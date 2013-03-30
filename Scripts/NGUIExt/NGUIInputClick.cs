@@ -6,8 +6,8 @@ using System.Collections;
 /// </summary>
 [AddComponentMenu("M8/NGUI/InputClick")]
 public class NGUIInputClick : MonoBehaviour {
-    public InputAction action;
-    public InputAction alternate = InputAction.NumAction;
+    public int action;
+    public int alternate = InputManager.ActionInvalid;
 
     /// <summary>
     /// Check to see if this object is selected via NGUI for input to process.
@@ -20,7 +20,7 @@ public class NGUIInputClick : MonoBehaviour {
         if(mStarted && Main.instance != null && Main.instance.input != null) {
             Main.instance.input.AddButtonCall(action, OnInputEnter);
 
-            if(alternate != InputAction.NumAction)
+            if(alternate != InputManager.ActionInvalid)
                 Main.instance.input.AddButtonCall(alternate, OnInputEnter);
         }
 
@@ -30,7 +30,7 @@ public class NGUIInputClick : MonoBehaviour {
         if(mStarted && Main.instance != null && Main.instance.input != null) {
             Main.instance.input.RemoveButtonCall(action, OnInputEnter);
 
-            if(alternate != InputAction.NumAction)
+            if(alternate != InputManager.ActionInvalid)
                 Main.instance.input.RemoveButtonCall(alternate, OnInputEnter);
         }
     }
@@ -41,7 +41,7 @@ public class NGUIInputClick : MonoBehaviour {
         if(Main.instance != null && Main.instance.input != null) {
             Main.instance.input.AddButtonCall(action, OnInputEnter);
 
-            if(alternate != InputAction.NumAction)
+            if(alternate != InputManager.ActionInvalid)
                 Main.instance.input.AddButtonCall(alternate, OnInputEnter);
         }
 	}

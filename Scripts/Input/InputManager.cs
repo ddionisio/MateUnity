@@ -5,6 +5,8 @@ using System.Collections.Generic;
 //generalized input handling, useful for porting to non-unity conventions (e.g. Ouya)
 [AddComponentMenu("M8/Core/InputManager")]
 public class InputManager : MonoBehaviour {
+    public const int ActionInvalid = -1;
+
     public delegate void OnButton(Info data);
 
     public enum State {
@@ -54,7 +56,7 @@ public class InputManager : MonoBehaviour {
     }
 
     public class Bind {
-        public InputAction action = (InputAction)0;
+        public int action = 0;
         public Control control = InputManager.Control.Button;
 
         public float deadZone = 0.1f;
@@ -62,8 +64,9 @@ public class InputManager : MonoBehaviour {
         public Key[] keys;
     }
 
+    public int actionCount = 0;
     public TextAsset config;
-
+    
     protected class BindData {
         public Info info;
 
@@ -96,24 +99,24 @@ public class InputManager : MonoBehaviour {
         }
     }
 
-    protected BindData[] mBinds = new BindData[(int)InputAction.NumAction];
+    protected BindData[] mBinds;
 
     //interfaces (available after awake)
 
-    public bool CheckBind(InputAction action) {
-        return mBinds[(int)action] != null;
+    public bool CheckBind(int action) {
+        return mBinds[action] != null;
     }
 
-    public float GetAxis(InputAction action) {
-        return mBinds[(int)action].info.axis;
+    public float GetAxis(int action) {
+        return mBinds[action].info.axis;
     }
 
-    public State GetState(InputAction action) {
-        return mBinds[(int)action].info.state;
+    public State GetState(int action) {
+        return mBinds[action].info.state;
     }
 
-    public bool IsDown(InputAction action) {
-        foreach(Key key in mBinds[(int)action].keys) {
+    public bool IsDown(int action) {
+        foreach(Key key in mBinds[action].keys) {
             if(ProcessButtonDown(key)) {
                 return true;
             }
@@ -122,24 +125,24 @@ public class InputManager : MonoBehaviour {
         return false;
     }
 
-    public int GetIndex(InputAction action) {
-        return mBinds[(int)action].info.index;
+    public int GetIndex(int action) {
+        return mBinds[action].info.index;
     }
 
-    public void AddButtonCall(InputAction action, OnButton callback) {
-        mBinds[(int)action].callback += callback;
+    public void AddButtonCall(int action, OnButton callback) {
+        mBinds[action].callback += callback;
     }
 
-    public void RemoveButtonCall(InputAction action, OnButton callback) {
-        mBinds[(int)action].callback -= callback;
+    public void RemoveButtonCall(int action, OnButton callback) {
+        mBinds[action].callback -= callback;
     }
 
-    public void ClearButtonCall(InputAction action) {
-        mBinds[(int)action].ClearCallback();
+    public void ClearButtonCall(int action) {
+        mBinds[action].ClearCallback();
     }
 
     public void ClearAllButtonCalls() {
-        for(int i = 0; i < (int)InputAction.NumAction; i++) {
+        for(int i = 0; i < actionCount; i++) {
             mBinds[i].ClearCallback();
         }
     }
@@ -177,12 +180,14 @@ public class InputManager : MonoBehaviour {
     }
 
     protected virtual void Awake() {
+        mBinds = new BindData[actionCount];
+
         if(config != null) {
             fastJSON.JSON.Instance.Parameters.UseExtensions = false;
             List<Bind> keys = fastJSON.JSON.Instance.ToObject<List<Bind>>(config.text);
 
             foreach(Bind key in keys) {
-                mBinds[(int)key.action] = new BindData(key);
+                mBinds[key.action] = new BindData(key);
             }
         }
     }

@@ -10,7 +10,9 @@ using HutongGames.PlayMaker;
 
 [AddComponentMenu("M8/Entity/EntityBase")]
 public class EntityBase : MonoBehaviour {
-    public delegate void OnSetState(EntityBase ent, EntityState state);
+    public const int StateInvalid = -1;
+
+    public delegate void OnSetState(EntityBase ent, int state);
     public delegate void OnSetBool(EntityBase ent, bool b);
     public delegate void OnFinish(EntityBase ent);
 
@@ -23,8 +25,8 @@ public class EntityBase : MonoBehaviour {
     public event OnFinish spawnCallback;
     public event OnFinish releaseCallback;
 
-    private EntityState mState = EntityState.NumState;
-    private EntityState mPrevState = EntityState.NumState;
+    private int mState = StateInvalid;
+    private int mPrevState = StateInvalid;
 
 #if PLAYMAKER
     private PlayMakerFSM mFSM;
@@ -84,12 +86,12 @@ public class EntityBase : MonoBehaviour {
     }
 #endif
 
-    public EntityState state {
+    public int state {
         get { return mState; }
 
         set {
             if(mState != value) {
-                if(mState != EntityState.NumState)
+                if(mState != StateInvalid)
                     mPrevState = mState;
 
                 mState = value;
@@ -103,7 +105,7 @@ public class EntityBase : MonoBehaviour {
         }
     }
 
-    public EntityState prevState {
+    public int prevState {
         get { return mPrevState; }
     }
 
@@ -276,7 +278,7 @@ public class EntityBase : MonoBehaviour {
     /// NOTE: calls after an update to ensure Awake and Start is called.
     /// </summary>
     void OnSpawned() {
-        mState = mPrevState = EntityState.NumState; //avoid invalid updates
+        mState = mPrevState = StateInvalid; //avoid invalid updates
 
         //allow activator to start and check if we need to spawn now or later
         //ensure start is called before spawning if we are freshly allocated from entity manager

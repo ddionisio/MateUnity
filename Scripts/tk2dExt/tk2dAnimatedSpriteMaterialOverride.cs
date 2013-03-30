@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/tk2D/SpriteAnimMaterialOverride")]
-public class tk2dSpriteAnimMaterialOverride : tk2dAnimatedSprite {
+[AddComponentMenu("M8/tk2D/AnimatedSpriteMaterialOverride")]
+public class tk2dAnimatedSpriteMaterialOverride : tk2dAnimatedSprite {
     public Material material;
 
     private Material mMaterialInst;

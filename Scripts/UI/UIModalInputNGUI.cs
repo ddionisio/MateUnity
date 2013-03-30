@@ -7,14 +7,14 @@ using System.Collections;
 [AddComponentMenu("M8/UI/ModalInputNGUI")]
 public class UIModalInputNGUI : MonoBehaviour {
 
-    public InputAction axisX;
-    public InputAction axisY;
+    public int axisX = InputManager.ActionInvalid;
+    public int axisY = InputManager.ActionInvalid;
 
     public float axisDelay = 0.25f;
     public float axisThreshold = 0.75f;
 
-    public InputAction enter;
-    public InputAction cancel;
+    public int enter = InputManager.ActionInvalid;
+    public int cancel = InputManager.ActionInvalid;
 
     private UICamera.MouseOrTouch mController = new UICamera.MouseOrTouch();
     private bool mInputActive = false;
@@ -65,24 +65,28 @@ public class UIModalInputNGUI : MonoBehaviour {
                 if(nextTime < time) {
                     InputManager input = Main.instance.input;
 
-                    float x = input.GetAxis(axisX);
-                    if(x < -axisThreshold) {
-                        nextTime = time + axisDelay;
-                        UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.LeftArrow);
-                    }
-                    else if(x > axisThreshold) {
-                        nextTime = time + axisDelay;
-                        UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.RightArrow);
+                    if(axisX != InputManager.ActionInvalid) {
+                        float x = input.GetAxis(axisX);
+                        if(x < -axisThreshold) {
+                            nextTime = time + axisDelay;
+                            UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.LeftArrow);
+                        }
+                        else if(x > axisThreshold) {
+                            nextTime = time + axisDelay;
+                            UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.RightArrow);
+                        }
                     }
 
-                    float y = input.GetAxis(axisY);
-                    if(y < -axisThreshold) {
-                        nextTime = time + axisDelay;
-                        UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.DownArrow);
-                    }
-                    else if(y > axisThreshold) {
-                        nextTime = time + axisDelay;
-                        UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.UpArrow);
+                    if(axisY != InputManager.ActionInvalid) {
+                        float y = input.GetAxis(axisY);
+                        if(y < -axisThreshold) {
+                            nextTime = time + axisDelay;
+                            UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.DownArrow);
+                        }
+                        else if(y > axisThreshold) {
+                            nextTime = time + axisDelay;
+                            UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.UpArrow);
+                        }
                     }
                 }
             }
@@ -98,10 +102,10 @@ public class UIModalInputNGUI : MonoBehaviour {
             //bind callbacks
             InputManager input = Main.instance.input;
 
-            if(enter != InputAction.NumAction)
+            if(enter != InputManager.ActionInvalid)
                 input.AddButtonCall(enter, OnInputEnter);
 
-            if(cancel != InputAction.NumAction)
+            if(cancel != InputManager.ActionInvalid)
                 input.AddButtonCall(cancel, OnInputCancel);
 
             mInputActive = true;
@@ -118,10 +122,10 @@ public class UIModalInputNGUI : MonoBehaviour {
             InputManager input = Main.instance != null ? Main.instance.input : null;
 
             if(input != null) {
-                if(enter != InputAction.NumAction)
+                if(enter != InputManager.ActionInvalid)
                     input.RemoveButtonCall(enter, OnInputEnter);
 
-                if(cancel != InputAction.NumAction)
+                if(cancel != InputManager.ActionInvalid)
                     input.RemoveButtonCall(cancel, OnInputCancel);
             }
 

@@ -81,5 +81,10 @@ namespace M8.Editor {
 
             return ret;
         }
+
+        public static string GetProjectName() {
+            string[] pathSplit = Application.dataPath.Split('/');
+            return pathSplit[pathSplit.Length - 2];
+        }
     }
 }

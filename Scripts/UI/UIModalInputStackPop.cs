@@ -8,7 +8,7 @@ using System.Collections;
 [AddComponentMenu("M8/UI/ModalInputStackPop")]
 public class UIModalInputStackPop : MonoBehaviour {
 
-    public InputAction escape;
+    public int escape = 0;
 
     private UIController mController;
 
