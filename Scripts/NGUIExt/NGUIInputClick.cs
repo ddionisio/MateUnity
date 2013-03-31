@@ -6,7 +6,7 @@ using System.Collections;
 /// </summary>
 [AddComponentMenu("M8/NGUI/InputClick")]
 public class NGUIInputClick : MonoBehaviour {
-    public int action;
+    public int action = 0;
     public int alternate = InputManager.ActionInvalid;
 
     /// <summary>

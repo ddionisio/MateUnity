@@ -86,5 +86,9 @@ namespace M8.Editor {
             string[] pathSplit = Application.dataPath.Split('/');
             return pathSplit[pathSplit.Length - 2];
         }
+
+        public static string PreferenceKey(string klass, string field) {
+            return string.Format("m8.{0}.{1}.{2}", GetProjectName(), klass, field);
+        }
     }
 }

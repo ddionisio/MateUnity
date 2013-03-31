@@ -64,7 +64,6 @@ public class InputManager : MonoBehaviour {
         public Key[] keys;
     }
 
-    public int actionCount = 0;
     public TextAsset config;
     
     protected class BindData {
@@ -142,7 +141,7 @@ public class InputManager : MonoBehaviour {
     }
 
     public void ClearAllButtonCalls() {
-        for(int i = 0; i < actionCount; i++) {
+        for(int i = 0; i < mBinds.Length; i++) {
             mBinds[i].ClearCallback();
         }
     }
@@ -180,15 +179,28 @@ public class InputManager : MonoBehaviour {
     }
 
     protected virtual void Awake() {
-        mBinds = new BindData[actionCount];
-
         if(config != null) {
+            Dictionary<int, BindData> binds = new Dictionary<int, BindData>();
+
             fastJSON.JSON.Instance.Parameters.UseExtensions = false;
             List<Bind> keys = fastJSON.JSON.Instance.ToObject<List<Bind>>(config.text);
 
+            int highestActionInd = 0;
+
             foreach(Bind key in keys) {
-                mBinds[key.action] = new BindData(key);
+                binds.Add(key.action, new BindData(key));
+
+                if(key.action > highestActionInd)
+                    highestActionInd = key.action;
             }
+
+            mBinds = new BindData[highestActionInd + 1];
+            foreach(KeyValuePair<int, BindData> pair in binds) {
+                mBinds[pair.Key] = pair.Value;
+            }
+        }
+        else {
+            mBinds = new BindData[0];
         }
     }
 

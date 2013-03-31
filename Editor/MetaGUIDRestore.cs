@@ -8,7 +8,8 @@ using System.Text;
 
 namespace M8.Editor {
     public class MetaGUIDRestore : EditorWindow {
-        public const string textPathPrefs = "m8.renegadeware.MetaGUIDRestore.textPath";
+        public const string PrefKlass = "MetaGUIDRestore";
+        public const string PrefText = "Text";
 
         public class Item {
             public string path;
@@ -57,7 +58,7 @@ namespace M8.Editor {
         }
 
         void OnEnable() {
-            string path = EditorPrefs.GetString(textPathPrefs, "");
+            string path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlass, PrefText), "");
             if(!string.IsNullOrEmpty(path)) {
                 Object obj = AssetDatabase.LoadAssetAtPath(path, typeof(TextAsset));
                 if(obj != null)
@@ -67,7 +68,7 @@ namespace M8.Editor {
 
         void OnDisable() {
             if(mTextFile != null)
-                EditorPrefs.SetString(textPathPrefs, AssetDatabase.GetAssetPath(mTextFile));
+                EditorPrefs.SetString(Utility.PreferenceKey(PrefKlass, PrefText), AssetDatabase.GetAssetPath(mTextFile));
         }
 
         void OnGUI() {
