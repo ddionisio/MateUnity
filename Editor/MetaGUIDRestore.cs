@@ -208,24 +208,24 @@ namespace M8.Editor {
                 }
 
                 GUILayout.EndHorizontal();
+
+                if(mMetaFilePaths != null) {
+                    GUILayout.Label("Meta files to generate from:");
+
+                    mMetaFilesScroll = GUILayout.BeginScrollView(mMetaFilesScroll);
+
+                    foreach(string path in mMetaFilePaths) {
+                        GUILayout.Label(path);
+                    }
+
+                    GUILayout.EndScrollView();
+                }
+                else {
+                    GUILayout.Label("Select file(s) and folder(s) to gather guids from meta files.");
+                }
             }
             else {
                 GUILayout.Label("Create or select an existing text file first.");
-            }
-
-            if(mMetaFilePaths != null) {
-                GUILayout.Label("Meta files to generate from:");
-
-                mMetaFilesScroll = GUILayout.BeginScrollView(mMetaFilesScroll);
-
-                foreach(string path in mMetaFilePaths) {
-                    GUILayout.Label(path);
-                }
-
-                GUILayout.EndScrollView();
-            }
-            else {
-                GUILayout.Label("Select file(s) and folder(s) to gather guids from meta files.");
             }
         }
     }

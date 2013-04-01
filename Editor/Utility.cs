@@ -6,6 +6,9 @@ using System.IO;
 
 namespace M8.Editor {
     public struct Utility {
+        public const char ArrowUpChar = '\u25B2';
+        public const char ArrowDownChar = '\u25BC';
+
         public static Texture2D blankTexture {
             get {
                 return EditorGUIUtility.whiteTexture;

@@ -36,8 +36,15 @@ public class InputManager : MonoBehaviour {
         public string input = ""; //for use with unity's input
         public KeyCode code = KeyCode.None; //unity
         public InputKeyMap map = InputKeyMap.None; //for external (like ouya!)
+
         public ButtonAxis axis = ButtonAxis.None; //for buttons as axis
         public int index = 0; //which index this key refers to
+
+        public void ResetKeys() {
+            input = "";
+            code = KeyCode.None;
+            map = InputKeyMap.None;
+        }
 
         public float GetAxisValue() {
             float ret = 0.0f;
@@ -61,7 +68,7 @@ public class InputManager : MonoBehaviour {
 
         public float deadZone = 0.1f;
 
-        public Key[] keys;
+        public List<Key> keys = null;
     }
 
     public TextAsset config;
@@ -82,7 +89,7 @@ public class InputManager : MonoBehaviour {
         public BindData(Bind bind) {
             control = bind.control;
             deadZone = bind.deadZone;
-            keys = bind.keys;
+            keys = bind.keys != null ? bind.keys.ToArray() : new Key[0];
 
             down = false;
         }
