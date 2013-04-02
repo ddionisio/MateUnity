@@ -39,7 +39,7 @@ public class Main : MonoBehaviour {
     }
 
     void OnDisable() {
-        Debug.Log("main disable");
+        //Debug.Log("main disable");
         PlayerPrefs.Save();
     }
 
