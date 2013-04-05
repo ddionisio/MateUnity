@@ -97,6 +97,8 @@ class PoolController : MonoBehaviour {
         }
     }
 
+    public string group = "";
+
     [SerializeField]
     bool _persistent = false;
 
@@ -140,6 +142,23 @@ class PoolController : MonoBehaviour {
         PoolController pc = GetPool(group);
         if(pc != null) {
             pc.Release(entity);
+        }
+    }
+
+    public static void Expand(string group, string type, int amount) {
+        PoolController pc = GetPool(group);
+        if(pc != null) {
+            pc.Expand(type, amount);
+        }
+    }
+
+    public Transform GetDefaultParent(string type) {
+        FactoryData dat;
+        if(mFactory.TryGetValue(type, out dat)) {
+            return dat.defaultParent;
+        }
+        else {
+            return null;
         }
     }
 
@@ -196,6 +215,13 @@ class PoolController : MonoBehaviour {
         }
     }
 
+    public void Expand(string type, int amount) {
+        FactoryData dat;
+        if(mFactory.TryGetValue(type, out dat)) {
+            dat.Expand(amount);
+        }
+    }
+
     /*IEnumerator DestroyEntityDelay(GameObject go) {
         yield return new WaitForFixedUpdate();
 
@@ -210,7 +236,7 @@ class PoolController : MonoBehaviour {
                 dat.DeInit();
             }
 
-            mControllers.Remove(name);
+            mControllers.Remove(group);
 
             if(mControllers.Count == 0)
                 mControllers = null;
@@ -218,12 +244,15 @@ class PoolController : MonoBehaviour {
     }
 
     void Awake() {
+        if(group == null)
+            group = name;
+
         if(mControllers == null) {
             mControllers = new Dictionary<string, PoolController>();
         }
 
-        if(!mControllers.ContainsKey(name)) {
-            mControllers.Add(name, this);
+        if(!mControllers.ContainsKey(group)) {
+            mControllers.Add(group, this);
 
             if(_persistent)
                 DontDestroyOnLoad(gameObject);
@@ -239,7 +268,7 @@ class PoolController : MonoBehaviour {
             }
         }
         else {
-            Debug.LogWarning("PoolController for: " + name + " already exists!");
+            Debug.LogWarning("PoolController for: " + group + " already exists!");
             DestroyImmediate(gameObject);
         }
     }

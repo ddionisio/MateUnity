@@ -147,8 +147,6 @@ public class EntityBase : MonoBehaviour {
             PoolManager.Pools[mSpawnGroup].Despawn(transform);
 #else
             PoolController.Release(mSpawnGroup, transform);
-
-            StartCoroutine(DestroyDelay());
 #endif
         }
         else {
