@@ -157,7 +157,9 @@ public class InputManager : MonoBehaviour {
 
     protected virtual float ProcessAxis(Key key, float deadZone) {
         if(key.input.Length > 0) {
-            return Input.GetAxis(key.input);
+            //return Input.GetAxis(key.input);
+            float val = Input.GetAxis(key.input);
+            return Mathf.Abs(val) > deadZone ? val : 0.0f;
         }
         else if(key.code != KeyCode.None) {
             if(Input.GetKey(key.code)) {
