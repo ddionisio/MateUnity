@@ -4,6 +4,15 @@ using System.Collections;
 
 namespace M8 {
     public struct ArrayUtil {
+        public static T[][] NewDoubleArray<T>(int numRow, int numCol) {
+            T[][] ret = new T[numRow][];
+            for(int i = 0; i < numRow; i++) {
+                ret[i] = new T[numCol];
+            }
+
+            return ret;
+        }
+
         public static void Shuffle(Array array) {
             for(int i = 0, max = array.Length; i < max; i++) {
                 int r = UnityEngine.Random.Range(i, max);

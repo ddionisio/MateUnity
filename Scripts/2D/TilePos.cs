@@ -42,7 +42,7 @@ namespace M8 {
         }
 
         public override string ToString() {
-            return string.Format("[{0}, {1}]", row, col);
+            return string.Format("[c={0}, r={1}]", col, row);
         }
     }
 }
