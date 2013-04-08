@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 [AddComponentMenu("M8/Game/PoolController")]
-class PoolController : MonoBehaviour {
+public class PoolController : MonoBehaviour {
     [System.Serializable]
     public class FactoryData {
         public Transform template = null;
@@ -204,13 +204,14 @@ class PoolController : MonoBehaviour {
             FactoryData dat;
             if(mFactory.TryGetValue(pdc.factoryKey, out dat)) {
                 pdc.claimed = true;
+
+                entity.SendMessage("OnDespawned", null, SendMessageOptions.DontRequireReceiver);
+
                 dat.Release(entity);
             }
-
-            entity.SendMessage("OnDespawned", null, SendMessageOptions.DontRequireReceiver);
         }
         else { //not in the pool, just kill it
-            Object.Destroy(entity);
+            Object.Destroy(entity.gameObject);
             //StartCoroutine(DestroyEntityDelay(entity.gameObject));
         }
     }
