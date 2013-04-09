@@ -6,6 +6,7 @@ using System.Collections;
 /// </summary>
 [AddComponentMenu("M8/UI/ModalInputNGUI")]
 public class UIModalInputNGUI : MonoBehaviour {
+    public int player = 0;
 
     public int axisX = InputManager.ActionInvalid;
     public int axisY = InputManager.ActionInvalid;
@@ -66,7 +67,7 @@ public class UIModalInputNGUI : MonoBehaviour {
                     InputManager input = Main.instance.input;
 
                     if(axisX != InputManager.ActionInvalid) {
-                        float x = input.GetAxis(axisX);
+                        float x = input.GetAxis(player, axisX);
                         if(x < -axisThreshold) {
                             nextTime = time + axisDelay;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.LeftArrow);
@@ -78,7 +79,7 @@ public class UIModalInputNGUI : MonoBehaviour {
                     }
 
                     if(axisY != InputManager.ActionInvalid) {
-                        float y = input.GetAxis(axisY);
+                        float y = input.GetAxis(player, axisY);
                         if(y < -axisThreshold) {
                             nextTime = time + axisDelay;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.DownArrow);
@@ -103,10 +104,10 @@ public class UIModalInputNGUI : MonoBehaviour {
             InputManager input = Main.instance.input;
 
             if(enter != InputManager.ActionInvalid)
-                input.AddButtonCall(enter, OnInputEnter);
+                input.AddButtonCall(player, enter, OnInputEnter);
 
             if(cancel != InputManager.ActionInvalid)
-                input.AddButtonCall(cancel, OnInputCancel);
+                input.AddButtonCall(player, cancel, OnInputCancel);
 
             mInputActive = true;
 
@@ -123,10 +124,10 @@ public class UIModalInputNGUI : MonoBehaviour {
 
             if(input != null) {
                 if(enter != InputManager.ActionInvalid)
-                    input.RemoveButtonCall(enter, OnInputEnter);
+                    input.RemoveButtonCall(player, enter, OnInputEnter);
 
                 if(cancel != InputManager.ActionInvalid)
-                    input.RemoveButtonCall(cancel, OnInputCancel);
+                    input.RemoveButtonCall(player, cancel, OnInputCancel);
             }
 
             mInputActive = false;

@@ -257,7 +257,17 @@ namespace M8.Editor {
                             GUILayout.BeginVertical(GUI.skin.box);
 
                             GUILayout.BeginHorizontal();
+                            mBinds[i].bind.keys[key].player = EditorGUILayout.IntField("Player", mBinds[i].bind.keys[key].player, GUILayout.MaxWidth(200));
+                            
+                            GUILayout.FlexibleSpace();
 
+                            if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
+                                delKey = key;
+
+                            GUILayout.EndHorizontal();
+
+                            GUILayout.BeginHorizontal();
+                                                        
                             //key bind
                             mBinds[i].keyTypes[key] = (InputType)EditorGUILayout.EnumPopup(mBinds[i].keyTypes[key]);
                             
@@ -275,15 +285,12 @@ namespace M8.Editor {
                                     break;
                             }
 
-                            GUILayout.FlexibleSpace();
-
-                            if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
-                                delKey = key;
-
                             GUILayout.EndHorizontal();
 
                             //other configs
-                            mBinds[i].bind.keys[key].axis = (InputManager.ButtonAxis)EditorGUILayout.EnumPopup("Axis", mBinds[i].bind.keys[key].axis, GUILayout.MaxWidth(200));
+                            if(mBinds[i].keyTypes[key] != InputType.Unity)
+                                mBinds[i].bind.keys[key].axis = (InputManager.ButtonAxis)EditorGUILayout.EnumPopup("Axis", mBinds[i].bind.keys[key].axis, GUILayout.MaxWidth(200));
+
                             mBinds[i].bind.keys[key].index = EditorGUILayout.IntField("Index", mBinds[i].bind.keys[key].index, GUILayout.MaxWidth(200));
 
                             GUILayout.EndVertical();

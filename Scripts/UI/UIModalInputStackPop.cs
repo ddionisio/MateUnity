@@ -7,7 +7,7 @@ using System.Collections;
 [RequireComponent(typeof(UIController))]
 [AddComponentMenu("M8/UI/ModalInputStackPop")]
 public class UIModalInputStackPop : MonoBehaviour {
-
+    public int player = 0;
     public int escape = 0;
 
     private UIController mController;
@@ -35,10 +35,10 @@ public class UIModalInputStackPop : MonoBehaviour {
         InputManager input = Main.instance.input;
 
         if(active) {
-            input.AddButtonCall(escape, OnInputEscape);
+            input.AddButtonCall(player, escape, OnInputEscape);
         }
         else {
-            input.RemoveButtonCall(escape, OnInputEscape);
+            input.RemoveButtonCall(player, escape, OnInputEscape);
         }
     }
 }

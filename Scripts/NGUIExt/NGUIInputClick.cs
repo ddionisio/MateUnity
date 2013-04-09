@@ -6,6 +6,7 @@ using System.Collections;
 /// </summary>
 [AddComponentMenu("M8/NGUI/InputClick")]
 public class NGUIInputClick : MonoBehaviour {
+    public int player = 0;
     public int action = 0;
     public int alternate = InputManager.ActionInvalid;
 
@@ -18,20 +19,20 @@ public class NGUIInputClick : MonoBehaviour {
 
     void OnEnable() {
         if(mStarted && Main.instance != null && Main.instance.input != null) {
-            Main.instance.input.AddButtonCall(action, OnInputEnter);
+            Main.instance.input.AddButtonCall(player, action, OnInputEnter);
 
             if(alternate != InputManager.ActionInvalid)
-                Main.instance.input.AddButtonCall(alternate, OnInputEnter);
+                Main.instance.input.AddButtonCall(player, alternate, OnInputEnter);
         }
 
     }
 
     void OnDisable() {
         if(mStarted && Main.instance != null && Main.instance.input != null) {
-            Main.instance.input.RemoveButtonCall(action, OnInputEnter);
+            Main.instance.input.RemoveButtonCall(player, action, OnInputEnter);
 
             if(alternate != InputManager.ActionInvalid)
-                Main.instance.input.RemoveButtonCall(alternate, OnInputEnter);
+                Main.instance.input.RemoveButtonCall(player, alternate, OnInputEnter);
         }
     }
 
@@ -39,10 +40,10 @@ public class NGUIInputClick : MonoBehaviour {
 	void Start () {
         mStarted = true;
         if(Main.instance != null && Main.instance.input != null) {
-            Main.instance.input.AddButtonCall(action, OnInputEnter);
+            Main.instance.input.AddButtonCall(player, action, OnInputEnter);
 
             if(alternate != InputManager.ActionInvalid)
-                Main.instance.input.AddButtonCall(alternate, OnInputEnter);
+                Main.instance.input.AddButtonCall(player, alternate, OnInputEnter);
         }
 	}
 	
