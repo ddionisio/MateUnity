@@ -3,6 +3,8 @@ using System.Collections;
 
 [AddComponentMenu("M8/tk2D/ColorPulseDelay")]
 public class SpriteColorPulseDelay : MonoBehaviour {
+    public tk2dBaseSprite sprite;
+
     public float startDelay;
     public float delay;
     public float pauseDelay;
@@ -10,30 +12,37 @@ public class SpriteColorPulseDelay : MonoBehaviour {
     public Color startColor;
     public Color endColor = Color.white;
 
-    private tk2dBaseSprite mSprite;
-
+    private WaitForFixedUpdate mDoUpdate;
+    private WaitForSeconds mWaitSecondsStart;
+    private WaitForSeconds mWaitSecondsUpdate;
+        
     void OnEnable() {
-        if(mSprite != null) {
+        if(sprite != null) {
             StartCoroutine(DoPulseUpdate());
         }
     }
 
     void Awake() {
+        mDoUpdate = new WaitForFixedUpdate();
+        mWaitSecondsStart = new WaitForSeconds(startDelay);
+        mWaitSecondsUpdate = new WaitForSeconds(pauseDelay);
     }
 
     // Use this for initialization
     void Start() {
-        mSprite = GetComponent<tk2dBaseSprite>();
+        if(sprite == null)
+            sprite = GetComponent<tk2dBaseSprite>();
+
         StartCoroutine(DoPulseUpdate());
     }
 
     IEnumerator DoPulseUpdate() {
-        mSprite.color = startColor;
+        sprite.color = startColor;
         
         if(startDelay > 0.0f)
-            yield return new WaitForSeconds(startDelay);
+            yield return mWaitSecondsStart;
         else
-            yield return new WaitForFixedUpdate();
+            yield return mDoUpdate;
 
         const float pi2 = Mathf.PI * 2.0f;
         float t = 0.0f;
@@ -42,20 +51,20 @@ public class SpriteColorPulseDelay : MonoBehaviour {
             t += Time.fixedDeltaTime;
 
             if(t >= delay) {
-                mSprite.color = startColor;
+                sprite.color = startColor;
                 t = 0.0f;
 
                 if(pauseDelay > 0.0f) {
-                    yield return new WaitForSeconds(pauseDelay);
+                    yield return mWaitSecondsUpdate;
                     continue;
                 }
             }
             else {
                 float s = Mathf.Sin(pi2 * (t / delay));
-                mSprite.color = Color.Lerp(startColor, endColor, s);
+                sprite.color = Color.Lerp(startColor, endColor, s);
             }
 
-            yield return new WaitForFixedUpdate();
+            yield return mDoUpdate;
         }
     }
 }

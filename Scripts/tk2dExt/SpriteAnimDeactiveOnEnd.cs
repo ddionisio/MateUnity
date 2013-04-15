@@ -3,19 +3,21 @@ using UnityEngine;
 [RequireComponent(typeof(tk2dAnimatedSprite))]
 [AddComponentMenu("M8/tk2D/AnimDeactiveOnEnd")]
 public class SpriteAnimDeactiveOnEnd : MonoBehaviour {
-    private tk2dAnimatedSprite mSpr;
+    public tk2dAnimatedSprite sprite;
 
     void OnDestroy() {
-        if(mSpr != null)
-            mSpr.animationCompleteDelegate -= OnAnimationComplete;
+        if(sprite != null)
+            sprite.animationCompleteDelegate -= OnAnimationComplete;
     }
 
     void Awake() {
-        mSpr = GetComponent<tk2dAnimatedSprite>();
-        mSpr.animationCompleteDelegate += OnAnimationComplete;
+        if(sprite == null)
+            sprite = GetComponent<tk2dAnimatedSprite>();
+
+        sprite.animationCompleteDelegate += OnAnimationComplete;
     }
 
-    private void OnAnimationComplete(tk2dAnimatedSprite sprite, int clipId) {
+    private void OnAnimationComplete(tk2dAnimatedSprite aSprite, int clipId) {
         gameObject.SetActive(false);
     }
 }

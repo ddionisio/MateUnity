@@ -5,6 +5,7 @@ using System.Collections.Generic;
 //generalized input handling, useful for porting to non-unity conventions (e.g. Ouya)
 [AddComponentMenu("M8/Core/InputManager")]
 public class InputManager : MonoBehaviour {
+    public const int MaxPlayers = 8;
     public const int ActionInvalid = -1;
 
     public delegate void OnButton(Info data);
@@ -30,9 +31,6 @@ public class InputManager : MonoBehaviour {
         public State state;
         public float axis;
         public int index;
-    }
-
-    public struct PlayerRegistry {
     }
 
     public class Key {
@@ -78,50 +76,58 @@ public class InputManager : MonoBehaviour {
 
     public TextAsset config;
 
-    public int numPlayers = 1;
-
     protected class PlayerData {
         public Info info;
 
         public bool down;
 
+        public Key[] keys;
+
         public OnButton callback;
 
-        public PlayerData() {
+        public PlayerData(List<Key> aKeys) {
             down = false;
-            callback = null;
+            keys = aKeys.ToArray();
         }
     }
     
     protected class BindData {
         public Control control;
-
         public float deadZone;
 
         public PlayerData[] players;
 
-        public Key[] keys;
-
-        public BindData(Bind bind, int numPlayers) {
+        public BindData(Bind bind) {
             control = bind.control;
             deadZone = bind.deadZone;
 
-            keys = bind.keys.ToArray();
+            //construct player data, put in the keys
+            int numPlayers = 0;
+
+            List<Key>[] playerKeys = new List<Key>[MaxPlayers];
+
+            foreach(Key key in bind.keys) {
+                if(key.player + 1 > numPlayers)
+                    numPlayers = key.player + 1;
+
+                if(playerKeys[key.player] == null)
+                    playerKeys[key.player] = new List<Key>();
+
+                playerKeys[key.player].Add(key);
+            }
 
             players = new PlayerData[numPlayers];
             for(int i = 0; i < numPlayers; i++) {
-                players[i] = new PlayerData();
-            }
-        }
-
-        public void ClearCallback() {
-            foreach(PlayerData pd in players) {
-                pd.callback = null;    
+                if(playerKeys[i] != null) {
+                    players[i] = new PlayerData(playerKeys[i]);
+                }
             }
         }
     }
 
     protected BindData[] mBinds;
+
+    protected HashSet<PlayerData> mButtonCalls;
 
     //interfaces (available after awake)
 
@@ -130,7 +136,21 @@ public class InputManager : MonoBehaviour {
     }
 
     public float GetAxis(int player, int action) {
-        return mBinds[action].players[player].info.axis;
+        BindData bindData = mBinds[action];
+        PlayerData pd = bindData.players[player];
+        Key[] keys = pd.keys;
+        
+        pd.info.axis = 0.0f;
+
+        foreach(Key key in keys) {
+            float axis = ProcessAxis(key, bindData.deadZone);
+            if(axis != 0.0f) {
+                pd.info.axis = axis;
+                break;
+            }
+        }
+
+        return pd.info.axis;
     }
 
     public State GetState(int player, int action) {
@@ -138,10 +158,10 @@ public class InputManager : MonoBehaviour {
     }
 
     public bool IsDown(int player, int action) {
-        Key[] keys = mBinds[action].keys;
+        Key[] keys = mBinds[action].players[player].keys;
 
         foreach(Key key in keys) {
-            if(key.player == player && ProcessButtonDown(key)) {
+            if(ProcessButtonDown(key)) {
                 return true;
             }
         }
@@ -154,21 +174,33 @@ public class InputManager : MonoBehaviour {
     }
 
     public void AddButtonCall(int player, int action, OnButton callback) {
-        mBinds[action].players[player].callback += callback;
+        PlayerData pd = mBinds[action].players[player];
+        pd.callback += callback;
+        mButtonCalls.Add(pd);
     }
 
     public void RemoveButtonCall(int player, int action, OnButton callback) {
-        mBinds[action].players[player].callback -= callback;
+        PlayerData pd = mBinds[action].players[player];
+        pd.callback -= callback;
+        if(pd.callback == null)
+            mButtonCalls.Remove(pd);
     }
 
     public void ClearButtonCall(int action) {
-        mBinds[action].ClearCallback();
+        foreach(PlayerData pd in mBinds[action].players) {
+            pd.callback = null;
+            mButtonCalls.Remove(pd);
+        }
     }
 
     public void ClearAllButtonCalls() {
-        for(int i = 0; i < mBinds.Length; i++) {
-            mBinds[i].ClearCallback();
+        foreach(BindData bd in mBinds) {
+            foreach(PlayerData pd in bd.players) {
+                pd.callback = null;
+            }
         }
+
+        mButtonCalls.Clear();
     }
 
     //implements
@@ -198,11 +230,7 @@ public class InputManager : MonoBehaviour {
     //internal
 
     protected virtual void OnDestroy() {
-        foreach(BindData bind in mBinds) {
-            if(bind != null) {
-                bind.ClearCallback();
-            }
-        }
+        ClearAllButtonCalls();
     }
 
     protected virtual void Awake() {
@@ -215,7 +243,7 @@ public class InputManager : MonoBehaviour {
             int highestActionInd = 0;
 
             foreach(Bind key in keys) {
-                binds.Add(key.action, new BindData(key, numPlayers));
+                binds.Add(key.action, new BindData(key));
 
                 if(key.action > highestActionInd)
                     highestActionInd = key.action;
@@ -225,6 +253,8 @@ public class InputManager : MonoBehaviour {
             foreach(KeyValuePair<int, BindData> pair in binds) {
                 mBinds[pair.Key] = pair.Value;
             }
+
+            mButtonCalls = new HashSet<PlayerData>();
         }
         else {
             mBinds = new BindData[0];
@@ -232,60 +262,33 @@ public class InputManager : MonoBehaviour {
     }
 
     protected virtual void FixedUpdate() {
-        foreach(BindData bindData in mBinds) {
-            if(bindData != null && bindData.keys != null) {
-                foreach(PlayerData pd in bindData.players) {
-                    pd.info.state = State.None;
-                    pd.info.axis = 0.0f;
+        foreach(PlayerData pd in mButtonCalls) {
+            pd.info.state = State.None;
+
+            foreach(Key key in pd.keys) {
+                if(ProcessButtonDown(key)) {
+                    if(!pd.down) {
+                        pd.down = true;
+
+                        pd.info.axis = key.GetAxisValue();
+                        pd.info.state = State.Pressed;
+                        pd.info.index = key.index;
+
+                        pd.callback(pd.info);
+                        break;
+                    }
                 }
+                else {
+                    if(pd.down) {
+                        pd.down = false;
 
-                switch(bindData.control) {
-                    case Control.Axis:
-                        foreach(Key key in bindData.keys) {
-                            PlayerData pd = bindData.players[key.player];
+                        pd.info.axis = 0.0f;
+                        pd.info.state = State.Released;
+                        pd.info.index = key.index;
 
-                            float axis = ProcessAxis(key, bindData.deadZone);
-                            if(axis != 0.0f) {
-                                pd.info.axis = axis;
-                                break;
-                            }
-                        }
+                        pd.callback(pd.info);
                         break;
-
-                    case Control.Button:
-                        foreach(Key key in bindData.keys) {
-                            PlayerData pd = bindData.players[key.player];
-
-                            if(ProcessButtonDown(key)) {
-                                if(!pd.down) {
-                                    pd.down = true;
-
-                                    pd.info.axis = key.GetAxisValue();
-                                    pd.info.state = State.Pressed;
-                                    pd.info.index = key.index;
-
-                                    if(pd.callback != null)
-                                        pd.callback(pd.info);
-
-                                    break;
-                                }
-                            }
-                            else {
-                                if(pd.down) {
-                                    pd.down = false;
-
-                                    pd.info.axis = 0.0f;
-                                    pd.info.state = State.Released;
-                                    pd.info.index = key.index;
-
-                                    if(pd.callback != null)
-                                        pd.callback(pd.info);
-
-                                    break;
-                                }
-                            }
-                        }
-                        break;
+                    }
                 }
             }
         }

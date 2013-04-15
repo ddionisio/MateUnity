@@ -4,22 +4,29 @@ using System.Collections;
 [AddComponentMenu("M8/tk2D/PlayOnEnable")]
 public class SpritePlayOnEnable : MonoBehaviour {
 	
-	private tk2dAnimatedSprite mAnimSprite;
-	
-	
+	public tk2dAnimatedSprite sprite;
+
+    public float minDelay;
+    public float maxDelay;
+
 	void OnEnable() {
-		if(mAnimSprite != null) {
-			mAnimSprite.PlayFromFrame(0);
-		}
+        if(minDelay > 0) {
+            if(minDelay < maxDelay)
+                Invoke("PlayDelayed", Random.Range(minDelay, maxDelay));
+        }
+        else {
+            sprite.Play();
+        }
 	}
 	
-	void OnDisable() {
-	}
+    void Awake() {
+        if(sprite == null)
+            sprite = GetComponent<tk2dAnimatedSprite>();
+
+        sprite.playAutomatically = false;
+    }
 	
-	void Start() {
-		mAnimSprite = GetComponent<tk2dAnimatedSprite>();
-		if(mAnimSprite != null && !mAnimSprite.playAutomatically) {
-			mAnimSprite.Play();
-		}
-	}
+    void PlayDelayed() {
+        sprite.Play();
+    }
 }

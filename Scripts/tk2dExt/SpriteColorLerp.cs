@@ -12,14 +12,14 @@ public class SpriteColorLerp : MonoBehaviour {
         NumType
     }
 
+    public tk2dBaseSprite sprite;
+
     public Type type;
 
 	public float delay;
 
     public Color[] colors;
 
-	private tk2dBaseSprite mSprite;
-	
 	private float mCurTime = 0;
     private bool mStarted = false;
     private bool mActive = false;
@@ -30,12 +30,13 @@ public class SpriteColorLerp : MonoBehaviour {
             mActive = true;
             mReverse = false;
             mCurTime = 0;
-            mSprite.color = colors[0];
+            sprite.color = colors[0];
         }
 	}
 	
 	void Awake() {
-		mSprite = GetComponent<tk2dBaseSprite>();
+        if(sprite == null)
+            sprite = GetComponent<tk2dBaseSprite>();
 	}
 	
 	// Use this for initialization
@@ -43,7 +44,7 @@ public class SpriteColorLerp : MonoBehaviour {
         mStarted = true;
         mActive = true;
         mReverse = false;
-        mSprite.color = colors[0];
+        sprite.color = colors[0];
 	}
 	
 	// Update is called once per frame
@@ -55,10 +56,10 @@ public class SpriteColorLerp : MonoBehaviour {
                 case Type.Once:
                     if(mCurTime >= delay) {
                         mActive = false;
-                        mSprite.color = colors[colors.Length-1];
+                        sprite.color = colors[colors.Length - 1];
                     }
                     else {
-                        mSprite.color = M8.ColorUtil.Lerp(colors, mCurTime/delay);
+                        sprite.color = M8.ColorUtil.Lerp(colors, mCurTime / delay);
                     }
                     break;
 
@@ -67,7 +68,7 @@ public class SpriteColorLerp : MonoBehaviour {
                         mCurTime -= delay;
                     }
 
-                    mSprite.color = M8.ColorUtil.LerpRepeat(colors, mCurTime/delay);
+                    sprite.color = M8.ColorUtil.LerpRepeat(colors, mCurTime / delay);
                     break;
 
                 case Type.Saw:
@@ -75,7 +76,7 @@ public class SpriteColorLerp : MonoBehaviour {
                         mCurTime -= delay;
                     }
 
-                    mSprite.color = M8.ColorUtil.Lerp(colors, mCurTime/delay);
+                    sprite.color = M8.ColorUtil.Lerp(colors, mCurTime / delay);
                     break;
 
                 case Type.SeeSaw:
@@ -88,7 +89,7 @@ public class SpriteColorLerp : MonoBehaviour {
                         mReverse = !mReverse;
                     }
 
-                    mSprite.color = M8.ColorUtil.Lerp(colors, mCurTime/delay);
+                    sprite.color = M8.ColorUtil.Lerp(colors, mCurTime / delay);
                     break;
             }
         }
