@@ -265,30 +265,34 @@ public class InputManager : MonoBehaviour {
         foreach(PlayerData pd in mButtonCalls) {
             pd.info.state = State.None;
 
+            Key keyDown = null;
+
             foreach(Key key in pd.keys) {
                 if(ProcessButtonDown(key)) {
-                    if(!pd.down) {
-                        pd.down = true;
-
-                        pd.info.axis = key.GetAxisValue();
-                        pd.info.state = State.Pressed;
-                        pd.info.index = key.index;
-
-                        pd.callback(pd.info);
-                        break;
-                    }
+                    keyDown = key;
+                    break;
                 }
-                else {
-                    if(pd.down) {
-                        pd.down = false;
+            }
 
-                        pd.info.axis = 0.0f;
-                        pd.info.state = State.Released;
-                        pd.info.index = key.index;
+            if(keyDown != null) {
+                if(!pd.down) {
+                    pd.down = true;
 
-                        pd.callback(pd.info);
-                        break;
-                    }
+                    pd.info.axis = keyDown.GetAxisValue();
+                    pd.info.state = State.Pressed;
+                    pd.info.index = keyDown.index;
+
+                    pd.callback(pd.info);
+                }
+            }
+            else {
+                if(pd.down) {
+                    pd.down = false;
+
+                    pd.info.axis = 0.0f;
+                    pd.info.state = State.Released;
+
+                    pd.callback(pd.info);
                 }
             }
         }
