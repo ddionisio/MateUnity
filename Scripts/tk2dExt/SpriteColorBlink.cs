@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("M8/tk2D/ColorBlink")]
 public class SpriteColorBlink : MonoBehaviour {
     public tk2dBaseSprite sprite;
     public Color color;
