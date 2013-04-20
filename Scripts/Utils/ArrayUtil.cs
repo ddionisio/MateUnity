@@ -4,6 +4,12 @@ using System.Collections;
 
 namespace M8 {
     public struct ArrayUtil {
+        public static void Fill<T>(T[] src, T data) {
+            for(int i = 0, max = src.Length; i < max; i++) {
+                src[i] = data;
+            }
+        }
+
         public static T[][] NewDoubleArray<T>(int numRow, int numCol) {
             T[][] ret = new T[numRow][];
             for(int i = 0; i < numRow; i++) {

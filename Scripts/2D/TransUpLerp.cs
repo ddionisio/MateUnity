@@ -1,15 +1,11 @@
 using UnityEngine;
 using System.Collections;
 
-public class TransUpSmoothDamp : MonoBehaviour {
+public class TransUpLerp : MonoBehaviour {
     public Vector3 up = Vector3.up;
     public float delay = 1.0f;
-    public float maxSpeed = Mathf.Infinity;
 
     public Transform target; //optional
-
-    private float mTime;
-    private Vector3 mCurVel = Vector3.zero;
 
     private WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
 
@@ -18,19 +14,27 @@ public class TransUpSmoothDamp : MonoBehaviour {
         StartCoroutine(DoIt());
     }
 
-    IEnumerator DoIt() {
-        mTime = 0.0f;
+    public void ApplyUp() {
+        target.up = up;
+    }
 
-        while(mTime <= delay) {
+    IEnumerator DoIt() {
+        Vector3 curUp = target.up;
+
+        float time = 0.0f;
+
+        while(time <= delay) {
             float delta = Time.fixedDeltaTime;
 
-            //assuming up property normalizes
-            target.up = Vector3.SmoothDamp(target.up, up, ref mCurVel, delay, maxSpeed, delta);
+            //assuming up properly normalizes
+            target.up = Vector3.Lerp(curUp, up, time / delay);
 
-            mTime += delta;
+            time += delta;
 
             yield return mWaitUpdate;
         }
+
+        target.up = up;
     }
 
     void Awake() {
