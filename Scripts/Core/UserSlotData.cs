@@ -99,13 +99,20 @@ public class UserSlotData : UserData {
         }
     }
 
+    public override bool HasKey(string name) {
+        //TODO: add check to other value containers
+        return mValueIs != null && mValueIs.ContainsKey(name);
+    }
+
     /// <summary>
     /// This will get given name from current user data.  Make sure data has been loaded beforehand.
     /// </summary>
     public override int GetInt(string name, int defaultValue = 0) {
-        int dat = defaultValue;
-        mValueIs.TryGetValue(name, out dat);
-        return dat;
+        int dat;
+        if(mValueIs != null && mValueIs.TryGetValue(name, out dat))
+            return dat;
+
+        return defaultValue;
     }
 
     /// <summary>

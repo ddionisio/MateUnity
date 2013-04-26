@@ -1,17 +1,35 @@
 ﻿using UnityEngine;
 
-public abstract class UserData : MonoBehaviour {
+[AddComponentMenu("M8/Core/UserData")]
+public class UserData : MonoBehaviour {
     private static UserData mInstance = null;
 
     public static UserData instance { get { return mInstance; } }
 
-    public abstract void Save();
+    public virtual void Save() {
+    }
 
-    public abstract void Delete();
+    public virtual void Delete() {
+        PlayerPrefs.DeleteAll();
 
-    public abstract int GetInt(string name, int defaultValue = 0);
+        //resave stuff
+        //TODO: might be better to broadcast it so anything that is not UserData related is resaved
+        //instead of explicit calls
+        if(Main.instance != null)
+            Main.instance.userSettings.Save();
+    }
 
-    public abstract void SetInt(string name, int value);
+    public virtual bool HasKey(string name) {
+        return PlayerPrefs.HasKey(name);
+    }
+
+    public virtual int GetInt(string name, int defaultValue = 0) {
+        return PlayerPrefs.GetInt(name, defaultValue);
+    }
+
+    public virtual void SetInt(string name, int value) {
+        PlayerPrefs.SetInt(name, value);
+    }
 
     void OnDisable() {
         Save();

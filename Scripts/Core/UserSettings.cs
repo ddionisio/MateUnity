@@ -82,6 +82,12 @@ public class UserSettings {
         mLanguage = (GameLanguage)PlayerPrefs.GetInt(languageKey, (int)GameLanguage.English);
     }
 
+    public void Save() {
+        PlayerPrefs.SetInt(soundEnableKey, mSoundEnabled ? 1 : 0);
+        PlayerPrefs.SetInt(musicEnableKey, mMusicEnabled ? 1 : 0);
+        PlayerPrefs.SetInt(languageKey, (int)mLanguage);
+    }
+
     private void RelaySettingsChanged() {
         SceneManager.RootBroadcastMessage("UserSettingsChanged", this, SendMessageOptions.DontRequireReceiver);
     }

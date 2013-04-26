@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Scene controller. Make sure this is the root of all your objects in the scene, there should only be one of these.
 /// </summary>
-[AddComponentMenu("M8/Scene/SceneController")]
+[AddComponentMenu("M8/Core/SceneController")]
 public class SceneController : MonoBehaviour {
 	public SequencerState sequencer;
 	

@@ -41,5 +41,18 @@ namespace M8 {
             
             return dest;
         }
+
+        public static void RemoveAt<T>(ref T[] src, int index) {
+            T[] dest = new T[src.Length - 1];
+            if(index > 0) {
+                Array.Copy(src, 0, dest, 0, index);
+            }
+
+            if(index < src.Length - 1) {
+                Array.Copy(src, index + 1, dest, index, src.Length - index - 1);
+            }
+
+            src = dest;
+        }
 	}
 }
