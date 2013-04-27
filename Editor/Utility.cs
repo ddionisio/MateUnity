@@ -16,9 +16,9 @@ namespace M8.Editor {
         }
 
         public static string[] GenerateGenericMaskString() {
-            string[] ret = new string[31];
+            string[] ret = new string[32];
             for(int i = 0; i < ret.Length; i++) {
-                ret[i] = (i + 1).ToString();
+                ret[i] = i.ToString();
             }
 
             return ret;

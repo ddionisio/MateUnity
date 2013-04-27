@@ -20,10 +20,7 @@ public class SceneStateInspector : Editor {
 
     public override void OnInspectorGUI() {
         if(mMasks == null) {
-            mMasks = new string[31];
-            for(int i = 0; i < mMasks.Length; i++) {
-                mMasks[i] = (i + 1).ToString();
-            }
+            mMasks = M8.Editor.Utility.GenerateGenericMaskString();
         }
 
         SceneState data = target as SceneState;
