@@ -1,5 +1,7 @@
 
 public struct EntityEvent {
+    public const string TriggerAct = "EntityTriggerAct";
+
     public const string ActionEnter = "EntityActionEnter";
     public const string ActionFinish = "EntityActionFinish";
     public const string ActionHitEnter = "EntityActionHitEnter";
