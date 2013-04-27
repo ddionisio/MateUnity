@@ -52,9 +52,9 @@ public class SoundPlayerGlobal : MonoBehaviour {
 
                 ret.SetActive(true);
             }
-            else {
+            /*else {
                 Debug.LogWarning("Ran out of available sound player for: " + name);
-            }
+            }*/
         }
         else {
             Debug.LogWarning("sound player not found: " + name);

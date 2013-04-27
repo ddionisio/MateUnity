@@ -14,8 +14,11 @@ public class MusicManager : MonoBehaviour {
 	public class MusicData {
 		public string name;
 		public AudioSource source;
-		public float loopDelay;
+		public float loopDelay = 0.0f;
+        public bool loop = true;
 	}
+
+    public delegate void OnMusicFinish(string curMusicName);
 	
 	public MusicData[] music;
 	
@@ -24,6 +27,11 @@ public class MusicManager : MonoBehaviour {
 	public string playOnStart;
 
     public AutoPlayType autoPlay = AutoPlayType.None;
+
+    /// <summary>
+    /// Callback when music is done playing.  Make sure the audio source 'loop' is set to false
+    /// </summary>
+    public event OnMusicFinish musicFinishCallback;
 	
 	private static MusicManager mInstance = null;
 	
@@ -116,6 +124,8 @@ public class MusicManager : MonoBehaviour {
 	void OnDestroy() {
         if(mInstance == this)
 		    mInstance = null;
+
+        musicFinishCallback = null;
 	}
 	
 	void Awake() {
@@ -160,6 +170,9 @@ public class MusicManager : MonoBehaviour {
 	void SetState(State state) {
 		mState = state;
 		mCurTime = 0;
+
+        if(mState == State.None)
+            mCurMusic = null;
 	}
 	
 	// Update is called once per frame
@@ -169,10 +182,19 @@ public class MusicManager : MonoBehaviour {
 			break;
 		case State.Playing:
 			if(!(mCurMusic.source.loop || mCurMusic.source.isPlaying)) {
+                string curName = mCurMusic.name;
+
                 if(autoPlay != AutoPlayType.None)
                     AutoPlaylistNext();
-                else //loop
-				    mCurMusic.source.Play((ulong)System.Math.Round(rate*((double)mCurMusic.loopDelay)));
+                else if(mCurMusic.loop) //loop
+                    mCurMusic.source.Play((ulong)System.Math.Round(rate * ((double)mCurMusic.loopDelay)));
+                else {
+                    SetState(State.None);
+                }
+
+                //callback
+                if(musicFinishCallback != null)
+                    musicFinishCallback(curName);
 			}
 			break;
 		case State.Changing:

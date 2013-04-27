@@ -15,6 +15,15 @@ namespace M8.Editor {
             }
         }
 
+        public static string[] GenerateGenericMaskString() {
+            string[] ret = new string[31];
+            for(int i = 0; i < ret.Length; i++) {
+                ret[i] = (i + 1).ToString();
+            }
+
+            return ret;
+        }
+
         public static void DrawSeparator() {
             GUILayout.Space(12f);
 

@@ -235,11 +235,6 @@ public class EntityBase : MonoBehaviour {
 
         //for when putting entities on scene, skip the spawning state
         if(activateOnStart) {
-#if PLAYMAKER
-            if(mFSM != null)
-                mFSM.enabled = true;
-#endif
-
             StartCoroutine(DoStart());
         }
     }
@@ -296,22 +291,64 @@ public class EntityBase : MonoBehaviour {
     }
                 
     IEnumerator DoStart() {
+#if PLAYMAKER
+        if(mFSM != null) {
+            mFSM.enabled = true;
+
+            yield return new WaitForFixedUpdate();
+
+            SpawnStart();
+
+            mFSM.SendEvent(EntityEvent.Start);
+        }
+        else {
+            yield return new WaitForFixedUpdate();
+
+            SpawnStart();
+        }
+#else
         yield return new WaitForFixedUpdate();
 
         SpawnStart();
-
-#if PLAYMAKER
-        if(mFSM != null) {
-            mFSM.SendEvent(EntityEvent.Start);
-        }
 #endif
 
         yield break;
     }
 
     IEnumerator DoSpawn() {
+#if PLAYMAKER
+        //start up
+        if(mFSM != null) {
+            //restart
+            mFSM.Fsm.Reinitialize();
+            mFSM.enabled = true;
+                        
+            //allow fsm to boot up, then tell it to spawn
+            yield return new WaitForFixedUpdate();
 
-        yield return new WaitForFixedUpdate();
+            SpawnStart();
+
+            if(spawnCallback != null) {
+                spawnCallback(this);
+            }
+
+            mFSM.SendEvent(EntityEvent.Spawn);
+        }
+        else {
+             yield return new WaitForFixedUpdate();
+
+            SpawnStart();
+
+            if(spawnCallback != null) {
+                spawnCallback(this);
+            }
+
+            yield return new WaitForSeconds(spawnDelay);
+
+            SpawnFinish();
+        }
+#else
+         yield return new WaitForFixedUpdate();
 
         SpawnStart();
 
@@ -319,24 +356,6 @@ public class EntityBase : MonoBehaviour {
             spawnCallback(this);
         }
 
-#if PLAYMAKER
-        //start up
-        if(mFSM != null) {
-            //restart
-            mFSM.Fsm.Reinitialize();
-            mFSM.enabled = true;
-
-            //allow fsm to boot up, then tell it to spawn
-            yield return new WaitForFixedUpdate();
-
-            mFSM.SendEvent(EntityEvent.Spawn);
-        }
-        else {
-            yield return new WaitForSeconds(spawnDelay);
-
-            SpawnFinish();
-        }
-#else
         yield return new WaitForSeconds(spawnDelay);
 
         SpawnFinish();
