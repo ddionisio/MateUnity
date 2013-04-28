@@ -122,6 +122,15 @@ public class UserSlotData : UserData {
         mValueIs[name] = value;
     }
 
+    public override string GetString(string name, string defaultValue = "") {
+        Debug.LogError("Not yet implemented!!!");
+        return defaultValue;
+    }
+
+    public override void SetString(string name, string value) {
+        Debug.LogError("Not yet implemented!!!");
+    }
+
     protected override void Awake() {
         base.Awake();
 

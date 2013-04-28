@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+[AddComponentMenu("M8/Game/WaypointData")]
 public class WaypointData : MonoBehaviour {
     [System.NonSerialized]
     public int curInd;

@@ -31,6 +31,14 @@ public class UserData : MonoBehaviour {
         PlayerPrefs.SetInt(name, value);
     }
 
+    public virtual string GetString(string name, string defaultValue = "") {
+        return PlayerPrefs.GetString(name, defaultValue);
+    }
+
+    public virtual void SetString(string name, string value) {
+        PlayerPrefs.SetString(name, value);
+    }
+
     void OnDisable() {
         Save();
     }
