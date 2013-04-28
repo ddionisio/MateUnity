@@ -2,11 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class WaypointData : Object {
-    public int curInd;
-    public List<Transform> waypoints;
-}
-
 [AddComponentMenu("M8/Game/WaypointManager")]
 public class WaypointManager : MonoBehaviour {
 
@@ -19,16 +14,15 @@ public class WaypointManager : MonoBehaviour {
         }
     }
 
-    public WaypointData CreateWaypointData(string name) {
+    public bool SetWaypointData(string name, WaypointData wpDat) {
         List<Transform> wps = GetWaypoints(name);
         if(wps != null) {
-            WaypointData newWaypoint = new WaypointData();
-            newWaypoint.curInd = 0;
-            newWaypoint.waypoints = wps;
-            return newWaypoint;
+            wpDat.curInd = 0;
+            wpDat.waypoints = wps;
+            return true;
         }
 
-        return null;
+        return false;
     }
 
     public List<Transform> GetWaypoints(string name) {
