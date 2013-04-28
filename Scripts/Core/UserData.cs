@@ -44,10 +44,12 @@ public class UserData : MonoBehaviour {
     }
 
     void OnDestroy() {
-        mInstance = null;
+        if(mInstance == this)
+            mInstance = null;
     }
 
     protected virtual void Awake() {
-        mInstance = this;
+        if(mInstance == null)
+            mInstance = this;
     }
 }

@@ -99,9 +99,13 @@ public class SceneState : MonoBehaviour {
     }
 
     public bool CheckFlag(string name, int bit) {
+        return CheckFlagMask(name, 1 << bit);
+    }
+
+    public bool CheckFlagMask(string name, int mask) {
         int flags = GetValue(name);
 
-        return (flags & (1<<bit)) != 0;
+        return (flags & mask) != 0;
     }
 
     public void SetFlag(string name, int bit, bool state, bool persistent) {
@@ -160,13 +164,17 @@ public class SceneState : MonoBehaviour {
     }
 
     public bool CheckGlobalFlag(string name, int bit) {
+        return CheckGlobalFlagMask(name, 1 << bit);
+    }
+
+    public bool CheckGlobalFlagMask(string name, int mask) {
         int flags = GetGlobalValue(name);
 
-        return (flags & (1 << bit)) != 0;
+        return (flags & mask) != 0;
     }
 
     public void SetGlobalFlag(string name, int bit, bool state, bool persistent) {
-        int flags = GetValue(name);
+        int flags = GetGlobalValue(name);
 
         if(state)
             flags |= 1 << bit;
