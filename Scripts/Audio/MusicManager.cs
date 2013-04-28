@@ -28,6 +28,9 @@ public class MusicManager : MonoBehaviour {
 
     public AutoPlayType autoPlay = AutoPlayType.None;
 
+    public bool dontDestroy = false;
+    public bool overrideExisting = false; //delete current available music manager
+
     /// <summary>
     /// Callback when music is done playing.  Make sure the audio source 'loop' is set to false
     /// </summary>
@@ -129,6 +132,11 @@ public class MusicManager : MonoBehaviour {
 	}
 	
 	void Awake() {
+        if(overrideExisting && mInstance != null) {
+            mInstance.Stop(false);
+            DestroyImmediate(mInstance.gameObject);
+        }
+
         if(mInstance == null) {
             mInstance = this;
 
@@ -139,6 +147,9 @@ public class MusicManager : MonoBehaviour {
 
             if(autoPlay == AutoPlayType.Shuffled)
                 M8.ArrayUtil.Shuffle(music);
+
+            if(dontDestroy)
+                Object.DontDestroyOnLoad(gameObject);
         }
         else
             DestroyImmediate(gameObject);
