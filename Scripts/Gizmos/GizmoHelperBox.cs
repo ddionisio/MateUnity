@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("M8/Gizmo Helpers/Box")]
 public class GizmoHelperBox : MonoBehaviour {
     public Bounds bound = new Bounds(Vector3.zero, Vector3.one);
     public Color color = Color.white;

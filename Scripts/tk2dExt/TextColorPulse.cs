@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/tk2D/ColorPulse")]
-public class SpriteColorPulse : MonoBehaviour {
-    public tk2dBaseSprite sprite;
+[AddComponentMenu("M8/tk2D/TextColorPulse")]
+public class TextColorPulse : MonoBehaviour {
+    public tk2dTextMesh text;
 
 	public float pulsePerSecond;
 	public Color startColor;
@@ -15,25 +15,28 @@ public class SpriteColorPulse : MonoBehaviour {
 	void OnEnable() {
         if(mStarted) {
             mCurPulseTime = 0;
-            sprite.color = startColor;
+            text.color = startColor;
+            text.Commit();
         }
 	}
 
     void OnDisable() {
-        if(mStarted) {
-            sprite.color = startColor;
+        if(mStarted && text != null) {
+            text.color = startColor;
+            text.Commit();
         }
     }
 	
 	void Awake() {
-        if(sprite == null)
-            sprite = GetComponent<tk2dBaseSprite>();
+        if(text == null)
+            text = GetComponent<tk2dTextMesh>();
 	}
 	
 	// Use this for initialization
 	void Start () {
         mStarted = true;
-        sprite.color = startColor;
+        text.color = startColor;
+        text.Commit();
 	}
 	
 	// Update is called once per frame
@@ -43,6 +46,7 @@ public class SpriteColorPulse : MonoBehaviour {
 		float t = Mathf.Sin(Mathf.PI*mCurPulseTime*pulsePerSecond);
 		t *= t;
 
-        sprite.color = Color.Lerp(startColor, endColor, t);
+        text.color = Color.Lerp(startColor, endColor, t);
+        text.Commit();
 	}
 }

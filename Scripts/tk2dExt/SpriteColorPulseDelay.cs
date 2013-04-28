@@ -22,6 +22,12 @@ public class SpriteColorPulseDelay : MonoBehaviour {
         }
     }
 
+    void OnDisable() {
+        if(sprite != null) {
+            sprite.color = startColor;
+        }
+    }
+
     void Awake() {
         mDoUpdate = new WaitForFixedUpdate();
         mWaitSecondsStart = new WaitForSeconds(startDelay);
