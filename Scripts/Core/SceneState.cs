@@ -170,7 +170,7 @@ public class SceneState : MonoBehaviour {
     public bool CheckGlobalFlagMask(string name, int mask) {
         int flags = GetGlobalValue(name);
 
-        return (flags & mask) != 0;
+        return (flags & mask) == mask;
     }
 
     public void SetGlobalFlag(string name, int bit, bool state, bool persistent) {
