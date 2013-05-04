@@ -17,14 +17,17 @@ public class UIModalInputNGUI : MonoBehaviour {
     public int enter = InputManager.ActionInvalid;
     public int cancel = InputManager.ActionInvalid;
 
+    private enum AxisState {
+        Up,
+        Down
+    }
+
+    private AxisState mAxisXState = AxisState.Up;
+    private AxisState mAxisYState = AxisState.Up;
+
     private UICamera.MouseOrTouch mController = new UICamera.MouseOrTouch();
     private bool mInputActive = false;
-
-    void OnEnable() {
-        if(mInputActive) {
-            StartCoroutine(AxisCheck());
-        }
-    }
+    private float mNextTime = 0.0f;
 
     void OnDestroy() {
         OnUIModalInactive();
@@ -57,45 +60,61 @@ public class UIModalInputNGUI : MonoBehaviour {
         }
     }
 
-    IEnumerator AxisCheck() {
-        float nextTime = 0.0f;
-
-        while(mInputActive) {
+    void Update() {
+        if(mInputActive) {
             if(UICamera.selectedObject != null) {
                 float time = Time.realtimeSinceStartup;
-                if(nextTime < time) {
-                    InputManager input = Main.instance.input;
+                float delta = time - mNextTime;
 
-                    if(axisX != InputManager.ActionInvalid) {
-                        float x = input.GetAxis(player, axisX);
-                        if(x < -axisThreshold) {
-                            nextTime = time + axisDelay;
+                InputManager input = Main.instance.input;
+
+                if(axisX != InputManager.ActionInvalid) {
+                    float x = input.GetAxis(player, axisX);
+                    if(x < -axisThreshold) {
+                        if(delta >= axisDelay) {
+                            mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.LeftArrow);
                         }
-                        else if(x > axisThreshold) {
-                            nextTime = time + axisDelay;
+
+                        mAxisXState = AxisState.Down;
+                    }
+                    else if(x > axisThreshold) {
+                        if(delta >= axisDelay) {
+                            mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.RightArrow);
                         }
-                    }
 
-                    if(axisY != InputManager.ActionInvalid) {
-                        float y = input.GetAxis(player, axisY);
-                        if(y < -axisThreshold) {
-                            nextTime = time + axisDelay;
+                        mAxisXState = AxisState.Down;
+                    }
+                    else {
+                        mAxisXState = AxisState.Up;
+                    }
+                }
+
+                if(axisY != InputManager.ActionInvalid) {
+                    float y = input.GetAxis(player, axisY);
+                    if(y < -axisThreshold) {
+                        if(delta >= axisDelay) {
+                            mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.DownArrow);
                         }
-                        else if(y > axisThreshold) {
-                            nextTime = time + axisDelay;
+
+                        mAxisYState = AxisState.Down;
+                    }
+                    else if(y > axisThreshold) {
+                        if(delta >= axisDelay) {
+                            mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.UpArrow);
                         }
+
+                        mAxisYState = AxisState.Down;
+                    }
+                    else {
+                        mAxisYState = AxisState.Up;
                     }
                 }
             }
-
-            yield return new WaitForFixedUpdate();
         }
-
-        yield break;
     }
 
     void OnUIModalActive() {
@@ -111,9 +130,9 @@ public class UIModalInputNGUI : MonoBehaviour {
 
             mInputActive = true;
 
-            if(gameObject.activeInHierarchy) {
-                StartCoroutine(AxisCheck());
-            }
+            mAxisXState = AxisState.Up;
+            mAxisYState = AxisState.Up;
+            mNextTime = Time.realtimeSinceStartup;
         }
     }
 

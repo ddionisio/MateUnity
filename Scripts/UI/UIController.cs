@@ -20,11 +20,12 @@ public abstract class UIController : MonoBehaviour {
 
 	public void _active(bool active) {
         if(active) {
-            StartCoroutine(DelayActivate());
+            OnActive(true);
+
+            if(onActiveCallback != null)
+                onActiveCallback(true);
         }
         else {
-            StopCoroutine("DelayActivate");
-
             OnActive(false);
 
             if(onActiveCallback != null)
@@ -45,15 +46,4 @@ public abstract class UIController : MonoBehaviour {
         if(onCloseCallback != null)
             onCloseCallback();
 	}
-
-    IEnumerator DelayActivate() {
-        yield return new WaitForFixedUpdate();
-
-        OnActive(true);
-
-        if(onActiveCallback != null)
-            onActiveCallback(true);
-
-        yield break;
-    }
 }

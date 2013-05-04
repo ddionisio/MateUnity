@@ -207,9 +207,13 @@ public class InputManager : MonoBehaviour {
 
     protected virtual float ProcessAxis(Key key, float deadZone) {
         if(key.input.Length > 0) {
-            return Input.GetAxis(key.input);
-            //float val = Input.GetAxis(key.input);
-            //return Mathf.Abs(val) > deadZone ? val : 0.0f;
+            if(Time.timeScale == 0.0f) {
+                float val = Input.GetAxisRaw(key.input);
+                return Mathf.Abs(val) > deadZone ? val : 0.0f;
+            }
+            else {
+                return Input.GetAxis(key.input);
+            }
         }
         else if(key.code != KeyCode.None) {
             if(Input.GetKey(key.code)) {
@@ -261,7 +265,7 @@ public class InputManager : MonoBehaviour {
         }
     }
 
-    protected virtual void FixedUpdate() {
+    protected virtual void Update() {
         foreach(PlayerData pd in mButtonCalls) {
             pd.info.state = State.None;
 

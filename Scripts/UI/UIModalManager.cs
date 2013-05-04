@@ -25,6 +25,7 @@ public class UIModalManager : MonoBehaviour {
 
     private Dictionary<string, UIData> mModals;
     private Stack<UIData> mModalStack;
+    private Queue<UIData> mModalToOpen;
 
     public UIData ModalGetData(string modal) {
         UIData dat = null;
@@ -54,6 +55,10 @@ public class UIModalManager : MonoBehaviour {
     //closes all modal and open this
     public void ModalReplace(string modal) {
         ModalClearStack(false);
+        
+        //cancel opening other modals
+        mModalToOpen.Clear();
+
         ModalPushToStack(modal, false);
 
     }
@@ -63,6 +68,8 @@ public class UIModalManager : MonoBehaviour {
     }
 
     public void ModalCloseTop() {
+        //TODO: check queue?
+
         if(mModalStack.Count > 0) {
             UIData uid = mModalStack.Pop();
             UIController ui = uid.ui;
@@ -88,6 +95,9 @@ public class UIModalManager : MonoBehaviour {
 
     public void ModalCloseAll() {
         ModalClearStack(true);
+
+        //cancel opening other modals
+        mModalToOpen.Clear();
     }
 
     void ModalPushToStack(string modal, bool evokeActive) {
@@ -97,22 +107,8 @@ public class UIModalManager : MonoBehaviour {
 
         UIData uid = mModals[modal];
 
-        if(mModalStack.Count > 0) {
-            //hide below
-            UIData prevUID = mModalStack.Peek();
-            UIController prevUI = prevUID.ui;
-            prevUI._active(false);
-
-            if(uid.exclusive)
-                prevUI.gameObject.SetActive(false);
-        }
-
-        UIController ui = uid.ui;
-        ui.gameObject.SetActive(true);
-        ui._open();
-        ui._active(true);
-
-        mModalStack.Push(uid);
+        //wait for an update, this is to allow the ui game object to initialize properly
+        mModalToOpen.Enqueue(uid);
     }
 
     void ModalClearStack(bool evokeInactive) {
@@ -149,6 +145,7 @@ public class UIModalManager : MonoBehaviour {
 
         mModals = new Dictionary<string, UIData>(uis.Length);
         mModalStack = new Stack<UIData>(uis.Length);
+        mModalToOpen = new Queue<UIData>(uis.Length);
 
         //setup data and deactivate object
         for(int i = 0; i < uis.Length; i++) {
@@ -165,6 +162,30 @@ public class UIModalManager : MonoBehaviour {
     void Start() {
         if(!string.IsNullOrEmpty(openOnStart)) {
             ModalOpen(openOnStart);
+        }
+    }
+
+    void LateUpdate() {
+        //open all queued modals
+        while(mModalToOpen.Count > 0) {
+            UIData uid = mModalToOpen.Dequeue();
+
+            if(mModalStack.Count > 0) {
+                //hide below
+                UIData prevUID = mModalStack.Peek();
+                UIController prevUI = prevUID.ui;
+                prevUI._active(false);
+
+                if(uid.exclusive)
+                    prevUI.gameObject.SetActive(false);
+            }
+
+            UIController ui = uid.ui;
+            ui.gameObject.SetActive(true);
+            ui._open();
+            ui._active(true);
+
+            mModalStack.Push(uid);
         }
     }
 }

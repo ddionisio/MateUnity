@@ -97,7 +97,7 @@ public class InputManagerOuya : InputManager {
         }
     }
 
-    protected override void FixedUpdate() {
+    protected override void Update() {
         foreach(BindData bindData in mBinds) {
             if(bindData != null && bindData.keys != null) {
                 switch(bindData.control) {
