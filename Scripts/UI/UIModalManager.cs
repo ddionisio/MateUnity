@@ -21,6 +21,8 @@ public class UIModalManager : MonoBehaviour {
         }
     }
 
+    public bool persistent = false;
+
     private static UIModalManager mInstance;
 
     private Dictionary<string, UIData> mModals;
@@ -137,25 +139,32 @@ public class UIModalManager : MonoBehaviour {
     }
 
     void OnDestroy() {
-        mInstance = null;
+        if(mInstance == this) {
+            mInstance = null;
+        }
     }
 
     void Awake() {
-        mInstance = this;
+        if(mInstance == null) {
+            mInstance = this;
 
-        mModals = new Dictionary<string, UIData>(uis.Length);
-        mModalStack = new Stack<UIData>(uis.Length);
-        mModalToOpen = new Queue<UIData>(uis.Length);
+            mModals = new Dictionary<string, UIData>(uis.Length);
+            mModalStack = new Stack<UIData>(uis.Length);
+            mModalToOpen = new Queue<UIData>(uis.Length);
 
-        //setup data and deactivate object
-        for(int i = 0; i < uis.Length; i++) {
-            UIData uid = uis[i];
-            UIController ui = uid.ui;
-            if(ui != null) {
-                ui.gameObject.SetActive(false);
+            //setup data and deactivate object
+            for(int i = 0; i < uis.Length; i++) {
+                UIData uid = uis[i];
+                UIController ui = uid.ui;
+                if(ui != null) {
+                    ui.gameObject.SetActive(false);
+                }
+
+                mModals.Add(uid.name, uid);
             }
 
-            mModals.Add(uid.name, uid);
+            if(persistent)
+                Object.DontDestroyOnLoad(gameObject);
         }
     }
 

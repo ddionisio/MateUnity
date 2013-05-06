@@ -24,6 +24,7 @@ public class SceneManager : MonoBehaviour {
     private static List<Transform> mRoots = new List<Transform>();
 
     private bool mIsFullscreen = false;
+    private bool mPaused = false;
 
     public int curLevel {
         get {
@@ -83,18 +84,26 @@ public class SceneManager : MonoBehaviour {
     }
 
     public void Pause() {
-        if(Time.timeScale != 0.0f) {
-            mPrevTimeScale = Time.timeScale;
-            Time.timeScale = 0.0f;
-        }
+        if(!mPaused) {
+            mPaused = true;
 
-        RootBroadcastMessage("OnScenePause", null, SendMessageOptions.DontRequireReceiver);
+            if(Time.timeScale != 0.0f) {
+                mPrevTimeScale = Time.timeScale;
+                Time.timeScale = 0.0f;
+            }
+
+            RootBroadcastMessage("OnScenePause", null, SendMessageOptions.DontRequireReceiver);
+        }
     }
 
     public void Resume() {
-        Time.timeScale = mPrevTimeScale;
+        if(mPaused) {
+            mPaused = false;
 
-        RootBroadcastMessage("OnSceneResume", null, SendMessageOptions.DontRequireReceiver);
+            Time.timeScale = mPrevTimeScale;
+
+            RootBroadcastMessage("OnSceneResume", null, SendMessageOptions.DontRequireReceiver);
+        }
     }
 
     /// <summary>
@@ -132,6 +141,8 @@ public class SceneManager : MonoBehaviour {
         mIsFullscreen = Screen.fullScreen;
 
         mPrevTimeScale = Time.timeScale;
+
+        mPaused = false;
 
         screenTransition.finishCallback = OnScreenTransitionFinish;
     }

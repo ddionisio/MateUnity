@@ -71,7 +71,7 @@ public class UIModalInputNGUI : MonoBehaviour {
                 if(axisX != InputManager.ActionInvalid) {
                     float x = input.GetAxis(player, axisX);
                     if(x < -axisThreshold) {
-                        if(delta >= axisDelay) {
+                        if(delta >= axisDelay || mAxisXState == AxisState.Up) {
                             mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.LeftArrow);
                         }
@@ -79,7 +79,7 @@ public class UIModalInputNGUI : MonoBehaviour {
                         mAxisXState = AxisState.Down;
                     }
                     else if(x > axisThreshold) {
-                        if(delta >= axisDelay) {
+                        if(delta >= axisDelay || mAxisXState == AxisState.Up) {
                             mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.RightArrow);
                         }
@@ -94,7 +94,7 @@ public class UIModalInputNGUI : MonoBehaviour {
                 if(axisY != InputManager.ActionInvalid) {
                     float y = input.GetAxis(player, axisY);
                     if(y < -axisThreshold) {
-                        if(delta >= axisDelay) {
+                        if(delta >= axisDelay || mAxisYState == AxisState.Up) {
                             mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.DownArrow);
                         }
@@ -102,7 +102,7 @@ public class UIModalInputNGUI : MonoBehaviour {
                         mAxisYState = AxisState.Down;
                     }
                     else if(y > axisThreshold) {
-                        if(delta >= axisDelay) {
+                        if(delta >= axisDelay || mAxisYState == AxisState.Up) {
                             mNextTime = time;
                             UICamera.Notify(UICamera.selectedObject, "OnKey", KeyCode.UpArrow);
                         }

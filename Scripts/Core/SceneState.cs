@@ -196,16 +196,20 @@ public class SceneState : MonoBehaviour {
     }
 
     void OnDestroy() {
-        mInstance = null;
+        if(mInstance == this) {
+            mInstance = null;
+        }
     }
 
     void Awake() {
-        mInstance = this;
+        if(mInstance == null) {
+            mInstance = this;
 
-        mStartData = new Dictionary<string, InitData[]>(startData.Length);
-        foreach(InitSceneData sdat in startData) {
-            if(!string.IsNullOrEmpty(sdat.scene) && sdat.data != null)
-                mStartData.Add(sdat.scene, sdat.data);
+            mStartData = new Dictionary<string, InitData[]>(startData.Length);
+            foreach(InitSceneData sdat in startData) {
+                if(!string.IsNullOrEmpty(sdat.scene) && sdat.data != null)
+                    mStartData.Add(sdat.scene, sdat.data);
+            }
         }
     }
 

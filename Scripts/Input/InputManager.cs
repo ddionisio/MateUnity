@@ -129,6 +129,14 @@ public class InputManager : MonoBehaviour {
 
     protected HashSet<PlayerData> mButtonCalls;
 
+    private struct ButtonCallSetData {
+        public PlayerData pd;
+        public OnButton cb;
+        public bool add;
+    }
+
+    private Queue<ButtonCallSetData> mButtonCallSetQueue = new Queue<ButtonCallSetData>(64); //prevent breaking enumeration during update when adding/removing
+
     //interfaces (available after awake)
 
     public bool CheckBind(int action) {
@@ -175,21 +183,21 @@ public class InputManager : MonoBehaviour {
 
     public void AddButtonCall(int player, int action, OnButton callback) {
         PlayerData pd = mBinds[action].players[player];
-        pd.callback += callback;
-        mButtonCalls.Add(pd);
+
+        mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = true });
     }
 
     public void RemoveButtonCall(int player, int action, OnButton callback) {
         PlayerData pd = mBinds[action].players[player];
-        pd.callback -= callback;
-        if(pd.callback == null)
-            mButtonCalls.Remove(pd);
+
+        mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = false });
     }
 
     public void ClearButtonCall(int action) {
         foreach(PlayerData pd in mBinds[action].players) {
             pd.callback = null;
-            mButtonCalls.Remove(pd);
+
+            mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = null, add = false });
         }
     }
 
@@ -201,6 +209,8 @@ public class InputManager : MonoBehaviour {
         }
 
         mButtonCalls.Clear();
+
+        mButtonCallSetQueue.Clear();
     }
 
     //implements
@@ -298,6 +308,24 @@ public class InputManager : MonoBehaviour {
 
                     pd.callback(pd.info);
                 }
+            }
+        }
+
+        //add new button calls
+        while(mButtonCallSetQueue.Count > 0) {
+            ButtonCallSetData dat = mButtonCallSetQueue.Dequeue();
+            if(dat.add) {
+                if(dat.cb != null)
+                    dat.pd.callback += dat.cb;
+
+                mButtonCalls.Add(dat.pd);
+            }
+            else {
+                if(dat.cb != null)
+                    dat.pd.callback -= dat.cb;
+
+                if(dat.pd.callback == null)
+                    mButtonCalls.Remove(dat.pd);
             }
         }
     }
