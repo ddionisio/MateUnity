@@ -31,6 +31,8 @@ public class WaypointMover : MonoBehaviour {
     public float nodeWait;
     public float moveDelay;
 
+    public int startIndex = 0;
+
     private int mCurInd;
     private bool mReversed;
 
@@ -75,12 +77,12 @@ public class WaypointMover : MonoBehaviour {
         if(mWPs.Count > 1)
             StartCoroutine(DoIt());
         else
-            target.position = mWPs[0].position;
+            target.position = mWPs[startIndex].position;
     }
 
     IEnumerator DoIt() {
         //reset data
-        mCurInd = 0;
+        mCurInd = startIndex;
         mReversed = false;
 
         yield return mWaitStartDelay;
