@@ -15,6 +15,7 @@ public class SceneStateInspector : Editor {
 
     private string mApplyName = "";
     private int mApplyValue = 0;
+    private float mApplyFValue = 0.0f;
     private bool mApplyToGlobal = false;
     private bool mApplyPersistent = false;
 
@@ -26,6 +27,8 @@ public class SceneStateInspector : Editor {
         SceneState data = target as SceneState;
 
         if(!Application.isPlaying) {
+            GUI.changed = false;
+
             //Globals 
             initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
 
@@ -52,8 +55,9 @@ public class SceneStateInspector : Editor {
 
                     GUILayout.EndHorizontal();
 
-                    initDat.val = EditorGUILayout.IntField("Value", initDat.val);
-                    initDat.val = EditorGUILayout.MaskField("Flags", initDat.val, mMasks);
+                    initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
+                    initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
+                    initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
                     initDat.persistent = GUILayout.Toggle(initDat.persistent, "Persistent");
 
                     GUILayout.EndVertical();
@@ -123,8 +127,9 @@ public class SceneStateInspector : Editor {
 
                                 GUILayout.EndHorizontal();
 
-                                initDat.val = EditorGUILayout.IntField("Value", initDat.val);
-                                initDat.val = EditorGUILayout.MaskField("Flags", initDat.val, mMasks);
+                                initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
+                                initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
+                                initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
                                 initDat.persistent = GUILayout.Toggle(initDat.persistent, "Persistent");
 
                                 GUILayout.EndVertical();
@@ -155,6 +160,9 @@ public class SceneStateInspector : Editor {
                     data.startData[data.startData.Length - 1] = new SceneState.InitSceneData();
                 }
             }
+
+            if(GUI.changed)
+                EditorUtility.SetDirty(target);
         }
         else {
             M8.Editor.Utility.DrawSeparator();
@@ -164,13 +172,14 @@ public class SceneStateInspector : Editor {
 
             if(runtimeGlobalFoldout) {
                 if(data.globalStates != null) {
-                    foreach(KeyValuePair<string, int> dat in data.globalStates) {
+                    foreach(KeyValuePair<string, SceneState.StateValue> dat in data.globalStates) {
                         GUILayout.BeginVertical(GUI.skin.box);
 
                         GUILayout.Label(dat.Key);
 
-                        EditorGUILayout.LabelField("Value", dat.Value.ToString());
-                        EditorGUILayout.MaskField("Flags", dat.Value, mMasks);
+                        EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
+                        EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
+                        EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
 
                         GUILayout.EndVertical();
                     }
@@ -184,13 +193,14 @@ public class SceneStateInspector : Editor {
 
             if(runtimeFoldout) {
                 if(data.states != null) {
-                    foreach(KeyValuePair<string, int> dat in data.states) {
+                    foreach(KeyValuePair<string, SceneState.StateValue> dat in data.states) {
                         GUILayout.BeginVertical(GUI.skin.box);
 
                         GUILayout.Label(dat.Key);
 
-                        EditorGUILayout.LabelField("Value", dat.Value.ToString());
-                        EditorGUILayout.MaskField("Flags", dat.Value, mMasks);
+                        EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
+                        EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
+                        EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
 
                         GUILayout.EndVertical();
                     }
@@ -208,14 +218,19 @@ public class SceneStateInspector : Editor {
 
             mApplyValue = EditorGUILayout.IntField("Value", mApplyValue);
             mApplyValue = EditorGUILayout.MaskField("Flags", mApplyValue, mMasks);
+            mApplyFValue = EditorGUILayout.FloatField("Float", mApplyFValue);
             mApplyToGlobal = GUILayout.Toggle(mApplyToGlobal, "Global");
             mApplyPersistent = GUILayout.Toggle(mApplyPersistent, "Persistent");
 
             if(GUILayout.Button("Apply") && !string.IsNullOrEmpty(mApplyName)) {
-                if(mApplyToGlobal)
+                if(mApplyToGlobal) {
                     data.SetGlobalValue(mApplyName, mApplyValue, mApplyPersistent);
-                else
+                    data.SetGlobalValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                }
+                else {
                     data.SetValue(mApplyName, mApplyValue, mApplyPersistent);
+                    data.SetValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                }
 
                 Repaint();
             }
@@ -226,9 +241,10 @@ public class SceneStateInspector : Editor {
 
             //refresh
             if(GUILayout.Button("Refresh")) {
-                if(!string.IsNullOrEmpty(mApplyName))
+                if(!string.IsNullOrEmpty(mApplyName)) {
                     mApplyValue = data.GetValue(mApplyName);
-
+                    mApplyFValue = data.GetValueFloat(mApplyName);
+                }
                 Repaint();
             }
         }

@@ -36,5 +36,7 @@ public class GOActiveBySceneStateFlag : MonoBehaviour {
         bool val = global ? SceneState.instance.CheckGlobalFlagMask(flag, flagBit) : SceneState.instance.CheckFlag(flag, flagBit);
         if(val)
             target.SetActive(setActive);
+        else
+            target.SetActive(!setActive);
     }
 }

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 [CustomEditor(typeof(UIModalInputNGUI))]
 public class UIModalInputNGUIInspector : Editor {
     public override void OnInspectorGUI() {
+        GUI.changed = false;
+
         UIModalInputNGUI obj = target as UIModalInputNGUI;
 
         obj.player = EditorGUILayout.IntField("Player", obj.player);
@@ -17,5 +19,8 @@ public class UIModalInputNGUIInspector : Editor {
 
         obj.enter = M8.Editor.InputMapper.GUISelectInputAction("Enter", obj.enter);
         obj.cancel = M8.Editor.InputMapper.GUISelectInputAction("Cancel", obj.cancel);
+
+        if(GUI.changed)
+            EditorUtility.SetDirty(target);
     }
 }

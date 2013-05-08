@@ -8,12 +8,13 @@ public class SceneState : MonoBehaviour {
     public const string GlobalDataFormat = "global_{0}";
     public const string DataFormat = "{0}_{1}";
 
-    public delegate void StateCallback(bool isGlobal, string name, int val);
+    public delegate void StateCallback(bool isGlobal, string name, StateValue val);
         
     [System.Serializable]
     public class InitData {
         public string name = "";
-        public int val = 0;
+        public int ival = 0;
+        public float fval = 0.0f;
         public bool persistent = false;
     }
 
@@ -25,65 +26,83 @@ public class SceneState : MonoBehaviour {
         public bool editFoldout = true; //just for editing
     }
 
+    public struct StateValue {
+        public int ival;
+        public float fval;
+
+        public StateValue(int aVal, float aFval) {
+            ival = aVal;
+            fval = aFval;
+        }
+
+        public void Apply(UserData ud, string key) {
+            ival = ud.GetInt(key, ival);
+            fval = ud.GetFloat(key, fval);
+        }
+    }
+
     public InitData[] globalStartData;
 
     public InitSceneData[] startData; //use for debug
 
     public event StateCallback onValueChange;
-
+        
     private static SceneState mInstance = null;
 
     private Dictionary<string, InitData[]> mStartData;
 
     private string mScene = null; //scene associated with current flags
-    private Dictionary<string, int> mStates = null;
+    private Dictionary<string, StateValue> mStates = null;
 
-    private Dictionary<string, int> mGlobalStates = new Dictionary<string,int>();
+    private Dictionary<string, StateValue> mGlobalStates = new Dictionary<string, StateValue>();
 
     //only buffer one level previous for now
     private string mPrevScene = null;
-    private Dictionary<string, int> mPrevStates = null;
+    private Dictionary<string, StateValue> mPrevStates = null;
 
     public static SceneState instance { get { return mInstance; } }
 
-    public Dictionary<string, int> globalStates { get { return mGlobalStates; } }
+    public static StateValue zeroValueData { get { return new StateValue(0, 0.0f); } }
 
-    public Dictionary<string, int> states { get { return mStates; } }
+    public Dictionary<string, StateValue> globalStates { get { return mGlobalStates; } }
+
+    public Dictionary<string, StateValue> states { get { return mStates; } }
 
     public int GetValue(string name) {
         if(mStates == null) {
-            mStates = new Dictionary<string, int>();
+            mStates = new Dictionary<string, StateValue>();
         }
 
-        int v = 0;
+        StateValue v = zeroValueData;
         //try local
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
-            string key = string.Format(DataFormat, mScene, name);
-            v = UserData.instance.GetInt(key, 0);
+            v.Apply(UserData.instance, string.Format(DataFormat, mScene, name));
             mStates.Add(name, v);
         }
 
-        return v;
+        return v.ival;
     }
 
     public void SetValue(string name, int val, bool persistent) {
         if(mStates == null) {
-            mStates = new Dictionary<string, int>();
+            mStates = new Dictionary<string, StateValue>();
         }
 
         bool isValueSet = false;
-        int curVal = 0;
+        StateValue curVal = zeroValueData;
         if(mStates.TryGetValue(name, out curVal)) {
-            isValueSet = curVal != val;
+            isValueSet = curVal.ival != val;
 
-            if(isValueSet)
-                mStates[name] = val;
+            if(isValueSet) {
+                curVal.ival = val;
+                mStates[name] = curVal;
+            }
         }
         else {
             isValueSet = true;
-
-            mStates.Add(name, val);
+            curVal.ival = val;
+            mStates.Add(name, curVal);
         }
 
         if(isValueSet) {
@@ -93,7 +112,7 @@ public class SceneState : MonoBehaviour {
             }
 
             if(onValueChange != null) {
-                onValueChange(false, name, val);
+                onValueChange(false, name, curVal);
             }
         }
     }
@@ -119,36 +138,86 @@ public class SceneState : MonoBehaviour {
         SetValue(name, flags, persistent);
     }
 
-    public int GetGlobalValue(string name) {
+    public float GetValueFloat(string name) {
         if(mStates == null) {
-            mStates = new Dictionary<string, int>();
+            mStates = new Dictionary<string, StateValue>();
         }
 
-        int v = 0;
+        StateValue v = zeroValueData;
+        //try local
+        if(!mStates.TryGetValue(name, out v)) {
+            //try user data
+            v.Apply(UserData.instance, string.Format(DataFormat, mScene, name));
+            mStates.Add(name, v);
+        }
+
+        return v.fval;
+    }
+
+    public void SetValueFloat(string name, float val, bool persistent) {
+        if(mStates == null) {
+            mStates = new Dictionary<string, StateValue>();
+        }
+
+        bool isValueSet = false;
+        StateValue curVal = zeroValueData;
+        if(mStates.TryGetValue(name, out curVal)) {
+            isValueSet = curVal.fval != val;
+
+            if(isValueSet) {
+                curVal.fval = val;
+                mStates[name] = curVal;
+            }
+        }
+        else {
+            isValueSet = true;
+            curVal.fval = val;
+            mStates.Add(name, curVal);
+        }
+
+        if(isValueSet) {
+            if(persistent) {
+                string key = string.Format(DataFormat, mScene, name);
+                UserData.instance.SetFloat(key, val);
+            }
+
+            if(onValueChange != null) {
+                onValueChange(false, name, curVal);
+            }
+        }
+    }
+
+    public int GetGlobalValue(string name) {
+        if(mStates == null) {
+            mStates = new Dictionary<string, StateValue>();
+        }
+
+        StateValue v = zeroValueData;
         //try local
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
-            string key = string.Format(GlobalDataFormat, name);
-            v = UserData.instance.GetInt(key, 0);
+            v.Apply(UserData.instance, string.Format(GlobalDataFormat, name));
             mGlobalStates.Add(name, v);
         }
 
-        return v;
+        return v.ival;
     }
 
     public void SetGlobalValue(string name, int val, bool persistent) {
         bool isValueSet = false;
-        int curVal = 0;
+        StateValue curVal = zeroValueData;
         if(mGlobalStates.TryGetValue(name, out curVal)) {
-            isValueSet = curVal != val;
+            isValueSet = curVal.ival != val;
 
-            if(isValueSet)
-                mGlobalStates[name] = val;
+            if(isValueSet) {
+                curVal.ival = val;
+                mGlobalStates[name] = curVal;
+            }
         }
         else {
             isValueSet = true;
-
-            mGlobalStates.Add(name, val);
+            curVal.ival = val;
+            mGlobalStates.Add(name, curVal);
         }
 
         if(isValueSet) {
@@ -158,7 +227,7 @@ public class SceneState : MonoBehaviour {
             }
 
             if(onValueChange != null) {
-                onValueChange(true, name, val);
+                onValueChange(true, name, curVal);
             }
         }
     }
@@ -184,7 +253,55 @@ public class SceneState : MonoBehaviour {
         SetGlobalValue(name, flags, persistent);
     }
 
+    public float GetGlobalValueFloat(string name) {
+        if(mStates == null) {
+            mStates = new Dictionary<string, StateValue>();
+        }
+
+        StateValue v = zeroValueData;
+        //try local
+        if(!mGlobalStates.TryGetValue(name, out v)) {
+            //try user data
+            v.Apply(UserData.instance, string.Format(GlobalDataFormat, name));
+            mGlobalStates.Add(name, v);
+        }
+
+        return v.fval;
+    }
+
+    public void SetGlobalValueFloat(string name, float val, bool persistent) {
+        bool isValueSet = false;
+        StateValue curVal = zeroValueData;
+        if(mGlobalStates.TryGetValue(name, out curVal)) {
+            isValueSet = curVal.fval != val;
+
+            if(isValueSet) {
+                curVal.fval = val;
+                mGlobalStates[name] = curVal;
+            }
+        }
+        else {
+            isValueSet = true;
+            curVal.fval = val;
+            mGlobalStates.Add(name, curVal);
+        }
+
+        if(isValueSet) {
+            if(persistent) {
+                string key = string.Format(GlobalDataFormat, name);
+                UserData.instance.SetFloat(key, val);
+            }
+
+            if(onValueChange != null) {
+                onValueChange(true, name, curVal);
+            }
+        }
+    }
+
     public void ResetGlobalValues() {
+        mGlobalStates.Clear();
+
+        AppendGlobalInitData();
     }
 
     public void ResetValues() {
@@ -218,7 +335,7 @@ public class SceneState : MonoBehaviour {
 
         if(mStates == null && mScene == null) {
             mScene = Application.loadedLevelName;
-            mStates = new Dictionary<string, int>();
+            mStates = new Dictionary<string, StateValue>();
             AppendInitData();
         }
     }
@@ -228,7 +345,7 @@ public class SceneState : MonoBehaviour {
         //revert flags if new scene is previous
         if(toScene != mScene) {
             string curScene = mScene;
-            Dictionary<string, int> curStates = mStates;
+            Dictionary<string, StateValue> curStates = mStates;
 
             mScene = toScene;
 
@@ -236,7 +353,7 @@ public class SceneState : MonoBehaviour {
                 mStates = mPrevStates;
             }
             else {
-                mStates = new Dictionary<string, int>();
+                mStates = new Dictionary<string, StateValue>();
                 AppendInitData();
             }
                         
@@ -252,9 +369,9 @@ public class SceneState : MonoBehaviour {
             mGlobalStates.Keys.CopyTo(keys, 0);
 
             foreach(string key in keys) {
-                int val = mGlobalStates[key];
-                string userKey = string.Format(GlobalDataFormat, key);
-                mGlobalStates[key] = ud.GetInt(userKey, val);
+                StateValue val = mGlobalStates[key];
+                val.Apply(ud, string.Format(GlobalDataFormat, key));
+                mGlobalStates[key] = val;
             }
         }
 
@@ -264,9 +381,9 @@ public class SceneState : MonoBehaviour {
             mStates.Keys.CopyTo(keys, 0);
 
             foreach(string key in keys) {
-                int val = mStates[key];
-                string userKey = string.Format(DataFormat, mScene, key);
-                mStates[key] = ud.GetInt(userKey, val);
+                StateValue val = mStates[key];
+                val.Apply(ud, string.Format(DataFormat, mScene, key));
+                mStates[key] = val;
             }
         }
     }
@@ -277,25 +394,16 @@ public class SceneState : MonoBehaviour {
                 //check if data exists in user first
                 string key = string.Format(GlobalDataFormat, dat.name);
 
-                int val;
-
-                if(UserData.instance.HasKey(key)) {
-                    val = UserData.instance.GetInt(key);
-                }
-                else {
-                    val = dat.val;
-
-                    if(dat.persistent)
-                        UserData.instance.SetInt(key, val);
-                }
+                StateValue s = new StateValue(dat.ival, dat.fval);
+                s.Apply(UserData.instance, key);
 
                 if(mGlobalStates.ContainsKey(dat.name))
-                    mGlobalStates[dat.name] = val;
+                    mGlobalStates[dat.name] = s;
                 else
-                    mGlobalStates.Add(dat.name, val);
+                    mGlobalStates.Add(dat.name, s);
 
                 if(onValueChange != null) {
-                    onValueChange(true, dat.name, val);
+                    onValueChange(true, dat.name, s);
                 }
             }
         }
@@ -309,25 +417,16 @@ public class SceneState : MonoBehaviour {
                     //check if data exists in user first
                     string key = string.Format(DataFormat, mScene, dat.name);
 
-                    int val;
-
-                    if(UserData.instance.HasKey(key)) {
-                        val = UserData.instance.GetInt(key);
-                    }
-                    else {
-                        val = dat.val;
-
-                        if(dat.persistent)
-                            UserData.instance.SetInt(key, val);
-                    }
+                    StateValue s = new StateValue(dat.ival, dat.fval);
+                    s.Apply(UserData.instance, key);
 
                     if(mStates.ContainsKey(dat.name))
-                        mStates[dat.name] = val;
+                        mStates[dat.name] = s;
                     else
-                        mStates.Add(dat.name, val);
+                        mStates.Add(dat.name, s);
 
                     if(onValueChange != null) {
-                        onValueChange(false, dat.name, val);
+                        onValueChange(false, dat.name, s);
                     }
                 }
             }

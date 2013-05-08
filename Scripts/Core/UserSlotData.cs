@@ -122,6 +122,15 @@ public class UserSlotData : UserData {
         mValueIs[name] = value;
     }
 
+    public override float GetFloat(string name, float defaultValue = 0) {
+        Debug.LogError("Not yet implemented!!!");
+        return defaultValue;
+    }
+
+    public override void SetFloat(string name, float value) {
+        Debug.LogError("Not yet implemented!!!");
+    }
+
     public override string GetString(string name, string defaultValue = "") {
         Debug.LogError("Not yet implemented!!!");
         return defaultValue;

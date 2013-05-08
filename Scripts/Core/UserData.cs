@@ -31,6 +31,14 @@ public class UserData : MonoBehaviour {
         PlayerPrefs.SetInt(name, value);
     }
 
+    public virtual float GetFloat(string name, float defaultValue = 0) {
+        return PlayerPrefs.GetFloat(name, defaultValue);
+    }
+
+    public virtual void SetFloat(string name, float value) {
+        PlayerPrefs.SetFloat(name, value);
+    }
+
     public virtual string GetString(string name, string defaultValue = "") {
         return PlayerPrefs.GetString(name, defaultValue);
     }
