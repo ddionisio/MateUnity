@@ -15,7 +15,6 @@ public class SceneState : MonoBehaviour {
         public string name = "";
         public int ival = 0;
         public float fval = 0.0f;
-        public bool persistent = false;
     }
 
     [System.Serializable]

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("M8/2D/TransUpLookAt")]
 public class TransUpLookAt : MonoBehaviour {
     public Transform target;
     public Transform source; //the source to set the up vector

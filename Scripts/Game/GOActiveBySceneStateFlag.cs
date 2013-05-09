@@ -22,6 +22,8 @@ public class GOActiveBySceneStateFlag : MonoBehaviour {
             bool val = global ? SceneState.instance.CheckGlobalFlagMask(flag, flagBit) : SceneState.instance.CheckFlag(flag, flagBit);
             if(val)
                 target.SetActive(setActive);
+            else
+                target.SetActive(!setActive);
         }
     }
 
@@ -31,6 +33,13 @@ public class GOActiveBySceneStateFlag : MonoBehaviour {
     }
 
     void Start() {
+        //ensure scene state has called its Start() and whatever modifications to flags are set during Start() anywhere
+        StartCoroutine(DoIt());
+    }
+
+    IEnumerator DoIt() {
+        yield return new WaitForFixedUpdate();
+
         mStarted = true;
 
         bool val = global ? SceneState.instance.CheckGlobalFlagMask(flag, flagBit) : SceneState.instance.CheckFlag(flag, flagBit);
@@ -38,5 +47,7 @@ public class GOActiveBySceneStateFlag : MonoBehaviour {
             target.SetActive(setActive);
         else
             target.SetActive(!setActive);
+
+        yield break;
     }
 }

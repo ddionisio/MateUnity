@@ -6,12 +6,21 @@ using System.Collections.Generic;
 public class SceneManager : MonoBehaviour {
 
     public const string levelString = "level";
+    public const int stackCapacity = 8;
 
     public ScreenTransition screenTransition;
 
+    [SerializeField]
+    bool stackEnable = false;
+
     private SceneController mSceneController;
+    
     private string mCurSceneStr;
+
     private int mCurLevel;
+
+    private Stack<string> mSceneStack;
+
     private float mPrevTimeScale;
 
     private SceneCheckpoint mCheckPoint = null;
@@ -60,7 +69,7 @@ public class SceneManager : MonoBehaviour {
         mCheckPoint = check;
     }
 
-    public void LoadScene(string scene) {
+    void _LoadScene(string scene) {
         mSceneToLoad = scene;
 
         if(mFirstTime) {
@@ -72,6 +81,12 @@ public class SceneManager : MonoBehaviour {
         }
     }
 
+    public void LoadScene(string scene) {
+        SceneStackPush(mCurSceneStr, scene);
+
+        _LoadScene(scene);
+    }
+
     public void LoadLevel(int level) {
         mCurLevel = level;
         LoadScene(levelString + level);
@@ -80,6 +95,32 @@ public class SceneManager : MonoBehaviour {
     public void Reload() {
         if(!string.IsNullOrEmpty(mCurSceneStr)) {
             LoadScene(mCurSceneStr);
+        }
+    }
+
+    /// <summary>
+    /// Angry if stack is not enabled
+    /// </summary>
+    public void LoadLastSceneStack() {
+        if(stackEnable) {
+            if(mSceneStack.Count > 0) {
+                _LoadScene(mSceneStack.Pop());
+            }
+            else {
+                Debug.Log("No more scenes to pop!");
+            }
+        }
+        else {
+            Debug.LogError("Stack is not enabled!!!");
+        }
+    }
+
+    public void ClearSceneStack() {
+        if(stackEnable) {
+            mSceneStack.Clear();
+        }
+        else {
+            Debug.LogError("Stack is not enabled!!!");
         }
     }
 
@@ -144,6 +185,9 @@ public class SceneManager : MonoBehaviour {
 
         mPaused = false;
 
+        if(stackEnable)
+            mSceneStack = new Stack<string>(stackCapacity);
+
         screenTransition.finishCallback = OnScreenTransitionFinish;
     }
 
@@ -182,5 +226,37 @@ public class SceneManager : MonoBehaviour {
         screenTransition.state = ScreenTransition.State.In;
 
         yield break;
+    }
+
+    private void SceneStackPush(string scene, string nextScene) {
+        if(stackEnable && scene != nextScene) {
+            if(mSceneStack.Count == stackCapacity) {
+                //remove the oldest
+                string[] stuff = mSceneStack.ToArray();
+                mSceneStack.Clear();
+                for(int i = stuff.Length - 2; i >= 0; i--) {
+                    mSceneStack.Push(stuff[i]);
+                }
+            }
+
+            //check if next scene is already in stack, then pop stuff and dont push
+            int stackCount = 0;
+            bool stackFound = false;
+            foreach(string stackScene in mSceneStack) {
+                stackCount++;
+
+                if(stackScene == nextScene) {
+                    stackFound = true;
+                    break;
+                }
+            }
+
+            if(stackFound) {
+                for(int i = 0; i < stackCount; i++)
+                    mSceneStack.Pop();
+            }
+            else
+                mSceneStack.Push(scene);                
+        }
     }
 }

@@ -58,7 +58,6 @@ public class SceneStateInspector : Editor {
                     initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
                     initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
                     initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
-                    initDat.persistent = GUILayout.Toggle(initDat.persistent, "Persistent");
 
                     GUILayout.EndVertical();
                 }
@@ -130,7 +129,6 @@ public class SceneStateInspector : Editor {
                                 initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
                                 initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
                                 initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
-                                initDat.persistent = GUILayout.Toggle(initDat.persistent, "Persistent");
 
                                 GUILayout.EndVertical();
                             }

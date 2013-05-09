@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("M8/2D/TransUpLerp")]
 public class TransUpLerp : MonoBehaviour {
     public Vector3 up = Vector3.up;
     public float delay = 1.0f;
