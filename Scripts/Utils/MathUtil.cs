@@ -22,9 +22,9 @@ namespace M8 {
         //-------------- 2D --------------
 
         public static void Limit(ref Vector2 v, float limit) {
-            float d = v.magnitude;
-            if(d > limit) {
-                v /= d;
+            float dSqr = v.sqrMagnitude;
+            if(dSqr > limit * limit) {
+                v /= Mathf.Sqrt(dSqr);
                 v *= limit;
             }
         }
