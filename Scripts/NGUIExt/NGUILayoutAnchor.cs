@@ -29,7 +29,7 @@ public class NGUILayoutAnchor : MonoBehaviour {
 	public DirectionVertical dirVert;
 	
 	public bool rounding = true;
-	
+
 	public bool alwaysUpdate = false;
 	
 	private Transform mTrans;
@@ -40,7 +40,7 @@ public class NGUILayoutAnchor : MonoBehaviour {
 			Vector3 s = mTrans.localScale;
 			
 			Bounds targetBound = NGUIMath.CalculateRelativeWidgetBounds(mTrans.parent, target);
-			
+
 			switch(dirHorz) {
 			case DirectionHorizontal.Left:
 				pos.x = targetBound.min.x + padding.x;
