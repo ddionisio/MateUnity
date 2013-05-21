@@ -13,12 +13,16 @@ public abstract class Sensor<T> : MonoBehaviour where T : Component {
 			return mUnits;
 		}
 	}
+
+    public void CleanUp() {
+        mUnits.RemoveWhere(IsUnitInvalid);
+    }
 	
-	void OnEnable() {
+	protected virtual void OnEnable() {
 		collider.enabled = true;
 	}
-	
-	void OnDisable() {
+
+    protected virtual void OnDisable() {
 		collider.enabled = false;
 	}
 			
@@ -39,8 +43,17 @@ public abstract class Sensor<T> : MonoBehaviour where T : Component {
 			UnitRemoved(unit);
 		}
 	}
-	
-	void CleanUp() {
-		mUnits.RemoveWhere(delegate(T unit) {return unit == null || !unit.gameObject.activeInHierarchy;});
-	}
+
+    bool IsUnitInvalid(T unit) {
+        if(unit != null) {
+            if(!unit.gameObject.activeInHierarchy || !UnitVerify(unit)) {
+                UnitRemoved(unit);
+                return true;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
 }

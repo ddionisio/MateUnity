@@ -35,6 +35,11 @@ public class UIModalManager : MonoBehaviour {
         return dat;
     }
 
+    public T ModalGetController<T>(string modal)  where T : UIController {
+        UIData dat = ModalGetData(modal);
+        return dat != null ? dat.ui as T : null;
+    }
+
     public bool ModalIsInStack(string modal) {
         bool ret = false;
         foreach(UIData uid in mModalStack) {
