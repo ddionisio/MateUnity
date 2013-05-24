@@ -113,6 +113,10 @@ public class UIModalManager : MonoBehaviour {
         }
 
         UIData uid = mModals[modal];
+        if(!mModals.TryGetValue(modal, out uid)) {
+            Debug.LogError("Modal not found: " + modal);
+            return;
+        }
 
         //wait for an update, this is to allow the ui game object to initialize properly
         mModalToOpen.Enqueue(uid);

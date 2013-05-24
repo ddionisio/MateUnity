@@ -3,15 +3,17 @@ using System.Collections;
 
 [AddComponentMenu("M8/2D/TransAnimWaveOfsRand")]
 public class TransAnimWaveOfsRand : MonoBehaviour {
+    public Transform target;
+
     public float pauseStart;
 
     public float pauseMin;
     public float pauseMax;
 
-	public float pulseDelayMin;
+    public float pulseDelayMin;
     public float pulseDelayMax;
-	
-	public Vector2 ofsMin;
+
+    public Vector2 ofsMin;
     public Vector2 ofsMax;
 
     private enum State {
@@ -19,40 +21,43 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
         Pulse
     }
 
-	private float mCurPulseTime = 0;
+    private float mCurPulseTime = 0;
     private float mPauseDelay;
 
     private float mPulseDelay;
-	private Vector2 mStartPos;
-	private Vector2 mEndPos;
+    private Vector2 mStartPos;
+    private Vector2 mEndPos;
 
     private State mState;
     private bool mStarted = false;
 
-	void OnEnable() {
+    void OnEnable() {
         if(mStarted) {
-            transform.localPosition = new Vector3(mStartPos.x, mStartPos.y, transform.localPosition.z);
+            target.localPosition = new Vector3(mStartPos.x, mStartPos.y, target.localPosition.z);
             mState = State.Pause;
             mCurPulseTime = 0;
             mPauseDelay = Random.Range(pauseMin, pauseMax);
         }
-	}
-	
-	void Awake() {
-		mStartPos = transform.localPosition;
-	}
-	
-	// Use this for initialization
-	void Start () {
+    }
+
+    void Awake() {
+        if(target == null)
+            target = transform;
+
+        mStartPos = target.localPosition;
+    }
+
+    // Use this for initialization
+    void Start() {
         mState = State.Pause;
         mCurPulseTime = 0;
         mPauseDelay = pauseStart;
         mStarted = true;
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		mCurPulseTime += Time.deltaTime;
+    }
+
+    // Update is called once per frame
+    void Update() {
+        mCurPulseTime += Time.deltaTime;
 
         switch(mState) {
             case State.Pause:
@@ -71,12 +76,12 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
                 if(mCurPulseTime < mPulseDelay) {
                     float t = Mathf.Sin(M8.MathUtil.TwoPI * (mCurPulseTime / mPulseDelay));
 
-		            Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, t);
-		
-		            transform.localPosition = new Vector3(newPos.x, newPos.y, transform.localPosition.z);
+                    Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, t);
+
+                    target.localPosition = new Vector3(newPos.x, newPos.y, target.localPosition.z);
                 }
                 else {
-                    transform.localPosition = new Vector3(mStartPos.x, mStartPos.y, transform.localPosition.z);
+                    target.localPosition = new Vector3(mStartPos.x, mStartPos.y, target.localPosition.z);
 
                     mState = State.Pause;
                     mCurPulseTime = 0.0f;
@@ -84,5 +89,5 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
                 }
                 break;
         }
-	}
+    }
 }

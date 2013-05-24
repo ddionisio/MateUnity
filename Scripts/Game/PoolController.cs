@@ -21,16 +21,16 @@ public class PoolController : MonoBehaviour {
 
         private int nameCounter = 0;
 
-        public void Init(Transform poolHolder) {
+        public void Init(string group, Transform poolHolder) {
             this.poolHolder = poolHolder;
 
             nameCounter = 0;
 
             available = new List<Transform>(maxCapacity);
-            Expand(startCapacity);
+            Expand(group, startCapacity);
         }
 
-        public void Expand(int num) {
+        public void Expand(string group, int num) {
             for(int i = 0; i < num; i++) {
                 //PoolDataController
                 Transform t = (Transform)Object.Instantiate(template);
@@ -43,6 +43,7 @@ public class PoolController : MonoBehaviour {
                     pdc = t.gameObject.AddComponent<PoolDataController>();
                 }
 
+                pdc.group = group;
                 pdc.factoryKey = template.name;
 
                 available.Add(t);
@@ -57,15 +58,15 @@ public class PoolController : MonoBehaviour {
             allocateCounter--;
         }
 
-        public Transform Allocate(string name, Transform parent) {
+        public Transform Allocate(string group, string name, Transform parent) {
             if(available.Count == 0) {
                 if(allocateCounter + 1 > maxCapacity) {
                     Debug.LogWarning(template.name + " is expanding beyond max capacity: " + maxCapacity);
 
-                    Expand(maxCapacity);
+                    Expand(group, maxCapacity);
                 }
                 else {
-                    Expand(1);
+                    Expand(group, 1);
                 }
             }
 
@@ -170,7 +171,7 @@ public class PoolController : MonoBehaviour {
 
         FactoryData dat;
         if(mFactory.TryGetValue(type, out dat)) {
-            entityRet = dat.Allocate(name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
+            entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
 
             if(entityRet != null) {
                 if(!string.IsNullOrEmpty(waypoint)) {
@@ -219,7 +220,7 @@ public class PoolController : MonoBehaviour {
     public void Expand(string type, int amount) {
         FactoryData dat;
         if(mFactory.TryGetValue(type, out dat)) {
-            dat.Expand(amount);
+            dat.Expand(group, amount);
         }
     }
 
@@ -263,7 +264,7 @@ public class PoolController : MonoBehaviour {
             //generate cache and such
             mFactory = new Dictionary<string, FactoryData>(factory.Length);
             foreach(FactoryData factoryData in factory) {
-                factoryData.Init(poolHolder);
+                factoryData.Init(group, poolHolder);
 
                 mFactory.Add(factoryData.template.name, factoryData);
             }

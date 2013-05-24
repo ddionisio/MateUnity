@@ -4,7 +4,6 @@ using System.Collections;
 /// <summary>
 /// Set given 'select' to UICamera.selectObject upon modal active.
 /// </summary>
-[RequireComponent(typeof(UIController))]
 [AddComponentMenu("M8/UI/ModalActiveSelectNGUI")]
 public class UIModalActiveSelectNGUI : MonoBehaviour {
 

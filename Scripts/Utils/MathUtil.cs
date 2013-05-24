@@ -90,6 +90,26 @@ namespace M8 {
             return Limit(desired - velocity, cap) * factor;
         }
 
+        public static Vector2 Hermite(Vector2 v1, Vector2 t1, Vector2 v2, Vector2 t2, float s) {
+            float s2 = s * s, s3 = s2 * s;
+
+            float h1 = 2 * s3 - 3 * s2 + 1;          // calculate basis function 1
+            float h2 = -2 * s3 + 3 * s2;              // calculate basis function 2
+            float h3 = s3 - 2 * s2 + s;         // calculate basis function 3
+            float h4 = s3 - s2;              // calculate basis function 4
+
+            return new Vector2(
+                h1 * v1.x + h2 * v2.x + h3 * t1.x + h4 * t2.x,
+                h1 * v1.y + h2 * v2.y + h3 * t1.y + h4 * t2.y);
+        }
+
+        public static Vector2 CatMullRom(Vector2 v1, Vector2 v2, Vector2 v3, Vector2 v4, float s) {
+            Vector2 t1 = new Vector2((v3.x - v1.x) * 0.5f, (v3.y - v1.y) * 0.5f);
+            Vector2 t2 = new Vector2((v4.x - v2.x) * 0.5f, (v4.y - v2.y) * 0.5f);
+
+	        return Hermite(v2, t1, v3, t2, s);
+        }
+
         //-------------- 3D --------------
 
         public static void Limit(ref Vector3 v, float limit) {

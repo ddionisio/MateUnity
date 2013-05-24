@@ -39,7 +39,7 @@ public class EntityBase : MonoBehaviour {
 
     private bool mDoSpawnOnWake = false;
 
-    private string mSpawnGroup = null; //set this after being spawned via pool manager
+    private PoolDataController mPoolData;
 
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
         //TODO: use ours if no 3rd party pool manager
@@ -50,8 +50,9 @@ public class EntityBase : MonoBehaviour {
         T ent = spawned != null ? spawned.GetComponent<T>() : null;
 
         if(ent != null) {
-            ent.mSpawnGroup = spawnGroup;
             ent.transform.position = position;
+
+            //add pool data controller
         }
 
         return ent;
@@ -60,7 +61,6 @@ public class EntityBase : MonoBehaviour {
         T ent = spawned != null ? spawned.GetComponent<T>() : null;
 
         if(ent != null) {
-            ent.mSpawnGroup = spawnGroup;
             ent.transform.position = position;
         }
 
@@ -68,11 +68,21 @@ public class EntityBase : MonoBehaviour {
 #endif
     }
 
+    public string spawnType {
+        get {
+            if(mPoolData == null) {
+                return name;
+            }
+
+            return mPoolData.factoryKey; 
+        }
+    }
+
     /// <summary>
     /// Set by call from Spawn, so use that instead of directly spawning via pool manager.
     /// </summary>
     public string spawnGroup {
-        get { return mSpawnGroup; }
+        get { return mPoolData == null ? "" : mPoolData.group; }
     }
 
     ///<summary>entity is instantiated with activator set to disable on start, call spawn after activator sends a wakeup call.</summary>
@@ -111,14 +121,13 @@ public class EntityBase : MonoBehaviour {
 
     public bool isReleased {
         get {
-            if(string.IsNullOrEmpty(mSpawnGroup))
+            if(mPoolData == null)
                 return false;
 
 #if POOLMANAGER
-            return !PoolManager.Pools[mSpawnGroup].IsSpawned(transform);
+            return !PoolManager.Pools[mPoolData.group].IsSpawned(transform);
 #else
-            PoolDataController pdc = GetComponent<PoolDataController>();
-            return pdc != null ? pdc.claimed : false;
+            return mPoolData.claimed;
 #endif
         }
     }
@@ -141,12 +150,12 @@ public class EntityBase : MonoBehaviour {
     }
 
     public void Release() {
-        if(!string.IsNullOrEmpty(mSpawnGroup)) {
+        if(mPoolData != null) {
 #if POOLMANAGER
-            transform.parent = PoolManager.Pools[mSpawnGroup].group;
-            PoolManager.Pools[mSpawnGroup].Despawn(transform);
+            transform.parent = PoolManager.Pools[mPoolData.group].group;
+            PoolManager.Pools[mPoolData.group].Despawn(transform);
 #else
-            PoolController.Release(mSpawnGroup, transform);
+            PoolController.Release(mPoolData.group, transform);
 #endif
         }
         else {
@@ -213,6 +222,8 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void Awake() {
+        mPoolData = GetComponent<PoolDataController>();
+
         mActivator = GetComponentInChildren<EntityActivator>();
         if(mActivator != null) {
             mActivator.awakeCallback += ActivatorWakeUp;
@@ -271,6 +282,9 @@ public class EntityBase : MonoBehaviour {
     /// NOTE: calls after an update to ensure Awake and Start is called.
     /// </summary>
     void OnSpawned() {
+        if(mPoolData == null)
+            mPoolData = GetComponent<PoolDataController>();
+
         mState = mPrevState = StateInvalid; //avoid invalid updates
 
         //allow activator to start and check if we need to spawn now or later
@@ -289,7 +303,7 @@ public class EntityBase : MonoBehaviour {
             StartCoroutine(DoSpawn());
         }
     }
-                
+
     IEnumerator DoStart() {
 #if PLAYMAKER
         if(mFSM != null) {

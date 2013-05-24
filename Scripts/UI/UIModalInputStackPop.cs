@@ -4,7 +4,6 @@ using System.Collections;
 /// <summary>
 /// Pop modal stack if given input is pressed. Put this component on a modal dialog game object that has a UIController.
 /// </summary>
-[RequireComponent(typeof(UIController))]
 [AddComponentMenu("M8/UI/ModalInputStackPop")]
 public class UIModalInputStackPop : MonoBehaviour {
     public int player = 0;
