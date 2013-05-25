@@ -3,6 +3,7 @@ Shader "M8/RepeatTileScroll"
 	Properties 
 	{
 	    _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
+		modColor ("Mod Color", Color) = (1.0, 1.0, 1.0, 1.0)
 		speedX ("Speed X", Float) = 1
 		speedY ("Speed Y", Float) = 1
 		tileX ("Tile X", Float) = 1
@@ -37,6 +38,8 @@ Shader "M8/RepeatTileScroll"
 			};
 			
 			sampler2D _MainTex;
+
+			float4 modColor;
 			
 			float speedX;
 			float speedY;
@@ -63,7 +66,7 @@ Shader "M8/RepeatTileScroll"
 			
 			fixed4 frag(Output i) : COLOR
 			{
-				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color;
+				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color * modColor;
 				return col;
 			}
 			
