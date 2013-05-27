@@ -14,7 +14,7 @@ public class GizmoHelperBox : MonoBehaviour {
             BoxCollider bc = collider != null ? collider as BoxCollider : null;
             if(bc != null) {
                 bound.center = bc.center;
-                bound.extents = bc.size * 0.5f;
+                bound.extents = new Vector3(bc.size.x*transform.localScale.x, bc.size.y*transform.localScale.y, bc.size.z*transform.localScale.z) * 0.5f;
             }
         }
 

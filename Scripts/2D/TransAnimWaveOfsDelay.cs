@@ -9,6 +9,7 @@ public class TransAnimWaveOfsDelay : MonoBehaviour {
     public Vector2 ofs;
 
     public bool roundOutput; //only works for pixel-coordinate
+    public bool squared;
 
     public Transform target; //optional
 
@@ -62,9 +63,9 @@ public class TransAnimWaveOfsDelay : MonoBehaviour {
 
             case State.Pulse:
                 if(mCurPulseTime < pulseDelay) {
-                    float t = Mathf.Sin(M8.MathUtil.TwoPI * (mCurPulseTime / pulseDelay));
+                    float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / pulseDelay));
 
-		            Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, t);
+                    Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, squared ? t * t : t);
 
                     target.localPosition = roundOutput ?
                         new Vector3(Mathf.Round(newPos.x), Mathf.Round(newPos.y), target.localPosition.z)

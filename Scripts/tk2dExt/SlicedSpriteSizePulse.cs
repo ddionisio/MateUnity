@@ -9,6 +9,7 @@ public class SlicedSpriteSizePulse : MonoBehaviour {
     public Vector2 ofs;
 
     public bool roundOutput = true; //only works for pixel-coordinate
+    public bool squared;
 
     public tk2dSlicedSprite target; //optional
 
@@ -67,9 +68,9 @@ public class SlicedSpriteSizePulse : MonoBehaviour {
 
             case State.Pulse:
                 if(mCurPulseTime < pulseDelay) {
-                    float t = Mathf.Sin(M8.MathUtil.TwoPI * (mCurPulseTime / pulseDelay));
+                    float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / pulseDelay));
 
-                    Vector2 newPos = Vector2.Lerp(mStart, mEnd, t);
+                    Vector2 newPos = Vector2.Lerp(mStart, mEnd, squared ? t * t : t);
 
                     target.dimensions = roundOutput ?
                         new Vector2(Mathf.Round(newPos.x), Mathf.Round(newPos.y))

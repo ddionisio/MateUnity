@@ -16,6 +16,8 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
     public Vector2 ofsMin;
     public Vector2 ofsMax;
 
+    public bool squared;
+
     private enum State {
         Pause,
         Pulse
@@ -74,9 +76,9 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
 
             case State.Pulse:
                 if(mCurPulseTime < mPulseDelay) {
-                    float t = Mathf.Sin(M8.MathUtil.TwoPI * (mCurPulseTime / mPulseDelay));
+                    float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / mPulseDelay));
 
-                    Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, t);
+                    Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, squared ? t * t : t);
 
                     target.localPosition = new Vector3(newPos.x, newPos.y, target.localPosition.z);
                 }

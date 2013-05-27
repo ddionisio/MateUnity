@@ -23,7 +23,7 @@ public class SoundPlayer : MonoBehaviour {
 
     public virtual void Play() {
         UserSettings us = Main.instance.userSettings;
-        audio.volume = us.isSoundEnable ? mDefaultVolume : 0.0f;
+        audio.volume = mDefaultVolume * us.soundVolume;
 
         if(playDelay > 0.0f)
             audio.PlayDelayed(refRate * playDelay);
@@ -49,6 +49,6 @@ public class SoundPlayer : MonoBehaviour {
 
     void UserSettingsChanged(UserSettings us) {
         if(audio.isPlaying)
-            audio.volume = us.isSoundEnable ? mDefaultVolume : 0.0f;
+            audio.volume = mDefaultVolume * us.soundVolume;
     }
 }

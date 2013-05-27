@@ -3,30 +3,30 @@ using System.Collections;
 
 public class UserSettings {
     public const string volumeKey = "v";
-    public const string soundEnableKey = "snd";
-    public const string musicEnableKey = "mus";
+    public const string soundKey = "snd";
+    public const string musicKey = "mus";
     public const string languageKey = "l";
 
-    public bool isSoundEnable {
-        get { return mSoundEnabled; }
+    public float soundVolume {
+        get { return mSoundVolume; }
 
         set {
-            if(mSoundEnabled != value) {
-                mSoundEnabled = value;
-                PlayerPrefs.SetInt(soundEnableKey, mSoundEnabled ? 1 : 0);
+            if(mSoundVolume != value) {
+                mSoundVolume = value;
+                PlayerPrefs.SetFloat(soundKey, mSoundVolume);
 
                 RelaySettingsChanged();
             }
         }
     }
 
-    public bool isMusicEnable {
-        get { return mMusicEnabled; }
+    public float musicVolume {
+        get { return mMusicVolume; }
 
         set {
-            if(mMusicEnabled != value) {
-                mMusicEnabled = value;
-                PlayerPrefs.SetInt(musicEnableKey, mMusicEnabled ? 1 : 0);
+            if(mMusicVolume != value) {
+                mMusicVolume = value;
+                PlayerPrefs.SetFloat(musicKey, mMusicVolume);
 
                 RelaySettingsChanged();
             }
@@ -58,14 +58,14 @@ public class UserSettings {
 
     //need to debug while listening to music
 #if UNITY_EDITOR
-    private const int enableDefault = 1;
+    private const float volumeDefault = 1.0f;
 #else
-	private const int enableDefault = 1;
+	private const float volumeDefault = 0.0f;
 #endif
 
     private float mVolume;
-    private bool mSoundEnabled;
-    private bool mMusicEnabled;
+    private float mSoundVolume;
+    private float mMusicVolume;
     private GameLanguage mLanguage = GameLanguage.English;
 
     // Use this for initialization
@@ -73,9 +73,9 @@ public class UserSettings {
         //load settings
         mVolume = PlayerPrefs.GetFloat(volumeKey, 1.0f);
 
-        mSoundEnabled = PlayerPrefs.GetInt(soundEnableKey, enableDefault) > 0;
+        mSoundVolume = PlayerPrefs.GetFloat(soundKey, volumeDefault);
 
-        mMusicEnabled = PlayerPrefs.GetInt(musicEnableKey, enableDefault) > 0;
+        mMusicVolume = PlayerPrefs.GetFloat(musicKey, volumeDefault);
 
         AudioListener.volume = mVolume;
 
@@ -83,8 +83,9 @@ public class UserSettings {
     }
 
     public void Save() {
-        PlayerPrefs.SetInt(soundEnableKey, mSoundEnabled ? 1 : 0);
-        PlayerPrefs.SetInt(musicEnableKey, mMusicEnabled ? 1 : 0);
+        PlayerPrefs.SetFloat(volumeKey, mVolume);
+        PlayerPrefs.SetFloat(soundKey, mSoundVolume);
+        PlayerPrefs.SetFloat(musicKey, mMusicVolume);
         PlayerPrefs.SetInt(languageKey, (int)mLanguage);
     }
 

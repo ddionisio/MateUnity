@@ -313,17 +313,29 @@ public class EntityBase : MonoBehaviour {
 
             SpawnStart();
 
+            if(spawnCallback != null) {
+                spawnCallback(this);
+            }
+
             mFSM.SendEvent(EntityEvent.Start);
         }
         else {
             yield return new WaitForFixedUpdate();
 
             SpawnStart();
+
+            if(spawnCallback != null) {
+                spawnCallback(this);
+            }
         }
 #else
         yield return new WaitForFixedUpdate();
 
         SpawnStart();
+
+        if(spawnCallback != null) {
+            spawnCallback(this);
+        }
 #endif
 
         yield break;

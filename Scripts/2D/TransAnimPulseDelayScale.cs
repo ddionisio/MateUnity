@@ -9,6 +9,7 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
     public Vector2 ofs;
 
     public bool roundOutput = true; //only works for pixel-coordinate
+    public bool squared = false;
 
     public Transform target; //optional
 
@@ -55,7 +56,7 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        mState = State.Pause;
+        mState = pauseStart > 0.0f ? State.Pause : State.Pulse;
         mCurPulseTime = 0;
         mStarted = true;
     }
@@ -73,9 +74,9 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
 
             case State.Pulse:
                 if(mCurPulseTime < pulseDelay) {
-                    float t = Mathf.Sin(M8.MathUtil.TwoPI * (mCurPulseTime / pulseDelay));
+                    float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / pulseDelay));
 
-                    Vector2 newPos = Vector2.Lerp(mStart, mEnd, t);
+                    Vector2 newPos = Vector2.Lerp(mStart, mEnd, squared ? t * t : t);
 
                     ApplyScale(roundOutput ?
                         new Vector2(Mathf.Round(newPos.x), Mathf.Round(newPos.y))
@@ -84,8 +85,13 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
                 else {
                     ApplyScale(mStart);
 
-                    mState = State.Pause;
-                    mCurPulseTime = 0.0f;
+                    if(pauseStart > 0.0f) {
+                        mState = State.Pause;
+                        mCurPulseTime = 0.0f;
+                    }
+                    else {
+                        mCurPulseTime -= pulseDelay;
+                    }
                 }
                 break;
         }

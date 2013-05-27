@@ -12,6 +12,8 @@ public class SpriteColorPulseDelay : MonoBehaviour {
     public Color startColor;
     public Color endColor = Color.white;
 
+    public bool squared;
+
     private WaitForFixedUpdate mDoUpdate;
     private WaitForSeconds mWaitSecondsStart;
     private WaitForSeconds mWaitSecondsUpdate;
@@ -50,7 +52,6 @@ public class SpriteColorPulseDelay : MonoBehaviour {
         else
             yield return mDoUpdate;
 
-        const float pi2 = Mathf.PI * 2.0f;
         float t = 0.0f;
 
         while(true) {
@@ -66,8 +67,8 @@ public class SpriteColorPulseDelay : MonoBehaviour {
                 }
             }
             else {
-                float s = Mathf.Sin(pi2 * (t / delay));
-                sprite.color = Color.Lerp(startColor, endColor, s);
+                float s = Mathf.Sin(Mathf.PI * (t / delay));
+                sprite.color = Color.Lerp(startColor, endColor, squared ? s * s : s);
             }
 
             yield return mDoUpdate;
