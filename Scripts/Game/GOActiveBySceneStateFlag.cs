@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Game/GOActiveBySceneStateFlag")]
+[AddComponentMenu("M8/Game Object/Active By SceneState Flag")]
 public class GOActiveBySceneStateFlag : MonoBehaviour {
     [HideInInspector]
     public string flag;

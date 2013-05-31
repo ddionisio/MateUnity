@@ -143,13 +143,13 @@ public class AnimatorData : MonoBehaviour {
     }
 
     void Start() {
-#if UNITY_EDITOR
-#else
+        if(!Application.isPlaying)
+            return;
+
         if(playOnStart) {
             Play(playOnStart.name, true, 0f, false);
             playOnStart = null;
         }
-#endif
     }
 
     void OnDrawGizmos() {

@@ -21,18 +21,19 @@ public class AMTransitionPicker : EditorWindow {
     private GUISkin skin = null;
     private string cachedSkinName = null;
     // resources
-    private Texture tex_transition_a = AMEditorResource.LoadEditorTexture("am_transition_a");
-    private Texture tex_transition_b = AMEditorResource.LoadEditorTexture("am_transition_b");
-    private Texture tex_default_view = AMEditorResource.LoadEditorTexture("am_icon_default_view");
-    private Texture tex_game_view = AMEditorResource.LoadEditorTexture("am_icon_game_view");
-    private Texture tex_transition_toggle_bg = AMEditorResource.LoadEditorTexture("am_transition_toggle_bg");
-    private Texture tex_transition_toggle_button_bg = AMEditorResource.LoadEditorTexture("am_transition_toggle_button_bg");
-    private Texture texRightArrow = AMEditorResource.LoadEditorTexture("am_nav_right");// inspector right arrow
-    private Texture texLeftArrow = AMEditorResource.LoadEditorTexture("am_nav_left");	// inspector left arrow
-    private Texture tex_angle_0 = AMEditorResource.LoadEditorTexture("am_angle_0");
-    private Texture tex_angle_90 = AMEditorResource.LoadEditorTexture("am_angle_90");
-    private Texture tex_angle_180 = AMEditorResource.LoadEditorTexture("am_angle_180");
-    private Texture tex_angle_270 = AMEditorResource.LoadEditorTexture("am_angle_270");
+    private Texture tex_transition_a;
+    private Texture tex_transition_b;
+    private Texture tex_default_view;
+    private Texture tex_game_view;
+    private Texture tex_transition_toggle_bg;
+    private Texture tex_transition_toggle_button_bg;
+    private Texture texRightArrow;// inspector right arrow
+    private Texture texLeftArrow;	// inspector left arrow
+    private Texture tex_angle_0;
+    private Texture tex_angle_90;
+    private Texture tex_angle_180;
+    private Texture tex_angle_270;
+    private bool texLoaded = false;
     // constants
     private const float width_preview_max = 275f;
     private const float height_preview_max = 180f;
@@ -74,6 +75,23 @@ public class AMTransitionPicker : EditorWindow {
 
     #region Main
     void OnEnable() {
+        if(!texLoaded) {
+            tex_transition_a = AMEditorResource.LoadEditorTexture("am_transition_a");
+            tex_transition_b = AMEditorResource.LoadEditorTexture("am_transition_b");
+            tex_default_view = AMEditorResource.LoadEditorTexture("am_icon_default_view");
+            tex_game_view = AMEditorResource.LoadEditorTexture("am_icon_game_view");
+            tex_transition_toggle_bg = AMEditorResource.LoadEditorTexture("am_transition_toggle_bg");
+            tex_transition_toggle_button_bg = AMEditorResource.LoadEditorTexture("am_transition_toggle_button_bg");
+            texRightArrow = AMEditorResource.LoadEditorTexture("am_nav_right");// inspector right arrow
+            texLeftArrow = AMEditorResource.LoadEditorTexture("am_nav_left");	// inspector left arrow
+            tex_angle_0 = AMEditorResource.LoadEditorTexture("am_angle_0");
+            tex_angle_90 = AMEditorResource.LoadEditorTexture("am_angle_90");
+            tex_angle_180 = AMEditorResource.LoadEditorTexture("am_angle_180");
+            tex_angle_270 = AMEditorResource.LoadEditorTexture("am_angle_270");
+
+            texLoaded = true;
+        }
+
         window = this;
         setWindowSize();
         this.wantsMouseMove = true;

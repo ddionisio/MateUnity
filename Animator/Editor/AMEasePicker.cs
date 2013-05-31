@@ -19,7 +19,8 @@ public class AMEasePicker : EditorWindow {
 	private AnimationCurve selectedCurve = new AnimationCurve();
 	private bool isCustomEase = false;
 	// texture
-	Texture tex_orb = (Texture)Resources.Load("am_orb");
+	Texture tex_orb;
+    bool texLoaded = false;
 	
 	// skins
 	private GUISkin skin = null;
@@ -49,6 +50,11 @@ public class AMEasePicker : EditorWindow {
 	private float x_pos = 20f;
 	
 	void OnEnable() {
+        if(!texLoaded) {
+            tex_orb = AMEditorResource.LoadEditorTexture("am_orb");
+            texLoaded = true;
+        }
+
 		window = this;
 		this.maxSize = new Vector2(715f,398f);
 		this.minSize = this.maxSize;

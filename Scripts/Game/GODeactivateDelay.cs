@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Game/GODeactivateDelay")]
+[AddComponentMenu("M8/Game Object/Deactivate Delay")]
 public class GODeactivateDelay : MonoBehaviour {
     public delegate void OnDeactivate();
 

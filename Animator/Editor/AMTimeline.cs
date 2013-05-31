@@ -191,49 +191,50 @@ public class AMTimeline : EditorWindow {
 	// colors
 	private Color colBirdsEyeFrames = new Color(210f/255f,210f/255f,210f/255f,1f);
 	// textures
-	private Texture tex_cursor_zoomin = AMEditorResource.LoadEditorTexture("am_cursor_zoomin");
-    private Texture tex_cursor_zoomout = AMEditorResource.LoadEditorTexture("am_cursor_zoomout");
-	private Texture tex_cursor_zoom_blank = AMEditorResource.LoadEditorTexture("am_cursor_zoom_blank");
-	private Texture tex_cursor_zoom = null;
-	private Texture tex_cursor_grab = AMEditorResource.LoadEditorTexture("am_cursor_grab");
-	private Texture tex_icon_track = AMEditorResource.LoadEditorTexture("am_icon_track");
-	private Texture tex_icon_track_hover = AMEditorResource.LoadEditorTexture("am_icon_track_hover");
-	private Texture tex_icon_group_closed = AMEditorResource.LoadEditorTexture("am_icon_group_closed");
-	private Texture tex_icon_group_open = AMEditorResource.LoadEditorTexture("am_icon_group_open");
-	private Texture tex_icon_group_hover = AMEditorResource.LoadEditorTexture("am_icon_group_hover");
-	private Texture tex_element_position = AMEditorResource.LoadEditorTexture("am_element_position");
-	private Texture texFrKey = AMEditorResource.LoadEditorTexture("am_key");
-	private Texture texFrSet = AMEditorResource.LoadEditorTexture("am_frame_set");
-	//private Texture texFrU = AMEditorResource.LoadTexture("am_frame");
-	//private Texture texFrM = AMEditorResource.LoadTexture("am_frame-m");
-	//private Texture texFrUS = AMEditorResource.LoadTexture("am_frame-s"); 
-	//private Texture texFrMS = AMEditorResource.LoadTexture("am_frame-m-s"); 
-	//private Texture texFrUG = AMEditorResource.LoadTexture("am_frame-g"); 
-	private Texture texKeyBirdsEye = AMEditorResource.LoadEditorTexture("am_key_birdseye"); 
-	private Texture texIndLine = AMEditorResource.LoadEditorTexture("am_indicator_line");
-	private Texture texIndHead = AMEditorResource.LoadEditorTexture("am_indicator_head");
-	private Texture texProperties = AMEditorResource.LoadEditorTexture("am_information");	
-	private Texture texRightArrow = AMEditorResource.LoadEditorTexture("am_nav_right");// inspector right arrow
-	private Texture texLeftArrow = AMEditorResource.LoadEditorTexture("am_nav_left");	// inspector left arrow
-	private Texture[] texInterpl = {AMEditorResource.LoadEditorTexture("am_interpl_curve"),AMEditorResource.LoadEditorTexture("am_interpl_linear")};
-	private Texture texBoxBorder = AMEditorResource.LoadEditorTexture("am_box_border");
-	private Texture texBoxRed = AMEditorResource.LoadEditorTexture("am_box_red");
-	//private Texture texBoxBlue = AMEditorResource.LoadTexture("am_box_blue");
-	private Texture texBoxLightBlue = AMEditorResource.LoadEditorTexture("am_box_lightblue");
-	private Texture texBoxDarkBlue = AMEditorResource.LoadEditorTexture("am_box_darkblue");
-	private Texture texBoxGreen = AMEditorResource.LoadEditorTexture("am_box_green");
-	private Texture texBoxPink = AMEditorResource.LoadEditorTexture("am_box_pink");
-	private Texture texBoxYellow = AMEditorResource.LoadEditorTexture("am_box_yellow");
-	private Texture texBoxOrange = AMEditorResource.LoadEditorTexture("am_box_orange");
-	private Texture texBoxPurple = AMEditorResource.LoadEditorTexture("am_box_purple");
-	private Texture texIconTranslation = AMEditorResource.LoadEditorTexture("am_icon_translation");
-	private Texture texIconRotation = AMEditorResource.LoadEditorTexture("am_icon_rotation");
-	private Texture texIconAnimation = AMEditorResource.LoadEditorTexture("am_icon_animation");
-	private Texture texIconAudio = AMEditorResource.LoadEditorTexture("am_icon_audio");
-	private Texture texIconProperty = AMEditorResource.LoadEditorTexture("am_icon_property");
-	private Texture texIconEvent = AMEditorResource.LoadEditorTexture("am_icon_event");
-	private Texture texIconOrientation = AMEditorResource.LoadEditorTexture("am_icon_orientation");
-	private Texture texIconCameraSwitcher = AMEditorResource.LoadEditorTexture("am_icon_cameraswitcher");
+    private Texture tex_cursor_zoomin;
+    private Texture tex_cursor_zoomout;
+    private Texture tex_cursor_zoom_blank;
+    private Texture tex_cursor_zoom = null;
+    private Texture tex_cursor_grab;
+    private Texture tex_icon_track;
+    private Texture tex_icon_track_hover;
+    private Texture tex_icon_group_closed;
+    private Texture tex_icon_group_open;
+    private Texture tex_icon_group_hover;
+    private Texture tex_element_position;
+    private Texture texFrKey;
+    private Texture texFrSet;
+    //private Texture texFrU;
+    //private Texture texFrM;
+    //private Texture texFrUS; 
+    //private Texture texFrMS; 
+    //private Texture texFrUG; 
+    private Texture texKeyBirdsEye;
+    private Texture texIndLine;
+    private Texture texIndHead;
+    private Texture texProperties;
+    private Texture texRightArrow;// inspector right arrow
+    private Texture texLeftArrow;	// inspector left arrow
+    private Texture[] texInterpl = new Texture[2];
+    private Texture texBoxBorder;
+    private Texture texBoxRed;
+    //private Texture texBoxBlue;
+    private Texture texBoxLightBlue;
+    private Texture texBoxDarkBlue;
+    private Texture texBoxGreen;
+    private Texture texBoxPink;
+    private Texture texBoxYellow;
+    private Texture texBoxOrange;
+    private Texture texBoxPurple;
+    private Texture texIconTranslation;
+    private Texture texIconRotation;
+    private Texture texIconAnimation;
+    private Texture texIconAudio;
+    private Texture texIconProperty;
+    private Texture texIconEvent;
+    private Texture texIconOrientation;
+    private Texture texIconCameraSwitcher;
+    private bool texLoaded = false;
 	
 	// temporary variables
 	private bool isPlayMode = false; 		// whether the user is in play mode, used to close AMTimeline when in play mode
@@ -346,6 +347,54 @@ public class AMTimeline : EditorWindow {
 	#region Main
 	
 	void OnEnable() {
+        if(!texLoaded) {
+            tex_cursor_zoomin = AMEditorResource.LoadEditorTexture("am_cursor_zoomin");
+            tex_cursor_zoomout = AMEditorResource.LoadEditorTexture("am_cursor_zoomout");
+            tex_cursor_zoom_blank = AMEditorResource.LoadEditorTexture("am_cursor_zoom_blank");
+            tex_cursor_zoom = null;
+            tex_cursor_grab = AMEditorResource.LoadEditorTexture("am_cursor_grab");
+            tex_icon_track = AMEditorResource.LoadEditorTexture("am_icon_track");
+            tex_icon_track_hover = AMEditorResource.LoadEditorTexture("am_icon_track_hover");
+            tex_icon_group_closed = AMEditorResource.LoadEditorTexture("am_icon_group_closed");
+            tex_icon_group_open = AMEditorResource.LoadEditorTexture("am_icon_group_open");
+            tex_icon_group_hover = AMEditorResource.LoadEditorTexture("am_icon_group_hover");
+            tex_element_position = AMEditorResource.LoadEditorTexture("am_element_position");
+            texFrKey = AMEditorResource.LoadEditorTexture("am_key");
+            texFrSet = AMEditorResource.LoadEditorTexture("am_frame_set");
+            //texFrU = AMEditorResource.LoadTexture("am_frame");
+            //texFrM = AMEditorResource.LoadTexture("am_frame-m");
+            //texFrUS = AMEditorResource.LoadTexture("am_frame-s"); 
+            //texFrMS = AMEditorResource.LoadTexture("am_frame-m-s"); 
+            //texFrUG = AMEditorResource.LoadTexture("am_frame-g"); 
+            texKeyBirdsEye = AMEditorResource.LoadEditorTexture("am_key_birdseye");
+            texIndLine = AMEditorResource.LoadEditorTexture("am_indicator_line");
+            texIndHead = AMEditorResource.LoadEditorTexture("am_indicator_head");
+            texProperties = AMEditorResource.LoadEditorTexture("am_information");
+            texRightArrow = AMEditorResource.LoadEditorTexture("am_nav_right");// inspector right arrow
+            texLeftArrow = AMEditorResource.LoadEditorTexture("am_nav_left");	// inspector left arrow
+            texInterpl[0] = AMEditorResource.LoadEditorTexture("am_interpl_curve"); texInterpl[1] = AMEditorResource.LoadEditorTexture("am_interpl_linear");
+            texBoxBorder = AMEditorResource.LoadEditorTexture("am_box_border");
+            texBoxRed = AMEditorResource.LoadEditorTexture("am_box_red");
+            //texBoxBlue = AMEditorResource.LoadTexture("am_box_blue");
+            texBoxLightBlue = AMEditorResource.LoadEditorTexture("am_box_lightblue");
+            texBoxDarkBlue = AMEditorResource.LoadEditorTexture("am_box_darkblue");
+            texBoxGreen = AMEditorResource.LoadEditorTexture("am_box_green");
+            texBoxPink = AMEditorResource.LoadEditorTexture("am_box_pink");
+            texBoxYellow = AMEditorResource.LoadEditorTexture("am_box_yellow");
+            texBoxOrange = AMEditorResource.LoadEditorTexture("am_box_orange");
+            texBoxPurple = AMEditorResource.LoadEditorTexture("am_box_purple");
+            texIconTranslation = AMEditorResource.LoadEditorTexture("am_icon_translation");
+            texIconRotation = AMEditorResource.LoadEditorTexture("am_icon_rotation");
+            texIconAnimation = AMEditorResource.LoadEditorTexture("am_icon_animation");
+            texIconAudio = AMEditorResource.LoadEditorTexture("am_icon_audio");
+            texIconProperty = AMEditorResource.LoadEditorTexture("am_icon_property");
+            texIconEvent = AMEditorResource.LoadEditorTexture("am_icon_event");
+            texIconOrientation = AMEditorResource.LoadEditorTexture("am_icon_orientation");
+            texIconCameraSwitcher = AMEditorResource.LoadEditorTexture("am_icon_cameraswitcher");
+
+            texLoaded = true;
+        }
+
 		this.title = "Animator";
 		this.minSize = new Vector2(width_track+width_playback_controls+width_inspector_open+70f,190f);
 		window = this;

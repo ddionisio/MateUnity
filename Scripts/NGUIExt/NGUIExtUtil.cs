@@ -22,5 +22,13 @@ namespace M8 {
             t.localPosition = pos;
             t.localScale = s;
         }
+
+        public static void LayoutRefresh(Transform t) {
+            foreach(Transform child in t) {
+                LayoutRefresh(child);
+            }
+
+            t.SendMessage("Reposition", null, SendMessageOptions.DontRequireReceiver);
+        }
     }
 }

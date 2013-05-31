@@ -6,7 +6,7 @@ using System.Collections;
 /// Or the inverse, which game object is deactive based on scene state counter.
 /// Value has to be within the target array index
 /// </summary>
-[AddComponentMenu("M8/Game/GOActiveSwitchSceneStateValue")]
+[AddComponentMenu("M8/Game Object/Active Switch SceneState Value")]
 public class GOActiveSwitchSceneStateValue : MonoBehaviour {
     public string variable;
     public bool global;

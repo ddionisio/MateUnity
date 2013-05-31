@@ -2,11 +2,25 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 [AddComponentMenu("M8/Game/WaypointManager")]
 public class WaypointManager : MonoBehaviour {
 
     private static WaypointManager mInstance = null;
     private Dictionary<string, List<Transform>> mWaypoints;
+
+#if UNITY_EDITOR
+    public float arrowSize = 2.0f;
+    public float arrowAngle = 30.0f;
+    public float pointSize = 0.5f;
+    public float pointSizeSelected = 1.0f;
+
+    [HideInInspector]
+    public Transform __inspectorSelected;
+#endif
 
     public static WaypointManager instance {
         get {
@@ -74,29 +88,63 @@ public class WaypointManager : MonoBehaviour {
     }
 
     void OnDrawGizmos() {
+        Transform selection = Selection.activeTransform;
+
         foreach(Transform t in transform) {
-            Gizmos.color = Color.green;
-            
+            bool wpActive = selection != null 
+                && (t == selection || selection.parent == t || (__inspectorSelected != null && (__inspectorSelected == t || __inspectorSelected.parent == t)));
+            Gizmos.color = wpActive ? Color.green : Color.green * 0.5f;
+
             if(t.childCount > 0) {
-                Vector3 p = t.GetChild(0).position;
+                //first child
+                Transform child = t.GetChild(0);
 
-                Gizmos.DrawIcon(p, "waypoint", true);
+                Vector3 p = child.position;
 
+                if(pointSize > 0.0f)
+                    Gizmos.DrawSphere(p, pointSize);
+
+                if(child == selection || child == __inspectorSelected) {
+                    if(pointSizeSelected > 0.0f) {
+                        Gizmos.DrawWireSphere(p, pointSizeSelected);
+                    }
+                }
+                //
+
+                //render others
                 for(int i = 1; i < t.childCount; i++) {
-                    Vector3 np = t.GetChild(i).position;
+                    child = t.GetChild(i);
+                    Vector3 np = child.position;
                     Vector3 dir = np - p;
                     float len = dir.magnitude;
                     if(len > 0) {
                         dir /= len;
-                        M8.Gizmo.ArrowFourLine(p, dir, len, 2.0f, 30.0f);
-                        //Gizmos.DrawSphere(np, 1.0f);
+                        M8.Gizmo.ArrowFourLine(p, dir, len, arrowSize, arrowAngle);
+                    }
+
+                    if(pointSize > 0.0f)
+                        Gizmos.DrawSphere(np, pointSize);
+
+                    if(child == selection || child == __inspectorSelected) {
+                        if(pointSizeSelected > 0.0f) {
+                            Gizmos.DrawWireSphere(np, pointSizeSelected);
+                        }
                     }
 
                     p = np;
                 }
             }
             else {
-                Gizmos.DrawIcon(t.position, "waypoint", true);
+                Vector3 np = t.position;
+
+                if(pointSize > 0.0f)
+                    Gizmos.DrawSphere(np, pointSize);
+
+                if(t == selection || t == __inspectorSelected) {
+                    if(pointSizeSelected > 0.0f) {
+                        Gizmos.DrawWireSphere(np, pointSizeSelected);
+                    }
+                }
             }
         }
     }

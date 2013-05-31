@@ -22,5 +22,20 @@ namespace M8 {
 
             return ret;
         }
+
+        public static bool IsParentOf(Transform child, Transform parent) {
+            bool ret = false;
+
+            Transform p = child;
+            while(p != null) {
+                p = p.parent;
+                if(p == parent) {
+                    ret = true;
+                    break;
+                }
+            }
+
+            return ret;
+        }
     }
 }
