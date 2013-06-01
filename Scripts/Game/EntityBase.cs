@@ -19,7 +19,7 @@ public class EntityBase : MonoBehaviour {
     public float spawnDelay = 0.1f;
 
     public bool activateOnStart = false; //if we want FSM/other stuff to activate on start (when placing entities on scene)
-
+    
     public event OnSetState setStateCallback;
     public event OnSetBool setBlinkCallback;
     public event OnFinish spawnCallback;
@@ -38,6 +38,7 @@ public class EntityBase : MonoBehaviour {
     private float mBlinkDelay = 0;
 
     private bool mDoSpawnOnWake = false;
+    private bool mAutoSpawnFinish = true;
 
     private PoolDataController mPoolData;
 
@@ -95,6 +96,14 @@ public class EntityBase : MonoBehaviour {
         get { return mFSM; }
     }
 #endif
+
+    /// <summary>
+    /// if true, SpawnFinish is called after SpawnStart based on spawnDelay, this is not used if there is an FSM
+    /// </summary>
+    public bool autoSpawnFinish {
+        get { return mAutoSpawnFinish; }
+        set { mAutoSpawnFinish = value; }
+    }
 
     public int state {
         get { return mState; }
@@ -369,9 +378,13 @@ public class EntityBase : MonoBehaviour {
                 spawnCallback(this);
             }
 
-            yield return new WaitForSeconds(spawnDelay);
+            if(autoSpawnFinish) {
+                if(spawnDelay > 0.0f) {
+                    yield return new WaitForSeconds(spawnDelay);
+                }
 
-            SpawnFinish();
+                SpawnFinish();
+            }
         }
 #else
          yield return new WaitForFixedUpdate();
@@ -382,9 +395,13 @@ public class EntityBase : MonoBehaviour {
             spawnCallback(this);
         }
 
-        yield return new WaitForSeconds(spawnDelay);
+        if(autoSpawnFinish) {
+            if(spawnDelay > 0.0f) {
+                yield return new WaitForSeconds(spawnDelay);
+            }
 
-        SpawnFinish();
+            SpawnFinish();
+        }
 #endif
 
         yield break;

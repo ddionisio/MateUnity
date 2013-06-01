@@ -19,12 +19,34 @@ public class WaypointManagerInspector : Editor {
     private Dictionary<Transform, Data> mData;
     private string mNewName;
 
+    private static string mLastWaypoint = null;
+    private static int mLastWaypointInd = -1;
+
     void OnEnable() {
         WaypointManager input = target as WaypointManager;
+        
         int numChild = input.transform.GetChildCount();
         mData = new Dictionary<Transform, Data>(numChild);
+
         foreach(Transform t in input.transform) {
-            mData.Add(t, new Data());
+            Data dat = new Data();
+
+            if(t.name == mLastWaypoint) {
+                dat.foldout = true;
+
+                if(mLastWaypointInd != -1) {
+                    dat.selInd = Mathf.Clamp(mLastWaypointInd, 0, t.GetChildCount());
+                    input.__inspectorSelected = t.GetChild(dat.selInd);
+                }
+                else {
+                    input.__inspectorSelected = t;
+                }
+
+                mLastWaypoint = null;
+                mLastWaypointInd = -1;
+            }
+
+            mData.Add(t, dat);
         }
     }
 
@@ -58,6 +80,8 @@ public class WaypointManagerInspector : Editor {
                 GUILayout.BeginHorizontal();
                 t.name = EditorGUILayout.TextField("New Name", t.name);
 
+                mLastWaypoint = t.name;
+
                 if(GUILayout.Button("SEL", GUILayout.MaxWidth(50.0f))) {
                     Selection.activeGameObject = t.gameObject;
                 }
@@ -86,6 +110,7 @@ public class WaypointManagerInspector : Editor {
 
                         input.__inspectorSelected = newPt2.transform;
 
+                        mLastWaypointInd = 1;
                         Selection.activeGameObject = newPt2;
                     }
                 }
@@ -100,6 +125,7 @@ public class WaypointManagerInspector : Editor {
 
                     GUILayout.BeginHorizontal();
                     if(GUILayout.Button("Select")) {
+                        mLastWaypointInd = dat.selInd;
                         Selection.activeGameObject = t.GetChild(dat.selInd).gameObject;
                     }
 
@@ -112,12 +138,16 @@ public class WaypointManagerInspector : Editor {
                             t.GetChild(dat.selInd + 1).position = input.__inspectorSelected.position;
                             newPt1 = t.GetChild(dat.selInd + 1).gameObject;
                         }
+                        else {
+                            newPt1.transform.position = input.__inspectorSelected.position;
+                        }
 
                         //shift others
                         for(int i = numChild; i > dat.selInd; i--) {
                             t.GetChild(i).name = i.ToString();
                         }
 
+                        mLastWaypointInd = dat.selInd + 1;
                         Selection.activeGameObject = newPt1.gameObject;
                     }
 
@@ -166,6 +196,9 @@ public class WaypointManagerInspector : Editor {
             GameObject newGO = new GameObject(mNewName);
             newGO.transform.parent = input.transform;
             newGO.transform.localPosition = Vector3.zero;
+
+            mLastWaypoint = mNewName;
+            mLastWaypointInd = -1;
             Selection.activeGameObject = newGO;
         }
         GUILayout.EndHorizontal();

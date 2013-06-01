@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+//using System.Text.RegularExpressions;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -33,6 +34,7 @@ public class WaypointManager : MonoBehaviour {
         if(wps != null) {
             wpDat.curInd = 0;
             wpDat.waypoints = wps;
+            wpDat.waypoint = name;
             return true;
         }
 
@@ -75,7 +77,9 @@ public class WaypointManager : MonoBehaviour {
                     points.Add(t);
                 }
                 points.Sort(delegate(Transform t1, Transform t2) {
-                    return t1.name.CompareTo(t2.name);
+                    int i1 = int.Parse(t1.name);
+                    int i2 = int.Parse(t2.name);
+                    return i1.CompareTo(i2);
                 });
             }
             else {
@@ -87,6 +91,7 @@ public class WaypointManager : MonoBehaviour {
         }
     }
 
+#if UNITY_EDITOR
     void OnDrawGizmos() {
         Transform selection = Selection.activeTransform;
 
@@ -148,4 +153,5 @@ public class WaypointManager : MonoBehaviour {
             }
         }
     }
+#endif
 }
