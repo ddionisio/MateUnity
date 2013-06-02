@@ -33,6 +33,16 @@ public class UIModalInputNGUI : MonoBehaviour {
         OnUIModalInactive();
     }
 
+    void Awake() {
+        Camera cam = NGUITools.FindCameraForLayer(gameObject.layer);
+        if(cam != null) {
+            UICamera uiCam = cam.GetComponent<UICamera>();
+            if(uiCam != null) {
+                uiCam.useKeyboard = false; //NGUI shouldn't have hardcoded input logic...bad!
+            }
+        }
+    }
+
     void OnInputEnter(InputManager.Info data) {
         bool pressed = data.state == InputManager.State.Pressed;
         bool released = data.state == InputManager.State.Released;
