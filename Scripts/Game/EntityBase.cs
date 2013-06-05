@@ -65,7 +65,7 @@ public class EntityBase : MonoBehaviour {
             ent.transform.position = position;
         }
 
-        return null;
+        return ent;
 #endif
     }
 
@@ -168,7 +168,10 @@ public class EntityBase : MonoBehaviour {
 #endif
         }
         else {
-            StartCoroutine(DestroyDelay());
+            if(gameObject.activeInHierarchy)
+                StartCoroutine(DestroyDelay());
+            else
+                Destroy(gameObject);
         }
     }
 

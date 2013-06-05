@@ -40,7 +40,7 @@ public class NGUIPointAt : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if(mPOI != null) {
+        if(mPOI != null && mPOI.gameObject.activeInHierarchy) {
             Vector3 vp = mPOICam.WorldToViewportPoint(mPOI.position);
 
             bool isEdge = false;
@@ -73,6 +73,9 @@ public class NGUIPointAt : MonoBehaviour {
                     pointer.gameObject.SetActive(false);
                 }
             }
+        }
+        else {
+            pointer.gameObject.SetActive(false);
         }
     }
 }
