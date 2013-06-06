@@ -7,7 +7,6 @@ using System.Collections;
 ///make sure to have this as a child,
 ///destroy it if we are currently active
 ///</summary>
-[RequireComponent(typeof(Collider))]
 [AddComponentMenu("M8/Entity/EntityActivator")]
 public class EntityActivator : MonoBehaviour {
     public const string ActivatorHolderTag = "ActivatorHolder"; //make sure this is in the scene root

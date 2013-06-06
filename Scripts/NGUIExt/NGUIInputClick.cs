@@ -9,6 +9,8 @@ public class NGUIInputClick : MonoBehaviour {
     public int player = 0;
     public int action = 0;
     public int alternate = InputManager.ActionInvalid;
+    public float axisCheck;
+    public float axisDelay = 0.5f;
 
     /// <summary>
     /// Check to see if this object is selected via NGUI for input to process.
@@ -17,14 +19,14 @@ public class NGUIInputClick : MonoBehaviour {
 
     private bool mStarted;
 
+    private bool mIsAxisAction = false;
+    private bool mIsAxisActionAlt = false;
+    private float mAxisLastTime = 0.0f;
+    private bool mLastClick = false;
+
     void OnEnable() {
-        if(mStarted && Main.instance != null && Main.instance.input != null) {
-            Main.instance.input.AddButtonCall(player, action, OnInputEnter);
-
-            if(alternate != InputManager.ActionInvalid)
-                Main.instance.input.AddButtonCall(player, alternate, OnInputEnter);
-        }
-
+        if(mStarted)
+            DoBind();
     }
 
     void OnDisable() {
@@ -36,17 +38,78 @@ public class NGUIInputClick : MonoBehaviour {
         }
     }
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start() {
         mStarted = true;
-        if(Main.instance != null && Main.instance.input != null) {
-            Main.instance.input.AddButtonCall(player, action, OnInputEnter);
+        DoBind();
+    }
 
-            if(alternate != InputManager.ActionInvalid)
-                Main.instance.input.AddButtonCall(player, alternate, OnInputEnter);
+    void Update() {
+        if(mIsAxisAction || mIsAxisActionAlt) {
+            bool doClick = false;
+            if(mIsAxisAction) {
+                float axis = Main.instance.input.GetAxis(player, action);
+                if(axisCheck < 0.0f) {
+                    doClick = axis <= axisCheck;
+                }
+                else if(axisCheck > 0.0f) {
+                    doClick = axis >= axisCheck;
+                }
+            }
+
+            if(mIsAxisActionAlt && !doClick) {
+                float axis = Main.instance.input.GetAxis(player, alternate);
+                if(axisCheck < 0.0f) {
+                    doClick = axis <= axisCheck;
+                }
+                else if(axisCheck > 0.0f) {
+                    doClick = axis >= axisCheck;
+                }
+            }
+
+            if(doClick) {
+                if(!mLastClick) {
+                    mLastClick = true;
+                    mAxisLastTime = Time.time;
+                }
+                else if(Time.time - mAxisLastTime < axisDelay)
+                    doClick = false;
+                else {
+                    mAxisLastTime = Time.time;
+                }
+            }
+            else {
+                if(mLastClick) {
+                    mLastClick = false;
+                    mAxisLastTime = 0.0f;
+                }
+            }
+
+            if(doClick && (!checkSelected || UICamera.selectedObject == gameObject)) {
+                UICamera.Notify(gameObject, "OnClick", null);
+            }
         }
-	}
-	
+    }
+
+    void DoBind() {
+        mIsAxisAction = false;
+        mIsAxisActionAlt = false;
+
+        if(Main.instance != null && Main.instance.input != null) {
+            if(Main.instance.input.GetControlType(action) == InputManager.Control.Button)
+                Main.instance.input.AddButtonCall(player, action, OnInputEnter);
+            else
+                mIsAxisAction = true;
+
+            if(alternate != InputManager.ActionInvalid) {
+                if(Main.instance.input.GetControlType(action) == InputManager.Control.Button)
+                    Main.instance.input.AddButtonCall(player, alternate, OnInputEnter);
+                else
+                    mIsAxisActionAlt = true;
+            }
+        }
+    }
+
     void OnInputEnter(InputManager.Info data) {
         if(data.state == InputManager.State.Pressed && (!checkSelected || UICamera.selectedObject == gameObject)) {
             UICamera.Notify(gameObject, "OnClick", null);

@@ -70,6 +70,9 @@ public class SceneManager : MonoBehaviour {
     }
 
     void _LoadScene(string scene) {
+        //make sure the scene is not paused
+        Resume();
+
         mSceneToLoad = scene;
 
         if(mFirstTime) {

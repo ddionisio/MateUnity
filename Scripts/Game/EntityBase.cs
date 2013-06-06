@@ -42,6 +42,8 @@ public class EntityBase : MonoBehaviour {
 
     private PoolDataController mPoolData;
 
+    private byte mStartedCounter = 0;
+
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
         //TODO: use ours if no 3rd party pool manager
 #if POOLMANAGER
@@ -202,12 +204,15 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void ActivatorWakeUp() {
-        if(mDoSpawnOnWake) { //if we haven't properly spawned yet, do so now
+        if(activateOnStart && mStartedCounter == 1) { //we didn't get a chance to start properly before being inactivated
+            StartCoroutine(DoStart());
+        }
+        else if(mDoSpawnOnWake) { //if we haven't properly spawned yet, do so now
             mDoSpawnOnWake = false;
             StartCoroutine(DoSpawn());
         }
 #if PLAYMAKER
-        else if(mFSM != null) {
+        else if(mFSM != null && mStartedCounter > 0) {
             //resume FSM
             mFSM.Fsm.Event(EntityEvent.Wake);
         }
@@ -255,6 +260,8 @@ public class EntityBase : MonoBehaviour {
     // Use this for initialization
     protected virtual void Start() {
         BroadcastMessage("EntityStart", this, SendMessageOptions.DontRequireReceiver);
+
+        mStartedCounter = 1;
 
         //for when putting entities on scene, skip the spawning state
         if(activateOnStart) {
@@ -350,6 +357,8 @@ public class EntityBase : MonoBehaviour {
         }
 #endif
 
+        mStartedCounter = 2;
+
         yield break;
     }
 
@@ -406,6 +415,8 @@ public class EntityBase : MonoBehaviour {
             SpawnFinish();
         }
 #endif
+
+        mStartedCounter = 2;
 
         yield break;
     }

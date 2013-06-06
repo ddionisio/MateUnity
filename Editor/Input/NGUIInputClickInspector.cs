@@ -15,6 +15,9 @@ public class NGUIInputClickInspector : Editor {
         input.action = M8.Editor.InputMapper.GUISelectInputAction("Action", input.action);
         input.alternate = M8.Editor.InputMapper.GUISelectInputAction("Alt. Action", input.alternate);
 
+        input.axisCheck = EditorGUILayout.FloatField("Axis Check", input.axisCheck);
+        input.axisDelay = EditorGUILayout.FloatField("Axis Delay", input.axisDelay);
+
         input.checkSelected = EditorGUILayout.Toggle("Check Selected", input.checkSelected);
 
         if(GUI.changed)

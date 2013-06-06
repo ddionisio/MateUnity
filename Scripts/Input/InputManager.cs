@@ -143,6 +143,10 @@ public class InputManager : MonoBehaviour {
         return mBinds[action] != null;
     }
 
+    public Control GetControlType(int action) {
+        return mBinds[action].control;
+    }
+
     public float GetAxis(int player, int action) {
         BindData bindData = mBinds[action];
         PlayerData pd = bindData.players[player];
