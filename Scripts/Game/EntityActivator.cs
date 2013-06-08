@@ -25,6 +25,11 @@ public class EntityActivator : MonoBehaviour {
     private Transform mActivatorHolder = null;
 
     /// <summary>
+    /// If true, then we are currently waiting for trigger. If false, then parent should be inactive
+    /// </summary>
+    public bool isActive { get { return mIsActive; } }
+
+    /// <summary>
     /// Initialize, call this when you are about to be re-added to the scene
     /// </summary>
     public void Start() {
@@ -50,7 +55,7 @@ public class EntityActivator : MonoBehaviour {
                 transform.parent = mParentGo.transform;
             }
 
-            StopCoroutine("DoActive");
+            //StopCoroutine("DoActive");
             CancelInvoke("InActiveDelay");
             mParentGo = null;
             mIsActive = true;

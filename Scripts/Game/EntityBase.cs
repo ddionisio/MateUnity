@@ -238,6 +238,13 @@ public class EntityBase : MonoBehaviour {
         releaseCallback = null;
     }
 
+    protected virtual void OnEnable() {
+        //we didn't get a chance to start properly before being inactivated
+        if((mActivator == null || mActivator.isActive) && activateOnStart && mStartedCounter == 1) {
+            StartCoroutine(DoStart());
+        }
+    }
+
     protected virtual void Awake() {
         mPoolData = GetComponent<PoolDataController>();
 
