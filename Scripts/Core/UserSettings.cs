@@ -60,7 +60,7 @@ public class UserSettings {
 #if UNITY_EDITOR
     private const float volumeDefault = 1.0f;
 #else
-	private const float volumeDefault = 0.0f;
+	private const float volumeDefault = 1.0f;
 #endif
 
     private float mVolume;

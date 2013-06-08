@@ -28,7 +28,7 @@ namespace M8 {
                 LayoutRefresh(child);
             }
 
-            t.SendMessage("Reposition", null, SendMessageOptions.DontRequireReceiver);
+            t.gameObject.SendMessage("Reposition", null, SendMessageOptions.DontRequireReceiver);
         }
     }
 }
