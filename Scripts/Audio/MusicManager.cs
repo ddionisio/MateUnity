@@ -57,7 +57,6 @@ public class MusicManager : MonoBehaviour {
     private MusicData mCurMusic;
     private MusicData mNextMusic;
 
-    private float mMusicVolume = 1.0f;
     private int mCurAutoplayInd = -1;
 
     public static MusicManager instance {
@@ -77,7 +76,7 @@ public class MusicManager : MonoBehaviour {
 
         if(mCurMusic == null || immediate) {
             mCurMusic = mMusic[name];
-            mCurMusic.source.volume = mCurMusic.defaultVolume * mMusicVolume;
+            mCurMusic.source.volume = mCurMusic.defaultVolume * Main.instance.userSettings.musicVolume;
             mCurMusic.source.Play();
             SetState(State.Playing);
         }
@@ -118,7 +117,7 @@ public class MusicManager : MonoBehaviour {
             mCurAutoplayInd = 0;
 
         mCurMusic = music[mCurAutoplayInd];
-        mCurMusic.source.volume = mCurMusic.defaultVolume * mMusicVolume;
+        mCurMusic.source.volume = mCurMusic.defaultVolume * Main.instance.userSettings.musicVolume;
         mCurMusic.source.Play();
         SetState(State.Playing);
     }
@@ -157,8 +156,6 @@ public class MusicManager : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        mMusicVolume = Main.instance.userSettings.musicVolume;
-
         if(!string.IsNullOrEmpty(playOnStart)) {
             Play(playOnStart, true);
         }
@@ -169,12 +166,10 @@ public class MusicManager : MonoBehaviour {
     }
 
     void UserSettingsChanged(UserSettings us) {
-        mMusicVolume = us.musicVolume;
-
         if(mCurMusic != null) {
             switch(mState) {
                 case State.Playing:
-                    mCurMusic.source.volume = mCurMusic.defaultVolume * mMusicVolume;
+                    mCurMusic.source.volume = mCurMusic.defaultVolume * us.musicVolume;
                     break;
             }
         }
@@ -216,7 +211,7 @@ public class MusicManager : MonoBehaviour {
                     mCurMusic.source.Stop();
 
                     if(mNextMusic != null) {
-                        mCurMusic.source.volume = mCurMusic.defaultVolume * mMusicVolume;
+                        mCurMusic.source.volume = mCurMusic.defaultVolume * Main.instance.userSettings.musicVolume;
                         mNextMusic.source.Play();
 
                         mCurMusic = mNextMusic;
@@ -229,7 +224,7 @@ public class MusicManager : MonoBehaviour {
                     }
                 }
                 else {
-                    mCurMusic.source.volume = mCurMusic.defaultVolume * (1.0f - mCurTime / changeFadeOutDelay) * mMusicVolume;
+                    mCurMusic.source.volume = mCurMusic.defaultVolume * (1.0f - mCurTime / changeFadeOutDelay) * Main.instance.userSettings.musicVolume;
                 }
                 break;
         }

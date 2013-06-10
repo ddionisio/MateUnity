@@ -13,6 +13,7 @@ public class SoundPlayerGlobal : MonoBehaviour {
         public float delay;
         public float volume = 1.0f;
         public bool loop;
+        public bool realtime;
     }
 
     public SoundData[] sfx;
@@ -21,9 +22,19 @@ public class SoundPlayerGlobal : MonoBehaviour {
 
     public int max = 10;
 
+    private struct SoundPlaying {
+        public SoundData data;
+        public SoundPlayer player;
+        public float startTime;
+        public OnSoundEnd onEndCallback;
+        public object onEndParam;
+    }
+
     private static SoundPlayerGlobal mInstance = null;
 
     private Dictionary<string, SoundData> mSfx;
+
+    private List<SoundPlaying> mSfxPlaying;
 
     private int mNextId = 0;
 
@@ -42,13 +53,22 @@ public class SoundPlayerGlobal : MonoBehaviour {
                 ret.audio.loop = dat.loop;
 
                 SoundPlayer sp = ret.GetComponent<SoundPlayer>();
+                sp.playOnActive = false;
                 sp.defaultVolume = dat.volume;
                 sp.playDelay = dat.delay;
 
                 sp.Play();
 
-                if(!dat.loop)
-                    sp.StartCoroutine(OnSoundPlayFinish(dat.clip.length + dat.delay, ret, onEndCallback, onEndParam));
+                SoundPlaying newPlay = new SoundPlaying() { 
+                    data = dat, 
+                    player = sp, 
+                    startTime = dat.realtime ? Time.realtimeSinceStartup : Time.time,
+                    onEndCallback = onEndCallback,
+                    onEndParam = onEndParam};
+
+                mSfxPlaying.Add(newPlay);
+                
+                 //   sp.StartCoroutine(OnSoundPlayFinish(dat.clip.length + dat.delay, ret, onEndCallback, onEndParam));
 
                 ret.SetActive(true);
             }
@@ -125,16 +145,53 @@ public class SoundPlayerGlobal : MonoBehaviour {
             mSfx = new Dictionary<string, SoundData>(sfx.Length);
             foreach(SoundData sd in sfx)
                 mSfx.Add(sd.name, sd);
-
+                        
             //generate pool
             for(int i = 0; i < max; i++) {
                 CreateSource(i);
             }
 
+            mSfxPlaying = new List<SoundPlaying>(max);
+
             mNextId = 0;
         }
         else
             DestroyImmediate(gameObject);
+    }
+
+    void Update() {
+        if(mSfxPlaying.Count > 0) {
+            for(int i = 0, max = mSfxPlaying.Count; i < max; i++) {
+                SoundPlaying playing = mSfxPlaying[i];
+
+                bool isDone = false;
+
+                if(!playing.player.gameObject.activeSelf) {
+                    isDone = true;
+                }
+                else if(!playing.data.loop) {
+                    float duration = playing.data.clip.length + playing.data.delay;
+
+                    if(playing.data.realtime) {
+                        isDone = Time.realtimeSinceStartup - playing.startTime >= duration;
+                    }
+                    else {
+                        isDone = Time.time - playing.startTime >= duration;
+                    }
+                }
+
+                if(isDone) {
+                    mSfxPlaying.RemoveAt(i);
+                    max = mSfxPlaying.Count;
+                    i--;
+
+                    Stop(playing.player.gameObject);
+
+                    if(playing.onEndCallback != null)
+                        playing.onEndCallback(playing.onEndParam);
+                }
+            }
+        }
     }
     
     private GameObject CreateSource(int ind) {

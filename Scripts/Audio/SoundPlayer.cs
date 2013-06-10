@@ -32,12 +32,12 @@ public class SoundPlayer : MonoBehaviour {
     }
 
     protected virtual void OnEnable() {
-        if(mStarted)
+        if(mStarted && playOnActive)
             Play();
     }
 
     protected virtual void Awake() {
-        audio.playOnAwake = playOnActive;
+        audio.playOnAwake = false;
 
         mDefaultVolume = audio.volume;
     }
@@ -45,6 +45,9 @@ public class SoundPlayer : MonoBehaviour {
     // Use this for initialization
     protected virtual void Start() {
         mStarted = true;
+
+        if(playOnActive)
+            Play();
     }
 
     void UserSettingsChanged(UserSettings us) {
