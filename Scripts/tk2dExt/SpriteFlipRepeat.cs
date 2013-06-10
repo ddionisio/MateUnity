@@ -9,25 +9,33 @@ public class SpriteFlipRepeat : MonoBehaviour {
 	public bool vFlip;
 	
 	public float delay;
+
+    private bool mStarted = false;
 	
 	void OnEnable() {
-		InvokeRepeating("DoFlip", delay, delay);
+        if(mStarted)
+		    InvokeRepeating("DoFlip", delay, delay);
 	}
-	
-	void Awake() {
+
+    void OnDisable() {
+        CancelInvoke("DoFlip");
+    }
+
+    void Awake() {
         if(sprite == null)
             sprite = GetComponent<tk2dBaseSprite>();
+    }
+	
+	void Start() {
+        mStarted = true;
+        InvokeRepeating("DoFlip", delay, delay);
 	}
 	
 	void DoFlip() {
-        Vector3 s = sprite.scale;
-		
-		if(hFlip)
-			s.x *= -1;
+        if(hFlip)
+            sprite.FlipX = !sprite.FlipX;
 		
 		if(vFlip)
-			s.y *= -1;
-
-        sprite.scale = s;
+            sprite.FlipY = !sprite.FlipY;
 	}
 }

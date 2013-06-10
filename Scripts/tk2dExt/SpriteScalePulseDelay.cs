@@ -17,9 +17,11 @@ public class SpriteScalePulseDelay : MonoBehaviour {
     private WaitForFixedUpdate mDoUpdate;
     private WaitForSeconds mWaitSecondsStart;
     private WaitForSeconds mWaitSecondsUpdate;
+
+    private bool mStarted = false;
         
     void OnEnable() {
-        if(sprite != null) {
+        if(mStarted) {
             StartCoroutine(DoPulseUpdate());
         }
     }
@@ -31,6 +33,9 @@ public class SpriteScalePulseDelay : MonoBehaviour {
     }
 
     void Awake() {
+        if(sprite == null)
+            sprite = GetComponent<tk2dBaseSprite>();
+
         mDoUpdate = new WaitForFixedUpdate();
         mWaitSecondsStart = new WaitForSeconds(startDelay);
         mWaitSecondsUpdate = new WaitForSeconds(pauseDelay);
@@ -38,9 +43,8 @@ public class SpriteScalePulseDelay : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        if(sprite == null)
-            sprite = GetComponent<tk2dBaseSprite>();
-
+        mStarted = true;
+                
         StartCoroutine(DoPulseUpdate());
     }
 
