@@ -37,5 +37,20 @@ namespace M8 {
 
             return ret;
         }
+
+        /// <summary>
+        /// Get the layer the given transform resides in, 0 = root, ie. no parent
+        /// </summary>
+        public static int GetNodeLayer(Transform t) {
+            int ret = 0;
+
+            Transform p = t.parent;
+            while(p != null) {
+                ret++;
+                p = p.parent;
+            }
+
+            return ret;
+        }
     }
 }

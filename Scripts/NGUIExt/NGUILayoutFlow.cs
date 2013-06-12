@@ -3,7 +3,7 @@ using System.Collections;
 
 [ExecuteInEditMode]
 [AddComponentMenu("M8/NGUI/LayoutFlow")]
-public class NGUILayoutFlow : MonoBehaviour {
+public class NGUILayoutFlow : NGUILayoutBase {
 
     public enum Arrangement {
         Horizontal,
@@ -18,8 +18,6 @@ public class NGUILayoutFlow : MonoBehaviour {
 
     public Arrangement arrangement = Arrangement.Horizontal;
     public float padding;
-    public bool rounding = true;
-    public bool repositionNow = false;
     public bool relativeLineup = false;
 
     public LineUp lineup = LineUp.None;
@@ -29,16 +27,7 @@ public class NGUILayoutFlow : MonoBehaviour {
 
     private Bounds[] mBounds;
 
-    void Start() {
-        Reposition();
-    }
-
-    void Update() {
-        if(repositionNow)
-            Reposition();
-    }
-
-    public void Reposition() {
+    public override void Reposition() {
         bool useContents = contents != null && contents.Length > 0;
         int count = useContents ? contents.Length : transform.childCount;
 
@@ -274,7 +263,5 @@ public class NGUILayoutFlow : MonoBehaviour {
                 }
                 break;
         }
-
-        repositionNow = false;
     }
 }

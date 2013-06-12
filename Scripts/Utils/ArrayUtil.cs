@@ -54,5 +54,23 @@ namespace M8 {
 
             src = dest;
         }
+
+        public static void InsertAfter<T>(ref T[] src, int index, T val) {
+            if(index == src.Length - 1) {
+                System.Array.Resize(ref src, src.Length + 1);
+                src[src.Length - 1] = val;
+            }
+            else {
+                T[] dest = new T[src.Length + 1];
+
+                Array.Copy(src, dest, index+1);
+
+                dest[index + 1] = val;
+
+                Array.Copy(src, index + 1, dest, index + 2, src.Length - (index + 1));
+
+                src = dest;
+            }
+        }
 	}
 }

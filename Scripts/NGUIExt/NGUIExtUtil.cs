@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 //helper stuff
 namespace M8 {
@@ -21,14 +22,6 @@ namespace M8 {
 
             t.localPosition = pos;
             t.localScale = s;
-        }
-
-        public static void LayoutRefresh(Transform t) {
-            foreach(Transform child in t) {
-                LayoutRefresh(child);
-            }
-
-            t.gameObject.SendMessage("Reposition", null, SendMessageOptions.DontRequireReceiver);
         }
     }
 }

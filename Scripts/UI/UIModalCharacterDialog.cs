@@ -2,29 +2,16 @@ using UnityEngine;
 using System.Collections;
 
 [AddComponentMenu("M8/UI/ModalCharacterDialog")]
-[ExecuteInEditMode()]
 public class UIModalCharacterDialog : UIController {
     //index = -1 if there are no choices and we clicked next
     public delegate void OnAction(int choiceIndex);
 
     public const string defaultModalRef = "CharacterDialog";
 
-#if UNITY_EDITOR
-    public bool editorRefresh = false; //only use in editor
-#endif
-
-    public UISprite frame; //optional
-    public Vector2 framePadding;
-
-    public UISprite background; //optional
-    public Vector2 backgroundPadding;
-
     public UISprite portrait; //optional
     public UILabel nameLabel; //optional
     public UILabel textLabel; //required
 
-    public Transform bodyContainer; //optional: this is the transform that encapsulates both the portrait and content
-    public Transform contentContainer; //required: contains name, text, and the choices
     public Transform choiceContainer; //optional: each child must have a UIEventListener
 
     public event OnAction actionCallback;
@@ -34,10 +21,6 @@ public class UIModalCharacterDialog : UIController {
         public UIEventListener listener;
         public UIButtonKeys keys;
     }
-
-    private NGUILayoutFlow mChoiceFlow = null;
-    private NGUILayoutFlow mContentLayoutFlow = null; //this is to arrange all elements inside the body vertically
-    private NGUILayoutFlow mBodyLayoutFlow = null; //this is to arrange the portrait and the content horizontally
 
     private ChoiceData[] mChoiceEvents = null;
     private int mNumChoices;
@@ -90,8 +73,11 @@ public class UIModalCharacterDialog : UIController {
                 mNumChoices = Mathf.Min(choices.Length, mChoiceEvents.Length);
 
                 for(int i = 0; i < mNumChoices; i++) {
-                    if(mChoiceEvents[i].label != null) mChoiceEvents[i].label.text = isLocalized ? GameLocalize.GetText(choices[i]) : choices[i];
                     mChoiceEvents[i].keys.gameObject.SetActive(true);
+                    if(mChoiceEvents[i].label != null) {
+                        mChoiceEvents[i].label.text = isLocalized ? GameLocalize.GetText(choices[i]) : choices[i];
+                    }
+                    
 
                     if(i == 0) {
                         mChoiceEvents[i].keys.selectOnUp = mChoiceEvents[mNumChoices - 1].keys;
@@ -114,39 +100,7 @@ public class UIModalCharacterDialog : UIController {
         if(gameObject.activeSelf) {
             ApplyActive();
 
-            Reposition();
-        }
-    }
-
-    public void Reposition() {
-        //refresh choice flow
-        if(mChoiceFlow != null)
-            mChoiceFlow.Reposition();
-
-        Bounds bounds;
-
-        //refresh content layout flow
-        if(mContentLayoutFlow != null) {
-            mContentLayoutFlow.Reposition();
-        }
-
-        //finally, the body, which will arrange content and portrait
-        if(mBodyLayoutFlow != null) {
-            mBodyLayoutFlow.Reposition();
-
-            bounds = NGUIMath.CalculateRelativeWidgetBounds(bodyContainer);
-        }
-        else {
-            bounds = NGUIMath.CalculateRelativeWidgetBounds(contentContainer);
-        }
-
-        //stretch frame and background based on bounds
-        if(background != null) {
-            M8.NGUIExtUtil.WidgetEncapsulateBoundsLocal(background, backgroundPadding, bounds);
-        }
-
-        if(frame != null) {
-            M8.NGUIExtUtil.WidgetEncapsulateBoundsLocal(frame, framePadding, bounds);
+            NGUILayoutBase.RefreshNow(transform);
         }
     }
 
@@ -170,18 +124,6 @@ public class UIModalCharacterDialog : UIController {
 
     }
 
-#if UNITY_EDITOR
-    // Update is called once per frame
-    void Update() {
-        if(!Application.isPlaying && editorRefresh) {
-            mIsInit = false;
-            InitData();
-            Reposition();
-            editorRefresh = false;
-        }
-    }
-#endif
-
     protected override void OnActive(bool active) {
         //for selector, activate first choice
         if(active) {
@@ -190,7 +132,7 @@ public class UIModalCharacterDialog : UIController {
     }
 
     protected override void OnOpen() {
-        Reposition();
+        NGUILayoutBase.RefreshNow(transform);
     }
 
     protected override void OnClose() {
@@ -229,7 +171,7 @@ public class UIModalCharacterDialog : UIController {
                 textLabel.pivot = UIWidget.Pivot.TopLeft;
             }
 
-            if(contentContainer != null) {
+            /*if(contentContainer != null) {
                 mContentLayoutFlow = contentContainer.GetComponent<NGUILayoutFlow>();
                 mContentLayoutFlow.arrangement = NGUILayoutFlow.Arrangement.Vertical;
                 mContentLayoutFlow.rounding = true;
@@ -237,9 +179,9 @@ public class UIModalCharacterDialog : UIController {
 
                 mContentLayoutFlow.lineup = NGUILayoutFlow.LineUp.End;
                 mContentLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.Center;
-            }
+            }*/
 
-            if(bodyContainer != null) {
+            /*if(bodyContainer != null) {
                 if(mContentLayoutFlow != null) {
                     mContentLayoutFlow.lineup = NGUILayoutFlow.LineUp.None;
                     mContentLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.None;
@@ -251,15 +193,15 @@ public class UIModalCharacterDialog : UIController {
                 mBodyLayoutFlow.relativeLineup = false;
                 mBodyLayoutFlow.lineup = NGUILayoutFlow.LineUp.Center;
                 mBodyLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.End;
-            }
+            }*/
 
             if(choiceContainer != null && choiceContainer.GetChildCount() > 0) {
-                mChoiceFlow = choiceContainer.GetComponent<NGUILayoutFlow>();
+                /*mChoiceFlow = choiceContainer.GetComponent<NGUILayoutFlow>();
                 mChoiceFlow.arrangement = NGUILayoutFlow.Arrangement.Vertical;
                 mChoiceFlow.rounding = true;
                 mChoiceFlow.relativeLineup = false;
                 mChoiceFlow.lineup = NGUILayoutFlow.LineUp.None;
-                mChoiceFlow.lineup2 = NGUILayoutFlow.LineUp.None;
+                mChoiceFlow.lineup2 = NGUILayoutFlow.LineUp.None;*/
 
                 mChoiceEvents = new ChoiceData[choiceContainer.GetChildCount()];
 

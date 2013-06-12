@@ -3,7 +3,7 @@ using System.Collections;
 
 [ExecuteInEditMode]
 [AddComponentMenu("M8/NGUI/LayoutAnchor")]
-public class NGUILayoutAnchor : MonoBehaviour {
+public class NGUILayoutAnchor : NGUILayoutBase {
 
     public enum DirectionHorizontal {
         Left,
@@ -28,19 +28,15 @@ public class NGUILayoutAnchor : MonoBehaviour {
 
     public DirectionHorizontal dirHorz;
     public DirectionVertical dirVert;
-
-    public bool rounding = true;
-
-    public bool alwaysUpdate = false;
-
-    private Transform mTrans;
-
-    public void Reposition() {
+        
+    public override void Reposition() {
         if(target != null) {
-            Vector3 pos = mTrans.localPosition;
-            Vector3 s = mTrans.localScale;
+            Transform trans = transform;
 
-            Bounds targetBound = NGUIMath.CalculateRelativeWidgetBounds(mTrans.parent, target);
+            Vector3 pos = trans.localPosition;
+            Vector3 s = trans.localScale;
+
+            Bounds targetBound = NGUIMath.CalculateRelativeWidgetBounds(trans.parent, target);
 
             switch(dirHorz) {
                 case DirectionHorizontal.Left:
@@ -85,23 +81,8 @@ public class NGUILayoutAnchor : MonoBehaviour {
                 s.y = Mathf.Round(s.y);
             }
 
-            mTrans.localPosition = pos;
-            mTrans.localScale = s;
+            trans.localPosition = pos;
+            trans.localScale = s;
         }
-    }
-
-    void Awake() {
-        mTrans = transform;
-    }
-
-    // Update is called once per frame
-    void Update() {
-#if UNITY_EDITOR
-        Reposition();
-#else
-		if(alwaysUpdate) {
-			Reposition();
-		}
-#endif
     }
 }

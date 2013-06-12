@@ -49,7 +49,7 @@ public class UIModalConfirm : UIController {
     }
 
     protected override void OnOpen() {
-        M8.NGUIExtUtil.LayoutRefresh(transform);
+        NGUILayoutBase.RefreshNow(transform);
     }
 
     protected override void OnClose() {
