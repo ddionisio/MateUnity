@@ -18,11 +18,11 @@ public class UIModalCharacterDialog : UIController {
 
     public UISprite background; //optional
     public Vector2 backgroundPadding;
-        
+
     public UISprite portrait; //optional
     public UILabel nameLabel; //optional
     public UILabel textLabel; //required
-            
+
     public Transform bodyContainer; //optional: this is the transform that encapsulates both the portrait and content
     public Transform contentContainer; //required: contains name, text, and the choices
     public Transform choiceContainer; //optional: each child must have a UIEventListener
@@ -30,6 +30,7 @@ public class UIModalCharacterDialog : UIController {
     public event OnAction actionCallback;
 
     private struct ChoiceData {
+        public UILabel label;
         public UIEventListener listener;
         public UIButtonKeys keys;
     }
@@ -39,13 +40,15 @@ public class UIModalCharacterDialog : UIController {
     private NGUILayoutFlow mBodyLayoutFlow = null; //this is to arrange the portrait and the content horizontally
 
     private ChoiceData[] mChoiceEvents = null;
+    private int mNumChoices;
+    private bool mIsInit = false;
 
-    public static UIModalCharacterDialog Open(string modalRef, string text, string name = null, string portraitSpriteRef = null, string[] choices = null) {
+    public static UIModalCharacterDialog Open(bool isLocalized, string modalRef, string text, string aName = null, string portraitSpriteRef = null, string[] choices = null) {
         UIModalManager ui = UIModalManager.instance;
         UIModalCharacterDialog dlg = ui.ModalGetController<UIModalCharacterDialog>(modalRef);
 
         if(dlg != null) {
-            dlg.Apply(text, name, portraitSpriteRef, choices);
+            dlg.Apply(isLocalized, text, aName, portraitSpriteRef, choices);
 
             if(!ui.ModalIsInStack(modalRef)) {
                 ui.ModalOpen(modalRef); //will show on the next update
@@ -57,15 +60,17 @@ public class UIModalCharacterDialog : UIController {
 
         return dlg;
     }
-
+    
     /// <summary>
     /// Set the text and such for the dialog, call this before opening the dialog
     /// </summary>
-    public void Apply(string text, string name = null, string portraitSpriteRef = null, string[] choices = null) {
-        textLabel.text = text;
+    public void Apply(bool isLocalized, string text, string aName = null, string portraitSpriteRef = null, string[] choices = null) {
+        InitData();
+
+        textLabel.text = isLocalized ? GameLocalize.GetText(text) : text;
 
         if(nameLabel != null)
-            nameLabel.text = name;
+            nameLabel.text = isLocalized ? GameLocalize.GetText(aName) : aName;
 
         if(portrait != null) {
             if(portraitSpriteRef != null) {
@@ -78,28 +83,39 @@ public class UIModalCharacterDialog : UIController {
         }
 
         //apply choices
+        ResetChoices();
+
         if(mChoiceEvents != null) {
-            ResetChoices();
-
             if(choices != null && choices.Length > 0) {
-                int max = Mathf.Min(choices.Length, mChoiceEvents.Length);
+                mNumChoices = Mathf.Min(choices.Length, mChoiceEvents.Length);
 
-                mChoiceEvents[0].keys.selectOnUp = mChoiceEvents[max - 1].keys;
-                mChoiceEvents[0].keys.gameObject.SetActive(true);
-
-                mChoiceEvents[max - 1].keys.selectOnDown = mChoiceEvents[0].keys;
-                mChoiceEvents[max - 1].keys.gameObject.SetActive(true);
-
-                for(int i = 1; i < max - 1; i++) {
+                for(int i = 0; i < mNumChoices; i++) {
+                    if(mChoiceEvents[i].label != null) mChoiceEvents[i].label.text = isLocalized ? GameLocalize.GetText(choices[i]) : choices[i];
                     mChoiceEvents[i].keys.gameObject.SetActive(true);
-                    mChoiceEvents[i].keys.selectOnDown = mChoiceEvents[i + 1].keys;
+
+                    if(i == 0) {
+                        mChoiceEvents[i].keys.selectOnUp = mChoiceEvents[mNumChoices - 1].keys;
+                    }
+                    else {
+                        mChoiceEvents[i].keys.selectOnUp = mChoiceEvents[i - 1].keys;
+                    }
+
+                    if(i < mNumChoices - 1) {
+                        mChoiceEvents[i].keys.selectOnDown = mChoiceEvents[i + 1].keys;
+                    }
+                    else {
+                        mChoiceEvents[i].keys.selectOnDown = mChoiceEvents[0].keys;
+                    }
                 }
             }
         }
 
         //if dialog is already open, apply positioning
-        if(gameObject.activeSelf)
+        if(gameObject.activeSelf) {
+            ApplyActive();
+
             Reposition();
+        }
     }
 
     public void Reposition() {
@@ -135,9 +151,11 @@ public class UIModalCharacterDialog : UIController {
     }
 
     void OnDestroy() {
-        foreach(ChoiceData dat in mChoiceEvents) {
-            if(dat.listener != null)
-                dat.listener.onClick = null;
+        if(mChoiceEvents != null) {
+            foreach(ChoiceData dat in mChoiceEvents) {
+                if(dat.listener != null)
+                    dat.listener.onClick = null;
+            }
         }
 
         actionCallback = null;
@@ -145,7 +163,6 @@ public class UIModalCharacterDialog : UIController {
 
     void Awake() {
         InitData();
-        
     }
 
     // Use this for initialization
@@ -156,7 +173,8 @@ public class UIModalCharacterDialog : UIController {
 #if UNITY_EDITOR
     // Update is called once per frame
     void Update() {
-        if(editorRefresh) {
+        if(!Application.isPlaying && editorRefresh) {
+            mIsInit = false;
             InitData();
             Reposition();
             editorRefresh = false;
@@ -167,12 +185,7 @@ public class UIModalCharacterDialog : UIController {
     protected override void OnActive(bool active) {
         //for selector, activate first choice
         if(active) {
-            if(mChoiceEvents != null && mChoiceEvents[0].keys.gameObject.activeInHierarchy) {
-                UICamera.selectedObject = mChoiceEvents[0].keys.gameObject;
-            }
-            else {
-                UICamera.selectedObject = gameObject;
-            }
+            ApplyActive();
         }
     }
 
@@ -185,75 +198,101 @@ public class UIModalCharacterDialog : UIController {
         ResetChoices();
     }
 
+    void ApplyActive() {
+        if(mChoiceEvents != null && mNumChoices > 0) {
+            UICamera.selectedObject = mChoiceEvents[0].keys.gameObject;
+        }
+        else {
+            UICamera.selectedObject = gameObject;
+        }
+    }
+
     //this would be called if we have no choice events, or a mouse click. If there are choices, ignore
     void OnClick() {
-        if(mChoiceEvents == null && actionCallback != null) {
+        if(mNumChoices == 0 && actionCallback != null) {
             actionCallback(-1);
 
         }
     }
 
     private void InitData() {
-        if(portrait != null) {
-            portrait.pivot = UIWidget.Pivot.TopLeft;
-        }
-
-        if(nameLabel != null) {
-            nameLabel.pivot = UIWidget.Pivot.TopLeft;
-        }
-
-        if(textLabel != null) {
-            textLabel.pivot = UIWidget.Pivot.TopLeft;
-        }
-
-        if(contentContainer != null) {
-            mContentLayoutFlow = contentContainer.GetComponentInChildren<NGUILayoutFlow>();
-            mContentLayoutFlow.arrangement = NGUILayoutFlow.Arrangement.Vertical;
-            mContentLayoutFlow.rounding = true;
-            mContentLayoutFlow.relativeLineup = false;
-
-            mContentLayoutFlow.lineup = NGUILayoutFlow.LineUp.End;
-            mContentLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.Center;
-        }
-
-        if(bodyContainer != null) {
-            if(mContentLayoutFlow != null) {
-                mContentLayoutFlow.lineup = NGUILayoutFlow.LineUp.None;
-                mContentLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.None;
+        if(!mIsInit) {
+            if(portrait != null) {
+                portrait.pivot = UIWidget.Pivot.TopLeft;
             }
 
-            mBodyLayoutFlow = bodyContainer.GetComponentInChildren<NGUILayoutFlow>();
-            mBodyLayoutFlow.arrangement = NGUILayoutFlow.Arrangement.Horizontal;
-            mBodyLayoutFlow.rounding = true;
-            mBodyLayoutFlow.relativeLineup = false;
-            mBodyLayoutFlow.lineup = NGUILayoutFlow.LineUp.Center;
-            mBodyLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.End;
+            if(nameLabel != null) {
+                nameLabel.pivot = UIWidget.Pivot.TopLeft;
+            }
+
+            if(textLabel != null) {
+                textLabel.pivot = UIWidget.Pivot.TopLeft;
+            }
+
+            if(contentContainer != null) {
+                mContentLayoutFlow = contentContainer.GetComponent<NGUILayoutFlow>();
+                mContentLayoutFlow.arrangement = NGUILayoutFlow.Arrangement.Vertical;
+                mContentLayoutFlow.rounding = true;
+                mContentLayoutFlow.relativeLineup = false;
+
+                mContentLayoutFlow.lineup = NGUILayoutFlow.LineUp.End;
+                mContentLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.Center;
+            }
+
+            if(bodyContainer != null) {
+                if(mContentLayoutFlow != null) {
+                    mContentLayoutFlow.lineup = NGUILayoutFlow.LineUp.None;
+                    mContentLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.None;
+                }
+
+                mBodyLayoutFlow = bodyContainer.GetComponent<NGUILayoutFlow>();
+                mBodyLayoutFlow.arrangement = NGUILayoutFlow.Arrangement.Horizontal;
+                mBodyLayoutFlow.rounding = true;
+                mBodyLayoutFlow.relativeLineup = false;
+                mBodyLayoutFlow.lineup = NGUILayoutFlow.LineUp.Center;
+                mBodyLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.End;
+            }
+
+            if(choiceContainer != null && choiceContainer.GetChildCount() > 0) {
+                mChoiceFlow = choiceContainer.GetComponent<NGUILayoutFlow>();
+                mChoiceFlow.arrangement = NGUILayoutFlow.Arrangement.Vertical;
+                mChoiceFlow.rounding = true;
+                mChoiceFlow.relativeLineup = false;
+                mChoiceFlow.lineup = NGUILayoutFlow.LineUp.None;
+                mChoiceFlow.lineup2 = NGUILayoutFlow.LineUp.None;
+
+                mChoiceEvents = new ChoiceData[choiceContainer.GetChildCount()];
+
+                //setup callback for click
+                //disable all choices
+                for(int i = 0; i < mChoiceEvents.Length; i++) {
+                    Transform choice = choiceContainer.GetChild(i);
+                    mChoiceEvents[i].listener = choice.GetComponent<UIEventListener>();
+                    mChoiceEvents[i].listener.onClick = OnChoiceClick;
+
+                    mChoiceEvents[i].keys = choice.GetComponent<UIButtonKeys>();
+
+                    //only the first one, should only be one of these!
+                    UILabel[] labels = choice.GetComponentsInChildren<UILabel>(true);
+                    if(labels.Length > 0)
+                        mChoiceEvents[i].label = labels[0];
+                    //
+
+                    choice.gameObject.SetActive(false);
+                }
+            }
+
+            mIsInit = true;
         }
+    }
 
-        if(choiceContainer != null) {
-            mChoiceFlow = choiceContainer.GetComponentInChildren<NGUILayoutFlow>();
-            mChoiceFlow.arrangement = NGUILayoutFlow.Arrangement.Vertical;
-            mChoiceFlow.rounding = true;
-            mChoiceFlow.relativeLineup = false;
-            mChoiceFlow.lineup = NGUILayoutFlow.LineUp.None;
-            mChoiceFlow.lineup2 = NGUILayoutFlow.LineUp.None;
+    private void OnChoiceClick(GameObject go) {
+        for(int i = 0; i < mChoiceEvents.Length; i++) {
+            if(mChoiceEvents[i].listener.gameObject == go) {
+                if(actionCallback != null)
+                    actionCallback(i);
 
-            mChoiceEvents = new ChoiceData[choiceContainer.GetChildCount()];
-
-            //setup callback for click
-            //disable all choices
-            for(int i = 0; i < mChoiceEvents.Length; i++) {
-                Transform choice = choiceContainer.GetChild(i);
-                mChoiceEvents[i].listener = choice.GetComponent<UIEventListener>();
-                mChoiceEvents[i].keys = choice.GetComponent<UIButtonKeys>();
-
-                mChoiceEvents[i].listener.onClick = delegate(GameObject go) {
-                    if(actionCallback != null)
-                        actionCallback(i);
-                };
-                //
-
-                choice.gameObject.SetActive(false);
+                break;
             }
         }
     }
@@ -266,5 +305,7 @@ public class UIModalCharacterDialog : UIController {
                 dat.keys.selectOnDown = null;
             }
         }
+
+        mNumChoices = 0;
     }
 }

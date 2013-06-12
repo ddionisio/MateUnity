@@ -20,6 +20,8 @@ public class WaypointMover : MonoBehaviour {
         Damp
     }
 
+    public delegate void OnMoveCall(WaypointMover wm);
+
     public string waypoint;
 
     public Transform target;
@@ -33,12 +35,18 @@ public class WaypointMover : MonoBehaviour {
 
     public int startIndex = 0;
 
+    public event OnMoveCall moveBeginCallback; //starting to move to destination
+    public event OnMoveCall movePauseCallback; //starting to move to destination
+
+    private bool mPaused = false;
+
     private int mCurInd;
     private bool mReversed;
 
     private Vector3 mCurVel;
     private Vector3 mStartPos;
     private Vector3 mEndPos;
+    private Vector3 mDir;
 
     private bool mStarted = false;
 
@@ -50,12 +58,41 @@ public class WaypointMover : MonoBehaviour {
     private WaitForSeconds mWaitStartDelay;
     private WaitForSeconds mWaitDelay;
 
+    private Rigidbody mTargetBody;
+
+    public bool pause {
+        get { return mPaused; }
+        set {
+            if(mPaused != value) {
+                mPaused = value;
+
+                if(mPaused) {
+                    if(movePauseCallback != null)
+                        movePauseCallback(this);
+                }
+                else {
+                    if(moveBeginCallback != null)
+                        moveBeginCallback(this);
+                }
+            }
+        }
+    }
+
+    public Vector3 dir {
+        get { return mDir; }
+    }
+
+    void OnDestroy() {
+        moveBeginCallback = null;
+        movePauseCallback = null;
+    }
+
     void OnEnable() {
         if(mStarted) {
             if(mWPs.Count > 1)
                 StartCoroutine(DoIt());
             else
-                target.position = mWPs[0].position;
+                ApplyPosition(mWPs[0].position);
         }
     }
 
@@ -63,9 +100,11 @@ public class WaypointMover : MonoBehaviour {
         if(target == null)
             target = transform;
 
+        mTargetBody = target.rigidbody;
+
         mWaitUpdate = new WaitForFixedUpdate();
         mWaitStartDelay = new WaitForSeconds(startWait);
-        mWaitDelay = new WaitForSeconds(nodeWait);
+        mWaitDelay = nodeWait > 0.0f ? new WaitForSeconds(nodeWait) : null;
     }
 
     // Use this for initialization
@@ -77,55 +116,69 @@ public class WaypointMover : MonoBehaviour {
         if(mWPs.Count > 1)
             StartCoroutine(DoIt());
         else
-            target.position = mWPs[startIndex].position;
+            ApplyPosition(mWPs[startIndex].position);
     }
 
     IEnumerator DoIt() {
         //reset data
         mCurInd = startIndex;
         mReversed = false;
+        mPaused = false;
 
         yield return mWaitStartDelay;
 
         do {
             SetCurrent();
 
+            if(!mPaused) {
+                if(moveBeginCallback != null)
+                    moveBeginCallback(this);
+            }
+
             //move it
             while(mCurTime < moveDelay) {
-                mCurTime += Time.fixedDeltaTime;
+                if(!mPaused) {
+                    mCurTime += Time.fixedDeltaTime;
 
-                switch(move) {
-                    case Move.Lerp:
-                        target.position = Vector3.Lerp(mStartPos, mEndPos, mCurTime / moveDelay);
-                        break;
+                    switch(move) {
+                        case Move.Lerp:
+                            ApplyPosition(Vector3.Lerp(mStartPos, mEndPos, mCurTime / moveDelay));
+                            break;
 
-                    case Move.EaseIn:
-                        target.position =
-                            new Vector3(
-                                M8.Ease.In(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
-                                M8.Ease.In(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
-                                M8.Ease.In(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z));
-                        break;
+                        case Move.EaseIn:
+                            ApplyPosition(
+                                new Vector3(
+                                    M8.Ease.In(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
+                                    M8.Ease.In(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
+                                    M8.Ease.In(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)));
+                            break;
 
-                    case Move.EaseOut:
-                        target.position =
-                            new Vector3(
-                                M8.Ease.Out(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
-                                M8.Ease.Out(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
-                                M8.Ease.Out(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z));
-                        break;
+                        case Move.EaseOut:
+                            ApplyPosition(
+                                new Vector3(
+                                    M8.Ease.Out(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
+                                    M8.Ease.Out(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
+                                    M8.Ease.Out(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)));
+                            break;
 
-                    case Move.Damp:
-                        target.position = Vector3.SmoothDamp(target.position, mEndPos, ref mCurVel, Time.fixedDeltaTime);
-                        break;
+                        case Move.Damp:
+                            ApplyPosition(Vector3.SmoothDamp(target.position, mEndPos, ref mCurVel, Time.fixedDeltaTime));
+                            break;
+                    }
                 }
 
                 yield return mWaitUpdate;
             }
 
-            target.position = mEndPos;
+            ApplyPosition(mEndPos);
 
-            yield return mWaitDelay;
+            if(mWaitDelay != null) {
+                if(movePauseCallback != null)
+                    movePauseCallback(this);
+
+                yield return mWaitDelay;
+            }
+
         } while(!Next());
 
         yield break;
@@ -135,7 +188,7 @@ public class WaypointMover : MonoBehaviour {
         switch(move) {
             case Move.Damp:
                 mCurVel = Vector3.zero;
-                target.position = mWPs[mCurInd].position;
+                ApplyPosition(mWPs[mCurInd].position);
                 break;
 
             default:
@@ -173,6 +226,8 @@ public class WaypointMover : MonoBehaviour {
 
         mEndPos = mWPs[nextInd].position;
 
+        mDir = (mEndPos - mStartPos).normalized;
+
         mCurTime = 0.0f;
     }
 
@@ -209,5 +264,12 @@ public class WaypointMover : MonoBehaviour {
         }
 
         return ret;
+    }
+
+    void ApplyPosition(Vector3 pos) {
+        if(mTargetBody != null)
+            mTargetBody.MovePosition(pos);
+        else
+            target.position = pos;
     }
 }
