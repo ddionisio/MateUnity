@@ -179,6 +179,8 @@ namespace M8.Editor {
                             break;
                     }
                 }
+
+                EditorGUIUtility.LookLikeControls();
             }
 
             GUILayout.EndVertical();

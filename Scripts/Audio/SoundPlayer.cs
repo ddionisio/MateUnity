@@ -51,7 +51,7 @@ public class SoundPlayer : MonoBehaviour {
     }
 
     void UserSettingsChanged(UserSettings us) {
-        if(audio.isPlaying)
-            audio.volume = mDefaultVolume * us.soundVolume;
+        //if(audio.isPlaying)
+        audio.volume = mDefaultVolume * us.soundVolume;    
     }
 }
