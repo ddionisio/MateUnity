@@ -31,7 +31,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
         bool useContents = contents != null && contents.Length > 0;
         int count = useContents ? contents.Length : transform.childCount;
 
-        Bounds b;
+        Bounds b = new Bounds();
 
         //calculate bounds
 
