@@ -6,15 +6,19 @@
 *.csproj
 *.unityproj
 *.sln
+*.pidb
+*.DotSettings
 
 NGUI/
 TK2DROOT/
 PlayMaker/
 PathologicalGames/
+UnityVS/
 NGUI.meta
 TK2DROOT.meta
 PlayMaker.meta
 PathologicalGames.meta
+UnityVS.meta
 
 Ouya/
 Plugins/Android/
