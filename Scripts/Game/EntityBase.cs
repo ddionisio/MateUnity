@@ -8,6 +8,42 @@ using System.Collections;
 using HutongGames.PlayMaker;
 #endif
 
+/*
+Basic Framework would be something like this:
+    protected override void OnDespawned() {
+        //reset stuff here
+
+        base.OnDespawned();
+    }
+
+    protected override void OnDestroy() {
+        //dealloc here
+
+        base.OnDestroy();
+    }
+
+    public override void SpawnFinish() {
+        //start ai, player control, etc
+    }
+
+    protected override void SpawnStart() {
+        //initialize some things
+    }
+
+    protected override void Awake() {
+        base.Awake();
+
+        //initialize variables
+    }
+
+    // Use this for initialization
+    protected override void Start() {
+        base.Start();
+
+        //initialize variables from other sources (for communicating with managers, etc.)
+    }
+*/
+
 [AddComponentMenu("M8/Entity/EntityBase")]
 public class EntityBase : MonoBehaviour {
     public const int StateInvalid = -1;
@@ -18,7 +54,11 @@ public class EntityBase : MonoBehaviour {
 
     public float spawnDelay = 0.1f;
 
-    public bool activateOnStart = false; //if we want FSM/other stuff to activate on start (when placing entities on scene)
+    /// <summary>
+    /// if we want FSM/other stuff to activate on start (when placing entities on scene).
+    /// Set this to true if the entity is not gonna be spawned via Pool
+    /// </summary>
+    public bool activateOnStart = false; 
     
     public event OnSetState setStateCallback;
     public event OnSetBool setBlinkCallback;
@@ -353,6 +393,14 @@ public class EntityBase : MonoBehaviour {
             if(spawnCallback != null) {
                 spawnCallback(this);
             }
+
+            if(autoSpawnFinish) {
+                if(spawnDelay > 0.0f) {
+                    yield return new WaitForSeconds(spawnDelay);
+                }
+
+                SpawnFinish();
+            }
         }
 #else
         yield return new WaitForFixedUpdate();
@@ -361,6 +409,14 @@ public class EntityBase : MonoBehaviour {
 
         if(spawnCallback != null) {
             spawnCallback(this);
+        }
+
+        if(autoSpawnFinish) {
+            if(spawnDelay > 0.0f) {
+                yield return new WaitForSeconds(spawnDelay);
+            }
+
+            SpawnFinish();
         }
 #endif
 
