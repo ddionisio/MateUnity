@@ -203,6 +203,8 @@ public class PoolController : MonoBehaviour {
 
             if(entityRet != null) {
                 entityRet.transform.position = position;
+
+                entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
             }
             else {
                 Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);

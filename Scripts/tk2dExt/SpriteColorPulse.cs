@@ -11,6 +11,8 @@ public class SpriteColorPulse : MonoBehaviour {
 	
 	private float mCurPulseTime = 0;
     private bool mStarted = false;
+
+    private Color mDefaultColor;
 	
 	void OnEnable() {
         if(mStarted) {
@@ -21,13 +23,15 @@ public class SpriteColorPulse : MonoBehaviour {
 
     void OnDisable() {
         if(mStarted) {
-            sprite.color = startColor;
+            sprite.color = mDefaultColor;
         }
     }
 	
 	void Awake() {
         if(sprite == null)
             sprite = GetComponent<tk2dBaseSprite>();
+
+        mDefaultColor = sprite.color;
 	}
 	
 	// Use this for initialization

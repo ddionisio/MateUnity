@@ -79,9 +79,7 @@ public class EntityBase : MonoBehaviour {
 
     private bool mDoSpawnOnWake = false;
     private bool mAutoSpawnFinish = true;
-
-    private PoolDataController mPoolData;
-
+        
     private byte mStartedCounter = 0;
 
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
@@ -111,22 +109,28 @@ public class EntityBase : MonoBehaviour {
 #endif
     }
 
+    private PoolDataController mPoolData;
+    protected PoolDataController poolData {
+        get {
+            if(mPoolData == null) mPoolData = GetComponent<PoolDataController>();
+            return mPoolData;
+        }
+    }
+
     public string spawnType {
         get {
-            if(mPoolData == null) {
+            if(poolData == null) {
                 return name;
             }
 
-            return mPoolData.factoryKey; 
+            return poolData.factoryKey; 
         }
     }
 
     /// <summary>
     /// Set by call from Spawn, so use that instead of directly spawning via pool manager.
     /// </summary>
-    public string spawnGroup {
-        get { return mPoolData == null ? "" : mPoolData.group; }
-    }
+    public string spawnGroup { get { return poolData == null ? "" : poolData.group; } }
 
     ///<summary>entity is instantiated with activator set to disable on start, call spawn after activator sends a wakeup call.</summary>
     public bool doSpawnOnWake {
@@ -172,13 +176,13 @@ public class EntityBase : MonoBehaviour {
 
     public bool isReleased {
         get {
-            if(mPoolData == null)
-                return false;
-
 #if POOLMANAGER
             return !PoolManager.Pools[mPoolData.group].IsSpawned(transform);
 #else
-            return mPoolData.claimed;
+            if(poolData == null)
+                return false;
+
+            return poolData.claimed;
 #endif
         }
     }
@@ -201,12 +205,12 @@ public class EntityBase : MonoBehaviour {
     }
 
     public void Release() {
-        if(mPoolData != null) {
+        if(poolData != null) {
 #if POOLMANAGER
-            transform.parent = PoolManager.Pools[mPoolData.group].group;
-            PoolManager.Pools[mPoolData.group].Despawn(transform);
+            transform.parent = PoolManager.Pools[poolData.group].group;
+            PoolManager.Pools[poolData.group].Despawn(transform);
 #else
-            PoolController.Release(mPoolData.group, transform);
+            PoolController.Release(poolData.group, transform);
 #endif
         }
         else {
