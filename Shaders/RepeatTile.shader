@@ -3,6 +3,7 @@ Shader "M8/RepeatTile"
 	Properties 
 	{
 	    _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
+		modColor ("Mod Color", Color) = (1.0, 1.0, 1.0, 1.0)
 		tileX ("Tile X", Float) = 1
 		tileY ("Tile Y", Float) = 1
 	}
@@ -36,6 +37,8 @@ Shader "M8/RepeatTile"
 			
 			sampler2D _MainTex;
 			
+			float4 modColor;
+
 			float tileX;
 			float tileY;
 			
@@ -55,7 +58,7 @@ Shader "M8/RepeatTile"
 			
 			fixed4 frag(Output i) : COLOR
 			{
-				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color;
+				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color * modColor;
 				return col;
 			}
 			
