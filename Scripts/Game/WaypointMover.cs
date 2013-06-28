@@ -82,6 +82,28 @@ public class WaypointMover : MonoBehaviour {
         get { return mDir; }
     }
 
+    public bool reverse {
+        get { return mReversed; }
+        set {
+            if(mReversed != value) {
+                Vector3 pos = mStartPos;
+                mStartPos = mEndPos;
+                mEndPos = pos;
+                mDir *= -1.0f;
+                mCurVel *= -1.0f;
+                mCurTime = Mathf.Clamp(moveDelay - mCurTime, 0.0f, moveDelay);
+
+                Next();
+
+                mReversed = value;
+            }
+        }
+    }
+
+    public Vector3 curVelocity {
+        get { return mCurVel; }
+    }
+
     void OnDestroy() {
         moveBeginCallback = null;
         movePauseCallback = null;
@@ -91,8 +113,11 @@ public class WaypointMover : MonoBehaviour {
         if(mStarted) {
             if(mWPs.Count > 1)
                 StartCoroutine(DoIt());
-            else
-                ApplyPosition(mWPs[0].position);
+            else {
+                mDir = Vector3.zero;
+                mCurVel = Vector3.zero;
+                ApplyPosition(mWPs[0].position, false);
+            }
         }
     }
 
@@ -116,7 +141,7 @@ public class WaypointMover : MonoBehaviour {
         if(mWPs.Count > 1)
             StartCoroutine(DoIt());
         else
-            ApplyPosition(mWPs[startIndex].position);
+            ApplyPosition(mWPs[startIndex].position, false);
     }
 
     IEnumerator DoIt() {
@@ -128,7 +153,7 @@ public class WaypointMover : MonoBehaviour {
         yield return mWaitStartDelay;
 
         do {
-            SetCurrent();
+            SetCurrent(false);
 
             if(!mPaused) {
                 if(moveBeginCallback != null)
@@ -142,7 +167,7 @@ public class WaypointMover : MonoBehaviour {
 
                     switch(move) {
                         case Move.Lerp:
-                            ApplyPosition(Vector3.Lerp(mStartPos, mEndPos, mCurTime / moveDelay));
+                            ApplyPosition(Vector3.Lerp(mStartPos, mEndPos, mCurTime / moveDelay), true);
                             break;
 
                         case Move.EaseIn:
@@ -150,7 +175,7 @@ public class WaypointMover : MonoBehaviour {
                                 new Vector3(
                                     M8.Ease.In(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
                                     M8.Ease.In(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
-                                    M8.Ease.In(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)));
+                                    M8.Ease.In(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)), true);
                             break;
 
                         case Move.EaseOut:
@@ -158,11 +183,11 @@ public class WaypointMover : MonoBehaviour {
                                 new Vector3(
                                     M8.Ease.Out(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
                                     M8.Ease.Out(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
-                                    M8.Ease.Out(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)));
+                                    M8.Ease.Out(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)), true);
                             break;
 
                         case Move.Damp:
-                            ApplyPosition(Vector3.SmoothDamp(target.position, mEndPos, ref mCurVel, Time.fixedDeltaTime));
+                            ApplyPosition(Vector3.SmoothDamp(target.position, mEndPos, ref mCurVel, Time.fixedDeltaTime), false);
                             break;
                     }
                 }
@@ -170,7 +195,7 @@ public class WaypointMover : MonoBehaviour {
                 yield return mWaitUpdate;
             }
 
-            ApplyPosition(mEndPos);
+            ApplyPosition(mEndPos, true);
 
             if(mWaitDelay != null) {
                 if(movePauseCallback != null)
@@ -184,24 +209,37 @@ public class WaypointMover : MonoBehaviour {
         yield break;
     }
 
-    void SetCurrent() {
-        switch(move) {
-            case Move.Damp:
-                mCurVel = Vector3.zero;
-                ApplyPosition(mWPs[mCurInd].position);
-                break;
+    void SetCurrent(bool isUpdate) {
+        if(isUpdate) {
+            mStartPos = target.position;
 
-            default:
-                mStartPos = mWPs[mCurInd].position;
-                break;
+            mCurTime = Mathf.Clamp(moveDelay - mCurTime, 0.0f, moveDelay);
         }
+        else {
+            switch(move) {
+                case Move.Damp:
+                    ApplyPosition(mWPs[mCurInd].position, false);
+                    break;
+
+                default:
+                    mStartPos = mWPs[mCurInd].position;
+                    break;
+            }
+
+            mCurTime = 0.0f;
+        }
+
+        mCurVel = Vector3.zero;
 
         int nextInd;
 
         switch(type) {
             case Type.Loop:
-                nextInd = mCurInd + 1;
-                if(nextInd == mWPs.Count) {
+                nextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
+                if(nextInd < 0) {
+                    nextInd = 1;
+                }
+                else if(nextInd >= mWPs.Count) {
                     nextInd = 0;
                 }
                 break;
@@ -211,14 +249,14 @@ public class WaypointMover : MonoBehaviour {
                 if(nextInd < 0) {
                     nextInd = 1;
                 }
-                else if(nextInd == mWPs.Count) {
+                else if(nextInd >= mWPs.Count) {
                     nextInd = mCurInd - 1;
                 }
                 break;
 
             default:
-                nextInd = mCurInd + 1;
-                if(nextInd == mWPs.Count) {
+                nextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
+                if(nextInd < 0 || nextInd >= mWPs.Count) {
                     nextInd = mCurInd;
                 }
                 break;
@@ -227,8 +265,6 @@ public class WaypointMover : MonoBehaviour {
         mEndPos = mWPs[nextInd].position;
 
         mDir = (mEndPos - mStartPos).normalized;
-
-        mCurTime = 0.0f;
     }
 
     //true when done
@@ -237,9 +273,11 @@ public class WaypointMover : MonoBehaviour {
 
         switch(type) {
             case Type.Loop:
-                mCurInd++;
-                if(mCurInd == mWPs.Count)
+                mCurInd += mReversed ? -1 : 1;
+                if(mCurInd >= mWPs.Count)
                     mCurInd = 0;
+                else if(mCurInd < 0)
+                    mCurInd = mWPs.Count - 1;
                 break;
 
             case Type.Reverse:
@@ -248,16 +286,20 @@ public class WaypointMover : MonoBehaviour {
                     mCurInd = 1;
                     mReversed = false;
                 }
-                else if(mCurInd == mWPs.Count) {
+                else if(mCurInd >= mWPs.Count) {
                     mCurInd = mWPs.Count - 2;
                     mReversed = true;
                 }
                 break;
 
             case Type.Once:
-                mCurInd++;
-                if(mCurInd == mWPs.Count) {
+                mCurInd += mReversed ? -1 : 1;
+                if(mCurInd >= mWPs.Count) {
                     mCurInd = mWPs.Count - 1;
+                    ret = true;
+                }
+                else if(mCurInd < 0) {
+                    mCurInd = 0;
                     ret = true;
                 }
                 break;
@@ -266,7 +308,12 @@ public class WaypointMover : MonoBehaviour {
         return ret;
     }
 
-    void ApplyPosition(Vector3 pos) {
+    void ApplyPosition(Vector3 pos, bool computeVel) {
+        if(computeVel) {
+            Vector3 dpos = pos - target.position;
+            mCurVel = dpos / Time.fixedDeltaTime;
+        }
+
         if(mTargetBody != null)
             mTargetBody.MovePosition(pos);
         else
