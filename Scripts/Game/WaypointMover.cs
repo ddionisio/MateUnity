@@ -20,6 +20,48 @@ public class WaypointMover : MonoBehaviour {
         Damp
     }
 
+    //for use with saving states
+    public class SaveState {
+        private WaypointMover mMover;
+
+        private bool mPaused = false;
+
+        private int mCurInd;
+        private int mNextInd;
+        private bool mReversed;
+
+        private Vector3 mCurPos;
+        private float mCurTime;
+
+        public SaveState(WaypointMover mover) {
+            mMover = mover;
+
+            mCurPos = mover.target.position;
+            mPaused = mover.mPaused;
+            mCurInd = mover.mCurInd;
+            mNextInd = mover.mNextInd;
+            mReversed = mover.mReversed;
+            mCurTime = mover.mCurTime;
+        }
+
+        public void Restore() {
+            mMover.target.position = mCurPos;
+            mMover.mPaused = mPaused;
+            mMover.mCurInd = mCurInd;
+            mMover.mNextInd = mNextInd;
+            mMover.mReversed = mReversed;
+            mMover.mCurTime = mCurTime;
+
+            Vector3 mStartPos = mMover.mWPs[mCurInd].position, mEndPos = mMover.mWPs[mNextInd].position;
+
+            mMover.mDir = (mEndPos - mStartPos).normalized;
+
+            mMover.mCurVel = Vector3.zero;
+
+            mMover.mRestore = true;
+        }
+    }
+
     public delegate void OnMoveCall(WaypointMover wm);
 
     public string waypoint;
@@ -41,11 +83,10 @@ public class WaypointMover : MonoBehaviour {
     private bool mPaused = false;
 
     private int mCurInd;
+    private int mNextInd;
     private bool mReversed;
 
     private Vector3 mCurVel;
-    private Vector3 mStartPos;
-    private Vector3 mEndPos;
     private Vector3 mDir;
 
     private bool mStarted = false;
@@ -59,6 +100,8 @@ public class WaypointMover : MonoBehaviour {
     private WaitForSeconds mWaitDelay;
 
     private Rigidbody mTargetBody;
+
+    private bool mRestore = false;
 
     public bool pause {
         get { return mPaused; }
@@ -86,16 +129,16 @@ public class WaypointMover : MonoBehaviour {
         get { return mReversed; }
         set {
             if(mReversed != value) {
-                Vector3 pos = mStartPos;
-                mStartPos = mEndPos;
-                mEndPos = pos;
+                mReversed = value;
+
+                int curInd = mCurInd;
+                mCurInd = mNextInd;
+                mNextInd = curInd;
+
                 mDir *= -1.0f;
                 mCurVel *= -1.0f;
                 mCurTime = Mathf.Clamp(moveDelay - mCurTime, 0.0f, moveDelay);
-
-                Next();
-
-                mReversed = value;
+                
             }
         }
     }
@@ -145,23 +188,32 @@ public class WaypointMover : MonoBehaviour {
     }
 
     IEnumerator DoIt() {
-        //reset data
-        mCurInd = startIndex;
-        mReversed = false;
-        mPaused = false;
+        if(!mRestore) {
+            //reset data
+            mCurInd = startIndex;
+            mReversed = false;
+            mPaused = false;
 
-        yield return mWaitStartDelay;
+            yield return mWaitStartDelay;
+        }
 
         do {
-            SetCurrent(false);
+            if(mRestore) {
+                mRestore = false;
+            }
+            else {
+                SetCurrent();
 
-            if(!mPaused) {
-                if(moveBeginCallback != null)
-                    moveBeginCallback(this);
+                if(!mPaused) {
+                    if(moveBeginCallback != null)
+                        moveBeginCallback(this);
+                }
             }
 
             //move it
             while(mCurTime < moveDelay) {
+                Vector3 mStartPos = mWPs[mCurInd].position, mEndPos = mWPs[mNextInd].position;
+
                 if(!mPaused) {
                     mCurTime += Time.fixedDeltaTime;
 
@@ -195,7 +247,7 @@ public class WaypointMover : MonoBehaviour {
                 yield return mWaitUpdate;
             }
 
-            ApplyPosition(mEndPos, true);
+            ApplyPosition(mWPs[mNextInd].position, true);
 
             if(mWaitDelay != null) {
                 if(movePauseCallback != null)
@@ -204,65 +256,56 @@ public class WaypointMover : MonoBehaviour {
                 yield return mWaitDelay;
             }
 
-        } while(!Next());
+        } while(mRestore || !Next());
 
         yield break;
     }
 
-    void SetCurrent(bool isUpdate) {
-        if(isUpdate) {
-            mStartPos = target.position;
+    void SetCurrent() {
+        Vector3 mStartPos, mEndPos;
 
-            mCurTime = Mathf.Clamp(moveDelay - mCurTime, 0.0f, moveDelay);
+        mStartPos = mWPs[mCurInd].position;
+
+        switch(move) {
+            case Move.Damp:
+                ApplyPosition(mWPs[mCurInd].position, false);
+                break;
         }
-        else {
-            switch(move) {
-                case Move.Damp:
-                    ApplyPosition(mWPs[mCurInd].position, false);
-                    break;
 
-                default:
-                    mStartPos = mWPs[mCurInd].position;
-                    break;
-            }
-
-            mCurTime = 0.0f;
-        }
+        mCurTime = 0.0f;
 
         mCurVel = Vector3.zero;
 
-        int nextInd;
-
         switch(type) {
             case Type.Loop:
-                nextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
-                if(nextInd < 0) {
-                    nextInd = 1;
+                mNextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
+                if(mNextInd < 0) {
+                    mNextInd = 1;
                 }
-                else if(nextInd >= mWPs.Count) {
-                    nextInd = 0;
+                else if(mNextInd >= mWPs.Count) {
+                    mNextInd = 0;
                 }
                 break;
       
             case Type.Reverse:
-                nextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
-                if(nextInd < 0) {
-                    nextInd = 1;
+                mNextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
+                if(mNextInd < 0) {
+                    mNextInd = 1;
                 }
-                else if(nextInd >= mWPs.Count) {
-                    nextInd = mCurInd - 1;
+                else if(mNextInd >= mWPs.Count) {
+                    mNextInd = mCurInd - 1;
                 }
                 break;
 
             default:
-                nextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
-                if(nextInd < 0 || nextInd >= mWPs.Count) {
-                    nextInd = mCurInd;
+                mNextInd = mReversed ? mCurInd - 1 : mCurInd + 1;
+                if(mNextInd < 0 || mNextInd >= mWPs.Count) {
+                    mNextInd = mCurInd;
                 }
                 break;
         }
 
-        mEndPos = mWPs[nextInd].position;
+        mEndPos = mWPs[mNextInd].position;
 
         mDir = (mEndPos - mStartPos).normalized;
     }
@@ -271,37 +314,18 @@ public class WaypointMover : MonoBehaviour {
     bool Next() {
         bool ret = false;
 
-        switch(type) {
-            case Type.Loop:
-                mCurInd += mReversed ? -1 : 1;
-                if(mCurInd >= mWPs.Count)
-                    mCurInd = 0;
-                else if(mCurInd < 0)
-                    mCurInd = mWPs.Count - 1;
-                break;
+        mCurInd = mNextInd;
 
+        switch(type) {
             case Type.Reverse:
-                mCurInd += mReversed ? -1 : 1;
-                if(mCurInd < 0) {
-                    mCurInd = 1;
-                    mReversed = false;
-                }
-                else if(mCurInd >= mWPs.Count) {
-                    mCurInd = mWPs.Count - 2;
-                    mReversed = true;
+                if(mCurInd == 0 || mCurInd == mWPs.Count - 1) {
+                    mReversed = !mReversed;
                 }
                 break;
 
             case Type.Once:
-                mCurInd += mReversed ? -1 : 1;
-                if(mCurInd >= mWPs.Count) {
-                    mCurInd = mWPs.Count - 1;
+                if((mReversed && mCurInd == 0) || mCurInd == mWPs.Count - 1)
                     ret = true;
-                }
-                else if(mCurInd < 0) {
-                    mCurInd = 0;
-                    ret = true;
-                }
                 break;
         }
 
