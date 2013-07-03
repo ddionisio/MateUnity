@@ -23,13 +23,28 @@ public class NGUILayoutFlow : NGUILayoutBase {
     public LineUp lineup = LineUp.None;
     public LineUp lineup2 = LineUp.None;
 
+    public bool alphaSort = false;
+
     public Transform[] contents; //if empty, will iterate through children
 
     private Bounds[] mBounds;
 
     public override void Reposition() {
-        bool useContents = contents != null && contents.Length > 0;
-        int count = useContents ? contents.Length : transform.childCount;
+        Transform[] _contents;
+        if(alphaSort) {
+            _contents = new Transform[transform.childCount];
+            for(int i = 0; i < _contents.Length; i++) {
+                _contents[i] = transform.GetChild(i);
+            }
+
+            System.Array.Sort(_contents, (t1, t2) => t1.name.CompareTo(t2.name));
+        }
+        else {
+            _contents = contents;
+        }
+
+        bool useContents = _contents != null && _contents.Length > 0;
+        int count = useContents ? _contents.Length : transform.childCount;
 
         Bounds b = new Bounds();
 
@@ -41,7 +56,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
         float bMax = float.MinValue, bMin = float.MaxValue;
 
         for(int i = 0; i < count; ++i) {
-            Transform t = useContents ? contents[i] : transform.GetChild(i);
+            Transform t = useContents ? _contents[i] : transform.GetChild(i);
 
             b = NGUIMath.CalculateRelativeWidgetBounds(t);
             Vector3 scale = t.localScale;
@@ -71,7 +86,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
         float offset = 0;
 
         for(int i = 0; i < count; ++i) {
-            Transform t = useContents ? contents[i] : transform.GetChild(i);
+            Transform t = useContents ? _contents[i] : transform.GetChild(i);
 
             if(!t.gameObject.activeSelf) continue;
 
@@ -115,7 +130,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
                     switch(arrangement) {
                         case Arrangement.Horizontal:
                             for(int i = 0; i < count; ++i) {
-                                Transform t = useContents ? contents[i] : transform.GetChild(i);
+                                Transform t = useContents ? _contents[i] : transform.GetChild(i);
 
                                 Vector3 pos = t.localPosition;
 
@@ -135,7 +150,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
 
                         case Arrangement.Vertical:
                             for(int i = 0; i < count; ++i) {
-                                Transform t = useContents ? contents[i] : transform.GetChild(i);
+                                Transform t = useContents ? _contents[i] : transform.GetChild(i);
 
                                 Vector3 pos = t.localPosition;
 
@@ -160,7 +175,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
                 switch(arrangement) {
                     case Arrangement.Horizontal:
                         for(int i = 0; i < count; ++i) {
-                            Transform t = useContents ? contents[i] : transform.GetChild(i);
+                            Transform t = useContents ? _contents[i] : transform.GetChild(i);
 
                             Vector3 pos = t.localPosition;
 
@@ -185,7 +200,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
 
                     case Arrangement.Vertical:
                         for(int i = 0; i < count; ++i) {
-                            Transform t = useContents ? contents[i] : transform.GetChild(i);
+                            Transform t = useContents ? _contents[i] : transform.GetChild(i);
 
                             Vector3 pos = t.localPosition;
 
@@ -238,7 +253,7 @@ public class NGUILayoutFlow : NGUILayoutBase {
 
                     case Arrangement.Vertical:
                         for(int i = 0; i < count; ++i) {
-                            Transform t = useContents ? contents[i] : transform.GetChild(i);
+                            Transform t = useContents ? _contents[i] : transform.GetChild(i);
 
                             Vector3 pos = t.localPosition;
 

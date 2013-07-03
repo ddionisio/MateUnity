@@ -49,8 +49,10 @@ public abstract class NGUILayoutBase : MonoBehaviour {
     // Update is called once per frame
     protected virtual void Update() {
 #if UNITY_EDITOR
-        if(!Application.isPlaying || alwaysUpdate || repositionNow)
+        if(!Application.isPlaying || alwaysUpdate || repositionNow) {
             Reposition();
+            repositionNow = false;
+        }
 #else
 		if(alwaysUpdate || repositionNow) {
 			Reposition();

@@ -169,7 +169,7 @@ public class UIModalManager : MonoBehaviour {
                     ui.gameObject.SetActive(false);
                 }
 
-                mModals.Add(uid.name, uid);
+                mModals.Add(string.IsNullOrEmpty(uid.name) ? uid.ui.gameObject.name : uid.name, uid);
             }
 
             if(persistent)

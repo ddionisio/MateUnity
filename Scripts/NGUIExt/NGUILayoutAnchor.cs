@@ -81,6 +81,10 @@ public class NGUILayoutAnchor : NGUILayoutBase {
                 s.y = Mathf.Round(s.y);
             }
 
+            //too small
+            if(Mathf.Abs(s.x) <= float.Epsilon || Mathf.Abs(s.y) <= float.Epsilon)
+                return;
+
             trans.localPosition = pos;
             trans.localScale = s;
         }
