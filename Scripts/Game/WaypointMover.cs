@@ -10,7 +10,8 @@ public class WaypointMover : MonoBehaviour {
     public enum Type {
         Loop,
         Once,
-        Reverse
+        Reverse,
+        Stay
     }
 
     public enum Move {
@@ -77,6 +78,8 @@ public class WaypointMover : MonoBehaviour {
 
     public int startIndex = 0;
 
+    public bool startPause = false;
+
     public event OnMoveCall moveBeginCallback; //starting to move to destination
     public event OnMoveCall movePauseCallback; //starting to move to destination
 
@@ -134,11 +137,22 @@ public class WaypointMover : MonoBehaviour {
                 int curInd = mCurInd;
                 mCurInd = mNextInd;
                 mNextInd = curInd;
+                                
+                if(type == Type.Stay && mCurInd == mNextInd) {
+                    if(mNextInd == mWPs.Count - 1)
+                        mNextInd = mWPs.Count - 2;
+                    else
+                        mNextInd = 1;
 
-                mDir *= -1.0f;
-                mCurVel *= -1.0f;
-                mCurTime = Mathf.Clamp(moveDelay - mCurTime, 0.0f, moveDelay);
-                
+                    SetCurrent();
+                }
+                else {
+                    mDir *= -1.0f;
+                    mCurVel *= -1.0f;
+                    mCurTime = Mathf.Clamp(moveDelay - mCurTime, 0.0f, moveDelay);
+                }
+
+                mRestore = true;
             }
         }
     }
@@ -192,7 +206,7 @@ public class WaypointMover : MonoBehaviour {
             //reset data
             mCurInd = startIndex;
             mReversed = false;
-            mPaused = false;
+            mPaused = startPause;
 
             yield return mWaitStartDelay;
         }
@@ -203,12 +217,15 @@ public class WaypointMover : MonoBehaviour {
             }
             else {
                 SetCurrent();
-
+                                
                 if(!mPaused) {
                     if(moveBeginCallback != null)
                         moveBeginCallback(this);
                 }
             }
+
+            while(!mRestore && type == Type.Stay && mCurInd == mNextInd)
+                yield return mWaitUpdate;
 
             //move it
             while(mCurTime < moveDelay) {
@@ -255,7 +272,6 @@ public class WaypointMover : MonoBehaviour {
 
                 yield return mWaitDelay;
             }
-
         } while(mRestore || !Next());
 
         yield break;
@@ -323,9 +339,13 @@ public class WaypointMover : MonoBehaviour {
                 }
                 break;
 
+            case Type.Stay:
+                if(mCurInd == mNextInd)
+                    mCurTime = moveDelay;
+                break;
+
             case Type.Once:
-                if((mReversed && mCurInd == 0) || mCurInd == mWPs.Count - 1)
-                    ret = true;
+                ret = mCurInd == mNextInd;
                 break;
         }
 
