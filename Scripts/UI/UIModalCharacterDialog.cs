@@ -14,6 +14,8 @@ public class UIModalCharacterDialog : UIController {
 
     public Transform choiceContainer; //optional: each child must have a UIEventListener
 
+    public UIEventListener proceedClick; //if there are no choices to select, this is used, if null, default click to this game object
+
     public event OnAction actionCallback;
 
     private struct ChoiceData {
@@ -128,6 +130,13 @@ public class UIModalCharacterDialog : UIController {
         //for selector, activate first choice
         if(active) {
             ApplyActive();
+
+            if(proceedClick != null)
+                proceedClick.onClick = OnProceedClick;
+        }
+        else {
+            if(proceedClick != null)
+                proceedClick.onClick = null;
         }
     }
 
@@ -145,7 +154,7 @@ public class UIModalCharacterDialog : UIController {
             UICamera.selectedObject = mChoiceEvents[0].keys.gameObject;
         }
         else {
-            UICamera.selectedObject = gameObject;
+            UICamera.selectedObject = proceedClick != null ? proceedClick.gameObject : gameObject;
         }
     }
 
@@ -155,6 +164,10 @@ public class UIModalCharacterDialog : UIController {
             actionCallback(-1);
 
         }
+    }
+
+    void OnProceedClick(GameObject go) {
+        OnClick();
     }
 
     private void InitData() {

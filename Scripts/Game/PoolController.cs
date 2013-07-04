@@ -20,6 +20,11 @@ public class PoolController : MonoBehaviour {
         private Transform poolHolder;
 
         private int nameCounter = 0;
+        private int capacity = 0;
+
+        public int availableCount { get { return available.Count; } }
+
+        public int capacityCount { get { return capacity; } }
 
         public void Init(string group, Transform poolHolder) {
             this.poolHolder = poolHolder;
@@ -31,6 +36,11 @@ public class PoolController : MonoBehaviour {
         }
 
         public void Expand(string group, int num) {
+            capacity += num;
+
+            if(capacity > maxCapacity)
+                maxCapacity = capacity;
+
             for(int i = 0; i < num; i++) {
                 //PoolDataController
                 Transform t = (Transform)Object.Instantiate(template);
@@ -233,6 +243,24 @@ public class PoolController : MonoBehaviour {
             Object.Destroy(entity.gameObject);
             //StartCoroutine(DestroyEntityDelay(entity.gameObject));
         }
+    }
+
+    public int CapacityCount(string type) {
+        FactoryData dat;
+        if(mFactory.TryGetValue(type, out dat)) {
+            return dat.capacityCount;
+        }
+
+        return 0;
+    }
+
+    public int AvailableCount(string type) {
+        FactoryData dat;
+        if(mFactory.TryGetValue(type, out dat)) {
+            return dat.availableCount;
+        }
+
+        return 0;
     }
 
     public void Expand(string type, int amount) {

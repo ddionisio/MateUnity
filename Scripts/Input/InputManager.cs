@@ -42,7 +42,7 @@ public class InputManager : MonoBehaviour {
 
         public ButtonAxis axis = ButtonAxis.None; //for buttons as axis
         public int index = 0; //which index this key refers to
-        
+
         public void ResetKeys() {
             input = "";
             code = KeyCode.None;
@@ -90,7 +90,7 @@ public class InputManager : MonoBehaviour {
             keys = aKeys.ToArray();
         }
     }
-    
+
     protected class BindData {
         public Control control;
         public float deadZone;
@@ -151,7 +151,7 @@ public class InputManager : MonoBehaviour {
         BindData bindData = mBinds[action];
         PlayerData pd = bindData.players[player];
         Key[] keys = pd.keys;
-        
+
         pd.info.axis = 0.0f;
 
         foreach(Key key in keys) {
@@ -318,18 +318,22 @@ public class InputManager : MonoBehaviour {
         //add new button calls
         while(mButtonCallSetQueue.Count > 0) {
             ButtonCallSetData dat = mButtonCallSetQueue.Dequeue();
-            if(dat.add) {
-                if(dat.cb != null)
-                    dat.pd.callback += dat.cb;
+            if(dat.cb != null) {
+                if(dat.add) {
+                    if(!mButtonCalls.Contains(dat.pd)) {
+                        dat.pd.callback += dat.cb;
 
-                mButtonCalls.Add(dat.pd);
-            }
-            else {
-                if(dat.cb != null)
-                    dat.pd.callback -= dat.cb;
+                        mButtonCalls.Add(dat.pd);
+                    }
+                }
+                else {
+                    if(mButtonCalls.Contains(dat.pd)) {
+                        dat.pd.callback -= dat.cb;
 
-                if(dat.pd.callback == null)
-                    mButtonCalls.Remove(dat.pd);
+                        if(dat.pd.callback == null)
+                            mButtonCalls.Remove(dat.pd);
+                    }
+                }
             }
         }
     }

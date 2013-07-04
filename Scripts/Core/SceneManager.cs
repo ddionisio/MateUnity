@@ -35,6 +35,12 @@ public class SceneManager : MonoBehaviour {
     private bool mIsFullscreen = false;
     private bool mPaused = false;
 
+    public bool isPaused {
+        get {
+            return mPaused;
+        }
+    }
+
     public int curLevel {
         get {
             return mCurLevel;

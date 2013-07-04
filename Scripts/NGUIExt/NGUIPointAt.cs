@@ -28,6 +28,8 @@ public class NGUIPointAt : MonoBehaviour {
             mPOICam = null;
 
             gameObject.SetActive(false);
+
+            pointer.gameObject.SetActive(false);
         }
     }
 
