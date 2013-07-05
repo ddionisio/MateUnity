@@ -34,6 +34,8 @@ public class MusicManager : MonoBehaviour {
     public bool dontDestroy = false;
     public bool overrideExisting = false; //delete current available music manager
 
+    public bool restartOnAppFocus;
+
     /// <summary>
     /// Callback when music is done playing.  Make sure the audio source 'loop' is set to false
     /// </summary>
@@ -227,6 +229,13 @@ public class MusicManager : MonoBehaviour {
                     mCurMusic.source.volume = mCurMusic.defaultVolume * (1.0f - mCurTime / changeFadeOutDelay) * Main.instance.userSettings.musicVolume;
                 }
                 break;
+        }
+    }
+
+    void OnApplicationFocus(bool focus) {
+        if(restartOnAppFocus && focus && mState == State.Playing && mCurMusic != null) {
+            mCurMusic.source.Stop();
+            mCurMusic.source.Play();
         }
     }
 }
