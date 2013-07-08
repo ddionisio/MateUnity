@@ -26,3 +26,4 @@ Ouya.meta
 Plugins/Android.meta
 
 *.suo
+/Common/blank.png.meta
