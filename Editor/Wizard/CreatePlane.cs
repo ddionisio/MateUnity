@@ -112,8 +112,10 @@ namespace M8.Editor {
             MeshFilter meshFilter = (MeshFilter)plane.AddComponent(typeof(MeshFilter));
             plane.AddComponent(typeof(MeshRenderer));
 
+            string dir = M8.Editor.Utility.GetSelectionFolder();
+
             string planeAssetName = plane.name + widthSegments + "x" + lengthSegments + "W" + width + "L" + length + (orientation == Orientation.Horizontal ? "H" : "V") + anchorId + ".asset";
-            Mesh m = (Mesh)AssetDatabase.LoadAssetAtPath("Assets/Editor/" + planeAssetName, typeof(Mesh));
+            Mesh m = (Mesh)AssetDatabase.LoadAssetAtPath(dir + planeAssetName, typeof(Mesh));
 
             if(m == null) {
                 m = new Mesh();
@@ -164,7 +166,7 @@ namespace M8.Editor {
                 m.triangles = triangles;
                 m.RecalculateNormals();
 
-                AssetDatabase.CreateAsset(m, "Assets/Editor/" + planeAssetName);
+                AssetDatabase.CreateAsset(m, dir + planeAssetName);
                 AssetDatabase.SaveAssets();
             }
 

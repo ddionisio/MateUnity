@@ -29,6 +29,12 @@ public class UIModalManager : MonoBehaviour {
     private Stack<UIData> mModalStack;
     private Queue<UIData> mModalToOpen;
 
+    public int activeCount {
+        get {
+            return mModalStack.Count;
+        }
+    }
+
     public UIData ModalGetData(string modal) {
         UIData dat = null;
         mModals.TryGetValue(modal, out dat);

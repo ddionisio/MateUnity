@@ -166,6 +166,9 @@ public class EntityBase : MonoBehaviour {
                 }
 
                 StateChanged();
+
+                if(mFSM != null)
+                    mFSM.SendEvent(EntityEvent.StateChanged);
             }
         }
     }

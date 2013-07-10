@@ -17,6 +17,7 @@ public struct EntityEvent {
     public const string StatChanged = "EntityStatChanged";
     public const string TriggerEnter = "EntityActionTriggerEnter";
     public const string TriggerExit = "EntityActionTriggerExit";
+    public const string StateChanged = "EntityStateChanged";
     public const string Restore = "EntityRestore"; //for some cases when we want entity to return to a state (undo, reload, etc.)
     public const string Save = "EntitySave"; //if there is a need to save some states for later restore
 }
