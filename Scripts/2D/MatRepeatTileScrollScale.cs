@@ -18,10 +18,22 @@ public class MatRepeatTileScrollScale : MonoBehaviour {
     [SerializeField]
     Color _color = Color.white;
 
+    private Color mColor;
     private Transform mTrans = null;
     private Material mMat = null;
     private Vector2 mCurScale = Vector2.zero;
     private Vector2 mTextureSize = Vector2.zero;
+
+    public Color defaultColor { get { return _color; } }
+    public Color color {
+        get { return mColor; }
+        set {
+            if(mColor != value) {
+                mColor = value;
+                mMat.SetColor("modColor", mColor);
+            }
+        }
+    }
 
     void OnEnable() {
         mCurScale = Vector2.zero;
@@ -57,6 +69,8 @@ public class MatRepeatTileScrollScale : MonoBehaviour {
             mMat.SetFloat("speedX", _speedX);
             mMat.SetFloat("speedY", _speedY);
             mMat.SetColor("modColor", _color);
+
+            mColor = _color;
 
             mTextureSize = new Vector2(texture.width, texture.height);
 

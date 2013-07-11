@@ -74,12 +74,11 @@ public class EntityBase : MonoBehaviour {
 
     private EntityActivator mActivator = null;
 
-    private float mBlinkCurTime = 0;
-    private float mBlinkDelay = 0;
-
     private bool mDoSpawnOnWake = false;
     private bool mAutoSpawnFinish = true;
-        
+
+    private bool mBlinking = false;
+
     private byte mStartedCounter = 0;
 
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
@@ -191,20 +190,19 @@ public class EntityBase : MonoBehaviour {
     }
 
     public bool isBlinking {
-        get { return mBlinkDelay > 0 && mBlinkCurTime < mBlinkDelay; }
+        get { return mBlinking; }
     }
 
     public void Blink(float delay) {
-        mBlinkDelay = delay;
-        mBlinkCurTime = 0;
+        if(mBlinking)
+            StopCoroutine("DoBlink");
 
-        bool doBlink = delay > 0;
-
-        if(setBlinkCallback != null) {
-            setBlinkCallback(this, doBlink);
+        if(delay > 0.0f) {
+            StartCoroutine(DoBlink(delay));
         }
-
-        SetBlink(doBlink);
+        else {
+            BlinkStateSet(false);
+        }
     }
 
     public void Release() {
@@ -334,22 +332,6 @@ public class EntityBase : MonoBehaviour {
 
     //////////internal
 
-    // Update is called once per frame
-    private void Update() {
-        if(mBlinkDelay > 0) {
-            mBlinkCurTime += Time.deltaTime;
-            if(mBlinkCurTime >= mBlinkDelay) {
-                mBlinkDelay = mBlinkCurTime = 0;
-
-                if(setBlinkCallback != null) {
-                    setBlinkCallback(this, false);
-                }
-
-                SetBlink(false);
-            }
-        }
-    }
-
     /// <summary>
     /// Spawn this entity, resets stats, set action to spawning, then later calls OnEntitySpawnFinish.
     /// NOTE: calls after an update to ensure Awake and Start is called.
@@ -359,6 +341,8 @@ public class EntityBase : MonoBehaviour {
             mPoolData = GetComponent<PoolDataController>();
 
         mState = mPrevState = StateInvalid; //avoid invalid updates
+
+        mBlinking = false;
 
         //allow activator to start and check if we need to spawn now or later
         //ensure start is called before spawning if we are freshly allocated from entity manager
@@ -497,5 +481,22 @@ public class EntityBase : MonoBehaviour {
         GameObject.Destroy(gameObject);
 
         yield break;
+    }
+
+    void BlinkStateSet(bool blink) {
+        if(mBlinking != blink) {
+            mBlinking = blink;
+            if(setBlinkCallback != null)
+                setBlinkCallback(this, blink);
+            SetBlink(blink);
+        }
+    }
+
+    IEnumerator DoBlink(float delay) {
+        BlinkStateSet(true);
+
+        yield return new WaitForSeconds(delay);
+
+        BlinkStateSet(false);
     }
 }

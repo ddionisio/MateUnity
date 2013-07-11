@@ -14,6 +14,13 @@ public class SpriteColorBlink : MonoBehaviour {
         StartCoroutine(DoBlink());
     }
 
+    void OnDisable() {
+        StopAllCoroutines();
+
+        if(sprite != null)
+            sprite.color = mOrigColor;
+    }
+
     void Awake() {
         if(sprite == null)
             sprite = GetComponent<tk2dBaseSprite>();

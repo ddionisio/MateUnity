@@ -5,6 +5,24 @@ using System.Collections;
 
 namespace M8 {
     public struct Util {
+        static int ComponentNameCompare<T>(T obj1, T obj2) where T : Component {
+            return obj1.name.CompareTo(obj2.name);
+        }
+
+        public static T[] GetComponentsInChildrenAlphaSort<T>(Component c, bool includeInactive) where T : Component {
+            T[] items = c.GetComponentsInChildren<T>(includeInactive);
+            System.Array.Sort<T>(items, ComponentNameCompare);
+
+            return items;
+        }
+
+        public static T[] GetComponentsInChildrenAlphaSort<T>(GameObject go, bool includeInactive) where T : Component {
+            T[] items = go.GetComponentsInChildren<T>(includeInactive);
+            System.Array.Sort<T>(items, ComponentNameCompare);
+
+            return items;
+        }
+
         /// <summary>
         /// Get the component from parent of given t, if inclusive is true, try to find the component on t first.
         /// </summary>
