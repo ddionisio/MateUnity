@@ -207,8 +207,10 @@ public class InputManager : MonoBehaviour {
 
     public void ClearAllButtonCalls() {
         foreach(BindData bd in mBinds) {
-            foreach(PlayerData pd in bd.players) {
-                pd.callback = null;
+            if(bd != null && bd.players != null) {
+                foreach(PlayerData pd in bd.players) {
+                    pd.callback = null;
+                }
             }
         }
 
@@ -261,10 +263,12 @@ public class InputManager : MonoBehaviour {
             int highestActionInd = 0;
 
             foreach(Bind key in keys) {
-                binds.Add(key.action, new BindData(key));
+                if(key != null && key.keys != null) {
+                    binds.Add(key.action, new BindData(key));
 
-                if(key.action > highestActionInd)
-                    highestActionInd = key.action;
+                    if(key.action > highestActionInd)
+                        highestActionInd = key.action;
+                }
             }
 
             mBinds = new BindData[highestActionInd + 1];

@@ -107,7 +107,7 @@ namespace M8 {
             Vector2 t1 = new Vector2((v3.x - v1.x) * 0.5f, (v3.y - v1.y) * 0.5f);
             Vector2 t2 = new Vector2((v4.x - v2.x) * 0.5f, (v4.y - v2.y) * 0.5f);
 
-	        return Hermite(v2, t1, v3, t2, s);
+            return Hermite(v2, t1, v3, t2, s);
         }
 
         //-------------- 3D --------------
@@ -124,7 +124,51 @@ namespace M8 {
             Limit(ref v, limit);
             return v;
         }
+
+        public static float DistanceSqr(Vector3 pt1, Vector3 pt2) {
+            return Vector3.SqrMagnitude(pt1 - pt2);
+        }
+
+        public static Vector3 MidPoint(Vector3 pt1, Vector3 pt2) {
+            return new Vector3((pt1.x + pt2.x) * 0.5f, (pt1.y + pt2.y) * 0.5f, (pt1.z + pt2.z) * 0.5f);
+        }
+
+        /// <summary>
+        /// get the square distance from a point to a line segment.
+        /// </summary>
+        /// <param name="lineP1">line segment start point</param>
+        /// <param name="lineP2">line segment end point</param>
+        /// <param name="point">point to get distance to</param>
+        /// <param name="closestPoint">set to either 1, 2, or 4, determining which end the point is closest to (p1, p2, or the middle)</param>
+        /// <returns></returns>
+        public static float DistanceToLineSqr(Vector3 lineP1, Vector3 lineP2, Vector3 point, out int closestPoint) {
+            Vector3 v = lineP2 - lineP1;
+            Vector3 w = point - lineP1;
+
+            float c1 = Vector3.Dot(w, v);
+
+            if(c1 <= 0) {//closest point is p1
+                closestPoint = 1;
+                return DistanceSqr(point, lineP1);
+            }
+
+            float c2 = Vector3.Dot(v, v);
+
+            if(c2 <= c1) {//closest point is p2
+                closestPoint = 2;
+                return DistanceSqr(point, lineP2);
+            }
+
+            float b = c1 / c2;
+            Vector3 pb = lineP1 + b * v;
+
+            closestPoint = 4;
+            return DistanceSqr(point, pb);
+        }
     }
+
+
+    //-------------- Easing --------------
 
     public struct Ease {
         public static float In(float t, float tMax, float start, float delta) {
