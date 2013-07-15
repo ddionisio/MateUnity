@@ -10,7 +10,7 @@ namespace M8 {
 
             float dot = Vector3.Dot(up, delta);
 
-            if(dot < cosLimit)
+            if(dot < -cosLimit)
                 return CollisionFlags.Below;
             else if(dot > cosLimit)
                 return CollisionFlags.Above;
@@ -45,7 +45,7 @@ namespace M8 {
 
             float dot = Vector3.Dot(up, delta);
 
-            if(dot < 0.5f)
+            if(dot < -0.5f)
                 return CollisionFlags.Below;
             else if(dot > 0.5f)
                 return CollisionFlags.Above;
