@@ -148,7 +148,7 @@ public class Sprite3D : MonoBehaviour {
 
         angle += mAngleOfs;
         if(angle > 360.0f)
-            return 0;
+            angle -= 360.0f;
 
         return Mathf.RoundToInt((angle/360.0f)*(mDirs.Length-1));
     }
