@@ -125,6 +125,14 @@ namespace M8 {
             return v;
         }
 
+        public static Vector3 Reflect(Vector3 v, Vector3 n) {
+            return v - (2.0f * Vector3.Dot(v, n)) * n;
+        }
+
+        public static Vector3 Slide(Vector3 v, Vector3 n) {
+            return v - Vector3.Dot(v, n) * n;
+        }
+
         public static float DistanceSqr(Vector3 pt1, Vector3 pt2) {
             return Vector3.SqrMagnitude(pt1 - pt2);
         }

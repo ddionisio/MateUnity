@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("M8/3D/TransLookAt")]
 public class TransLookAt : MonoBehaviour {
     public string targetTag = "MainCamera"; //if target is null
     public Transform target;

@@ -1,11 +1,13 @@
 using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("M8/3D/TransLookAtUpLock")]
 public class TransLookAtUpLock : MonoBehaviour {
     public string targetTag = "MainCamera"; //if target is null
     public Transform target;
 
     public bool visibleCheck = true; //if true, only compute if source's renderer is visible
+    public bool backwards;
 
     public Transform source; //if null, use this transform
 
@@ -24,9 +26,10 @@ public class TransLookAtUpLock : MonoBehaviour {
     void Update() {
         if(!visibleCheck || source.renderer.isVisible) {
             Vector3 v = target.position - source.position;
+            Vector3 f = backwards ? -Vector3.forward : Vector3.back;
+
+            v = source.worldToLocalMatrix.MultiplyVector(v);
             v.y = 0.0f;
-            Vector3 f = source.forward;
-            f.y = 0.0f;
 
             float s = M8.MathUtil.CheckSideSign(new Vector2(v.x, v.z), new Vector2(f.x, f.z));
 
