@@ -358,6 +358,9 @@ public class WaypointMover : MonoBehaviour {
             mCurVel = dpos / Time.fixedDeltaTime;
         }
 
+        if(target.collider != null)
+            pos -= target.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
+
         if(mTargetBody != null)
             mTargetBody.MovePosition(pos);
         else
