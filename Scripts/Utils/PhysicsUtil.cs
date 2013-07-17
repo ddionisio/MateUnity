@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace M8 {
     public struct PhysicsUtil {
+        public const CollisionFlags anyCollisionFlags = CollisionFlags.Above | CollisionFlags.Below | CollisionFlags.Sides;
+
+        const float defaultSphereCosCheck = 0.86602540378443864676372317075294f;
+        const float defaultBoxCosCheck = 0.70710678118654752440084436210485f;
+
         //cheaper version if you pre-cache the cos(angleLimit)
         public static CollisionFlags GetCollisionFlagsSphereCos(Vector3 up, Vector3 center, float cosLimit, Vector3 contactPoint) {
             Vector3 delta = contactPoint - center;
@@ -22,7 +27,11 @@ namespace M8 {
             return GetCollisionFlagsSphereCos(up, center, Mathf.Cos(angleLimit), contactPoint);
         }
 
-        public static CollisionFlags GetCollisionFlagsCapsule(Vector3 up, Vector3 scale, Vector3 center, float height, float radius, float angleLimit, Vector3 contactPoint) {
+        public static CollisionFlags GetCollisionFlagsSphere(Vector3 up, Vector3 center, Vector3 contactPoint) {
+            return GetCollisionFlagsSphereCos(up, center, defaultSphereCosCheck, contactPoint);
+        }
+
+        public static CollisionFlags GetCollisionFlagsCapsule(Vector3 up, Vector3 scale, Vector3 center, float height, float radius, Vector3 contactPoint) {
             Vector3 p = (up * ((height - (radius * 2.0f)) * 0.5f));
             p = Vector3.Scale(p, scale);
             Vector3 bottom = center - p;
@@ -45,9 +54,9 @@ namespace M8 {
 
             float dot = Vector3.Dot(up, delta);
 
-            if(dot < -0.5f)
+            if(dot < -defaultBoxCosCheck)
                 return CollisionFlags.Below;
-            else if(dot > 0.5f)
+            else if(dot > defaultBoxCosCheck)
                 return CollisionFlags.Above;
 
             return CollisionFlags.Sides;
