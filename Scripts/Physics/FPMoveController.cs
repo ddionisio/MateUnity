@@ -60,17 +60,16 @@ public class FPMoveController : RigidBodyController {
 
         Quaternion dirRot = dirHolder.rotation;
 
-        Vector2 newMoveAxis;
-
         if(mInputEnabled) {
             InputManager input = Main.instance.input;
 
             if(!isSlopSlide) {
-                newMoveAxis.x = moveInputX != InputManager.ActionInvalid ? input.GetAxis(player, moveInputX) : 0.0f;
-                newMoveAxis.y = moveInputY != InputManager.ActionInvalid ? input.GetAxis(player, moveInputY) : 0.0f;
+                moveSide = moveInputX != InputManager.ActionInvalid ? input.GetAxis(player, moveInputX) : 0.0f;
+                moveForward = moveInputY != InputManager.ActionInvalid ? input.GetAxis(player, moveInputY) : 0.0f;
             }
             else {
-                newMoveAxis = Vector2.zero;
+                moveForward = 0.0f;
+                moveSide = 0.0f;
             }
 
             mCurInputTurnAxis = turnInput != InputManager.ActionInvalid ? input.GetAxis(player, turnInput) : 0.0f;
@@ -90,11 +89,10 @@ public class FPMoveController : RigidBodyController {
             }
         }
         else {
-            newMoveAxis = Vector2.zero;
+            moveForward = 0.0f;
+            moveSide = 0.0f;
             mCurInputTurnAxis = 0.0f;
         }
-
-        moveAxis = newMoveAxis;
 
         base.FixedUpdate();
     }

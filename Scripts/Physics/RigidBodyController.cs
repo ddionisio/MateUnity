@@ -23,8 +23,11 @@ public class RigidBodyController : MonoBehaviour {
     public float moveForce = 60.0f;
     public float moveAirForce = 10.0f;
     public float moveMaxSpeed = 3.5f;
+    public bool moveNormalize = true;
 
     public float slopSlideForce = 20.0f;
+
+    public float sideBounceForce = 2.0f; //bounce off sides slightly
 
     public float airDrag = 0.05f; //if there is no ground collision, this is the drag
     public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
@@ -33,7 +36,7 @@ public class RigidBodyController : MonoBehaviour {
     public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag
 
     public float topBottomCollisionAngle = 30.0f; //criteria to determine collision flag
-
+        
     private Vector2 mCurMoveAxis;
     private Vector3 mCurMoveDir;
 
@@ -49,8 +52,11 @@ public class RigidBodyController : MonoBehaviour {
 
     private Vector3 mGroundMoveVel;
 
+    public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
+    public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
+
     public bool isSlopSlide { get { return mIsSlopSlide; } }
-    public Vector2 moveAxis { get { return mCurMoveAxis; } set { mCurMoveAxis = value; } }
+    
     public Vector3 moveDir { get { return mCurMoveDir; } }
     public CollisionFlags collisionFlags { get { return mCollFlags; } }
     public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
@@ -91,6 +97,9 @@ public class RigidBodyController : MonoBehaviour {
         foreach(ContactPoint contact in col.contacts) {
             if(mColls.ContainsKey(contact.otherCollider)) {
                 CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
+
+                if(colFlag == CollisionFlags.Sides && sideBounceForce > 0.0f)
+                    rigidbody.AddForce(contact.normal * sideBounceForce);
 
                 mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
             }
@@ -151,17 +160,24 @@ public class RigidBodyController : MonoBehaviour {
     bool Move(float force) {
         //compute move direction
         Quaternion dirRot = dirHolder.rotation;
-        Vector3 moveDelta = dirRot * Vector3.forward * mCurMoveAxis.y;
-        moveDelta += dirRot * Vector3.right * mCurMoveAxis.x;
+
+        Vector3 moveDelta = mCurMoveAxis.y != 0.0f ? dirRot * Vector3.forward * mCurMoveAxis.y : Vector3.zero;
+
+        if(mCurMoveAxis.x != 0.0f)
+            moveDelta += dirRot * Vector3.right * mCurMoveAxis.x;
 
         mCurMoveDir = moveDelta.normalized;
 
+        if(moveNormalize)
+            moveDelta = mCurMoveDir;
+        
         //check if we need to slide off walls
         foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
-            if(pair.Value.flag == CollisionFlags.Sides || pair.Value.flag == CollisionFlags.Below) {
+            if(pair.Value.flag == CollisionFlags.Sides) {
                 if(Vector3.Dot(mCurMoveDir, pair.Value.normal) < 0.0f) {
                     moveDelta = M8.MathUtil.Slide(mCurMoveDir, pair.Value.normal);
-                    break;
+                    moveDelta.Normalize();
+                    mCurMoveDir = moveDelta;
                 }
             }
         }
@@ -179,6 +195,7 @@ public class RigidBodyController : MonoBehaviour {
         }
 
         if(canMove) {
+            //M8.Debug.
             rigidbody.AddForce(moveDelta * force);
             return true;
         }
