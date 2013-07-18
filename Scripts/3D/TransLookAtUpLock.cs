@@ -26,7 +26,7 @@ public class TransLookAtUpLock : MonoBehaviour {
     void Update() {
         if(!visibleCheck || source.renderer.isVisible) {
             Vector3 v = target.position - source.position;
-            Vector3 f = backwards ? -Vector3.forward : Vector3.back;
+            Vector3 f = backwards ? Vector3.back : Vector3.forward;
 
             v = source.worldToLocalMatrix.MultiplyVector(v);
             v.y = 0.0f;

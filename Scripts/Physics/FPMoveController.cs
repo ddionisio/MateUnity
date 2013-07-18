@@ -5,8 +5,8 @@ using System.Collections.Generic;
 //TODO: right now it assumes a sphere collider
 [AddComponentMenu("M8/Physics/First-Person RigidBodyController")]
 public class FPMoveController : RigidBodyController {
-    public float jumpForce = 40.0f;
-    public float jumpDelay = 0.2f;
+    public float jumpForce = 50.0f;
+    public float jumpDelay = 0.15f;
 
     public float turnSensitivity = 2.0f;
 

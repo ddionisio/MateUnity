@@ -3,8 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 
 //TODO: right now it assumes a sphere collider
+//make sure to add a physics material to the collider
+//and set it with a high static friction to reduce sliding,
+//and be able to stand still on platforms
 [AddComponentMenu("M8/Physics/RigidBodyController")]
 public class RigidBodyController : MonoBehaviour {
+    const float moveCosCheck = 0.01745240643728351281941897851632f; //cos(89)
+
     public struct CollideInfo {
         public CollisionFlags flag;
         public Vector3 contactPoint;
@@ -12,17 +17,18 @@ public class RigidBodyController : MonoBehaviour {
 
     }
 
-    public Transform dirHolder; //the forward vector of this determines our forward movement
+    public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
+                                //you'll want this as an attach for camera as well.
 
-    public float moveForce = 25.0f;
+    public float moveForce = 60.0f;
     public float moveAirForce = 10.0f;
     public float moveMaxSpeed = 3.5f;
 
-    public float slopSlideForce = 25.0f;
+    public float slopSlideForce = 20.0f;
 
-    public float airDrag = 0.0f; //if there is no ground collision, this is the drag
-    public float groundDrag = 0.01f; //if there is ground and/or side collision and/or we are moving
-    public float standDrag = 10.0f; //drag when we are standing still
+    public float airDrag = 0.05f; //if there is no ground collision, this is the drag
+    public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
+    public float standDrag = 0.0f; //drag when we are standing still
 
     public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag
 
@@ -169,7 +175,7 @@ public class RigidBodyController : MonoBehaviour {
         bool canMove = velMagSqr < moveMaxSpeed * moveMaxSpeed;
         if(!canMove) { //see if we are trying to move the opposite dir
             Vector3 velDir = vel / Mathf.Sqrt(velMagSqr);
-            canMove = Vector3.Dot(mCurMoveDir, velDir) < 0.0f;
+            canMove = Vector3.Dot(mCurMoveDir, velDir) < moveCosCheck;
         }
 
         if(canMove) {

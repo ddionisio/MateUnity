@@ -173,8 +173,26 @@ namespace M8 {
             closestPoint = 4;
             return DistanceSqr(point, pb);
         }
-    }
 
+        /// <summary>
+        /// Get the angle in degrees between given forward axis to target position. WorldToLocal determines the
+        /// axis' space relative to given point.
+        /// If you want to create a rotation, use Quaternion.AngleAxis(angle, Vector3.up);
+        /// </summary>
+        public static float AngleForwardAxis(Matrix4x4 worldToLocal, Vector3 point, Vector3 axis, Vector3 target) {
+            Vector3 v = target - point;
+
+            v = worldToLocal.MultiplyVector(v);
+            v.y = 0.0f;
+
+            float s = M8.MathUtil.CheckSideSign(new Vector2(v.x, v.z), new Vector2(axis.x, axis.z));
+
+            float angle = Vector3.Angle(axis, v);
+
+            return s * angle;
+        }
+    }
+        
 
     //-------------- Easing --------------
 
