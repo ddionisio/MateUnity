@@ -29,8 +29,15 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
 
         textLabel.text = isLocalized ? GameLocalize.GetText(text) : text;
 
-        if(nameLabel != null)
-            nameLabel.text = isLocalized ? GameLocalize.GetText(aName) : aName;
+        if(nameLabel != null) {
+            if(!string.IsNullOrEmpty(aName)) {
+                nameLabel.text = isLocalized ? GameLocalize.GetText(aName) : aName;
+                nameLabel.gameObject.SetActive(true);
+            }
+            else {
+                nameLabel.gameObject.SetActive(false);
+            }
+        }
 
         if(portrait != null) {
             if(portraitSpriteRef != null) {

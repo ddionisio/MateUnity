@@ -50,7 +50,9 @@ public class GameLocalize : MonoBehaviour {
         string ret = "";
 
         if(mTable != null) {
-            if(mTable.TryGetValue(key, out ret)) {
+            if(mTable.ContainsKey(key)) {
+                ret = mTable[key];
+
                 //see if there's params
                 string[] keyParams;
 
