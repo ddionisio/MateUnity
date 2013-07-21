@@ -62,8 +62,37 @@ public class RigidBodyController : MonoBehaviour {
     public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
     public Dictionary<Collider, CollideInfo> collisions { get { return mColls; } }
 
+    /// <summary>
+    /// Check if given collision is currently colliding with this object.
+    /// </summary>
     public bool CheckCollide(Collider col) {
         return mColls.ContainsKey(col);
+    }
+
+    /// <summary>
+    /// Set dirHolder's forward axis to point towards given pos,
+    /// if lockUpVector=true, only rotate along the up vector.
+    /// </summary>
+    public void DirTo(Vector3 pos, bool lockUpVector) {
+        if(lockUpVector) {
+            float angle = M8.MathUtil.AngleForwardAxis(
+                dirHolder.worldToLocalMatrix,
+                dirHolder.position,
+                Vector3.forward,
+                pos);
+            dirHolder.rotation *= Quaternion.AngleAxis(angle, Vector3.up);
+        }
+        else {
+            dirHolder.LookAt(pos);
+        }
+    }
+
+    public void DirTo(GameObject targetGO, bool lockUpVector) {
+        DirTo(targetGO.transform.position, lockUpVector);
+    }
+
+    public void DirTo(Transform target, bool lockUpVector) {
+        DirTo(target.position, lockUpVector);
     }
 
     void OnCollisionEnter(Collision col) {

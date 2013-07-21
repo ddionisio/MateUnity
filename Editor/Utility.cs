@@ -38,6 +38,18 @@ namespace M8.Editor {
             }
         }
 
+        public static bool DrawAddButton() {
+            return GUILayout.Button(new GUIContent("+", "Click to add"), EditorStyles.toolbarButton);
+        }
+
+        public static bool DrawRemoveButton() {
+            return GUILayout.Button(new GUIContent("-", "Click to remove"), EditorStyles.toolbarButton);
+        }
+
+        public static bool DrawCopyButton() {
+            return GUILayout.Button(new GUIContent("C", "Click to copy"), EditorStyles.toolbarButton);
+        }
+
         /// <summary>
         /// Used by AddFoldOutListItemButtons to return which button was pressed, and by 
         /// UpdateFoldOutListOnButtonPressed to process the pressed button for regular lists

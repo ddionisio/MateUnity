@@ -5,8 +5,10 @@ using System.Collections.Generic;
 [CustomEditor(typeof(UIModalManager))]
 public class UIModalManagerInspector : Editor {
     private UIController mNewUI = null;
+    private TextEditor mTE = null;
 
     void OnEnable() {
+        mTE = new TextEditor();
     }
 
     public override void OnInspectorGUI() {
@@ -32,7 +34,17 @@ public class UIModalManagerInspector : Editor {
 
             GUILayout.FlexibleSpace();
 
-            if(GUILayout.Button(new GUIContent("-", "Click to remove"), EditorStyles.toolbarButton)) {
+            if(dat.ui != null) {
+                if(M8.Editor.Utility.DrawCopyButton()) {
+                    mTE.content = new GUIContent(dat.ui.name);
+                    mTE.SelectAll();
+                    mTE.Copy();
+                }
+
+                GUILayout.Space(4);
+            }
+
+            if(M8.Editor.Utility.DrawRemoveButton()) {
                 delInd = i;
             }
 
