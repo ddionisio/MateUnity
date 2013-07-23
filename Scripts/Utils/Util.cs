@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 //general helper functions
 
@@ -69,6 +70,16 @@ namespace M8 {
             }
 
             return ret;
+        }
+
+        public static void ShuffleList<T>(List<T> list) {
+            for(int i = 0, max = list.Count; i < max; i++) {
+                int r = UnityEngine.Random.Range(i, max);
+                T obj = list[i];
+                T robj = list[r];
+                list[i] = robj;
+                list[r] = obj;
+            }
         }
     }
 }

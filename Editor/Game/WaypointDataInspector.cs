@@ -15,7 +15,7 @@ public class WaypointDataInspector : Editor {
 
             WaypointData input = target as WaypointData;
 
-            EditorGUILayout.LabelField("Current Index", input.curInd.ToString());
+            EditorGUILayout.LabelField("Current Index", input.currentIndex.ToString());
         }
 
         if(GUI.changed)

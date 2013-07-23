@@ -8,7 +8,7 @@ using System.IO;
 namespace M8.Editor {
     public class MakePixelPerfect : EditorWindow {
 
-        [MenuItem("M8/2D/Make Pixel-Perfect")]
+        [MenuItem("M8/Tools/Make Pixel-Perfect")]
         static void DoIt() {
             EditorWindow.GetWindow(typeof(MakePixelPerfect));
         }

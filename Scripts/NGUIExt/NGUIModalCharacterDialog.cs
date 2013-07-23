@@ -188,7 +188,7 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
                 mBodyLayoutFlow.lineup2 = NGUILayoutFlow.LineUp.End;
             }*/
 
-            if(choiceContainer != null && choiceContainer.GetChildCount() > 0) {
+            if(choiceContainer != null && choiceContainer.childCount > 0) {
                 /*mChoiceFlow = choiceContainer.GetComponent<NGUILayoutFlow>();
                 mChoiceFlow.arrangement = NGUILayoutFlow.Arrangement.Vertical;
                 mChoiceFlow.rounding = true;
@@ -196,7 +196,7 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
                 mChoiceFlow.lineup = NGUILayoutFlow.LineUp.None;
                 mChoiceFlow.lineup2 = NGUILayoutFlow.LineUp.None;*/
 
-                mChoiceEvents = new ChoiceData[choiceContainer.GetChildCount()];
+                mChoiceEvents = new ChoiceData[choiceContainer.childCount];
 
                 //setup callback for click
                 //disable all choices

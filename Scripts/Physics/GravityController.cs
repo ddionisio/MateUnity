@@ -17,6 +17,7 @@ public class GravityController : MonoBehaviour {
     private WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
 
     private GravityFieldBase mGravityField; //which field we are currently attached to
+    private GravityFieldBase mGravityFieldPrev; //for gravity field that retains, overwritten by a new gravity field
 
     public Vector3 up {
         get { return _up; }
@@ -29,7 +30,12 @@ public class GravityController : MonoBehaviour {
         }
     }
 
-    public GravityFieldBase gravityField { get { return mGravityField; } set { mGravityField = value; } }
+    public GravityFieldBase gravityField { 
+        get { return mGravityField; } 
+        set {
+            mGravityField = value; 
+        } 
+    }
 
     void OnDisable() {
         mIsOrienting = false;
@@ -42,6 +48,9 @@ public class GravityController : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
+        if(GravityFieldBase.global != null)
+            GravityFieldBase.global.Add(this);
+
         ApplyUp();
     }
 

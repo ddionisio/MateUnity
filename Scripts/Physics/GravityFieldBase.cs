@@ -29,8 +29,18 @@ public abstract class GravityFieldBase : MonoBehaviour {
 
     public float gravity = -9.8f;
     public bool retainGravity = false; //if true, then gravity and up orientation of GravityController will persist when it exits the field
+    public bool isGlobal = false; //check as the default gravity field, there should only be one of these.
 
+    private static GravityFieldBase mGlobal = null;
+    
     private Dictionary<Collider, ItemData> mItems = new Dictionary<Collider,ItemData>(16);
+
+    public static GravityFieldBase global { get { return mGlobal; } }
+
+    public void Add(GravityController ctrl) {
+        mItems.Add(ctrl.collider, new ItemData(ctrl));
+        ctrl.gravityField = this;
+    }
 
     /// <summary>
     /// Used by other field to transfer ownership of item
@@ -42,6 +52,8 @@ public abstract class GravityFieldBase : MonoBehaviour {
                 itm.Restore();
 
             itm.controller.gravityField = null;
+
+            mItems.Remove(col);
         }
         else
             itm = new ItemData(null);
@@ -50,6 +62,16 @@ public abstract class GravityFieldBase : MonoBehaviour {
     }
 
     protected abstract Vector3 GetUpVector(Vector3 position);
+
+    protected virtual void OnDisable() {
+        if(mGlobal == this)
+            mGlobal = null;
+    }
+
+    protected virtual void OnEnable() {
+        if(isGlobal)
+            mGlobal = this;
+    }
 
     void OnTriggerEnter(Collider col) {
         if(!mItems.ContainsKey(col)) {
@@ -63,8 +85,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
                     }
                 }
                 else {
-                    mItems.Add(col, new ItemData(ctrl));
-                    ctrl.gravityField = this;
+                    Add(ctrl);
                 }
             }
         }
@@ -73,14 +94,22 @@ public abstract class GravityFieldBase : MonoBehaviour {
     void OnTriggerExit(Collider col) {
         ItemData itm;
         if(mItems.TryGetValue(col, out itm)) {
-            if(!retainGravity)
-                itm.Restore();
-
-            itm.controller.gravityField = null;
             mItems.Remove(col);
+                        
+            if(!retainGravity) {
+                itm.Restore();
+            }
+
+            //add to global
+            if(mGlobal != null) {
+                mGlobal.mItems.Add(col, itm);
+                itm.controller.gravityField = mGlobal;
+            }
+            else
+                itm.controller.gravityField = null;
         }
     }
-
+        
     void LateUpdate() {
         foreach(KeyValuePair<Collider, ItemData> pair in mItems) {
             GravityController ctrl = pair.Value.controller;

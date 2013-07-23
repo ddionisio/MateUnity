@@ -34,7 +34,7 @@ public class NGUIPage : MonoBehaviour, IComparer<GameObject> {
     }
 
     void Awake() {
-        mPages = new GameObject[pagesHolder.GetChildCount()];
+        mPages = new GameObject[pagesHolder.childCount];
         for(int i = 0; i < mPages.Length; i++) {
             mPages[i] = pagesHolder.GetChild(i).gameObject;
         }

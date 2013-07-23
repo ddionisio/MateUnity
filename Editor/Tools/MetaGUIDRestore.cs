@@ -24,7 +24,7 @@ namespace M8.Editor {
 
         private Vector2 mMetaFilesScroll;
 
-        [MenuItem("M8/Meta GUID Restore")]
+        [MenuItem("M8/Tools/Meta GUID Restore")]
         static void DoIt() {
             EditorWindow.GetWindow(typeof(MetaGUIDRestore));
         }

@@ -141,7 +141,7 @@ public class SpriteAnimator3D : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         //determine dir
-        if(mCurClip != -1) {
+        if(mCurClip != -1 && anim.Sprite.renderer.isVisible) {
             int newDir = GetDir();
             if(mCurDir != newDir) {
                 mCurDir = newDir;
@@ -167,7 +167,7 @@ public class SpriteAnimator3D : MonoBehaviour {
     }
 
     int GetDir() {
-        Vector3 v = target.position - mCamTrans.position;
+        Vector3 v = target.position - mCamTrans.position; //mCamTrans.forward; //
         Vector3 f = Vector3.forward;
 
         v = target.worldToLocalMatrix.MultiplyVector(v);

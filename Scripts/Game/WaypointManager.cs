@@ -29,18 +29,6 @@ public class WaypointManager : MonoBehaviour {
         }
     }
 
-    public bool SetWaypointData(string name, WaypointData wpDat) {
-        List<Transform> wps = GetWaypoints(name);
-        if(wps != null) {
-            wpDat.curInd = 0;
-            wpDat.waypoints = wps;
-            wpDat.waypoint = name;
-            return true;
-        }
-
-        return false;
-    }
-
     public List<Transform> GetWaypoints(string name) {
         List<Transform> ret = null;
         mWaypoints.TryGetValue(name, out ret);

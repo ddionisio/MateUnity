@@ -24,8 +24,8 @@ public class WaypointManagerInspector : Editor {
 
     void OnEnable() {
         WaypointManager input = target as WaypointManager;
-        
-        int numChild = input.transform.GetChildCount();
+
+        int numChild = input.transform.childCount;
         mData = new Dictionary<Transform, Data>(numChild);
 
         foreach(Transform t in input.transform) {
@@ -35,7 +35,7 @@ public class WaypointManagerInspector : Editor {
                 dat.foldout = true;
 
                 if(mLastWaypointInd != -1) {
-                    dat.selInd = Mathf.Clamp(mLastWaypointInd, 0, t.GetChildCount());
+                    dat.selInd = Mathf.Clamp(mLastWaypointInd, 0, t.childCount);
                     input.__inspectorSelected = t.GetChild(dat.selInd);
                 }
                 else {
@@ -92,7 +92,7 @@ public class WaypointManagerInspector : Editor {
                 }
                 GUILayout.EndHorizontal();
 
-                int numChild = t.GetChildCount();
+                int numChild = t.childCount;
 
                 if(numChild == 0) {
                     if(GUILayout.Button("Add New Point")) {
