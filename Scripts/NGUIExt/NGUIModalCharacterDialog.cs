@@ -9,8 +9,10 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
 
     public Transform choiceContainer; //optional: each child must have a UIEventListener
 
-    public UIEventListener proceedClick; //if there are no choices to select, this is used, if null, default click to this game object
+    public bool choiceAutoSelectFirst = true; //this should be set to true for no mouse input
 
+    public UIEventListener proceedClick; //if there are no choices to select, this is used, if null, default click to this game object
+        
     private struct ChoiceData {
         public UILabel label;
         public UIEventListener listener;
@@ -56,27 +58,34 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
             if(choices != null && choices.Length > 0) {
                 mNumChoices = Mathf.Min(choices.Length, mChoiceEvents.Length);
 
-                for(int i = 0; i < mNumChoices; i++) {
-                    mChoiceEvents[i].listener.gameObject.SetActive(true);
-                    if(mChoiceEvents[i].label != null) {
-                        mChoiceEvents[i].label.text = isLocalized ? GameLocalize.GetText(choices[i]) : choices[i];
-                    }
+                if(mNumChoices > 0) {
+                    choiceContainer.gameObject.SetActive(true);
 
-                    if(mChoiceEvents[i].keys != null) {
-                        if(i == 0) {
-                            mChoiceEvents[i].keys.selectOnUp = mChoiceEvents[mNumChoices - 1].keys;
-                        }
-                        else {
-                            mChoiceEvents[i].keys.selectOnUp = mChoiceEvents[i - 1].keys;
+                    for(int i = 0; i < mNumChoices; i++) {
+                        mChoiceEvents[i].listener.gameObject.SetActive(true);
+                        if(mChoiceEvents[i].label != null) {
+                            mChoiceEvents[i].label.text = isLocalized ? GameLocalize.GetText(choices[i]) : choices[i];
                         }
 
-                        if(i < mNumChoices - 1) {
-                            mChoiceEvents[i].keys.selectOnDown = mChoiceEvents[i + 1].keys;
-                        }
-                        else {
-                            mChoiceEvents[i].keys.selectOnDown = mChoiceEvents[0].keys;
+                        if(mChoiceEvents[i].keys != null) {
+                            if(i == 0) {
+                                mChoiceEvents[i].keys.selectOnUp = mChoiceEvents[mNumChoices - 1].keys;
+                            }
+                            else {
+                                mChoiceEvents[i].keys.selectOnUp = mChoiceEvents[i - 1].keys;
+                            }
+
+                            if(i < mNumChoices - 1) {
+                                mChoiceEvents[i].keys.selectOnDown = mChoiceEvents[i + 1].keys;
+                            }
+                            else {
+                                mChoiceEvents[i].keys.selectOnDown = mChoiceEvents[0].keys;
+                            }
                         }
                     }
+                }
+                else {
+                    choiceContainer.gameObject.SetActive(false);
                 }
             }
         }
@@ -132,7 +141,7 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
 
     void ApplyActive() {
         if(mChoiceEvents != null && mNumChoices > 0) {
-            UICamera.selectedObject = mChoiceEvents[0].listener.gameObject;
+            UICamera.selectedObject = choiceAutoSelectFirst ? mChoiceEvents[0].listener.gameObject : null;
         }
         else {
             UICamera.selectedObject = proceedClick != null ? proceedClick.gameObject : gameObject;

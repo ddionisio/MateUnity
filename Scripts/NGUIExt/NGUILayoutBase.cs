@@ -24,13 +24,15 @@ public abstract class NGUILayoutBase : MonoBehaviour {
     public static void RefreshNow(Transform t) {
         t.BroadcastMessage("ProcessText", null, SendMessageOptions.DontRequireReceiver);
 
-        NGUILayoutBase[] layouts = t.GetComponentsInChildren<NGUILayoutBase>(true);
+        NGUILayoutBase[] layouts = t.GetComponentsInChildren<NGUILayoutBase>(false);
 
         //sort
         System.Array.Sort(layouts, NGUILayoutBase.Comparer);
 
-        for(int i = layouts.Length - 1; i >= 0; i--)
-            layouts[i].Reposition();
+        for(int i = layouts.Length - 1; i >= 0; i--) {
+            if(!layouts[i].alwaysUpdate)
+                layouts[i].Reposition();
+        }
     }
 
     public abstract void Reposition();

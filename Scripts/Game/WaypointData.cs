@@ -87,6 +87,9 @@ public class WaypointData : MonoBehaviour {
 
                 return true;
             }
+            else {
+                Debug.LogWarning("Unable to get waypoints for: " + name);
+            }
         }
 
         return false;
