@@ -20,6 +20,22 @@ namespace M8.Editor {
             EditorWindow.GetWindow(typeof(Projectinator));
         }
 
+        void OnEnable() {
+            mAxisInd = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey("projectinator", "axis"), mAxisInd);
+            mInv = EditorPrefs.GetBool(M8.Editor.Utility.PreferenceKey("projectinator", "inv"), mInv);
+            mOfs = EditorPrefs.GetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "ofs"), mOfs);
+            mDist = EditorPrefs.GetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "dist"), mDist);
+            mLayer = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey("projectinator", "layer"), mLayer);
+        }
+
+        void OnDisable() {
+            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey("projectinator", "axis"), mAxisInd);
+            EditorPrefs.SetBool(M8.Editor.Utility.PreferenceKey("projectinator", "inv"), mInv);
+            EditorPrefs.SetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "ofs"), mOfs);
+            EditorPrefs.SetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "dist"), mDist);
+            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey("projectinator", "layer"), mLayer);
+        }
+
         void OnGUI() {
             GUILayout.BeginVertical();
 
