@@ -1,9 +1,12 @@
-Shader "M8/RepeatTile" 
+//only for 2D stuff
+Shader "M8/2D/RepeatTileScroll" 
 {
 	Properties 
 	{
 	    _MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
 		modColor ("Mod Color", Color) = (1.0, 1.0, 1.0, 1.0)
+		speedX ("Speed X", Float) = 1
+		speedY ("Speed Y", Float) = 1
 		tileX ("Tile X", Float) = 1
 		tileY ("Tile Y", Float) = 1
 	}
@@ -36,9 +39,12 @@ Shader "M8/RepeatTile"
 			};
 			
 			sampler2D _MainTex;
-			
-			float4 modColor;
 
+			float4 modColor;
+			
+			float speedX;
+			float speedY;
+			
 			float tileX;
 			float tileY;
 			
@@ -52,6 +58,9 @@ Shader "M8/RepeatTile"
 				o.texcoord = IN.texcoord;
 				o.texcoord.x *= tileX;
 				o.texcoord.y *= tileY;
+				
+				o.texcoord.x += speedX * _Time.y;
+				o.texcoord.y += speedY * _Time.y;
 				
 				return o;
 			}

@@ -30,10 +30,13 @@ public abstract class GravityFieldBase : MonoBehaviour {
     public float gravity = -9.8f;
     public bool retainGravity = false; //if true, then gravity and up orientation of GravityController will persist when it exits the field
     public bool isGlobal = false; //check as the default gravity field, there should only be one of these.
+    public float updateDelay = 0.0f;
 
     private static GravityFieldBase mGlobal = null;
     
     private Dictionary<Collider, ItemData> mItems = new Dictionary<Collider,ItemData>(16);
+
+    private YieldInstruction mWaitDelay;
 
     public static GravityFieldBase global { get { return mGlobal; } }
 
@@ -61,16 +64,27 @@ public abstract class GravityFieldBase : MonoBehaviour {
         return itm;
     }
 
-    protected abstract Vector3 GetUpVector(Vector3 position);
+    protected abstract Vector3 GetUpVector(Transform entity);
 
     protected virtual void OnDisable() {
         if(mGlobal == this)
             mGlobal = null;
+
+        StopAllCoroutines();
     }
 
     protected virtual void OnEnable() {
         if(isGlobal)
             mGlobal = this;
+
+        if(mWaitDelay == null) {
+            if(updateDelay > 0.0f)
+                mWaitDelay = new WaitForSeconds(updateDelay);
+            else
+                mWaitDelay = new WaitForFixedUpdate();
+        }
+
+        StartCoroutine(DoEval());
     }
 
     void OnTriggerEnter(Collider col) {
@@ -109,12 +123,19 @@ public abstract class GravityFieldBase : MonoBehaviour {
                 itm.controller.gravityField = null;
         }
     }
-        
-    void LateUpdate() {
-        foreach(KeyValuePair<Collider, ItemData> pair in mItems) {
-            GravityController ctrl = pair.Value.controller;
-            ctrl.up = GetUpVector(ctrl.transform.position);
-            ctrl.gravity = gravity;
+
+    IEnumerator DoEval() {
+        while(true) {
+            foreach(KeyValuePair<Collider, ItemData> pair in mItems) {
+                GravityController ctrl = pair.Value.controller;
+                Transform t = ctrl.transform;
+
+                ctrl.up = GetUpVector(t);
+
+                ctrl.gravity = gravity;
+            }
+
+            yield return mWaitDelay;
         }
     }
 }

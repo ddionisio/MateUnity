@@ -1,4 +1,4 @@
-Shader "M8/LitPremulVertexColor3DOpaque" {
+Shader "M8/LitPremulVertexColorOpaque3D" {
 Properties {
 	_MainTex ("Base (RGB)", 2D) = "white" {}
 }

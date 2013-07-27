@@ -17,6 +17,8 @@ public class RigidBodyController : MonoBehaviour {
 
     }
 
+    public delegate void CallbackEvent();
+
     public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
                                 //you'll want this as an attach for camera as well.
 
@@ -27,15 +29,20 @@ public class RigidBodyController : MonoBehaviour {
 
     public float slopSlideForce = 20.0f;
 
-    public float sideBounceForce = 2.0f; //bounce off sides slightly
+    public float sideBounceImpulse = 0.72f; //bounce off sides slightly
 
     public float airDrag = 0.05f; //if there is no ground collision, this is the drag
     public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
-    public float standDrag = 0.0f; //drag when we are standing still
+    public float waterDrag = 20.0f; //if within water
+
+    public LayerMask waterLayerMask;
 
     public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag
 
     public float topBottomCollisionAngle = 30.0f; //criteria to determine collision flag
+
+    public event CallbackEvent waterEnterCallback;
+    public event CallbackEvent waterExitCallback;
         
     private Vector2 mCurMoveAxis;
     private Vector3 mCurMoveDir;
@@ -52,6 +59,8 @@ public class RigidBodyController : MonoBehaviour {
 
     private Vector3 mGroundMoveVel;
 
+    private int mWaterCounter; //counter for water triggers
+
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
@@ -61,6 +70,7 @@ public class RigidBodyController : MonoBehaviour {
     public CollisionFlags collisionFlags { get { return mCollFlags; } }
     public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
     public Dictionary<Collider, CollideInfo> collisions { get { return mColls; } }
+    public bool isUnderWater { get { return mWaterCounter > 0; } }
 
     /// <summary>
     /// Check if given collision is currently colliding with this object.
@@ -95,6 +105,14 @@ public class RigidBodyController : MonoBehaviour {
         DirTo(target.position, lockUpVector);
     }
 
+    // implements
+
+    protected virtual void WaterEnter() {
+    }
+
+    protected virtual void WaterExit() {
+    }
+
     void OnCollisionEnter(Collision col) {
         //refresh during stay
         //mCollFlags = CollisionFlags.None;
@@ -127,8 +145,8 @@ public class RigidBodyController : MonoBehaviour {
             if(mColls.ContainsKey(contact.otherCollider)) {
                 CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
 
-                if(colFlag == CollisionFlags.Sides && sideBounceForce > 0.0f)
-                    rigidbody.AddForce(contact.normal * sideBounceForce);
+                if(colFlag == CollisionFlags.Sides && sideBounceImpulse > 0.0f)
+                    rigidbody.AddForce(contact.normal * sideBounceImpulse, ForceMode.Impulse);
 
                 mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
             }
@@ -147,8 +165,42 @@ public class RigidBodyController : MonoBehaviour {
         RefreshCollInfo();
     }
 
+    void OnTriggerEnter(Collider col) {
+        if((waterLayerMask & (1 << col.gameObject.layer)) != 0) {
+            mWaterCounter++;
+        }
+
+        if(isUnderWater) {
+            WaterEnter();
+
+            if(waterEnterCallback != null)
+                waterEnterCallback();
+        }
+    }
+
+    void OnTriggerExit(Collider col) {
+        if((waterLayerMask & (1 << col.gameObject.layer)) != 0) {
+            mWaterCounter--;
+        }
+
+        if(!isUnderWater) {
+            WaterExit();
+
+            if(waterExitCallback != null)
+                waterExitCallback();
+        }
+    }
+
+    protected virtual void OnDestroy() {
+        waterEnterCallback = null;
+        waterExitCallback = null;
+    }
+        
     protected virtual void Awake() {
         mTopBottomColCos = Mathf.Cos(topBottomCollisionAngle);
+    }
+
+    protected virtual void Start() {
     }
 
     // Update is called once per frame
@@ -158,7 +210,7 @@ public class RigidBodyController : MonoBehaviour {
 #endif
 
         if(mIsSlopSlide) {
-            rigidbody.drag = groundDrag;
+            rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
 
             Vector3 dir = M8.MathUtil.Slide(-transform.up, mSlopNormal);
             dir.Normalize();
@@ -168,32 +220,30 @@ public class RigidBodyController : MonoBehaviour {
         if(mCurMoveAxis != Vector2.zero) {
             //move
             if(isGrounded) {
-                rigidbody.drag = groundDrag;
+                rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
 
-                Move(moveForce);
+                Move(dirHolder.rotation, mCurMoveAxis, moveForce);
             }
             else {
-                rigidbody.drag = airDrag;
+                rigidbody.drag = isUnderWater ? waterDrag : airDrag;
 
-                Move(moveAirForce);
+                Move(dirHolder.rotation, mCurMoveAxis, moveAirForce);
             }
         }
         else {
             mCurMoveDir = Vector3.zero;
 
-            rigidbody.drag = isGrounded ? (mCollFlags == CollisionFlags.Below ? standDrag : groundDrag) : airDrag;
+            rigidbody.drag = isUnderWater ? waterDrag : isGrounded ? groundDrag : airDrag;
         }
     }
 
     //return true if we moved
-    bool Move(float force) {
+    public bool Move(Quaternion dirRot, Vector2 axis, float force) {
         //compute move direction
-        Quaternion dirRot = dirHolder.rotation;
+        Vector3 moveDelta = axis.y != 0.0f ? dirRot * Vector3.forward * axis.y : Vector3.zero;
 
-        Vector3 moveDelta = mCurMoveAxis.y != 0.0f ? dirRot * Vector3.forward * mCurMoveAxis.y : Vector3.zero;
-
-        if(mCurMoveAxis.x != 0.0f)
-            moveDelta += dirRot * Vector3.right * mCurMoveAxis.x;
+        if(axis.x != 0.0f)
+            moveDelta += dirRot * Vector3.right * axis.x;
 
         mCurMoveDir = moveDelta.normalized;
 
@@ -201,15 +251,18 @@ public class RigidBodyController : MonoBehaviour {
             moveDelta = mCurMoveDir;
         
         //check if we need to slide off walls
-        foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
+        /*foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
             if(pair.Value.flag == CollisionFlags.Sides) {
-                if(Vector3.Dot(mCurMoveDir, pair.Value.normal) < 0.0f) {
-                    moveDelta = M8.MathUtil.Slide(mCurMoveDir, pair.Value.normal);
+                Vector3 colN = pair.Value.normal;
+                if(Vector3.Dot(mCurMoveDir, colN) < 0.0f) {
+                    moveDelta = M8.MathUtil.Slide(mCurMoveDir, colN);
                     moveDelta.Normalize();
                     mCurMoveDir = moveDelta;
                 }
             }
-        }
+        }*/
+
+        //M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
 
         //check if we can move based on speed or if going against new direction
         Vector3 vel = rigidbody.velocity - mGroundMoveVel;
@@ -252,8 +305,10 @@ public class RigidBodyController : MonoBehaviour {
                     mIsSlopSlide = Vector3.Angle(up, n) > slopLimit;
                     if(mIsSlopSlide)
                         mSlopNormal = n;
-                    else
+                    else {
+                        mIsSlopSlide = false;
                         groundNoSlope = true;
+                    }
                 }
 
                 //for platforms

@@ -3,8 +3,7 @@ using System.Collections;
 
 [AddComponentMenu("M8/Physics/GravityController")]
 public class GravityController : MonoBehaviour {
-    [SerializeField]
-    Vector3 _up = Vector3.up; //initial up vector, this is to orient the object's up to match this
+    public Vector3 startUp = Vector3.zero; //initial up vector, this is to orient the object's up to match this, if zero, init with transform's up
 
     public bool orientUp = true; //allow orientation of the up vector
 
@@ -18,12 +17,13 @@ public class GravityController : MonoBehaviour {
 
     private GravityFieldBase mGravityField; //which field we are currently attached to
     private GravityFieldBase mGravityFieldPrev; //for gravity field that retains, overwritten by a new gravity field
+    private Vector3 mUp;
 
     public Vector3 up {
-        get { return _up; }
+        get { return mUp; }
         set {
-            if(_up != value) {
-                _up = value;
+            if(mUp != value) {
+                mUp = value;
 
                 ApplyUp();
             }
@@ -51,33 +51,40 @@ public class GravityController : MonoBehaviour {
         if(GravityFieldBase.global != null)
             GravityFieldBase.global.Add(this);
 
-        ApplyUp();
+        if(startUp != Vector3.zero) {
+            up = startUp;
+        }
+        else {
+            mUp = transform.up;
+        }
     }
 
     // Update is called once per frame
     void FixedUpdate() {
-        rigidbody.AddForce(_up * gravity * rigidbody.mass, ForceMode.Force);
+        rigidbody.AddForce(mUp * gravity * rigidbody.mass, ForceMode.Force);
     }
 
     void ApplyUp() {
         if(orientUp) {
-            Vector3 f = Vector3.Cross(_up, -transform.right);
+            Vector3 f = Vector3.Cross(mUp, -transform.right);
             if(f == Vector3.zero || f.sqrMagnitude < 1.0f) {
-                Vector3 l = Vector3.Cross(_up, transform.forward);
-                f = Vector3.Cross(l, _up);
+                Vector3 l = Vector3.Cross(mUp, transform.forward);
+                f = Vector3.Cross(l, mUp);
             }
 
-            mRotateTo = Quaternion.LookRotation(f, _up);
+            if(f != Vector3.zero) {
+                mRotateTo = Quaternion.LookRotation(f, mUp);
 
-            if(!mIsOrienting)
-                StartCoroutine(OrientUp());            
+                if(!mIsOrienting)
+                    StartCoroutine(OrientUp());
+            }
         }
     }
 
     IEnumerator OrientUp() {
         mIsOrienting = true;
 
-        while(transform.up != _up) {
+        while(transform.up != mUp) {
             float step = orientationSpeed * Time.fixedDeltaTime;
             rigidbody.MoveRotation(Quaternion.RotateTowards(transform.rotation, mRotateTo, step));
 

@@ -1,7 +1,6 @@
-// unlit, vertex colour, alpha blended
-// cull off
-
-Shader "M8/MultVertexColor" 
+// unlit, vertex colour, premultiplied alpha blend
+// 2D stuff
+Shader "M8/2D/SolidVertexColorAlpha" 
 {
 	Properties 
 	{
@@ -11,7 +10,7 @@ Shader "M8/MultVertexColor"
 	SubShader
 	{
 		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
-		ZWrite Off Lighting Off Cull Off Fog { Mode Off } Blend DstColor Zero
+		ZWrite Off Lighting Off Cull Off Fog { Mode Off } Blend SrcAlpha OneMinusSrcAlpha
 		LOD 110
 		
 		Pass 
@@ -50,7 +49,8 @@ Shader "M8/MultVertexColor"
 
 			fixed4 frag_mult(v2f_vct i) : COLOR
 			{
-				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color;
+				fixed4 col = i.color;
+				col.a *= tex2D(_MainTex, i.texcoord).a;
 				return col;
 			}
 			
@@ -61,7 +61,7 @@ Shader "M8/MultVertexColor"
 	SubShader
 	{
 		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
-		ZWrite Off Blend DstColor SrcColor Cull Off Fog { Mode Off }
+		ZWrite Off Blend SrcAlpha OneMinusSrcAlpha Cull Off Fog { Mode Off }
 		LOD 100
 
 		BindChannels 
