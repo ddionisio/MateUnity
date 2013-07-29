@@ -165,7 +165,7 @@ public class RigidBodyController : MonoBehaviour {
         RefreshCollInfo();
     }
 
-    void OnTriggerEnter(Collider col) {
+    protected virtual void OnTriggerEnter(Collider col) {
         if((waterLayerMask & (1 << col.gameObject.layer)) != 0) {
             mWaterCounter++;
         }
@@ -178,7 +178,7 @@ public class RigidBodyController : MonoBehaviour {
         }
     }
 
-    void OnTriggerExit(Collider col) {
+    protected virtual void OnTriggerExit(Collider col) {
         if((waterLayerMask & (1 << col.gameObject.layer)) != 0) {
             mWaterCounter--;
         }
@@ -222,12 +222,12 @@ public class RigidBodyController : MonoBehaviour {
             if(isGrounded) {
                 rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
 
-                Move(dirHolder.rotation, mCurMoveAxis, moveForce);
+                Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveForce);
             }
             else {
                 rigidbody.drag = isUnderWater ? waterDrag : airDrag;
 
-                Move(dirHolder.rotation, mCurMoveAxis, moveAirForce);
+                Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveAirForce);
             }
         }
         else {
@@ -239,17 +239,22 @@ public class RigidBodyController : MonoBehaviour {
 
     //return true if we moved
     public bool Move(Quaternion dirRot, Vector2 axis, float force) {
+        return Move(dirRot, Vector3.forward, Vector3.right, axis, force);
+    }
+
+    //return true if we moved
+    public bool Move(Quaternion dirRot, Vector3 forward, Vector3 right, Vector2 axis, float force) {
         //compute move direction
-        Vector3 moveDelta = axis.y != 0.0f ? dirRot * Vector3.forward * axis.y : Vector3.zero;
+        Vector3 moveDelta = axis.y != 0.0f ? dirRot * forward * axis.y : Vector3.zero;
 
         if(axis.x != 0.0f)
-            moveDelta += dirRot * Vector3.right * axis.x;
+            moveDelta += dirRot * right * axis.x;
 
         mCurMoveDir = moveDelta.normalized;
 
         if(moveNormalize)
             moveDelta = mCurMoveDir;
-        
+
         //check if we need to slide off walls
         /*foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
             if(pair.Value.flag == CollisionFlags.Sides) {

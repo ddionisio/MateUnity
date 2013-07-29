@@ -3,10 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 
 //TODO: right now it assumes a sphere collider
-[AddComponentMenu("M8/Physics/First-Person RigidBodyController (with Look)")]
+[AddComponentMenu("M8/Physics/First-Person RigidBodyController")]
 public class FPController : RigidBodyController {
-    public Transform eye;
+    [SerializeField]
+    Transform _eye;
+
     public Vector3 eyeOfs;
+    public float eyeLockOrientSpeed = 180.0f; //when we lock the eye again, this is the speed to re-orient based on dirHolder
+    public float eyeLockPositionDelay = 1.0f; //reposition delay when we lock the eye again
 
     public float jumpImpulse = 5.0f;
     public float jumpWaterForce = 5.0f;
@@ -17,6 +21,11 @@ public class FPController : RigidBodyController {
     public bool lookYInvert = false;
     public float lookYAngleMin = -90.0f;
     public float lookYAngleMax = 90.0f;
+
+    public LayerMask ladderMask;
+    public float ladderOrientSpeed = 270.0f;
+    public float ladderDrag = 20.0f;
+    public float ladderJumpForce = 10.0f;
 
     public int player = 0;
     public int moveInputX = InputManager.ActionInvalid;
@@ -34,6 +43,19 @@ public class FPController : RigidBodyController {
 
     private Vector2 mLookCurInputAxis;
     private float mLookCurRot;
+
+    private GravityController mGravityCtrl;
+
+    private int mLadderCounter;
+    private bool mLadderLastGravity;
+    private Vector3 mLadderUp;
+    private Quaternion mLadderRot;
+
+    private bool mEyeLocked = true;
+    private bool mEyeOrienting = false;
+    private Vector3 mEyeOrientVel;
+
+    private WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
 
     public bool inputEnabled {
         get { return mInputEnabled; }
@@ -54,6 +76,40 @@ public class FPController : RigidBodyController {
         }
     }
 
+    public bool isOnLadder { get { return mLadderCounter > 0; } }
+
+    public GravityController gravityController { get { return mGravityCtrl; } }
+
+    public Transform eye {
+        get { return _eye; }
+    }
+
+    /// <summary>
+    /// This determines whether or not the eye will be set to the dirHolder's transform
+    /// </summary>
+    public bool eyeLocked {
+        get { return _eye != null && mEyeLocked; }
+        set {
+            if(mEyeLocked != value && _eye != null) {
+                mEyeLocked = value;
+
+                if(mEyeLocked) {
+                    //move eye orientation to dirHolder
+                    if(!mEyeOrienting) {
+                        mEyeOrienting = true;
+                        StartCoroutine(EyeOrienting());
+                    }
+
+                    mEyeOrientVel = Vector3.zero;
+                }
+                else {
+                    mLookCurRot = 0.0f;
+                    mEyeOrienting = false;
+                }
+            }
+        }
+    }
+
     protected override void WaterExit() {
         if(mJump) {
             if(jumpImpulse > 0.0f)
@@ -62,11 +118,71 @@ public class FPController : RigidBodyController {
             mJumpLastTime = Time.fixedTime;
         }
     }
-    
+
+    protected override void OnTriggerEnter(Collider col) {
+        base.OnTriggerEnter(col);
+
+        if((ladderMask & (1 << col.gameObject.layer)) != 0) {
+            mLadderUp = col.transform.up;
+
+            if(!M8.MathUtil.RotateToUp(mLadderUp, transform.right, transform.forward, ref mLadderRot))
+                transform.up = mLadderUp;
+
+            mLadderCounter++;
+        }
+
+        if(isOnLadder) {
+            mLadderLastGravity = rigidbody.useGravity;
+            if(mGravityCtrl != null) {
+                StartCoroutine(LadderOrientUp());
+                mGravityCtrl.enabled = false;
+            }
+        }
+    }
+
+    void OnTriggerStay(Collider col) {
+        if((ladderMask & (1 << col.gameObject.layer)) != 0) {
+            if(mLadderUp != col.transform.up) {
+                mLadderUp = col.transform.up;
+
+                if(!M8.MathUtil.RotateToUp(mLadderUp, transform.right, transform.forward, ref mLadderRot))
+                    transform.up = mLadderUp;
+            }
+        }
+    }
+
+    protected override void OnTriggerExit(Collider col) {
+        base.OnTriggerExit(col);
+
+        if((ladderMask & (1 << col.gameObject.layer)) != 0) {
+            mLadderCounter--;
+        }
+
+        if(!isOnLadder) {
+            rigidbody.useGravity = mLadderLastGravity;
+            if(mGravityCtrl != null)
+                mGravityCtrl.enabled = true;
+        }
+    }
+
     protected override void OnDestroy() {
         inputEnabled = false;
 
         base.OnDestroy();
+    }
+
+    void OnDisable() {
+        mEyeOrienting = false;
+
+        if(isOnLadder && transform.up != mLadderUp) {
+            transform.up = mLadderUp;
+        }
+    }
+
+    protected override void Awake() {
+        base.Awake();
+
+        mGravityCtrl = GetComponent<GravityController>();
     }
 
     // Use this for initialization
@@ -88,9 +204,13 @@ public class FPController : RigidBodyController {
             moveForward = 0.0f;
             moveSide = 0.0f;
 
-            if(isUnderWater && !isGrounded) {
+            if(isOnLadder) {
+                //move forward upwards
+                Move(dirRot, Vector3.up, Vector3.right, new Vector2(input.GetAxis(player, moveInputX), input.GetAxis(player, moveInputY)), moveForce);
+            }
+            else if(isUnderWater && !isGrounded) {
                 //Move based on eye
-                Move(eye.rotation, new Vector2(input.GetAxis(player, moveInputX), input.GetAxis(player, moveInputY)), moveForce);
+                Move(_eye.rotation, Vector3.forward, Vector3.right, new Vector2(input.GetAxis(player, moveInputX), input.GetAxis(player, moveInputY)), moveForce);
             }
             else if(!isSlopSlide) {
                 if(moveInputX != InputManager.ActionInvalid)
@@ -110,20 +230,25 @@ public class FPController : RigidBodyController {
             }
 
             //look vertical
-            float vDelta = mLookCurInputAxis.y * lookSensitivity;
+            if(mEyeLocked && !mEyeOrienting) {
+                float vDelta = mLookCurInputAxis.y * lookSensitivity;
 
-            mLookCurRot += vDelta;
+                mLookCurRot += vDelta;
 
-            if(mLookCurRot < -360.0f)
-                mLookCurRot += 360.0f;
-            else if(mLookCurRot > 360.0f)
-                mLookCurRot -= 360.0f;
+                if(mLookCurRot < -360.0f)
+                    mLookCurRot += 360.0f;
+                else if(mLookCurRot > 360.0f)
+                    mLookCurRot -= 360.0f;
 
-            mLookCurRot = Mathf.Clamp(mLookCurRot, lookYAngleMin, lookYAngleMax);
+                mLookCurRot = Mathf.Clamp(mLookCurRot, lookYAngleMin, lookYAngleMax);
+            }
 
             //jump
             if(mJump) {
-                if(isUnderWater) {
+                if(isOnLadder) {
+                    body.AddForce(dirRot * Vector3.up * ladderJumpForce);
+                }
+                else if(isUnderWater) {
                     body.AddForce(dirRot * Vector3.up * jumpWaterForce);
                 }
                 else {
@@ -144,13 +269,13 @@ public class FPController : RigidBodyController {
         }
 
         //set eye rotation
-        if(eye != null) {
+        if(_eye != null && mEyeLocked && !mEyeOrienting) {
             Quaternion rot = dirHolder.rotation;
 
             if(mLookCurRot != 0.0f)
                 rot *= Quaternion.AngleAxis(lookYInvert ? mLookCurRot : -mLookCurRot, Vector3.right);
 
-            eye.rotation = rot;
+            _eye.rotation = rot;
 
             Vector3 pos = dirHolder.position;
 
@@ -163,16 +288,19 @@ public class FPController : RigidBodyController {
             if(eyeOfs.z != 0.0f)
                 pos += dirHolder.forward * eyeOfs.z;
 
-            eye.position = pos;
+            _eye.position = pos;
         }
 
         base.FixedUpdate();
+
+        if(isOnLadder)
+            rigidbody.drag = ladderDrag;
     }
 
     void OnInputJump(InputManager.Info dat) {
         if(dat.state == InputManager.State.Pressed) {
             if(!mJump) {
-                if(isUnderWater) {
+                if(isUnderWater || isOnLadder) {
                     mJump = true;
                 }
                 else if(isGrounded && !isSlopSlide) {
@@ -186,6 +314,36 @@ public class FPController : RigidBodyController {
         }
         else if(dat.state == InputManager.State.Released) {
             mJump = false;
+        }
+    }
+
+    IEnumerator LadderOrientUp() {
+        while(isOnLadder) {
+            if(transform.up != mLadderUp) {
+                float step = ladderOrientSpeed * Time.fixedDeltaTime;
+                rigidbody.MoveRotation(Quaternion.RotateTowards(transform.rotation, mLadderRot, step));
+            }
+
+            yield return mWaitUpdate;
+        }
+    }
+
+    IEnumerator EyeOrienting() {
+        while(mEyeOrienting) {
+            yield return mWaitUpdate;
+
+            bool posDone = _eye.position == dirHolder.position;
+            if(!posDone) {
+                _eye.position = Vector3.SmoothDamp(_eye.position, dirHolder.position, ref mEyeOrientVel, eyeLockPositionDelay, Mathf.Infinity, Time.fixedDeltaTime);
+            }
+
+            bool rotDone = _eye.rotation == dirHolder.rotation;
+            if(!rotDone) {
+                float step = eyeLockOrientSpeed * Time.fixedDeltaTime;
+                _eye.rotation = Quaternion.RotateTowards(_eye.rotation, dirHolder.rotation, step);
+            }
+
+            mEyeOrienting = !(posDone && rotDone);
         }
     }
 }

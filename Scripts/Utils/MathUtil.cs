@@ -191,6 +191,21 @@ namespace M8 {
 
             return s * angle;
         }
+
+        public static bool RotateToUp(Vector3 up, Vector3 right, Vector3 forward, ref Quaternion rotate) {
+            Vector3 f = Vector3.Cross(up, -right);
+            if(f == Vector3.zero) {
+                Vector3 l = Vector3.Cross(up, forward);
+                f = Vector3.Cross(l, up);
+            }
+
+            if(f != Vector3.zero) {
+                rotate = Quaternion.LookRotation(f, up);
+                return true;
+            }
+
+            return false;
+        }
     }
         
 

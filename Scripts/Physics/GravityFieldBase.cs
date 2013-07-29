@@ -128,11 +128,13 @@ public abstract class GravityFieldBase : MonoBehaviour {
         while(true) {
             foreach(KeyValuePair<Collider, ItemData> pair in mItems) {
                 GravityController ctrl = pair.Value.controller;
-                Transform t = ctrl.transform;
+                if(ctrl.enabled) {
+                    Transform t = ctrl.transform;
 
-                ctrl.up = GetUpVector(t);
+                    ctrl.up = GetUpVector(t);
 
-                ctrl.gravity = gravity;
+                    ctrl.gravity = gravity;
+                }
             }
 
             yield return mWaitDelay;

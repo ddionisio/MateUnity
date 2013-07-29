@@ -57,6 +57,14 @@ namespace M8 {
             return ret;
         }
 
+        public static void SetPhysicsLayerRecursive(Transform t, int layer) {
+            t.gameObject.layer = layer;
+
+            foreach(Transform child in t) {
+                SetPhysicsLayerRecursive(child, layer);
+            }
+        }
+
         /// <summary>
         /// Get the layer the given transform resides in, 0 = root, ie. no parent
         /// </summary>

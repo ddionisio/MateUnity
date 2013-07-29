@@ -38,8 +38,10 @@ public class GravityController : MonoBehaviour {
     }
 
     void OnDisable() {
-        mIsOrienting = false;
-        StopAllCoroutines();
+        if(mIsOrienting) {
+            mIsOrienting = false;
+            transform.up = mUp;
+        }
     }
 
     void Awake() {
@@ -66,15 +68,7 @@ public class GravityController : MonoBehaviour {
 
     void ApplyUp() {
         if(orientUp) {
-            Vector3 f = Vector3.Cross(mUp, -transform.right);
-            if(f == Vector3.zero || f.sqrMagnitude < 1.0f) {
-                Vector3 l = Vector3.Cross(mUp, transform.forward);
-                f = Vector3.Cross(l, mUp);
-            }
-
-            if(f != Vector3.zero) {
-                mRotateTo = Quaternion.LookRotation(f, mUp);
-
+            if(M8.MathUtil.RotateToUp(mUp, transform.right, transform.forward, ref mRotateTo)) {
                 if(!mIsOrienting)
                     StartCoroutine(OrientUp());
             }
