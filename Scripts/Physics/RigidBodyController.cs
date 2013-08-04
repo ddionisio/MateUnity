@@ -35,7 +35,8 @@ public class RigidBodyController : MonoBehaviour {
     public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
     public float waterDrag = 20.0f; //if within water
 
-    public LayerMask waterLayerMask;
+    public string waterTag = "Water";
+    public LayerMask waterLayer;
 
     public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag
 
@@ -145,7 +146,7 @@ public class RigidBodyController : MonoBehaviour {
             if(mColls.ContainsKey(contact.otherCollider)) {
                 CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
 
-                if(colFlag == CollisionFlags.Sides && sideBounceImpulse > 0.0f)
+                if(sideBounceImpulse > 0.0f && colFlag == CollisionFlags.Sides)
                     rigidbody.AddForce(contact.normal * sideBounceImpulse, ForceMode.Impulse);
 
                 mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
@@ -166,7 +167,7 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void OnTriggerEnter(Collider col) {
-        if((waterLayerMask & (1 << col.gameObject.layer)) != 0) {
+        if(M8.Util.CheckLayerAndTag(col.gameObject, waterLayer, waterTag)) {
             mWaterCounter++;
         }
 
@@ -179,7 +180,7 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void OnTriggerExit(Collider col) {
-        if((waterLayerMask & (1 << col.gameObject.layer)) != 0) {
+        if(M8.Util.CheckLayerAndTag(col.gameObject, waterLayer, waterTag)) {
             mWaterCounter--;
         }
 
@@ -299,6 +300,7 @@ public class RigidBodyController : MonoBehaviour {
 
         Vector3 up = transform.up;
         //
+
         foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
             Vector3 n = pair.Value.normal;
             CollisionFlags flag = pair.Value.flag;

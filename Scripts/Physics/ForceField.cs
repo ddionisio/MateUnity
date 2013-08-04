@@ -25,7 +25,7 @@ public class ForceField : MonoBehaviour {
     public float force;
 
     [SerializeField]
-    float _updateDelay;
+    float _updateDelay = 0.2f;
 
     private bool mModeRunning = false;
     private YieldInstruction mWait;

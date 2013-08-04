@@ -24,6 +24,16 @@ namespace M8.Editor {
             return ret;
         }
 
+        public static string[] GenerateLayerMaskString() {
+            string[] ret = new string[32];
+            for(int i = 0; i < 32; i++) {
+                string layerName = LayerMask.LayerToName(i);
+                ret[i] = !string.IsNullOrEmpty(layerName) ? layerName : i.ToString();
+            }
+
+            return ret;
+        }
+
         public static void DrawSeparator() {
             GUILayout.Space(12f);
 

@@ -47,6 +47,10 @@ public class UserData : MonoBehaviour {
         PlayerPrefs.SetString(name, value);
     }
 
+    public virtual void Delete(string name) {
+        PlayerPrefs.DeleteKey(name);
+    }
+
     void OnDisable() {
         Save();
     }

@@ -89,5 +89,9 @@ namespace M8 {
                 list[r] = obj;
             }
         }
+
+        public static bool CheckLayerAndTag(GameObject go, int layerMask, string tag) {
+            return (layerMask & (1 << go.layer)) != 0 && go.tag == tag;
+        }
     }
 }

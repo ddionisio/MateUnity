@@ -10,12 +10,13 @@ namespace M8.Editor {
 
         private int mAxisInd = 0;
         private string[] mAxisNames = { "X", "Y", "Z" };
+        private string[] mLayerMasks;
 
         private bool mInv = false;
 
         private float mOfs = 0.01f;
 
-        private int mLayer = 0;
+        private int mLayerMask = 0;
 
         private GameObject mPrefab;
 
@@ -28,6 +29,7 @@ namespace M8.Editor {
         private float mRotAxis;
 
         private bool mPlaceUnderSelection;
+        private bool mUpdateOriginal;
 
         [MenuItem("M8/Tools/ProjectObjectPlacer")]
         static void DoIt() {
@@ -38,16 +40,19 @@ namespace M8.Editor {
             mAxisInd = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey(prefKey, "axis"), mAxisInd);
             mInv = EditorPrefs.GetBool(M8.Editor.Utility.PreferenceKey(prefKey, "inv"), mInv);
             mOfs = EditorPrefs.GetFloat(M8.Editor.Utility.PreferenceKey(prefKey, "ofs"), mOfs);
-            mLayer = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey(prefKey, "layer"), mLayer);
+            mLayerMask = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey(prefKey, "layer"), mLayerMask);
 
-            SceneView.onSceneGUIDelegate += OnSceneGUI;
+            if(SceneView.onSceneGUIDelegate != OnSceneGUI)
+                SceneView.onSceneGUIDelegate += OnSceneGUI;
+
+            mLayerMasks = M8.Editor.Utility.GenerateLayerMaskString();
         }
 
         void OnDisable() {
             EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey(prefKey, "axis"), mAxisInd);
             EditorPrefs.SetBool(M8.Editor.Utility.PreferenceKey(prefKey, "inv"), mInv);
             EditorPrefs.SetFloat(M8.Editor.Utility.PreferenceKey(prefKey, "ofs"), mOfs);
-            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey(prefKey, "layer"), mLayer);
+            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey(prefKey, "layer"), mLayerMask);
 
             if(mPrefabPreviewer != null) {
                 DestroyImmediate(mPrefabPreviewer.gameObject);
@@ -55,6 +60,14 @@ namespace M8.Editor {
             }
 
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
+        }
+
+        void OnFocus() {
+            mLayerMasks = M8.Editor.Utility.GenerateLayerMaskString();
+        }
+
+        void OnSelectionChange() {
+            Repaint();
         }
 
         void OnGUI() {
@@ -82,7 +95,7 @@ namespace M8.Editor {
             GUILayout.EndHorizontal();
                         
             //layer
-            mLayer = EditorGUILayout.LayerField(mLayer);
+            mLayerMask = EditorGUILayout.MaskField(mLayerMask, mLayerMasks);
 
             //prefab
             EditorGUIUtility.LookLikeControls();
@@ -99,16 +112,33 @@ namespace M8.Editor {
                 }
             }
 
-            //
-            GUILayout.BeginHorizontal(GUI.skin.box);
-            mPlaceUnderSelection = GUILayout.Toggle(mPlaceUnderSelection, "Place under selection.");
-            GUILayout.EndHorizontal();
-
             bool prevEnabled = GUI.enabled;
 
+            //
+            GUILayout.BeginVertical(GUI.skin.box);
+
+            GUI.enabled = prevEnabled
+                && mPrefab != null
+                && Selection.activeGameObject != null
+                && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.Prefab
+                && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.ModelPrefab
+                && (PrefabUtility.GetPrefabType(mPrefab) == PrefabType.Prefab
+                    || PrefabUtility.GetPrefabType(mPrefab) == PrefabType.ModelPrefab);
+
+            mPlaceUnderSelection = GUILayout.Toggle(mPlaceUnderSelection, "Place under selection.");
+            
+            GUI.enabled = prevEnabled
+                && mPrefab != null
+                && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.Prefab
+                && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.ModelPrefab;
+
+            mUpdateOriginal = GUILayout.Toggle(mUpdateOriginal, "Update object.");
+
+            GUILayout.EndVertical();
+                        
+            //do it
             GUI.enabled = prevEnabled && mPrefab != null;
 
-            //do it
             if(GUILayout.Button(mIsPlacingObject ? "Stop Placing Object" : "Start Placing Object")) {
                 if(mPrefabPreviewer != null) {
                     DestroyImmediate(mPrefabPreviewer.gameObject);
@@ -143,6 +173,20 @@ namespace M8.Editor {
                 HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
 
                 switch(Event.current.type) {
+                    case EventType.KeyDown:
+                        if(Event.current.keyCode == KeyCode.Escape) {
+                            mIsPlacingObject = false;
+                            mIsHit = false;
+
+                            if(mPrefabPreviewer != null) {
+                                DestroyImmediate(mPrefabPreviewer.gameObject);
+                                mPrefabPreviewer = null;
+                            }
+
+                            Repaint();
+                        }
+                        break;
+
                     case EventType.MouseDown:
                         if(Event.current.button == 0)
                             Stamp();
@@ -153,14 +197,16 @@ namespace M8.Editor {
                             mRotAxis += Event.current.delta.x;// / 10.0f;
                             mRotAxis %= 360.0f;
 
-                            ApplyRot();
+                            if(mIsHit)
+                                ApplyRot();
 
                             Repaint();
                         }
                         else if(Event.current.control) {
                             mOfs += Event.current.delta.y * 0.01f;
 
-                            mPrefabPreviewer.position = mHit.point + mHit.normal * mOfs;
+                            if(mIsHit)
+                                mPrefabPreviewer.position = mHit.point + mHit.normal * mOfs;
 
                             Repaint();
                         }
@@ -177,16 +223,34 @@ namespace M8.Editor {
         }
 
         void Stamp() {
-            GameObject newGo = Instantiate(mPrefab) as GameObject;
-            newGo.name = mPrefab.name + mDupCounter;
-            
-            Transform newT = newGo.transform;
+            if(mIsHit) {
+                GameObject newGo;
+                Transform newT;
 
-            newT.parent = mPlaceUnderSelection && Selection.activeGameObject != null ? Selection.activeGameObject.transform : null;
-            newT.position = mPrefabPreviewer.position;
-            newT.rotation = mPrefabPreviewer.rotation;
+                if(mUpdateOriginal
+                    && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.Prefab
+                    && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.ModelPrefab) {
+                    newGo = mPrefab;
+                    newT = newGo.transform;
+                }
+                else {
+                    newGo = Instantiate(mPrefab) as GameObject;
+                    newT = newGo.transform;
 
-            mDupCounter++;
+                    newGo.name = mPrefab.name + mDupCounter;
+
+                    newT.parent = mPlaceUnderSelection 
+                        && Selection.activeGameObject != null 
+                        && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.Prefab
+                        && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.ModelPrefab 
+                            ? Selection.activeGameObject.transform : null;
+                                        
+                    mDupCounter++;
+                }
+
+                newT.position = mPrefabPreviewer.position;
+                newT.rotation = mPrefabPreviewer.rotation;
+            }
         }
 
         void UpdatePreview(Camera cam) {
@@ -194,7 +258,7 @@ namespace M8.Editor {
             mousePos.y = Screen.height - Event.current.mousePosition.y;
             Ray ray = cam.ScreenPointToRay(mousePos);
 
-            mIsHit = Physics.Raycast(ray, out mHit, Mathf.Infinity, (1 << mLayer));
+            mIsHit = Physics.Raycast(ray, out mHit, Mathf.Infinity, mLayerMask);
 
             if(mIsHit) {
                 mPrefabPreviewer.position = mHit.point + mHit.normal * mOfs;

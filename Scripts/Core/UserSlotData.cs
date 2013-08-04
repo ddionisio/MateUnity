@@ -73,6 +73,8 @@ public class UserSlotData : UserData {
     public static void DeleteSlot(int slot) {
         PlayerPrefs.DeleteKey(PrefixKey + slot + "i");
         PlayerPrefs.DeleteKey(PrefixKey + slot + "name");
+
+        //TODO: delete global slot values
     }
 
     public override void Save() {
@@ -94,8 +96,9 @@ public class UserSlotData : UserData {
     public override void Delete() {
         if(mSlot != -1) {
             DeleteSlot(mSlot);
-            mSlot = -1;
-            mValueIs = null;
+            
+            //clear all value references
+            mValueIs.Clear();
         }
     }
 
@@ -138,6 +141,12 @@ public class UserSlotData : UserData {
 
     public override void SetString(string name, string value) {
         Debug.LogError("Not yet implemented!!!");
+    }
+
+    public override void Delete(string name) {
+        if(mValueIs.ContainsKey(name)) {
+            mValueIs.Remove(name);
+        }
     }
 
     protected override void Awake() {

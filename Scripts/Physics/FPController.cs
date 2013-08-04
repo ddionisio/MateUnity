@@ -22,7 +22,8 @@ public class FPController : RigidBodyController {
     public float lookYAngleMin = -90.0f;
     public float lookYAngleMax = 90.0f;
 
-    public LayerMask ladderMask;
+    public string ladderTag = "Ladder";
+    public LayerMask ladderLayer;
     public float ladderOrientSpeed = 270.0f;
     public float ladderDrag = 20.0f;
     public float ladderJumpForce = 10.0f;
@@ -118,11 +119,11 @@ public class FPController : RigidBodyController {
             mJumpLastTime = Time.fixedTime;
         }
     }
-
+        
     protected override void OnTriggerEnter(Collider col) {
         base.OnTriggerEnter(col);
 
-        if((ladderMask & (1 << col.gameObject.layer)) != 0) {
+        if(M8.Util.CheckLayerAndTag(col.gameObject, ladderLayer, ladderTag)) {
             mLadderUp = col.transform.up;
 
             if(!M8.MathUtil.RotateToUp(mLadderUp, transform.right, transform.forward, ref mLadderRot))
@@ -141,7 +142,7 @@ public class FPController : RigidBodyController {
     }
 
     void OnTriggerStay(Collider col) {
-        if((ladderMask & (1 << col.gameObject.layer)) != 0) {
+        if(M8.Util.CheckLayerAndTag(col.gameObject, ladderLayer, ladderTag)) {
             if(mLadderUp != col.transform.up) {
                 mLadderUp = col.transform.up;
 
@@ -154,7 +155,7 @@ public class FPController : RigidBodyController {
     protected override void OnTriggerExit(Collider col) {
         base.OnTriggerExit(col);
 
-        if((ladderMask & (1 << col.gameObject.layer)) != 0) {
+        if(M8.Util.CheckLayerAndTag(col.gameObject, ladderLayer, ladderTag)) {
             mLadderCounter--;
         }
 
