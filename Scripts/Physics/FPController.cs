@@ -12,6 +12,8 @@ public class FPController : RigidBodyController {
     public float eyeLockOrientSpeed = 180.0f; //when we lock the eye again, this is the speed to re-orient based on dirHolder
     public float eyeLockPositionDelay = 1.0f; //reposition delay when we lock the eye again
 
+    public bool moveNormalized = true; //use false for analogue
+
     public float jumpImpulse = 5.0f;
     public float jumpWaterForce = 5.0f;
     public float jumpForce = 50.0f;
@@ -111,6 +113,19 @@ public class FPController : RigidBodyController {
         }
     }
 
+    public override void ResetCollision() {
+        base.ResetCollision();
+
+        if(mLadderCounter > 0) {
+            if(mGravityCtrl != null)
+                mGravityCtrl.enabled = true;
+            else
+                rigidbody.useGravity = mLadderLastGravity;
+
+            mLadderCounter = 0;
+        }
+    }
+
     protected override void WaterExit() {
         if(mJump) {
             if(jumpImpulse > 0.0f)
@@ -133,16 +148,34 @@ public class FPController : RigidBodyController {
         }
 
         if(isOnLadder) {
-            mLadderLastGravity = rigidbody.useGravity;
             if(mGravityCtrl != null) {
                 StartCoroutine(LadderOrientUp());
                 mGravityCtrl.enabled = false;
             }
+            else {
+                mLadderLastGravity = rigidbody.useGravity;
+                rigidbody.useGravity = false;
+            }
         }
     }
 
-    void OnTriggerStay(Collider col) {
+    protected override void OnTriggerStay(Collider col) {
+        base.OnTriggerStay(col);
+
         if(M8.Util.CheckLayerAndTag(col.gameObject, ladderLayer, ladderTag)) {
+            if(mLadderCounter == 0) {
+                mLadderCounter++;
+
+                if(mGravityCtrl != null) {
+                    StartCoroutine(LadderOrientUp());
+                    mGravityCtrl.enabled = false;
+                }
+                else {
+                    mLadderLastGravity = rigidbody.useGravity;
+                    rigidbody.useGravity = false;
+                }
+            }
+
             if(mLadderUp != col.transform.up) {
                 mLadderUp = col.transform.up;
 
@@ -160,9 +193,10 @@ public class FPController : RigidBodyController {
         }
 
         if(!isOnLadder) {
-            rigidbody.useGravity = mLadderLastGravity;
             if(mGravityCtrl != null)
                 mGravityCtrl.enabled = true;
+            else
+                rigidbody.useGravity = mLadderLastGravity;
         }
     }
 
@@ -172,12 +206,10 @@ public class FPController : RigidBodyController {
         base.OnDestroy();
     }
 
-    void OnDisable() {
-        mEyeOrienting = false;
+    protected override void OnDisable() {
+        base.OnDisable();
 
-        if(isOnLadder && transform.up != mLadderUp) {
-            transform.up = mLadderUp;
-        }
+        mEyeOrienting = false;
     }
 
     protected override void Awake() {
@@ -201,24 +233,39 @@ public class FPController : RigidBodyController {
         if(mInputEnabled) {
             InputManager input = Main.instance.input;
 
+            float moveX, moveY;
+
+            if(moveNormalized) {
+                Vector2 moveVec = new Vector2(
+                    moveInputX != InputManager.ActionInvalid ? input.GetAxis(player, moveInputX) : 0.0f,
+                    moveInputY != InputManager.ActionInvalid ? input.GetAxis(player, moveInputY) : 0.0f);
+
+                moveVec.Normalize();
+
+                moveX = moveVec.x;
+                moveY = moveVec.y;
+
+            }
+            else {
+                moveX = moveInputX != InputManager.ActionInvalid ? input.GetAxis(player, moveInputX) : 0.0f;
+                moveY = moveInputY != InputManager.ActionInvalid ? input.GetAxis(player, moveInputY) : 0.0f;
+            }
+
             //movement
             moveForward = 0.0f;
             moveSide = 0.0f;
 
             if(isOnLadder) {
                 //move forward upwards
-                Move(dirRot, Vector3.up, Vector3.right, new Vector2(input.GetAxis(player, moveInputX), input.GetAxis(player, moveInputY)), moveForce);
+                Move(dirRot, Vector3.up, Vector3.right, new Vector2(moveX, moveY), moveForce);
             }
             else if(isUnderWater && !isGrounded) {
                 //Move based on eye
-                Move(_eye.rotation, Vector3.forward, Vector3.right, new Vector2(input.GetAxis(player, moveInputX), input.GetAxis(player, moveInputY)), moveForce);
+                Move(_eye.rotation, Vector3.forward, Vector3.right, new Vector2(moveX, moveY), moveForce);
             }
             else if(!isSlopSlide) {
-                if(moveInputX != InputManager.ActionInvalid)
-                    moveSide = input.GetAxis(player, moveInputX);
-
-                if(moveInputY != InputManager.ActionInvalid)
-                    moveForward = input.GetAxis(player, moveInputY);
+                moveForward = moveY;
+                moveSide = moveX;
             }
 
             //look

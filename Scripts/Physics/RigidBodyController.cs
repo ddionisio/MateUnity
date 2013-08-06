@@ -25,7 +25,6 @@ public class RigidBodyController : MonoBehaviour {
     public float moveForce = 60.0f;
     public float moveAirForce = 10.0f;
     public float moveMaxSpeed = 3.5f;
-    public bool moveNormalize = true;
 
     public float slopSlideForce = 20.0f;
 
@@ -61,6 +60,8 @@ public class RigidBodyController : MonoBehaviour {
     private Vector3 mGroundMoveVel;
 
     private int mWaterCounter; //counter for water triggers
+
+    private bool mRenewColls = false;
 
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
@@ -106,6 +107,18 @@ public class RigidBodyController : MonoBehaviour {
         DirTo(target.position, lockUpVector);
     }
 
+    public virtual void ResetCollision() {
+        mCollFlags = CollisionFlags.None;
+        mIsSlopSlide = false;
+        mGroundMoveVel = Vector3.zero;
+        mColls.Clear();
+        mWaterCounter = 0;
+        mCurMoveAxis = Vector2.zero;
+        mCurMoveDir = Vector3.zero;
+
+        mRenewColls = true;
+    }
+
     // implements
 
     protected virtual void WaterEnter() {
@@ -115,6 +128,11 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void OnCollisionEnter(Collision col) {
+        if(mRenewColls) {
+            mColls.Clear();
+            mRenewColls = false;
+        }
+
         //refresh during stay
         //mCollFlags = CollisionFlags.None;
         //mSlide = false;
@@ -138,18 +156,26 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void OnCollisionStay(Collision col) {
+        if(mRenewColls) {
+            mColls.Clear();
+            mRenewColls = false;
+        }
+
         Vector3 up = transform.up;
         Vector3 pos = collider.bounds.center;
 
         //refresh contact infos
         foreach(ContactPoint contact in col.contacts) {
+            CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
+
+            if(sideBounceImpulse > 0.0f && colFlag == CollisionFlags.Sides)
+                rigidbody.AddForce(contact.normal * sideBounceImpulse, ForceMode.Impulse);
+
             if(mColls.ContainsKey(contact.otherCollider)) {
-                CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
-
-                if(sideBounceImpulse > 0.0f && colFlag == CollisionFlags.Sides)
-                    rigidbody.AddForce(contact.normal * sideBounceImpulse, ForceMode.Impulse);
-
                 mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
+            }
+            else {
+                mColls.Add(contact.otherCollider, new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
             }
         }
 
@@ -179,9 +205,22 @@ public class RigidBodyController : MonoBehaviour {
         }
     }
 
+    protected virtual void OnTriggerStay(Collider col) {
+        if(mWaterCounter == 0 && M8.Util.CheckLayerAndTag(col.gameObject, waterLayer, waterTag)) {
+            mWaterCounter++;
+
+            WaterEnter();
+
+            if(waterEnterCallback != null)
+                waterEnterCallback();
+        }
+    }
+
     protected virtual void OnTriggerExit(Collider col) {
         if(M8.Util.CheckLayerAndTag(col.gameObject, waterLayer, waterTag)) {
             mWaterCounter--;
+            if(mWaterCounter < 0)
+                mWaterCounter = 0;
         }
 
         if(!isUnderWater) {
@@ -190,6 +229,10 @@ public class RigidBodyController : MonoBehaviour {
             if(waterExitCallback != null)
                 waterExitCallback();
         }
+    }
+
+    protected virtual void OnDisable() {
+        ResetCollision();
     }
 
     protected virtual void OnDestroy() {
@@ -253,9 +296,6 @@ public class RigidBodyController : MonoBehaviour {
 
         mCurMoveDir = moveDelta.normalized;
 
-        if(moveNormalize)
-            moveDelta = mCurMoveDir;
-
         //check if we need to slide off walls
         /*foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
             if(pair.Value.flag == CollisionFlags.Sides) {
@@ -302,6 +342,11 @@ public class RigidBodyController : MonoBehaviour {
         //
 
         foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
+            if(pair.Key == null) {
+                mRenewColls = true;
+                continue;
+            }
+
             Vector3 n = pair.Value.normal;
             CollisionFlags flag = pair.Value.flag;
 

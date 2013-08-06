@@ -326,16 +326,14 @@ public class SceneState : MonoBehaviour {
                 if(!string.IsNullOrEmpty(sdat.scene) && sdat.data != null)
                     mStartData.Add(sdat.scene, sdat.data);
             }
-        }
-    }
 
-    void Start() {
-        AppendGlobalInitData();
+            AppendGlobalInitData();
 
-        if(mStates == null && mScene == null) {
-            mScene = Application.loadedLevelName;
-            mStates = new Dictionary<string, StateValue>();
-            AppendInitData();
+            if(mStates == null && mScene == null) {
+                mScene = Application.loadedLevelName;
+                mStates = new Dictionary<string, StateValue>();
+                AppendInitData();
+            }
         }
     }
 
