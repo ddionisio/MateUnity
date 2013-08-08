@@ -13,19 +13,17 @@ public class GamePlatformActivator : MonoBehaviour {
     public DataPlatform[] platforms;
 
     void OnEnable() {
-        //for debug purpose, wait till main is initialized, otherwise it should be guaranteed
-        if(Main.instance != null)
-            DoIt();
-        else
-            StartCoroutine(LateDoIt());
+        GamePlatform platform = Main.instance.platform;
+
+        foreach(DataPlatform dp in platforms) {
+            dp.go.SetActive(dp.platform == platform);
+        }
     }
 
-    IEnumerator LateDoIt() {
-        yield return new WaitForFixedUpdate();
-
+    void Awake() {
         DoIt();
     }
-    
+
     private void DoIt() {
         GamePlatform platform = Main.instance.platform;
 

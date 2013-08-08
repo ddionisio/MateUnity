@@ -5,8 +5,8 @@ using System.Collections.Generic;
 //Put this in the core object, or on an object with DontDestroyOnLoad
 [AddComponentMenu("M8/Core/SceneState")]
 public class SceneState : MonoBehaviour {
-    public const string GlobalDataFormat = "global_{0}";
-    public const string DataFormat = "{0}_{1}";
+    public const string GlobalDataFormat = "g:{0}";
+    public const string DataFormat = "{0}:{1}";
 
     public delegate void StateCallback(bool isGlobal, string name, StateValue val);
         
@@ -67,19 +67,38 @@ public class SceneState : MonoBehaviour {
 
     public Dictionary<string, StateValue> states { get { return mStates; } }
 
-    public int GetValue(string name) {
+    public bool HasValue(string name) {
+        if(!mStates.ContainsKey(name)) {
+            //try user data
+            return UserData.instance.HasKey(string.Format(DataFormat, mScene, name));
+        }
+
+        return false;
+    }
+
+    public void DeleteValue(string name, bool persistent) {
+        mStates.Remove(name);
+
+        if(persistent)
+            UserData.instance.Delete(string.Format(DataFormat, mScene, name));
+    }
+
+    public int GetValue(string name, int defaultVal = 0) {
         if(mStates == null) {
             mStates = new Dictionary<string, StateValue>();
         }
 
-        StateValue v = zeroValueData;
+        StateValue v = new StateValue(defaultVal, 0.0f);
         //try local
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
-            v.Apply(UserData.instance, string.Format(DataFormat, mScene, name));
-            mStates.Add(name, v);
+            string key = string.Format(DataFormat, mScene, name);
+            if(UserData.instance.HasKey(key)) {
+                v.Apply(UserData.instance, key);
+                mStates.Add(name, v);
+            }
         }
-
+        
         return v.ival;
     }
 
@@ -137,17 +156,20 @@ public class SceneState : MonoBehaviour {
         SetValue(name, flags, persistent);
     }
 
-    public float GetValueFloat(string name) {
+    public float GetValueFloat(string name, float defaultVal = 0.0f) {
         if(mStates == null) {
             mStates = new Dictionary<string, StateValue>();
         }
 
-        StateValue v = zeroValueData;
+        StateValue v = new StateValue(0, defaultVal);
         //try local
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
-            v.Apply(UserData.instance, string.Format(DataFormat, mScene, name));
-            mStates.Add(name, v);
+            string key = string.Format(DataFormat, mScene, name);
+            if(UserData.instance.HasKey(key)) {
+                v.Apply(UserData.instance, key);
+                mStates.Add(name, v);
+            }
         }
 
         return v.fval;
@@ -186,17 +208,36 @@ public class SceneState : MonoBehaviour {
         }
     }
 
-    public int GetGlobalValue(string name) {
-        if(mStates == null) {
-            mStates = new Dictionary<string, StateValue>();
+    public bool HasGlobalValue(string name) {
+        if(!mGlobalStates.ContainsKey(name)) {
+            //try user data
+            return UserData.instance.HasKey(string.Format(GlobalDataFormat, name));
         }
 
-        StateValue v = zeroValueData;
+        return false;
+    }
+
+    public void DeleteGlobalValue(string name, bool persistent) {
+        mGlobalStates.Remove(name);
+
+        if(persistent)
+            UserData.instance.Delete(string.Format(GlobalDataFormat, name));
+    }
+
+    public int GetGlobalValue(string name, int defaultVal = 0) {
+        if(mGlobalStates == null) {
+            mGlobalStates = new Dictionary<string, StateValue>();
+        }
+
+        StateValue v = new StateValue(defaultVal, 0.0f);
         //try local
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
-            v.Apply(UserData.instance, string.Format(GlobalDataFormat, name));
-            mGlobalStates.Add(name, v);
+            string key = string.Format(GlobalDataFormat, name);
+            if(UserData.instance.HasKey(key)) {
+                v.Apply(UserData.instance, key);
+                mGlobalStates.Add(name, v);
+            }
         }
 
         return v.ival;
@@ -252,17 +293,20 @@ public class SceneState : MonoBehaviour {
         SetGlobalValue(name, flags, persistent);
     }
 
-    public float GetGlobalValueFloat(string name) {
-        if(mStates == null) {
-            mStates = new Dictionary<string, StateValue>();
+    public float GetGlobalValueFloat(string name, float defaultVal = 0.0f) {
+        if(mGlobalStates == null) {
+            mGlobalStates = new Dictionary<string, StateValue>();
         }
 
-        StateValue v = zeroValueData;
+        StateValue v = new StateValue(0, defaultVal);
         //try local
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
-            v.Apply(UserData.instance, string.Format(GlobalDataFormat, name));
-            mGlobalStates.Add(name, v);
+            string key = string.Format(GlobalDataFormat, name);
+            if(UserData.instance.HasKey(key)) {
+                v.Apply(UserData.instance, key);
+                mGlobalStates.Add(name, v);
+            }
         }
 
         return v.fval;

@@ -81,6 +81,8 @@ public class EntityBase : MonoBehaviour {
 
     private byte mStartedCounter = 0;
 
+    private SceneSerializer mSerializer = null;
+
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
         //TODO: use ours if no 3rd party pool manager
 #if POOLMANAGER
@@ -193,6 +195,10 @@ public class EntityBase : MonoBehaviour {
         get { return mBlinking; }
     }
 
+    public SceneSerializer serializer {
+        get { return mSerializer; }
+    }
+
     public void Blink(float delay) {
         if(mBlinking)
             StopCoroutine("DoBlink");
@@ -205,7 +211,10 @@ public class EntityBase : MonoBehaviour {
         }
     }
 
-    public void Release() {
+    /// <summary>
+    /// Explicit call to remove entity.
+    /// </summary>
+    public virtual void Release() {
         if(poolData != null) {
 #if POOLMANAGER
             transform.parent = PoolManager.Pools[poolData.group].group;
@@ -293,6 +302,8 @@ public class EntityBase : MonoBehaviour {
     protected virtual void Awake() {
         mPoolData = GetComponent<PoolDataController>();
 
+        mSerializer = GetComponent<SceneSerializer>();
+
         mActivator = GetComponentInChildren<EntityActivator>();
         if(mActivator != null) {
             mActivator.awakeCallback += ActivatorWakeUp;
@@ -306,7 +317,7 @@ public class EntityBase : MonoBehaviour {
             mFSM.Fsm.RestartOnEnable = false; //not when we want to sleep/wake
             mFSM.enabled = false;
         }
-#endif
+#endif  
     }
 
     // Use this for initialization

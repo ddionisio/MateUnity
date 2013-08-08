@@ -3,10 +3,10 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-[CustomEditor(typeof(SerializedID))]
+[CustomEditor(typeof(SceneSerializer))]
 [CanEditMultipleObjects]
 public class SerializedIDInspector : Editor {
-    private static Dictionary<int, SerializedID> mRefs = null;
+    private static Dictionary<int, SceneSerializer> mRefs = null;
 
     public override void OnInspectorGUI() {
         //this shouldn't be in a prefab...
@@ -32,7 +32,7 @@ public class SerializedIDInspector : Editor {
 
             CheckID(target);
 
-            SerializedID data = target as SerializedID;
+            SceneSerializer data = target as SceneSerializer;
 
             EditorGUILayout.LabelField("id", data.id.ToString());
         }
@@ -45,12 +45,12 @@ public class SerializedIDInspector : Editor {
     }
 
     void CheckID(Object obj) {
-        SerializedID data = obj as SerializedID;
+        SceneSerializer data = obj as SceneSerializer;
 
         //check if we need to generate keys
         if(mRefs == null)
             RegenerateIDs();
-        else if(data.id == SerializedID.invalidID || mRefs[data.id] != data) {
+        else if(data.id == SceneSerializer.invalidID || mRefs[data.id] != data) {
             int nid = 1;
             for(; ; nid++) {
                 if(mRefs.ContainsKey(nid)) {
@@ -71,18 +71,18 @@ public class SerializedIDInspector : Editor {
 
     void RegenerateIDs() {
         if(mRefs == null)
-            mRefs = new Dictionary<int, SerializedID>();
+            mRefs = new Dictionary<int, SceneSerializer>();
 
         //get all objects in scene with serializedID
-        Object[] objs = FindObjectsOfType(typeof(SerializedID));
+        Object[] objs = FindObjectsOfType(typeof(SceneSerializer));
 
         int nid = 1;
 
-        foreach(SerializedID sid in objs) {
+        foreach(SceneSerializer sid in objs) {
             bool genNewKey = false;
 
             //generate a new id if it's not generated or conflicted for some reason
-            if(sid.id != SerializedID.invalidID) {
+            if(sid.id != SceneSerializer.invalidID) {
                 if(mRefs.ContainsKey(sid.id)) {
                     genNewKey = mRefs[sid.id] != sid;
                 }
