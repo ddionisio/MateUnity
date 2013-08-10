@@ -14,10 +14,14 @@ public class FPController : RigidBodyController {
 
     public bool moveNormalized = true; //use false for analogue
 
+    public float turnAutoSpeed = 180.0f;
+
     public float jumpImpulse = 5.0f;
     public float jumpWaterForce = 5.0f;
     public float jumpForce = 50.0f;
     public float jumpDelay = 0.15f;
+
+    public bool jumpWall = false; //wall jump
 
     public float lookSensitivity = 2.0f;
     public bool lookYInvert = false;
@@ -58,7 +62,8 @@ public class FPController : RigidBodyController {
     private bool mEyeOrienting = false;
     private Vector3 mEyeOrientVel;
 
-    private WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
+    private bool mAutoTurning = false;
+    private Quaternion mAutoTurnRot;
 
     public bool inputEnabled {
         get { return mInputEnabled; }
@@ -88,7 +93,8 @@ public class FPController : RigidBodyController {
     }
 
     /// <summary>
-    /// This determines whether or not the eye will be set to the dirHolder's transform
+    /// This determines whether or not the eye will be set to the dirHolder's transform.
+    /// default: true. If false, input for looking up/down will be disabled.
     /// </summary>
     public bool eyeLocked {
         get { return _eye != null && mEyeLocked; }
@@ -113,6 +119,21 @@ public class FPController : RigidBodyController {
         }
     }
 
+    public void TurnTo(Vector3 turnDir) {
+        //determine rotation
+        float a = M8.MathUtil.AngleForwardAxisDir(dirHolder.worldToLocalMatrix, Vector3.forward, turnDir);
+        mAutoTurnRot = dirHolder.localRotation * Quaternion.AngleAxis(a, Vector3.up);
+
+        if(!mAutoTurning) {
+            mAutoTurning = true;
+            StartCoroutine(DoAutoTurn());
+        }
+    }
+
+    public void TurnToCancel() {
+        mAutoTurning = false;
+    }
+
     public override void ResetCollision() {
         base.ResetCollision();
 
@@ -134,7 +155,7 @@ public class FPController : RigidBodyController {
             mJumpLastTime = Time.fixedTime;
         }
     }
-        
+
     protected override void OnTriggerEnter(Collider col) {
         base.OnTriggerEnter(col);
 
@@ -210,6 +231,8 @@ public class FPController : RigidBodyController {
         base.OnDisable();
 
         mEyeOrienting = false;
+
+        TurnToCancel();
     }
 
     protected override void Awake() {
@@ -269,7 +292,7 @@ public class FPController : RigidBodyController {
             }
 
             //look
-            mLookCurInputAxis.x = lookInputX != InputManager.ActionInvalid ? input.GetAxis(player, lookInputX) : 0.0f;
+            mLookCurInputAxis.x = lookInputX != InputManager.ActionInvalid && !mAutoTurning ? input.GetAxis(player, lookInputX) : 0.0f;
             mLookCurInputAxis.y = lookInputY != InputManager.ActionInvalid ? input.GetAxis(player, lookInputY) : 0.0f;
 
             if(mLookCurInputAxis.x != 0.0f) {
@@ -346,17 +369,38 @@ public class FPController : RigidBodyController {
     }
 
     void OnInputJump(InputManager.Info dat) {
+        //jumpWall
         if(dat.state == InputManager.State.Pressed) {
-            if(!mJump) {
+            if(isUnderWater || isOnLadder) {
+                mJump = true;
+            }
+            else if(jumpWall && !mAutoTurning && collisionFlags == CollisionFlags.Sides) {
+                CollideInfo inf;
+                GetCollideInfo(CollisionFlags.Sides, out inf);
+
+                Vector3 jumpDir = inf.normal + dirHolder.up;
+
+                if(jumpImpulse > 0.0f) {
+                    rigidbody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
+                }
+
+                mJump = true;
+                mJumpLastTime = Time.fixedTime;
+
+                TurnTo(inf.normal);
+            }
+            else if(!mJump) {
                 if(isUnderWater || isOnLadder) {
                     mJump = true;
                 }
-                else if(isGrounded && !isSlopSlide) {
-                    if(jumpImpulse > 0.0f)
-                        rigidbody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
+                else if(!isSlopSlide) {
+                    if(isGrounded) {
+                        if(jumpImpulse > 0.0f)
+                            rigidbody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
 
-                    mJump = true;
-                    mJumpLastTime = Time.fixedTime;
+                        mJump = true;
+                        mJumpLastTime = Time.fixedTime;
+                    }
                 }
             }
         }
@@ -366,19 +410,23 @@ public class FPController : RigidBodyController {
     }
 
     IEnumerator LadderOrientUp() {
+        WaitForFixedUpdate waitUpdate = new WaitForFixedUpdate();
+
         while(isOnLadder) {
             if(transform.up != mLadderUp) {
                 float step = ladderOrientSpeed * Time.fixedDeltaTime;
                 rigidbody.MoveRotation(Quaternion.RotateTowards(transform.rotation, mLadderRot, step));
             }
 
-            yield return mWaitUpdate;
+            yield return waitUpdate;
         }
     }
 
     IEnumerator EyeOrienting() {
+        WaitForFixedUpdate waitUpdate = new WaitForFixedUpdate();
+
         while(mEyeOrienting) {
-            yield return mWaitUpdate;
+            yield return waitUpdate;
 
             bool posDone = _eye.position == dirHolder.position;
             if(!posDone) {
@@ -392,6 +440,20 @@ public class FPController : RigidBodyController {
             }
 
             mEyeOrienting = !(posDone && rotDone);
+        }
+    }
+
+    IEnumerator DoAutoTurn() {
+        WaitForFixedUpdate waitUpdate = new WaitForFixedUpdate();
+
+        while(mAutoTurning) {
+            yield return waitUpdate;
+
+            float step = turnAutoSpeed * Time.fixedDeltaTime;
+
+            dirHolder.localRotation = Quaternion.RotateTowards(dirHolder.localRotation, mAutoTurnRot, step);
+
+            mAutoTurning = dirHolder.localRotation != mAutoTurnRot;
         }
     }
 }

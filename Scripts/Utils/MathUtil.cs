@@ -179,17 +179,24 @@ namespace M8 {
         /// axis' space relative to given point.
         /// If you want to create a rotation, use Quaternion.AngleAxis(angle, Vector3.up);
         /// </summary>
-        public static float AngleForwardAxis(Matrix4x4 worldToLocal, Vector3 point, Vector3 axis, Vector3 target) {
-            Vector3 v = target - point;
+        public static float AngleForwardAxisDir(Matrix4x4 worldToLocal, Vector3 axis, Vector3 dir) {
+            dir = worldToLocal.MultiplyVector(dir);
+            dir.y = 0.0f;
 
-            v = worldToLocal.MultiplyVector(v);
-            v.y = 0.0f;
+            float s = M8.MathUtil.CheckSideSign(new Vector2(dir.x, dir.z), new Vector2(axis.x, axis.z));
 
-            float s = M8.MathUtil.CheckSideSign(new Vector2(v.x, v.z), new Vector2(axis.x, axis.z));
-
-            float angle = Vector3.Angle(axis, v);
+            float angle = Vector3.Angle(axis, dir);
 
             return s * angle;
+        }
+
+        /// <summary>
+        /// Get the angle in degrees between given forward axis to target position. WorldToLocal determines the
+        /// axis' space relative to given point.
+        /// If you want to create a rotation, use Quaternion.AngleAxis(angle, Vector3.up);
+        /// </summary>
+        public static float AngleForwardAxis(Matrix4x4 worldToLocal, Vector3 point, Vector3 axis, Vector3 target) {
+            return AngleForwardAxisDir(worldToLocal, axis, target - point);
         }
 
         public static bool RotateToUp(Vector3 up, Vector3 right, Vector3 forward, ref Quaternion rotate) {

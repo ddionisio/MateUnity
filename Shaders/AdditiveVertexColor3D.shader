@@ -1,8 +1,4 @@
-// unlit, vertex colour, alpha blended
-// cull off
-// only use for 2D stuff
-
-Shader "M8/2D/MultVertexColor" 
+Shader "M8/AdditiveVertexColor3D" 
 {
 	Properties 
 	{
@@ -12,8 +8,8 @@ Shader "M8/2D/MultVertexColor"
 	SubShader
 	{
 		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
-		ZWrite Off Lighting Off Cull Off Fog { Mode Off } Blend DstColor Zero
-		LOD 110
+		Lighting Off Fog { Mode Off } Blend One One
+		LOD 200
 		
 		Pass 
 		{
@@ -62,7 +58,7 @@ Shader "M8/2D/MultVertexColor"
 	SubShader
 	{
 		Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
-		ZWrite Off Blend DstColor Zero Cull Off Fog { Mode Off }
+		Blend One One Fog { Mode Off }
 		LOD 100
 
 		BindChannels 

@@ -63,6 +63,8 @@ public class RigidBodyController : MonoBehaviour {
 
     private bool mRenewColls = false;
 
+    private float mRadius = 0.0f;
+
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
@@ -73,6 +75,22 @@ public class RigidBodyController : MonoBehaviour {
     public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
     public Dictionary<Collider, CollideInfo> collisions { get { return mColls; } }
     public bool isUnderWater { get { return mWaterCounter > 0; } }
+    public float radius { get { return mRadius; } }
+
+    /// <summary>
+    /// Get the first occurence of CollideInfo based on given flags
+    /// </summary>
+    public bool GetCollideInfo(CollisionFlags flags, out CollideInfo info) {
+        foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
+            if((pair.Value.flag & flags) != 0) {
+                info = pair.Value;
+                return true;
+            }
+        }
+
+        info = new CollideInfo();
+        return false;
+    }
 
     /// <summary>
     /// Check if given collision is currently colliding with this object.
@@ -242,6 +260,13 @@ public class RigidBodyController : MonoBehaviour {
         
     protected virtual void Awake() {
         mTopBottomColCos = Mathf.Cos(topBottomCollisionAngle);
+
+        if(collider != null) {
+            if(collider is SphereCollider)
+                mRadius = ((SphereCollider)collider).radius;
+            else if(collider is CapsuleCollider)
+                mRadius = ((CapsuleCollider)collider).radius;
+        }
     }
 
     protected virtual void Start() {

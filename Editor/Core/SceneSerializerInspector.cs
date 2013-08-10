@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 [CustomEditor(typeof(SceneSerializer))]
 [CanEditMultipleObjects]
-public class SerializedIDInspector : Editor {
+public class SceneSerializerInspector : Editor {
     private static Dictionary<int, SceneSerializer> mRefs = null;
 
     public override void OnInspectorGUI() {
