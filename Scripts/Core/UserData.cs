@@ -116,6 +116,16 @@ public class UserData : MonoBehaviour {
             mValues[name] = value;
     }
 
+    public void DeleteAllByNameContain(string nameContains) {
+        if(mValues != null) {
+            //ew
+            foreach(string key in new List<string>(mValues.Keys)) {
+                if(key.Contains(nameContains))
+                    mValues.Remove(name);
+            }
+        }
+    }
+
     public virtual void Delete(string name) {
         if(mValues != null)
             mValues.Remove(name);

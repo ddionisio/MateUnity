@@ -374,20 +374,32 @@ public class FPController : RigidBodyController {
             if(isUnderWater || isOnLadder) {
                 mJump = true;
             }
-            else if(jumpWall && !mAutoTurning && collisionFlags == CollisionFlags.Sides) {
-                CollideInfo inf;
-                GetCollideInfo(CollisionFlags.Sides, out inf);
+            else if(jumpWall && !mAutoTurning && (collisionFlags & CollisionFlags.Sides) != 0) {
+                bool found = false;
+                CollideInfo inf = new CollideInfo();
 
-                Vector3 jumpDir = inf.normal + dirHolder.up;
-
-                if(jumpImpulse > 0.0f) {
-                    rigidbody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
+                foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
+                    if(pair.Value.flag == CollisionFlags.Sides) {
+                        if(Vector3.Angle(dirHolder.forward, pair.Value.normal) > 120.0f) {
+                            inf = pair.Value;
+                            found = true;
+                            break;
+                        }
+                    }
                 }
 
-                mJump = true;
-                mJumpLastTime = Time.fixedTime;
+                if(found) {
+                    Vector3 jumpDir = inf.normal + dirHolder.up;
 
-                TurnTo(inf.normal);
+                    if(jumpImpulse > 0.0f) {
+                        rigidbody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
+                    }
+
+                    mJump = true;
+                    mJumpLastTime = Time.fixedTime;
+
+                    TurnTo(inf.normal);
+                }
             }
             else if(!mJump) {
                 if(isUnderWater || isOnLadder) {

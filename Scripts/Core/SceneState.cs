@@ -76,6 +76,16 @@ public class SceneState : MonoBehaviour {
         return false;
     }
 
+    public void DeleteValuesByNameContain(string nameContains) {
+        foreach(string key in new List<string>(mStates.Keys)) {
+            if(key.Contains(nameContains)) {
+                mStates.Remove(key);
+            }
+        }
+
+        UserData.instance.DeleteAllByNameContain(string.Format(DataFormat, mScene, nameContains));
+    }
+
     public void DeleteValue(string name, bool persistent) {
         mStates.Remove(name);
 

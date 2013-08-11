@@ -16,6 +16,7 @@ public class SceneSerializer : MonoBehaviour {
     int _id = invalidID;
 
     private static Dictionary<int, SceneSerializer> mRefs = null;
+    private static int mGenIdStart = invalidID + 1;
 
     /// <summary>
     /// Get the serialized id, for ungenerated ids, make sure you call this after Awake (usu. at Start)
@@ -28,12 +29,7 @@ public class SceneSerializer : MonoBehaviour {
             }
 #endif
             if(_id == invalidID) {
-                //find an id we can use
-                int __id = 1;
-                for(; mRefs.ContainsKey(__id); __id++) ;
-
-                _id = __id;
-                mRefs.Add(_id, this);
+                __GenNewID();
             }
 
             return _id;
@@ -48,6 +44,18 @@ public class SceneSerializer : MonoBehaviour {
         _id = nid;
     }
 
+    /// <summary>
+    /// Use with caution, most likely after spawning
+    /// </summary>
+    public void __GenNewID() {
+        //find an id we can use
+        int __id = mGenIdStart;
+        for(; mRefs.ContainsKey(__id); __id++) ;
+
+        _id = __id;
+        mRefs.Add(_id, this);
+    }
+
     public static SceneSerializer GetObject(int id) {
         SceneSerializer ret = null;
 
@@ -58,8 +66,12 @@ public class SceneSerializer : MonoBehaviour {
         return ret;
     }
 
+    string GetVarId() {
+        return "obj" + id.ToString();
+    }
+
     string GetVarKey(string name) {
-        return string.Format("obj{0}{1}", _id, name);
+        return GetVarId() + name;
     }
 
     public bool HasValue(string name) {
@@ -67,35 +79,63 @@ public class SceneSerializer : MonoBehaviour {
     }
 
     public void DeleteValue(string name, bool persistent) {
-        SceneState.instance.DeleteValue(GetVarKey(name), persistent);
+        if(_id != invalidID)
+            SceneState.instance.DeleteValue(GetVarKey(name), persistent);
     }
 
     public int GetValue(string name, int defaultVal = 0) {
+        if(_id == invalidID)
+            return defaultVal;
+
         return SceneState.instance.GetValue(GetVarKey(name), defaultVal);
     }
 
     public void SetValue(string name, int val, bool persistent) {
-        SceneState.instance.SetValue(GetVarKey(name), val, persistent);
+        if(_id != invalidID)
+            SceneState.instance.SetValue(GetVarKey(name), val, persistent);
     }
 
     public bool CheckFlag(string name, int bit) {
+        if(_id == invalidID)
+            return false;
+
         return SceneState.instance.CheckFlagMask(GetVarKey(name), 1 << bit);
     }
 
     public bool CheckFlagMask(string name, int mask) {
+        if(_id == invalidID)
+            return false;
+
         return SceneState.instance.CheckFlagMask(GetVarKey(name), mask);
     }
 
     public void SetFlag(string name, int bit, bool state, bool persistent) {
-        SceneState.instance.SetFlag(GetVarKey(name), bit, state, persistent);
+        if(_id != invalidID)
+            SceneState.instance.SetFlag(GetVarKey(name), bit, state, persistent);
     }
 
     public float GetValueFloat(string name, float defaultVal = 0.0f) {
+        if(_id == invalidID)
+            return defaultVal;
+
         return SceneState.instance.GetValueFloat(GetVarKey(name), defaultVal);
     }
 
     public void SetValueFloat(string name, float val, bool persistent) {
-        SceneState.instance.SetValueFloat(GetVarKey(name), val, persistent);
+        if(_id != invalidID)
+            SceneState.instance.SetValueFloat(GetVarKey(name), val, persistent);
+    }
+
+    /// <summary>
+    /// Call this if you no longer want variables for this object to be kept in user data and scene data
+    /// </summary>
+    public void DeleteAllValues() {
+        if(_id != invalidID) {
+            SceneState.instance.DeleteValuesByNameContain(GetVarId());
+        }
+        else {
+            Debug.LogWarning("Invalid id for "+name+", nothing to delete.");
+        }
     }
 
     void OnDestroy() {
@@ -106,6 +146,7 @@ public class SceneSerializer : MonoBehaviour {
 
             if(mRefs.Count == 0) {
                 mRefs = null;
+                mGenIdStart = invalidID + 1;
             }
         }
     }
@@ -116,6 +157,9 @@ public class SceneSerializer : MonoBehaviour {
 
         if(_id != invalidID) {
             mRefs[_id] = this;
+
+            if(_id >= mGenIdStart)
+                mGenIdStart = _id + 1;
         }
     }
 }

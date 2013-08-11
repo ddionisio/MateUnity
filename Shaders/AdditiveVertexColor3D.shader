@@ -3,6 +3,7 @@ Shader "M8/AdditiveVertexColor3D"
 	Properties 
 	{
 		_MainTex ("Base (RGB) Trans (A)", 2D) = "white" {}
+		_Color ("Color", Color) = (1,1,1,1)
 	}
 	
 	SubShader
@@ -20,7 +21,7 @@ Shader "M8/AdditiveVertexColor3D"
 			#include "UnityCG.cginc"
 
 			sampler2D _MainTex;
-			float4 _MainTex_ST;
+			float4 _Color;
 
 			struct vin_vct 
 			{
@@ -47,7 +48,7 @@ Shader "M8/AdditiveVertexColor3D"
 
 			fixed4 frag_mult(v2f_vct i) : COLOR
 			{
-				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color;
+				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color * _Color;
 				return col;
 			}
 			

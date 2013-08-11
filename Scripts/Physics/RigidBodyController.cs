@@ -48,7 +48,7 @@ public class RigidBodyController : MonoBehaviour {
     private Vector3 mCurMoveDir;
 
     //private HashSet<Collider> mColls = new HashSet<Collider>();
-    private Dictionary<Collider, CollideInfo> mColls = new Dictionary<Collider, CollideInfo>(16);
+    protected Dictionary<Collider, CollideInfo> mColls = new Dictionary<Collider, CollideInfo>(16);
 
     private CollisionFlags mCollFlags;
 
@@ -76,7 +76,7 @@ public class RigidBodyController : MonoBehaviour {
     public Dictionary<Collider, CollideInfo> collisions { get { return mColls; } }
     public bool isUnderWater { get { return mWaterCounter > 0; } }
     public float radius { get { return mRadius; } }
-
+    
     /// <summary>
     /// Get the first occurence of CollideInfo based on given flags
     /// </summary>

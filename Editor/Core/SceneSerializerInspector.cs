@@ -10,8 +10,13 @@ public class SceneSerializerInspector : Editor {
 
     public override void OnInspectorGUI() {
         //this shouldn't be in a prefab...
-        
-        if(targets != null && targets.Length > 1) {
+
+        if(Application.isPlaying) {
+            SceneSerializer data = target as SceneSerializer;
+
+            EditorGUILayout.LabelField("id", data.id.ToString());
+        }
+        else if(targets != null && targets.Length > 1) {
             foreach(Object obj in targets) {
                 PrefabType prefabType = PrefabUtility.GetPrefabType(obj);
                 if(prefabType == PrefabType.Prefab || prefabType == PrefabType.ModelPrefab) {

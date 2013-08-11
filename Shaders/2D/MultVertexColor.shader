@@ -24,7 +24,6 @@ Shader "M8/2D/MultVertexColor"
 			#include "UnityCG.cginc"
 
 			sampler2D _MainTex;
-			float4 _MainTex_ST;
 
 			struct vin_vct 
 			{
