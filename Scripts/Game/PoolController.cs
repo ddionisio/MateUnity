@@ -149,17 +149,31 @@ public class PoolController : MonoBehaviour {
         }
     }
 
-    public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position) {
+    public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation) {
         PoolController pc = GetPool(group);
         if(pc != null) {
-            return pc.Spawn(type, name, toParent, position);
+            return pc.Spawn(type, name, toParent, position, rotation);
         }
         else {
             return null;
         }
     }
 
-    public static void Release(string group, Transform entity) {
+    public static void ReleaseAuto(Transform entity) {
+        PoolDataController pdc = entity.GetComponent<PoolDataController>();
+        if(pdc != null) {
+            PoolController pc = GetPool(pdc.group);
+            if(pc != null) {
+                pc.Release(entity);
+            }
+            else
+                Object.Destroy(entity.gameObject);
+        }
+        else
+            Object.Destroy(entity.gameObject);
+    }
+
+    public static void ReleaseByGroup(string group, Transform entity) {
         PoolController pc = GetPool(group);
         if(pc != null) {
             pc.Release(entity);
@@ -188,12 +202,14 @@ public class PoolController : MonoBehaviour {
     /// </summary>
     public Transform Spawn(string type, string name, Transform toParent, string waypoint) {
         Vector3 position = Vector3.zero;
+        Quaternion rot = Quaternion.identity;
 
         if(!string.IsNullOrEmpty(waypoint)) {
             if(WaypointManager.instance != null) {
                 Transform wp = WaypointManager.instance.GetWaypoint(waypoint);
                 if(wp != null) {
                     position = wp.position;
+                    rot = wp.rotation;
                 }
             }
             else {
@@ -201,10 +217,10 @@ public class PoolController : MonoBehaviour {
             }
         }
 
-        return Spawn(type, name, toParent, position);
+        return Spawn(type, name, toParent, position, rot);
     }
 
-    public Transform Spawn(string type, string name, Transform toParent, Vector3 position) {
+    public Transform Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot) {
         Transform entityRet = null;
 
         FactoryData dat;
@@ -213,6 +229,7 @@ public class PoolController : MonoBehaviour {
 
             if(entityRet != null) {
                 entityRet.transform.position = position;
+                entityRet.transform.rotation = rot;
 
                 entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
             }

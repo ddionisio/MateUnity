@@ -220,7 +220,7 @@ public class EntityBase : MonoBehaviour {
             transform.parent = PoolManager.Pools[poolData.group].group;
             PoolManager.Pools[poolData.group].Despawn(transform);
 #else
-            PoolController.Release(poolData.group, transform);
+            PoolController.ReleaseByGroup(poolData.group, transform);
 #endif
         }
         else {

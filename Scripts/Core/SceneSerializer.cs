@@ -10,6 +10,7 @@ using System.Collections.Generic;
 [AddComponentMenu("M8/Core/SceneSerializer")]
 public class SceneSerializer : MonoBehaviour {
     public const int invalidID = 0;
+    public const string removeKey = "_del";
 
     [SerializeField]
     [HideInInspector]
@@ -138,6 +139,16 @@ public class SceneSerializer : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Call this to remove the object from scene when loaded.
+    /// </summary>
+    public void MarkRemove() {
+        if(_id != invalidID) {
+            DeleteAllValues();
+            SetValue(removeKey, 1, true);
+        }
+    }
+
     void OnDestroy() {
         if(mRefs != null) {
             if(_id != invalidID) {
@@ -152,6 +163,12 @@ public class SceneSerializer : MonoBehaviour {
     }
 
     void Awake() {
+        //check if this object has been marked as remove, then delete it right away
+        if(GetValue(removeKey, 0) == 1) {
+            DestroyImmediate(gameObject);
+            return;
+        }
+
         if(mRefs == null)
             mRefs = new Dictionary<int, SceneSerializer>();
 

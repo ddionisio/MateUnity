@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/2D/CameraParallax")]
+[AddComponentMenu("M8/Camera/Parallax")]
 [ExecuteInEditMode]
 public class CameraParallax : MonoBehaviour {
 
@@ -16,9 +16,15 @@ public class CameraParallax : MonoBehaviour {
         if(view != null) {
             mLastViewPos = view.transform.position;
         }
+
+        camera.transparencySortMode = TransparencySortMode.Orthographic;
     }
 
     void Awake() {
+        camera.transparencySortMode = TransparencySortMode.Orthographic;
+    }
+
+    void OnPreCull() {
         camera.transparencySortMode = TransparencySortMode.Orthographic;
     }
 
@@ -37,4 +43,12 @@ public class CameraParallax : MonoBehaviour {
             }
         }
     }
+
+#if UNITY_EDITOR
+    void LateUpdate() {
+        if(!Application.isPlaying) {
+            camera.transparencySortMode = TransparencySortMode.Orthographic;
+        }
+    }
+#endif
 }

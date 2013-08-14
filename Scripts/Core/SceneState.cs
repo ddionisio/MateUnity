@@ -375,6 +375,8 @@ public class SceneState : MonoBehaviour {
         if(mInstance == null) {
             mInstance = this;
 
+            UserData.instance.actCallback += OnUserDataAction;
+
             mStartData = new Dictionary<string, InitData[]>(startData.Length);
             foreach(InitSceneData sdat in startData) {
                 if(!string.IsNullOrEmpty(sdat.scene) && sdat.data != null)
@@ -413,29 +415,33 @@ public class SceneState : MonoBehaviour {
         }
     }
 
-    void OnUserDataLoad(UserData ud) {
-        //update global states
-        if(mGlobalStates != null && mGlobalStates.Count > 0) {
-            string[] keys = new string[mGlobalStates.Count];
-            mGlobalStates.Keys.CopyTo(keys, 0);
+    void OnUserDataAction(UserData ud, UserData.Action act) {
+        switch(act) {
+            case UserData.Action.Load:
+                //update global states
+                if(mGlobalStates != null && mGlobalStates.Count > 0) {
+                    string[] keys = new string[mGlobalStates.Count];
+                    mGlobalStates.Keys.CopyTo(keys, 0);
 
-            foreach(string key in keys) {
-                StateValue val = mGlobalStates[key];
-                val.Apply(ud, string.Format(GlobalDataFormat, key));
-                mGlobalStates[key] = val;
-            }
-        }
+                    foreach(string key in keys) {
+                        StateValue val = mGlobalStates[key];
+                        val.Apply(ud, string.Format(GlobalDataFormat, key));
+                        mGlobalStates[key] = val;
+                    }
+                }
 
-        //update states
-        if(mStates != null && mStates.Count > 0 && !string.IsNullOrEmpty(mScene)) {
-            string[] keys = new string[mStates.Count];
-            mStates.Keys.CopyTo(keys, 0);
+                //update states
+                if(mStates != null && mStates.Count > 0 && !string.IsNullOrEmpty(mScene)) {
+                    string[] keys = new string[mStates.Count];
+                    mStates.Keys.CopyTo(keys, 0);
 
-            foreach(string key in keys) {
-                StateValue val = mStates[key];
-                val.Apply(ud, string.Format(DataFormat, mScene, key));
-                mStates[key] = val;
-            }
+                    foreach(string key in keys) {
+                        StateValue val = mStates[key];
+                        val.Apply(ud, string.Format(DataFormat, mScene, key));
+                        mStates[key] = val;
+                    }
+                }
+                break;
         }
     }
 

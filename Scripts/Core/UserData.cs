@@ -7,20 +7,31 @@ using System.IO;
 
 [AddComponentMenu("M8/Core/UserData")]
 public class UserData : MonoBehaviour {
-    public const string UserDataLoadCallName = "OnUserDataLoad";
-
+    public enum Action {
+        Load,
+        Save,
+        Enable,
+        Disable
+    }
+    
     [System.Serializable]
     public struct Data {
         public string name;
         public object obj;
     }
 
+    public delegate void OnAction(UserData ud, Action act);
+
     public bool loadOnStart = true;
     public bool autoSave = true;
+
+    public event OnAction actCallback;
 
     protected string mKey = "ud";
 
     private Dictionary<string, object> mValues = null;
+
+    private bool mStarted = false;
 
     private static UserData mInstance = null;
 
@@ -36,10 +47,14 @@ public class UserData : MonoBehaviour {
             mValues.Add(datum.name, datum.obj);
         }
 
-        SceneManager.RootBroadcastMessage(UserDataLoadCallName, this, SendMessageOptions.DontRequireReceiver);
+        if(actCallback != null)
+            actCallback(this, Action.Load);
     }
         
     public virtual void Save() {
+        if(actCallback != null)
+            actCallback(this, Action.Save);
+
         if(mValues != null) {
             List<Data> dat = new List<Data>(mValues.Count);
             foreach(KeyValuePair<string, object> pair in mValues)
@@ -150,10 +165,22 @@ public class UserData : MonoBehaviour {
         bf.Serialize(ms, dat);
         PlayerPrefs.SetString(mKey, System.Convert.ToBase64String(ms.GetBuffer()));
     }
-            
+
+    void OnEnable() {
+        if(mStarted) {
+            if(actCallback != null)
+                actCallback(this, Action.Enable);
+        }
+    }
+
     void OnDisable() {
-        if(autoSave)
-            Save();
+        if(mStarted) {
+            if(actCallback != null)
+                actCallback(this, Action.Disable);
+
+            if(autoSave)
+                Save();
+        }
     }
 
     void OnDestroy() {
@@ -167,6 +194,8 @@ public class UserData : MonoBehaviour {
     }
 
     protected virtual void Start() {
+        mStarted = true;
+
         if(loadOnStart)
             Load();
     }

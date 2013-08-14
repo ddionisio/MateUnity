@@ -14,8 +14,6 @@ public class FPController : RigidBodyController {
 
     public bool moveNormalized = true; //use false for analogue
 
-    public float turnAutoSpeed = 180.0f;
-
     public float jumpImpulse = 5.0f;
     public float jumpWaterForce = 5.0f;
     public float jumpForce = 50.0f;
@@ -61,10 +59,7 @@ public class FPController : RigidBodyController {
     private bool mEyeLocked = true;
     private bool mEyeOrienting = false;
     private Vector3 mEyeOrientVel;
-
-    private bool mAutoTurning = false;
-    private Quaternion mAutoTurnRot;
-
+    
     public bool inputEnabled {
         get { return mInputEnabled; }
         set {
@@ -104,12 +99,7 @@ public class FPController : RigidBodyController {
 
                 if(mEyeLocked) {
                     //move eye orientation to dirHolder
-                    if(!mEyeOrienting) {
-                        mEyeOrienting = true;
-                        StartCoroutine(EyeOrienting());
-                    }
-
-                    mEyeOrientVel = Vector3.zero;
+                    EyeOrient();
                 }
                 else {
                     mLookCurRot = 0.0f;
@@ -117,21 +107,6 @@ public class FPController : RigidBodyController {
                 }
             }
         }
-    }
-
-    public void TurnTo(Vector3 turnDir) {
-        //determine rotation
-        float a = M8.MathUtil.AngleForwardAxisDir(dirHolder.worldToLocalMatrix, Vector3.forward, turnDir);
-        mAutoTurnRot = dirHolder.localRotation * Quaternion.AngleAxis(a, Vector3.up);
-
-        if(!mAutoTurning) {
-            mAutoTurning = true;
-            StartCoroutine(DoAutoTurn());
-        }
-    }
-
-    public void TurnToCancel() {
-        mAutoTurning = false;
     }
 
     public override void ResetCollision() {
@@ -231,8 +206,7 @@ public class FPController : RigidBodyController {
         base.OnDisable();
 
         mEyeOrienting = false;
-
-        TurnToCancel();
+        mLookCurRot = 0.0f;
     }
 
     protected override void Awake() {
@@ -290,28 +264,31 @@ public class FPController : RigidBodyController {
                 moveForward = moveY;
                 moveSide = moveX;
             }
-
+                        
             //look
-            mLookCurInputAxis.x = lookInputX != InputManager.ActionInvalid && !mAutoTurning ? input.GetAxis(player, lookInputX) : 0.0f;
-            mLookCurInputAxis.y = lookInputY != InputManager.ActionInvalid ? input.GetAxis(player, lookInputY) : 0.0f;
-
-            if(mLookCurInputAxis.x != 0.0f) {
-                dirRot *= Quaternion.AngleAxis(mLookCurInputAxis.x * lookSensitivity, Vector3.up);
-                dirHolder.rotation = dirRot;
-            }
-
-            //look vertical
             if(mEyeLocked && !mEyeOrienting) {
-                float vDelta = mLookCurInputAxis.y * lookSensitivity;
+                mLookCurInputAxis.x = lookInputX != InputManager.ActionInvalid ? input.GetAxis(player, lookInputX) : 0.0f;
+                mLookCurInputAxis.y = lookInputY != InputManager.ActionInvalid ? input.GetAxis(player, lookInputY) : 0.0f;
 
-                mLookCurRot += vDelta;
+                //horizontal
+                if(mLookCurInputAxis.x != 0.0f) {
+                    dirRot *= Quaternion.AngleAxis(mLookCurInputAxis.x * lookSensitivity, Vector3.up);
+                    dirHolder.rotation = dirRot;
+                }
 
-                if(mLookCurRot < -360.0f)
-                    mLookCurRot += 360.0f;
-                else if(mLookCurRot > 360.0f)
-                    mLookCurRot -= 360.0f;
+                //vertical
+                if(mLookCurInputAxis.y != 0.0f) {
+                    float vDelta = mLookCurInputAxis.y * lookSensitivity;
 
-                mLookCurRot = Mathf.Clamp(mLookCurRot, lookYAngleMin, lookYAngleMax);
+                    mLookCurRot += vDelta;
+
+                    if(mLookCurRot < -360.0f)
+                        mLookCurRot += 360.0f;
+                    else if(mLookCurRot > 360.0f)
+                        mLookCurRot -= 360.0f;
+
+                    mLookCurRot = Mathf.Clamp(mLookCurRot, lookYAngleMin, lookYAngleMax);
+                }
             }
 
             //jump
@@ -374,7 +351,7 @@ public class FPController : RigidBodyController {
             if(isUnderWater || isOnLadder) {
                 mJump = true;
             }
-            else if(jumpWall && !mAutoTurning && (collisionFlags & CollisionFlags.Sides) != 0) {
+            else if(jumpWall && collisionFlags == CollisionFlags.Sides) {
                 bool found = false;
                 CollideInfo inf = new CollideInfo();
 
@@ -398,7 +375,10 @@ public class FPController : RigidBodyController {
                     mJump = true;
                     mJumpLastTime = Time.fixedTime;
 
-                    TurnTo(inf.normal);
+                    float a = M8.MathUtil.AngleForwardAxisDir(dirHolder.worldToLocalMatrix, Vector3.forward, inf.normal);
+                    dirHolder.rotation *= Quaternion.AngleAxis(a, Vector3.up);
+                    EyeOrient();
+                    //TurnTo(inf.normal);
                 }
             }
             else if(!mJump) {
@@ -419,6 +399,17 @@ public class FPController : RigidBodyController {
         else if(dat.state == InputManager.State.Released) {
             mJump = false;
         }
+    }
+
+    void EyeOrient() {
+        //move eye orientation to dirHolder
+        if(!mEyeOrienting) {
+            mEyeOrienting = true;
+            StartCoroutine(EyeOrienting());
+        }
+
+        mEyeOrientVel = Vector3.zero;
+        mLookCurRot = 0;
     }
 
     IEnumerator LadderOrientUp() {
@@ -451,21 +442,7 @@ public class FPController : RigidBodyController {
                 _eye.rotation = Quaternion.RotateTowards(_eye.rotation, dirHolder.rotation, step);
             }
 
-            mEyeOrienting = !(posDone && rotDone);
-        }
-    }
-
-    IEnumerator DoAutoTurn() {
-        WaitForFixedUpdate waitUpdate = new WaitForFixedUpdate();
-
-        while(mAutoTurning) {
-            yield return waitUpdate;
-
-            float step = turnAutoSpeed * Time.fixedDeltaTime;
-
-            dirHolder.localRotation = Quaternion.RotateTowards(dirHolder.localRotation, mAutoTurnRot, step);
-
-            mAutoTurning = dirHolder.localRotation != mAutoTurnRot;
+            mEyeOrienting = !rotDone;
         }
     }
 }

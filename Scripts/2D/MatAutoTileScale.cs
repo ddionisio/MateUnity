@@ -1,19 +1,18 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/2D/MatRepeatTileScrollScale")]
-public class MatRepeatTileScrollScale : MonoBehaviour {
-    public Renderer target;
-    public Shader shader; //assumes M8/RepeatTileScroll
-    public Texture texture;
+/// <summary>
+/// Automatically set the tile X/Y of target material based on the target object's scale X/Y
+/// </summary>
+[AddComponentMenu("M8/2D/MatAutoTileScale")]
+public class MatAutoTileScale : MonoBehaviour {
+    [SerializeField]
+    Renderer _target;
+
+    [SerializeField]
+    Texture _texture; //optional to change texture
 
     public float pixelPerUnit = 32.0f;
-
-    [SerializeField]
-    float _speedX;
-
-    [SerializeField]
-    float _speedY;
 
     [SerializeField]
     Color _color = Color.white;
@@ -24,6 +23,18 @@ public class MatRepeatTileScrollScale : MonoBehaviour {
     private Vector2 mCurScale = Vector2.zero;
     private Vector2 mTextureSize = Vector2.zero;
 
+    public Texture texture { 
+        get { return _texture; } 
+        set {
+            if(_texture != value) {
+                _texture = value;
+
+                mMat.mainTexture = _texture;
+                mTextureSize = new Vector2(_texture.width, _texture.height);
+                mCurScale = Vector2.zero;
+            }
+        } 
+    }
     public Color defaultColor { get { return _color; } }
     public Color color {
         get { return mColor; }
@@ -59,24 +70,24 @@ public class MatRepeatTileScrollScale : MonoBehaviour {
     }
 
     void InitMat() {
-        if(target == null)
-            target = renderer;
+        if(_target == null)
+            _target = renderer;
 
-        if(target != null && target.material != null && shader != null && texture != null) {
-            mMat = new Material(shader);
-            mMat.mainTexture = texture;
+        if(_target != null) {
+            mMat = _target.material;
 
-            mMat.SetFloat("speedX", _speedX);
-            mMat.SetFloat("speedY", _speedY);
+            if(_texture != null)
+                mMat.mainTexture = _texture;
+            else
+                _texture = mMat.mainTexture;
+
             mMat.SetColor("modColor", _color);
 
             mColor = _color;
 
-            mTextureSize = new Vector2(texture.width, texture.height);
+            mTextureSize = new Vector2(_texture.width, _texture.height);
 
-            target.material = mMat;
-
-            mTrans = target.transform;
+            mTrans = _target.transform;
         }
     }
 }
