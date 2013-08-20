@@ -9,11 +9,11 @@ public class SceneSerializerInspector : Editor {
     private static Dictionary<int, SceneSerializer> mRefs = null;
 
     public override void OnInspectorGUI() {
+        SceneSerializer data = target as SceneSerializer;
+
         //this shouldn't be in a prefab...
 
         if(Application.isPlaying) {
-            SceneSerializer data = target as SceneSerializer;
-
             EditorGUILayout.LabelField("id", data.id.ToString());
         }
         else if(targets != null && targets.Length > 1) {
@@ -36,8 +36,6 @@ public class SceneSerializerInspector : Editor {
             }
 
             CheckID(target);
-
-            SceneSerializer data = target as SceneSerializer;
 
             EditorGUILayout.LabelField("id", data.id.ToString());
         }

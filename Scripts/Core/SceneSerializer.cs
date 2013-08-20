@@ -14,25 +14,16 @@ public class SceneSerializer : MonoBehaviour {
 
     [SerializeField]
     [HideInInspector]
-    int _id = invalidID;
+    private int _id = invalidID;
 
     private static Dictionary<int, SceneSerializer> mRefs = null;
     private static int mGenIdStart = invalidID + 1;
 
     /// <summary>
-    /// Get the serialized id, for ungenerated ids, make sure you call this after Awake (usu. at Start)
+    /// Get the serialized id
     /// </summary>
     public int id {
         get {
-#if UNITY_EDITOR
-            if(!Application.isPlaying) {
-                return _id;
-            }
-#endif
-            if(_id == invalidID) {
-                __GenNewID();
-            }
-
             return _id;
         }
     }
@@ -42,7 +33,23 @@ public class SceneSerializer : MonoBehaviour {
     /// </summary>
     /// <param name="nid"></param>
     public void __EditorSetID(int nid) {
-        _id = nid;
+        if(Application.isPlaying) {
+            if(mRefs == null)
+                mRefs = new Dictionary<int, SceneSerializer>();
+
+            if(_id != invalidID) {
+                SceneSerializer ss;
+                if(mRefs.TryGetValue(_id, out ss) && ss == this)
+                    mRefs.Remove(_id);
+            }
+
+            _id = nid;
+
+            mRefs.Add(_id, this);
+        }
+        else {
+            _id = nid;
+        }
     }
 
     /// <summary>
@@ -51,9 +58,15 @@ public class SceneSerializer : MonoBehaviour {
     public void __GenNewID() {
         //find an id we can use
         int __id = mGenIdStart;
-        for(; mRefs.ContainsKey(__id); __id++) ;
+
+        if(mRefs != null)
+            for(; mRefs.ContainsKey(__id); __id++);
 
         _id = __id;
+
+        if(mRefs == null)
+            mRefs = new Dictionary<int, SceneSerializer>();
+
         mRefs.Add(_id, this);
     }
 
@@ -67,8 +80,16 @@ public class SceneSerializer : MonoBehaviour {
         return ret;
     }
 
+    public static void DeleteValues(int sid) {
+        SceneState.instance.DeleteValuesByNameContain(GetVarKey(sid));
+    }
+
+    static string GetVarKey(int sid) {
+        return "obj" + sid.ToString();
+    }
+
     string GetVarId() {
-        return "obj" + id.ToString();
+        return GetVarKey(id);
     }
 
     string GetVarKey(string name) {
@@ -132,7 +153,7 @@ public class SceneSerializer : MonoBehaviour {
     /// </summary>
     public void DeleteAllValues() {
         if(_id != invalidID) {
-            SceneState.instance.DeleteValuesByNameContain(GetVarId());
+            DeleteValues(_id);
         }
         else {
             Debug.LogWarning("Invalid id for "+name+", nothing to delete.");
@@ -142,7 +163,7 @@ public class SceneSerializer : MonoBehaviour {
     /// <summary>
     /// Call this to remove the object from scene when loaded.
     /// </summary>
-    public void MarkRemove() {
+    public virtual void MarkRemove() {
         if(_id != invalidID) {
             DeleteAllValues();
             SetValue(removeKey, 1, true);
@@ -162,7 +183,7 @@ public class SceneSerializer : MonoBehaviour {
         }
     }
 
-    void Awake() {
+    protected virtual void Awake() {
         //check if this object has been marked as remove, then delete it right away
         if(GetValue(removeKey, 0) == 1) {
             DestroyImmediate(gameObject);
