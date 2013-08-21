@@ -43,6 +43,37 @@ public class InputManager : MonoBehaviour {
         public ButtonAxis axis = ButtonAxis.None; //for buttons as axis
         public int index = 0; //which index this key refers to
 
+        private bool mNewBind = false;
+
+        public void SetAsInput(string input) {
+            ResetKeys();
+
+            this.input = input;
+        }
+
+        void _ApplyInfo(uint dataPak) {
+            ushort s1 = M8.Util.GetHiWord(dataPak);
+
+            axis = (ButtonAxis)M8.Util.GetHiByte(s1);
+            index = M8.Util.GetLoByte(s1);
+        }
+
+        public void SetAsKey(uint dataPak) {
+            ResetKeys();
+
+            _ApplyInfo(dataPak);
+
+            code = (KeyCode)M8.Util.GetLoWord(dataPak);
+        }
+
+        public void SetAsMap(uint dataPak) {
+            ResetKeys();
+
+            _ApplyInfo(dataPak);
+
+            map = (InputKeyMap)M8.Util.GetLoWord(dataPak);
+        }
+
         public void ResetKeys() {
             input = "";
             code = KeyCode.None;
@@ -62,6 +93,14 @@ public class InputManager : MonoBehaviour {
             }
 
             return ret;
+        }
+
+        public void _NewBind() {
+            mNewBind = true;
+        }
+
+        public bool _IsNewBind() {
+            return mNewBind;
         }
     }
 
@@ -87,6 +126,10 @@ public class InputManager : MonoBehaviour {
 
         public PlayerData(List<Key> aKeys) {
             down = false;
+            ApplyKeyList(aKeys);
+        }
+
+        public void ApplyKeyList(List<Key> aKeys) {
             keys = aKeys.ToArray();
         }
     }
@@ -102,6 +145,10 @@ public class InputManager : MonoBehaviour {
             deadZone = bind.deadZone;
 
             //construct player data, put in the keys
+            ApplyKeys(bind);
+        }
+
+        public void ApplyKeys(Bind bind) {
             int numPlayers = 0;
 
             List<Key>[] playerKeys = new List<Key>[MaxPlayers];
@@ -116,10 +163,15 @@ public class InputManager : MonoBehaviour {
                 playerKeys[key.player].Add(key);
             }
 
-            players = new PlayerData[numPlayers];
+            if(players == null)
+                players = new PlayerData[numPlayers];
+
             for(int i = 0; i < numPlayers; i++) {
                 if(playerKeys[i] != null) {
-                    players[i] = new PlayerData(playerKeys[i]);
+                    if(players[i] == null)
+                        players[i] = new PlayerData(playerKeys[i]);
+                    else
+                        players[i].ApplyKeyList(playerKeys[i]);
                 }
             }
         }
@@ -139,6 +191,166 @@ public class InputManager : MonoBehaviour {
 
     //interfaces (available after awake)
 
+    /// <summary>
+    /// Call this to reload binds from config and prefs.  This is to cancel editing key binds.
+    /// If deletePrefs = true, then remove custom binds from prefs.
+    /// </summary>
+    public void RevertBinds(bool deletePrefs) {
+        fastJSON.JSON.Instance.Parameters.UseExtensions = false;
+        List<Bind> keys = fastJSON.JSON.Instance.ToObject<List<Bind>>(config.text);
+
+        foreach(Bind key in keys) {
+            if(key != null && key.keys != null) {
+                if(mBinds[key.action] != null) {
+                    BindData bindDat = mBinds[key.action];
+                    bindDat.ApplyKeys(key);
+                }
+            }
+        }
+
+        if(deletePrefs) {
+            for(int act = 0; act < mBinds.Length; act++) {
+                BindData bindDat = mBinds[act];
+                if(bindDat != null) {
+                    for(int player = 0; player < bindDat.players.Length; player++) {
+                        PlayerData pd = bindDat.players[player];
+                        if(pd != null) {
+                            for(int index = 0; index < pd.keys.Length; index++) {
+                                string usdKey = _BaseKey(act, player, index);
+                                _DeletePlayerPrefs(usdKey);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            LoadBinds();
+        }
+    }
+
+    private void LoadBinds() {
+        for(int act = 0; act < mBinds.Length; act++) {
+            BindData bindDat = mBinds[act];
+            if(bindDat != null) {
+                for(int player = 0; player < bindDat.players.Length; player++) {
+                    PlayerData pd = bindDat.players[player];
+                    if(pd != null) {
+                        for(int index = 0; index < pd.keys.Length; index++) {
+                            string usdKey = _BaseKey(act, player, index);
+
+                            if(PlayerPrefs.HasKey(usdKey + "_i")) {
+                                if(pd.keys[index] == null)
+                                    pd.keys[index] = new Key();
+
+                                pd.keys[index].SetAsInput(PlayerPrefs.GetString(usdKey + "_i"));
+                            }
+                            else if(PlayerPrefs.HasKey(usdKey + "_k")) {
+                                if(pd.keys[index] == null)
+                                    pd.keys[index] = new Key();
+
+                                pd.keys[index].SetAsKey((uint)PlayerPrefs.GetInt(usdKey + "_k"));
+                            }
+                            else if(PlayerPrefs.HasKey(usdKey + "_m")) {
+                                if(pd.keys[index] == null)
+                                    pd.keys[index] = new Key();
+
+                                pd.keys[index].SetAsMap((uint)PlayerPrefs.GetInt(usdKey + "_m"));
+                            }
+                            else if(PlayerPrefs.HasKey(usdKey + "_d"))
+                                pd.keys[index] = null; //destroy
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    string _BaseKey(int action, int player, int key) {
+        return string.Format("bind_{0}_{1}_{2}", action, player, key);
+    }
+
+    void _DeletePlayerPrefs(string baseKey) {
+        PlayerPrefs.DeleteKey(baseKey + "_i");
+        PlayerPrefs.DeleteKey(baseKey + "_k");
+        PlayerPrefs.DeleteKey(baseKey + "_m");
+        PlayerPrefs.DeleteKey(baseKey + "_d");
+    }
+
+    /// <summary>
+    /// Call this once you are done modifying key binds
+    /// </summary>
+    public void SaveBinds() {
+        for(int act = 0; act < mBinds.Length; act++) {
+            BindData bindDat = mBinds[act];
+            if(bindDat != null) {
+                for(int player = 0; player < bindDat.players.Length; player++) {
+                    PlayerData pd = bindDat.players[player];
+                    if(pd != null) {
+                        for(int index = 0; index < pd.keys.Length; index++) {
+                            string usdKey = _BaseKey(act, player, index);
+
+                            Key key = pd.keys[index];
+                            if(key != null) {
+                                if(key._IsNewBind()) {
+                                    //for previous bind if type is changed
+                                    _DeletePlayerPrefs(usdKey);
+
+                                    if(!string.IsNullOrEmpty(key.input)) {
+                                        PlayerPrefs.SetString(usdKey + "_k", key.input);
+                                    }
+                                    else {
+                                        //pack data
+                                        ushort code = 0;
+                                        string postfix;
+
+                                        if(key.code != KeyCode.None) {
+                                            code = (ushort)key.code;
+                                            postfix = "_k";
+                                        }
+                                        else if(key.map != InputKeyMap.None) {
+                                            code = (ushort)key.map;
+                                            postfix = "_m";
+                                        }
+                                        else
+                                            postfix = null;
+
+                                        if(postfix != null) {
+                                            int val = (int)M8.Util.MakeLong(M8.Util.MakeWord((byte)key.axis, (byte)key.index), code);
+
+                                            PlayerPrefs.SetInt(usdKey + postfix, val);
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                _DeletePlayerPrefs(usdKey);
+                                PlayerPrefs.SetString(usdKey + "_d", "-");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void UnBindKey(int player, int action, int index) {
+        mBinds[action].players[player].keys[index] = null;
+    }
+
+    public void BindKey(int action, int index, Key newKey) {
+        newKey._NewBind();
+        mBinds[action].players[newKey.player].keys[index] = newKey;
+    }
+
+    public bool CheckBindKey(int player, int action, int index) {
+        return mBinds[action] != null && mBinds[action].players[player] != null && mBinds[action].players[player].keys[index] != null;
+    }
+
+    public Key GetBindKey(int player, int action, int index) {
+        return mBinds[action].players[player].keys[index];
+    }
+
     public bool CheckBind(int action) {
         return mBinds[action] != null;
     }
@@ -155,10 +367,12 @@ public class InputManager : MonoBehaviour {
         pd.info.axis = 0.0f;
 
         foreach(Key key in keys) {
-            float axis = ProcessAxis(key, bindData.deadZone);
-            if(axis != 0.0f) {
-                pd.info.axis = axis;
-                break;
+            if(key != null) {
+                float axis = ProcessAxis(key, bindData.deadZone);
+                if(axis != 0.0f) {
+                    pd.info.axis = axis;
+                    break;
+                }
             }
         }
 
@@ -173,7 +387,7 @@ public class InputManager : MonoBehaviour {
         Key[] keys = mBinds[action].players[player].keys;
 
         foreach(Key key in keys) {
-            if(ProcessButtonDown(key)) {
+            if(key != null && ProcessButtonDown(key)) {
                 return true;
             }
         }
@@ -277,6 +491,9 @@ public class InputManager : MonoBehaviour {
             }
 
             mButtonCalls = new HashSet<PlayerData>();
+
+            //load user config binds
+            LoadBinds();
         }
         else {
             mBinds = new BindData[0];

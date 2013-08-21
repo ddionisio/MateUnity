@@ -93,5 +93,33 @@ namespace M8 {
         public static bool CheckLayerAndTag(GameObject go, int layerMask, string tag) {
             return (layerMask & (1 << go.layer)) != 0 && go.tag == tag;
         }
+
+        public static ushort MakeWord(byte hb, byte lb) {
+            return (ushort)(((hb & 0xff) << 8) | (lb & 0xff));
+        }
+
+        public static uint MakeLong(ushort hs, ushort ls) {
+            return (uint)(((hs & 0xffff) << 16) | (ls & 0xffff));
+        }
+
+        public static uint MakeLong(byte b1, byte b2, byte b3, byte b4) {
+            return MakeLong(MakeWord(b1, b2), MakeWord(b3, b4));
+        }
+
+        public static ushort GetHiWord(uint i) {
+            return (ushort)(i >> 16);
+        }
+
+        public static ushort GetLoWord(uint s) {
+            return (ushort)(s & 0xffff);
+        }
+
+        public static byte GetHiByte(ushort s) {
+            return (byte)(s >> 8);
+        }
+
+        public static byte GetLoByte(ushort s) {
+            return (byte)(s & 0xff);
+        }
     }
 }
