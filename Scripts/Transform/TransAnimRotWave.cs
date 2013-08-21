@@ -4,18 +4,20 @@ using System.Collections;
 /// <summary>
 /// Rotate Z axis back and forth
 /// </summary>
-[AddComponentMenu("M8/2D/TransAnimRotWave")]
+[AddComponentMenu("M8/Transform/AnimRotWave")]
 public class TransAnimRotWave : MonoBehaviour {
 
     //TODO: types, lerp modes
 
     public Transform target;
 
-    public float originRot;
-
-    public float rot;
+    public Vector3 rotate;
 
     public float speed;
+
+    public bool local;
+
+    private Vector3 mOrigin;
 
     void OnEnable() {
 
@@ -25,7 +27,7 @@ public class TransAnimRotWave : MonoBehaviour {
         if(target == null)
             target = transform;
 
-        transform.eulerAngles = new Vector3(0, 0, originRot);
+        mOrigin = local ? transform.localEulerAngles : transform.eulerAngles;
     }
 
     // Use this for initialization
@@ -35,8 +37,11 @@ public class TransAnimRotWave : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        Vector3 a = transform.eulerAngles;
-        a.z = originRot + Mathf.Sin(Time.time * speed * Mathf.Deg2Rad) * rot;
-        transform.eulerAngles = a;
+        Vector3 angles = mOrigin + Mathf.Sin(Time.time * speed * Mathf.Deg2Rad) * rotate;
+
+        if(local)
+            transform.localEulerAngles = angles;
+        else
+            transform.eulerAngles = angles;
     }
 }

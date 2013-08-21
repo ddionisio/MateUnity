@@ -4,7 +4,7 @@ using System.Collections;
 /// <summary>
 /// Toggle between original scale and (original scale)*mod
 /// </summary>
-[AddComponentMenu("M8/2D/TransAnimFlipScale")]
+[AddComponentMenu("M8/Transform/AnimFlipScale")]
 public class TransAnimFlipScale : MonoBehaviour {
     public Transform target;
 

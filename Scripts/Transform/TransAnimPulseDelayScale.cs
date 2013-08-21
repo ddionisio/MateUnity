@@ -1,12 +1,12 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/2D/TransAnimPulseDelayScale")]
+[AddComponentMenu("M8/Transform/AnimPulseDelayScale")]
 public class TransAnimPulseDelayScale : MonoBehaviour {
     public float pauseStart;
     public float pulseDelay;
 
-    public Vector2 ofs;
+    public Vector3 ofs;
 
     public bool roundOutput = true; //only works for pixel-coordinate
     public bool squared = false;
@@ -20,21 +20,15 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
 
     private float mCurPulseTime = 0;
 
-    private Vector2 mStart;
-    private Vector2 mEnd;
+    private Vector3 mStart;
+    private Vector3 mEnd;
 
     private State mState;
     private bool mStarted = false;
 
-    void ApplyScale(Vector2 s) {
-        Vector3 ls = target.localScale;
-        ls.x = s.x; ls.y = s.y;
-        target.localScale = ls;
-    }
-
     void OnEnable() {
         if(mStarted) {
-            ApplyScale(mStart);
+            target.localScale = mStart;
             mState = State.Pause;
             mCurPulseTime = 0;
         }
@@ -42,7 +36,7 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
 
     void OnDisable() {
         if(mStarted && target != null) {
-            ApplyScale(mStart);
+            target.localScale = mStart;
         }
     }
 
@@ -76,14 +70,14 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
                 if(mCurPulseTime < pulseDelay) {
                     float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / pulseDelay));
 
-                    Vector2 newPos = Vector2.Lerp(mStart, mEnd, squared ? t * t : t);
+                    Vector3 newPos = Vector3.Lerp(mStart, mEnd, squared ? t * t : t);
 
-                    ApplyScale(roundOutput ?
-                        new Vector2(Mathf.Round(newPos.x), Mathf.Round(newPos.y))
-                        : newPos);
+                    target.localScale = roundOutput ?
+                        new Vector3(Mathf.Round(newPos.x), Mathf.Round(newPos.y), Mathf.Round(newPos.z))
+                        : newPos;
                 }
                 else {
-                    ApplyScale(mStart);
+                    target.localScale = mStart;
 
                     if(pauseStart > 0.0f) {
                         mState = State.Pause;

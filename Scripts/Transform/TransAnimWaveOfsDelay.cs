@@ -1,57 +1,63 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/2D/TransAnimWaveOfsDelay")]
+[AddComponentMenu("M8/Transform/AnimWaveOfsDelay")]
 public class TransAnimWaveOfsDelay : MonoBehaviour {
     public float pauseStart;
     public float pulseDelay;
 
-    public Vector2 ofs;
+    public Vector3 ofs;
 
     public bool roundOutput; //only works for pixel-coordinate
     public bool squared;
 
     public Transform target; //optional
 
+    public bool local = true;
+
     private enum State {
         Pause,
         Pulse
     }
 
-	private float mCurPulseTime = 0;
+    private float mCurPulseTime = 0;
 
-	private Vector2 mStartPos;
-	private Vector2 mEndPos;
+    private Vector3 mStartPos;
+    private Vector3 mEndPos;
 
     private State mState;
     private bool mStarted = false;
 
-	void OnEnable() {
+    void OnEnable() {
         if(mStarted) {
-            target.localPosition = new Vector3(mStartPos.x, mStartPos.y, target.localPosition.z);
+            if(local)
+                target.localPosition = mStartPos;
+            else
+                target.position = mStartPos;
+
             mState = State.Pause;
             mCurPulseTime = 0;
         }
-	}
-	
-	void Awake() {
+    }
+
+    void Awake() {
         if(target == null)
             target = transform;
 
-        mStartPos = target.localPosition;
+        mStartPos = local ? target.localPosition : target.position;
         mEndPos = mStartPos + ofs;
-	}
-	
-	// Use this for initialization
-	void Start () {
+    }
+
+    // Use this for initialization
+    void Start() {
         mState = State.Pause;
         mCurPulseTime = 0;
         mStarted = true;
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		mCurPulseTime += Time.deltaTime;
+    }
+
+    // Update is called once per frame
+    void Update() {
+        mCurPulseTime += Time.deltaTime;
 
         switch(mState) {
             case State.Pause:
@@ -65,19 +71,26 @@ public class TransAnimWaveOfsDelay : MonoBehaviour {
                 if(mCurPulseTime < pulseDelay) {
                     float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / pulseDelay));
 
-                    Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, squared ? t * t : t);
+                    Vector3 newPos = Vector3.Lerp(mStartPos, mEndPos, squared ? t * t : t);
 
-                    target.localPosition = roundOutput ?
-                        new Vector3(Mathf.Round(newPos.x), Mathf.Round(newPos.y), target.localPosition.z)
-                        : new Vector3(newPos.x, newPos.y, target.localPosition.z);
+                    if(roundOutput)
+                        newPos.Set(Mathf.Round(newPos.x), Mathf.Round(newPos.y), Mathf.Round(newPos.z));
+
+                    if(local)
+                        target.localPosition = newPos;
+                    else
+                        target.position = newPos;
                 }
                 else {
-                    target.localPosition = new Vector3(mStartPos.x, mStartPos.y, target.localPosition.z);
+                    if(local)
+                        target.localPosition = mStartPos;
+                    else
+                        target.position = mStartPos;
 
                     mState = State.Pause;
                     mCurPulseTime = 0.0f;
                 }
                 break;
         }
-	}
+    }
 }

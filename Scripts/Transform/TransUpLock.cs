@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/2D/TransUpLock")]
+[AddComponentMenu("M8/Transform/UpLock")]
 public class TransUpLock : MonoBehaviour {
-    public Vector2 up = Vector2.up;
+    public Vector3 up = Vector3.up;
 
     public Transform target;
 

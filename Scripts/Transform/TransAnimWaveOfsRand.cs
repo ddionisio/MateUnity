@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/2D/TransAnimWaveOfsRand")]
+[AddComponentMenu("M8/Transform/AnimWaveOfsRand")]
 public class TransAnimWaveOfsRand : MonoBehaviour {
     public Transform target;
 
@@ -13,10 +13,12 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
     public float pulseDelayMin;
     public float pulseDelayMax;
 
-    public Vector2 ofsMin;
-    public Vector2 ofsMax;
+    public Vector3 ofsMin;
+    public Vector3 ofsMax;
 
     public bool squared;
+
+    public bool local = true;
 
     private enum State {
         Pause,
@@ -27,15 +29,19 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
     private float mPauseDelay;
 
     private float mPulseDelay;
-    private Vector2 mStartPos;
-    private Vector2 mEndPos;
+    private Vector3 mStartPos;
+    private Vector3 mEndPos;
 
     private State mState;
     private bool mStarted = false;
 
     void OnEnable() {
         if(mStarted) {
-            target.localPosition = new Vector3(mStartPos.x, mStartPos.y, target.localPosition.z);
+            if(local)
+                target.localPosition = mStartPos;
+            else
+                target.position = mStartPos;
+
             mState = State.Pause;
             mCurPulseTime = 0;
             mPauseDelay = Random.Range(pauseMin, pauseMax);
@@ -46,7 +52,7 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
         if(target == null)
             target = transform;
 
-        mStartPos = target.localPosition;
+        mStartPos = local ? target.localPosition : target.position;
     }
 
     // Use this for initialization
@@ -71,6 +77,7 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
                     mEndPos = mStartPos;
                     mEndPos.x += Random.Range(ofsMin.x, ofsMax.x);
                     mEndPos.y += Random.Range(ofsMin.y, ofsMax.y);
+                    mEndPos.z += Random.Range(ofsMin.z, ofsMax.z);
                 }
                 break;
 
@@ -80,10 +87,16 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
 
                     Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, squared ? t * t : t);
 
-                    target.localPosition = new Vector3(newPos.x, newPos.y, target.localPosition.z);
+                    if(local)
+                        target.localPosition = newPos;
+                    else
+                        target.position = newPos;
                 }
                 else {
-                    target.localPosition = new Vector3(mStartPos.x, mStartPos.y, target.localPosition.z);
+                    if(local)
+                        target.localPosition = mStartPos;
+                    else
+                        target.position = mStartPos;
 
                     mState = State.Pause;
                     mCurPulseTime = 0.0f;
