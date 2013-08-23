@@ -9,19 +9,19 @@ public class FPController : RigidBodyController {
     Transform _eye;
 
     public Vector3 eyeOfs;
-    public float eyeLockOrientSpeed = 180.0f; //when we lock the eye again, this is the speed to re-orient based on dirHolder
-    public float eyeLockPositionDelay = 1.0f; //reposition delay when we lock the eye again
+    public float eyeLockOrientSpeed = 1080.0f; //when we lock the eye again, this is the speed to re-orient based on dirHolder
+    public float eyeLockPositionDelay = 0.01f; //reposition delay when we lock the eye again
 
     public bool moveNormalized = true; //use false for analogue
 
-    public float jumpImpulse = 5.0f;
-    public float jumpWaterForce = 5.0f;
-    public float jumpForce = 50.0f;
+    public float jumpImpulse = 4.0f;
+    public float jumpWaterForce = 40.0f;
+    public float jumpForce = 15.0f;
     public float jumpDelay = 0.15f;
 
     public bool jumpWall = false; //wall jump
 
-    public float lookSensitivity = 2.0f;
+    public float lookSensitivity = 4.0f;
     public bool lookYInvert = false;
     public float lookYAngleMin = -90.0f;
     public float lookYAngleMax = 90.0f;
@@ -29,8 +29,8 @@ public class FPController : RigidBodyController {
     public string ladderTag = "Ladder";
     public LayerMask ladderLayer;
     public float ladderOrientSpeed = 270.0f;
-    public float ladderDrag = 20.0f;
-    public float ladderJumpForce = 10.0f;
+    public float ladderDrag = 15.0f;
+    public float ladderJumpForce = 30.0f;
 
     public int player = 0;
     public int moveInputX = InputManager.ActionInvalid;
@@ -369,6 +369,8 @@ public class FPController : RigidBodyController {
                     Vector3 jumpDir = inf.normal + dirHolder.up;
 
                     if(jumpImpulse > 0.0f) {
+                        ClearCollFlags();
+                        rigidbody.drag = airDrag;
                         rigidbody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
                     }
 
@@ -387,8 +389,11 @@ public class FPController : RigidBodyController {
                 }
                 else if(!isSlopSlide) {
                     if(isGrounded) {
-                        if(jumpImpulse > 0.0f)
+                        if(jumpImpulse > 0.0f) {
+                            ClearCollFlags();
+                            rigidbody.drag = airDrag;
                             rigidbody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
+                        }
 
                         mJump = true;
                         mJumpLastTime = Time.fixedTime;

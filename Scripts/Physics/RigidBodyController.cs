@@ -22,17 +22,20 @@ public class RigidBodyController : MonoBehaviour {
     public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
                                 //you'll want this as an attach for camera as well.
 
-    public float moveForce = 60.0f;
-    public float moveAirForce = 10.0f;
-    public float moveMaxSpeed = 3.5f;
+    public float moveForce = 50.0f;
+    public float moveAirForce = 20.0f;
+    public float moveMaxSpeed = 2.5f;
 
     public float slopSlideForce = 20.0f;
 
-    public float sideBounceImpulse = 0.72f; //bounce off sides slightly
-
-    public float airDrag = 0.05f; //if there is no ground collision, this is the drag
+    public float airDrag = 0.015f; //if there is no ground collision, this is the drag
+    
     public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
-    public float waterDrag = 20.0f; //if within water
+    
+    public float standDrag = 10.0f;
+    public LayerMask standDragLayer;
+
+    public float waterDrag = 15.0f; //if within water
 
     public string waterTag = "Water";
     public LayerMask waterLayer;
@@ -51,6 +54,7 @@ public class RigidBodyController : MonoBehaviour {
     protected Dictionary<Collider, CollideInfo> mColls = new Dictionary<Collider, CollideInfo>(16);
 
     private CollisionFlags mCollFlags;
+    private int mCollGroundLayerMask = 0;
 
     private float mTopBottomColCos;
 
@@ -64,7 +68,7 @@ public class RigidBodyController : MonoBehaviour {
     private bool mRenewColls = false;
 
     private float mRadius = 0.0f;
-
+        
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
@@ -127,6 +131,7 @@ public class RigidBodyController : MonoBehaviour {
 
     public virtual void ResetCollision() {
         mCollFlags = CollisionFlags.None;
+        mCollGroundLayerMask = 0;
         mIsSlopSlide = false;
         mGroundMoveVel = Vector3.zero;
         mColls.Clear();
@@ -143,6 +148,10 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void WaterExit() {
+    }
+
+    protected void ClearCollFlags() {
+        mCollFlags = 0;
     }
 
     void OnCollisionEnter(Collision col) {
@@ -185,9 +194,6 @@ public class RigidBodyController : MonoBehaviour {
         //refresh contact infos
         foreach(ContactPoint contact in col.contacts) {
             CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
-
-            if(sideBounceImpulse > 0.0f && colFlag == CollisionFlags.Sides)
-                rigidbody.AddForce(contact.normal * sideBounceImpulse, ForceMode.Impulse);
 
             if(mColls.ContainsKey(contact.otherCollider)) {
                 mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
@@ -279,7 +285,7 @@ public class RigidBodyController : MonoBehaviour {
 #endif
 
         if(mIsSlopSlide) {
-            rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
+            //rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
 
             Vector3 dir = M8.MathUtil.Slide(-transform.up, mSlopNormal);
             dir.Normalize();
@@ -302,7 +308,7 @@ public class RigidBodyController : MonoBehaviour {
         else {
             mCurMoveDir = Vector3.zero;
 
-            rigidbody.drag = isUnderWater ? waterDrag : isGrounded ? groundDrag : airDrag;
+            rigidbody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : standDrag : airDrag;
         }
     }
 
@@ -358,6 +364,7 @@ public class RigidBodyController : MonoBehaviour {
 
     void RefreshCollInfo() {
         mCollFlags = CollisionFlags.None;
+        mCollGroundLayerMask = 0;
         mIsSlopSlide = false;
         mGroundMoveVel = Vector3.zero;
 
@@ -379,7 +386,8 @@ public class RigidBodyController : MonoBehaviour {
 
             if(flag == CollisionFlags.Below) {
                 if(!groundNoSlope) {
-                    mIsSlopSlide = Vector3.Angle(up, n) > slopLimit;
+                    float a = Vector3.Angle(up, n);
+                    mIsSlopSlide = a > slopLimit;
                     if(mIsSlopSlide)
                         mSlopNormal = n;
                     else {
@@ -393,6 +401,8 @@ public class RigidBodyController : MonoBehaviour {
                 if(body != null && body.velocity != Vector3.zero) {
                     mGroundMoveVel += body.velocity;
                 }
+
+                mCollGroundLayerMask |= 1 << pair.Key.gameObject.layer;
             }
         }
     }
