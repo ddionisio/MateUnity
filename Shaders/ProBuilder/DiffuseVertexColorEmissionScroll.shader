@@ -7,6 +7,8 @@ Shader "M8/ProBuilder/Diffuse Vertex Color Emission Scroll" {
   }
   SubShader {
     Tags { "RenderType" = "Opaque" }
+	
+	ColorMask RGB
 
     CGPROGRAM
     #pragma surface surf Lambert vertex:vtx addshadow fullforwardshadows

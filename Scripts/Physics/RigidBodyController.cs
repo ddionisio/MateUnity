@@ -8,7 +8,7 @@ using System.Collections.Generic;
 //and be able to stand still on platforms
 [AddComponentMenu("M8/Physics/RigidBodyController")]
 public class RigidBodyController : MonoBehaviour {
-    const float moveCosCheck = 0.01745240643728351281941897851632f; //cos(89)
+    protected const float moveCosCheck = 0.01745240643728351281941897851632f; //cos(89)
 
     public struct CollideInfo {
         public CollisionFlags flag;
@@ -63,11 +63,15 @@ public class RigidBodyController : MonoBehaviour {
 
     private Vector3 mGroundMoveVel;
 
+    private Vector3 mLocalVelocity;
+
     private int mWaterCounter; //counter for water triggers
 
     private bool mRenewColls = false;
 
     private float mRadius = 0.0f;
+
+    private GravityController mGravCtrl;
         
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
@@ -80,6 +84,9 @@ public class RigidBodyController : MonoBehaviour {
     public Dictionary<Collider, CollideInfo> collisions { get { return mColls; } }
     public bool isUnderWater { get { return mWaterCounter > 0; } }
     public float radius { get { return mRadius; } }
+    public Vector3 groundMoveVelocity { get { return mGroundMoveVel; } }
+    public GravityController gravityController { get { return mGravCtrl; } }
+    public Vector3 localVelocity { get { return mLocalVelocity; } }
     
     /// <summary>
     /// Get the first occurence of CollideInfo based on given flags
@@ -155,6 +162,8 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void OnCollisionEnter(Collision col) {
+        //Debug.Log("enter: " + col.gameObject.name);
+
         if(mRenewColls) {
             mColls.Clear();
             mRenewColls = false;
@@ -170,6 +179,9 @@ public class RigidBodyController : MonoBehaviour {
         Vector3 pos = collider.bounds.center;
 
         foreach(ContactPoint contact in col.contacts) {
+            if(contact.thisCollider != collider)
+                continue;
+
             if(!mColls.ContainsKey(contact.otherCollider)) {
                 //mColls.Add(contact.otherCollider, contact);
 
@@ -193,6 +205,9 @@ public class RigidBodyController : MonoBehaviour {
 
         //refresh contact infos
         foreach(ContactPoint contact in col.contacts) {
+            if(contact.thisCollider != collider)
+                continue;
+
             CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
 
             if(mColls.ContainsKey(contact.otherCollider)) {
@@ -208,9 +223,16 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void OnCollisionExit(Collision col) {
+        //Debug.Log("exit: " + col.gameObject.name);
+        
         foreach(ContactPoint contact in col.contacts) {
+            //Debug.Log("exit other coll: " + contact.otherCollider.name);
+            //Debug.Log("exit this coll: " + contact.thisCollider.name);
+
             if(mColls.ContainsKey(contact.otherCollider))
                 mColls.Remove(contact.otherCollider);
+            else if(mColls.ContainsKey(contact.thisCollider))
+                mColls.Remove(contact.thisCollider);
         }
 
         RefreshCollInfo();
@@ -265,6 +287,8 @@ public class RigidBodyController : MonoBehaviour {
     }
         
     protected virtual void Awake() {
+        mGravCtrl = GetComponent<GravityController>();
+
         mTopBottomColCos = Mathf.Cos(topBottomCollisionAngle);
 
         if(collider != null) {
@@ -283,6 +307,7 @@ public class RigidBodyController : MonoBehaviour {
 #if UNITY_EDITOR
         mTopBottomColCos = Mathf.Cos(topBottomCollisionAngle);
 #endif
+        ComputeLocalVelocity();
 
         if(mIsSlopSlide) {
             //rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
@@ -342,17 +367,8 @@ public class RigidBodyController : MonoBehaviour {
         //M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
 
         //check if we can move based on speed or if going against new direction
-        Vector3 vel = rigidbody.velocity - mGroundMoveVel;
-        //if( < 0.0f)
-        //Debug.Log("wtf: "+Vector3.Angle(vel, mCurMoveDir));
-
-        float velMagSqr = vel.sqrMagnitude;
-        bool canMove = velMagSqr < moveMaxSpeed * moveMaxSpeed;
-        if(!canMove) { //see if we are trying to move the opposite dir
-            Vector3 velDir = vel / Mathf.Sqrt(velMagSqr);
-            canMove = Vector3.Dot(mCurMoveDir, velDir) < moveCosCheck;
-        }
-
+        bool canMove = CanMove();
+        
         if(canMove) {
             //M8.Debug.
             rigidbody.AddForce(moveDelta * force);
@@ -362,7 +378,22 @@ public class RigidBodyController : MonoBehaviour {
         return false;
     }
 
-    void RefreshCollInfo() {
+    protected virtual bool CanMove() {
+        Vector3 vel = rigidbody.velocity - mGroundMoveVel;
+        float sqrMag = vel.sqrMagnitude;
+
+        bool ret = sqrMag < moveMaxSpeed * moveMaxSpeed;
+
+        //see if we are trying to move the opposite dir
+        if(!ret) { //see if we are trying to move the opposite dir
+            Vector3 velDir = rigidbody.velocity.normalized;
+            ret = Vector3.Dot(mCurMoveDir, velDir) < moveCosCheck;
+        }
+
+        return ret;
+    }
+
+    protected virtual void RefreshCollInfo() {
         mCollFlags = CollisionFlags.None;
         mCollGroundLayerMask = 0;
         mIsSlopSlide = false;
@@ -374,7 +405,7 @@ public class RigidBodyController : MonoBehaviour {
         //
 
         foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
-            if(pair.Key == null) {
+            if(pair.Key == null || !pair.Key.gameObject.activeSelf) {
                 mRenewColls = true;
                 continue;
             }
@@ -398,12 +429,16 @@ public class RigidBodyController : MonoBehaviour {
 
                 //for platforms
                 Rigidbody body = pair.Key.rigidbody;
-                if(body != null && body.velocity != Vector3.zero) {
+                if(body != null) {
                     mGroundMoveVel += body.velocity;
                 }
 
                 mCollGroundLayerMask |= 1 << pair.Key.gameObject.layer;
             }
         }
+    }
+
+    protected void ComputeLocalVelocity() {
+        mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(rigidbody.velocity - mGroundMoveVel);
     }
 }

@@ -49,8 +49,6 @@ public class FPController : RigidBodyController {
     private Vector2 mLookCurInputAxis;
     private float mLookCurRot;
 
-    private GravityController mGravityCtrl;
-
     private int mLadderCounter;
     private bool mLadderLastGravity;
     private Vector3 mLadderUp;
@@ -80,8 +78,6 @@ public class FPController : RigidBodyController {
     }
 
     public bool isOnLadder { get { return mLadderCounter > 0; } }
-
-    public GravityController gravityController { get { return mGravityCtrl; } }
 
     public Transform eye {
         get { return _eye; }
@@ -113,8 +109,8 @@ public class FPController : RigidBodyController {
         base.ResetCollision();
 
         if(mLadderCounter > 0) {
-            if(mGravityCtrl != null)
-                mGravityCtrl.enabled = true;
+            if(gravityController != null)
+                gravityController.enabled = true;
             else
                 rigidbody.useGravity = mLadderLastGravity;
 
@@ -144,9 +140,9 @@ public class FPController : RigidBodyController {
         }
 
         if(isOnLadder) {
-            if(mGravityCtrl != null) {
+            if(gravityController != null) {
                 StartCoroutine(LadderOrientUp());
-                mGravityCtrl.enabled = false;
+                gravityController.enabled = false;
             }
             else {
                 mLadderLastGravity = rigidbody.useGravity;
@@ -162,9 +158,9 @@ public class FPController : RigidBodyController {
             if(mLadderCounter == 0) {
                 mLadderCounter++;
 
-                if(mGravityCtrl != null) {
+                if(gravityController != null) {
                     StartCoroutine(LadderOrientUp());
-                    mGravityCtrl.enabled = false;
+                    gravityController.enabled = false;
                 }
                 else {
                     mLadderLastGravity = rigidbody.useGravity;
@@ -189,8 +185,8 @@ public class FPController : RigidBodyController {
         }
 
         if(!isOnLadder) {
-            if(mGravityCtrl != null)
-                mGravityCtrl.enabled = true;
+            if(gravityController != null)
+                gravityController.enabled = true;
             else
                 rigidbody.useGravity = mLadderLastGravity;
         }
@@ -211,8 +207,6 @@ public class FPController : RigidBodyController {
 
     protected override void Awake() {
         base.Awake();
-
-        mGravityCtrl = GetComponent<GravityController>();
     }
 
     // Use this for initialization
