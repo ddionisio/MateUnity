@@ -68,7 +68,8 @@ public class GravityController : MonoBehaviour {
 
     void ApplyUp() {
         if(orientUp) {
-            if(M8.MathUtil.RotateToUp(mUp, transform.right, transform.forward, ref mRotateTo)) {
+            //TODO: figure out better math
+            if(M8.MathUtil.RotateToUp(mUp, -transform.right, transform.forward, ref mRotateTo)) {
                 if(!mIsOrienting)
                     StartCoroutine(OrientUp());
             }

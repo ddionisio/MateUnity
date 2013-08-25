@@ -77,14 +77,22 @@ public class SpriteColorLerp : MonoBehaviour {
 
                 case Type.Saw:
                     if(mCurTime > delay) {
-                        mCurTime -= delay;
+                        if(mReverse)
+                            mCurTime -= delay;
+                        else
+                            mCurTime = delay - (mCurTime - delay);
+
+                        mReverse = !mReverse;
+                    }
+                    else if(mReverse && mCurTime <= 0.0f) {
+                        mActive = false;
                     }
 
                     sprite.color = M8.ColorUtil.Lerp(colors, mCurTime / delay);
                     break;
 
                 case Type.SeeSaw:
-                    if(mCurTime > delay) {
+                    if(mCurTime > delay || (mReverse && mCurTime <= 0.0f)) {
                         if(mReverse)
                             mCurTime -= delay;
                         else
