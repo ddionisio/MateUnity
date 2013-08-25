@@ -52,5 +52,5 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency" {
 		ENDCG
 	}
   }
-  Fallback "Diffuse"
+  Fallback "Transparent/Diffuse"
 }
