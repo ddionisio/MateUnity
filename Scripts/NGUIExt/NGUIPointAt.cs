@@ -17,19 +17,21 @@ public class NGUIPointAt : MonoBehaviour {
     }
 
     public void SetPOI(Transform poi) {
-        mPOI = poi;
+        if(mPOI != poi) {
+            mPOI = poi;
 
-        if(mPOI != null) {
-            mPOICam = NGUITools.FindCameraForLayer(mPOI.gameObject.layer);
+            if(mPOI != null) {
+                mPOICam = NGUITools.FindCameraForLayer(mPOI.gameObject.layer);
 
-            gameObject.SetActive(true);
-        }
-        else {
-            mPOICam = null;
+                gameObject.SetActive(true);
+            }
+            else {
+                mPOICam = null;
 
-            gameObject.SetActive(false);
+                gameObject.SetActive(false);
 
-            pointer.gameObject.SetActive(false);
+                pointer.gameObject.SetActive(false);
+            }
         }
     }
 

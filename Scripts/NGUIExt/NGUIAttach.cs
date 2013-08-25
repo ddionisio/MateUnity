@@ -53,13 +53,13 @@ public class NGUIAttach : MonoBehaviour {
                 //deactivate stuff?
             }
 
-            if(mVisible) {
+            //if(mVisible) {
                 mPos = mUICam.ViewportToWorldPoint(mPos);
                 mPos.x += offset.x;
                 mPos.y += offset.y;
                 mPos.z = mZ;
                 mTrans.position = mPos;
-            }
+            //}
         }
 	
 	}

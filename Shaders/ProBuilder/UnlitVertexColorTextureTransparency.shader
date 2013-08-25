@@ -7,7 +7,7 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency" {
 
     //ZWrite Off // on might hide behind pixels, off might miss order
     //Blend SrcAlpha OneMinusSrcAlpha
-	Blend One OneMinusSrcAlpha
+	Blend SrcAlpha OneMinusSrcAlpha
     ColorMask RGB
 	Lighting Off Fog { Mode Off }
 

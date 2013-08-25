@@ -17,7 +17,8 @@ public class RigidBodyController : MonoBehaviour {
 
     }
 
-    public delegate void CallbackEvent();
+    public delegate void CallbackEvent(RigidBodyController controller);
+    public delegate void CollisionCallbackEvent(RigidBodyController controller, Collision col);
 
     public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
                                 //you'll want this as an attach for camera as well.
@@ -46,6 +47,8 @@ public class RigidBodyController : MonoBehaviour {
 
     public event CallbackEvent waterEnterCallback;
     public event CallbackEvent waterExitCallback;
+    public event CollisionCallbackEvent collisionEnterCallback;
+    public event CollisionCallbackEvent collisionStayCallback;
         
     private Vector2 mCurMoveAxis;
     private Vector3 mCurMoveDir;
@@ -192,6 +195,9 @@ public class RigidBodyController : MonoBehaviour {
         }
 
         RefreshCollInfo();
+
+        if(collisionEnterCallback != null)
+            collisionEnterCallback(this, col);
     }
 
     void OnCollisionStay(Collision col) {
@@ -220,6 +226,9 @@ public class RigidBodyController : MonoBehaviour {
 
         //recalculate flags
         RefreshCollInfo();
+
+        if(collisionStayCallback != null)
+            collisionStayCallback(this, col);
     }
 
     void OnCollisionExit(Collision col) {
@@ -247,7 +256,7 @@ public class RigidBodyController : MonoBehaviour {
             WaterEnter();
 
             if(waterEnterCallback != null)
-                waterEnterCallback();
+                waterEnterCallback(this);
         }
     }
 
@@ -258,7 +267,7 @@ public class RigidBodyController : MonoBehaviour {
             WaterEnter();
 
             if(waterEnterCallback != null)
-                waterEnterCallback();
+                waterEnterCallback(this);
         }
     }
 
@@ -273,7 +282,7 @@ public class RigidBodyController : MonoBehaviour {
             WaterExit();
 
             if(waterExitCallback != null)
-                waterExitCallback();
+                waterExitCallback(this);
         }
     }
 
@@ -282,6 +291,8 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void OnDestroy() {
+        collisionEnterCallback = null;
+        collisionStayCallback = null;
         waterEnterCallback = null;
         waterExitCallback = null;
     }

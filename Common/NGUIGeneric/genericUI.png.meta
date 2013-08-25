@@ -23,13 +23,14 @@ TextureImporter:
   textureFormat: 4
   maxTextureSize: 4096
   textureSettings:
-    filterMode: 2
+    filterMode: 0
     aniso: 4
     mipBias: -1
     wrapMode: 1
   nPOTScale: 1
   lightmap: 0
   compressionQuality: 50
+  alphaIsTransparency: 0
   textureType: -1
   buildTargetSettings: []
   userData: 
