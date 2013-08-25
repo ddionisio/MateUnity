@@ -541,19 +541,17 @@ public class InputManager : MonoBehaviour {
             ButtonCallSetData dat = mButtonCallSetQueue.Dequeue();
             if(dat.cb != null) {
                 if(dat.add) {
-                    if(!mButtonCalls.Contains(dat.pd)) {
+                    if(dat.pd.callback != dat.cb) {
                         dat.pd.callback += dat.cb;
-
-                        mButtonCalls.Add(dat.pd);
                     }
+
+                    mButtonCalls.Add(dat.pd);
                 }
                 else {
-                    if(mButtonCalls.Contains(dat.pd)) {
-                        dat.pd.callback -= dat.cb;
+                    dat.pd.callback -= dat.cb;
 
-                        if(dat.pd.callback == null)
-                            mButtonCalls.Remove(dat.pd);
-                    }
+                    if(dat.pd.callback == null)
+                        mButtonCalls.Remove(dat.pd);
                 }
             }
         }

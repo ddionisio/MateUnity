@@ -84,6 +84,12 @@ public class UIModalManagerInspector : Editor {
 
         GUILayout.EndVertical();
 
+        GUILayout.BeginVertical(GUI.skin.box);
+
+        input.openOnStart = EditorGUILayout.TextField("Start", input.openOnStart);
+
+        GUILayout.EndVertical();
+
         if(GUI.changed)
             EditorUtility.SetDirty(target);
     }

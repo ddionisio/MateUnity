@@ -41,7 +41,7 @@ public class UIModalManager : MonoBehaviour {
         return dat;
     }
 
-    public T ModalGetController<T>(string modal)  where T : UIController {
+    public T ModalGetController<T>(string modal) where T : UIController {
         UIData dat = ModalGetData(modal);
         return dat != null ? dat.ui as T : null;
     }
@@ -68,7 +68,7 @@ public class UIModalManager : MonoBehaviour {
     //closes all modal and open this
     public void ModalReplace(string modal) {
         ModalClearStack(false);
-        
+
         //cancel opening other modals
         mModalToOpen.Clear();
 
@@ -118,7 +118,7 @@ public class UIModalManager : MonoBehaviour {
             SceneManager.RootBroadcastMessage("OnUIModalActive", null, SendMessageOptions.DontRequireReceiver);
         }
 
-        UIData uid = mModals[modal];
+        UIData uid = null;
         if(!mModals.TryGetValue(modal, out uid)) {
             Debug.LogError("Modal not found: " + modal);
             return;
