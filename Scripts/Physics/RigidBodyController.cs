@@ -42,8 +42,10 @@ public class RigidBodyController : MonoBehaviour {
     public LayerMask waterLayer;
 
     public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag
+    public float slideLimit = 75.0f;
 
-    public float topBottomCollisionAngle = 30.0f; //criteria to determine collision flag
+    public float capsuleCollisionDistOfs = 0.15f; //offset for the center line of the capsule to avoid marking collision as top/bottom
+    public float sphereCollisionAngle = 30.0f; //criteria to determine collision flag
 
     public event CallbackEvent waterEnterCallback;
     public event CallbackEvent waterExitCallback;
@@ -75,11 +77,20 @@ public class RigidBodyController : MonoBehaviour {
     private float mRadius = 0.0f;
 
     private GravityController mGravCtrl;
+
+    private CapsuleCollider mCapsuleColl;
+
+    private bool mLockDrag = false;
         
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
     public bool isSlopSlide { get { return mIsSlopSlide; } }
+
+    /// <summary>
+    /// Use this to override the rigidbody's drag such that ground/air/stand drag is ignored
+    /// </summary>
+    public bool lockDrag { get { return mLockDrag; } set { mLockDrag = value; } }
     
     public Vector3 moveDir { get { return mCurMoveDir; } }
     public CollisionFlags collisionFlags { get { return mCollFlags; } }
@@ -164,6 +175,16 @@ public class RigidBodyController : MonoBehaviour {
         mCollFlags = 0;
     }
 
+    CollisionFlags GenCollFlag(Vector3 up, Vector3 pos, Vector3 contactPt) {
+        if(mCapsuleColl) {
+            return M8.PhysicsUtil.GetCollisionFlagsCapsule(transform, mCapsuleColl.height, mRadius, capsuleCollisionDistOfs, mCapsuleColl.center, contactPt);
+            //return M8.PhysicsUtil.GetCollisionFlagsCapsule(up, transform.localScale, pos, mCapsuleColl.height, mRadius*0.9f, contactPt);
+        }
+        else {
+            return M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contactPt);
+        }
+    }
+
     void OnCollisionEnter(Collision col) {
         //Debug.Log("enter: " + col.gameObject.name);
 
@@ -188,7 +209,7 @@ public class RigidBodyController : MonoBehaviour {
             if(!mColls.ContainsKey(contact.otherCollider)) {
                 //mColls.Add(contact.otherCollider, contact);
 
-                CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
+                CollisionFlags colFlag = GenCollFlag(up, pos, contact.point);
 
                 mColls.Add(contact.otherCollider, new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
             }
@@ -214,7 +235,7 @@ public class RigidBodyController : MonoBehaviour {
             if(contact.thisCollider != collider)
                 continue;
 
-            CollisionFlags colFlag = M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
+            CollisionFlags colFlag = GenCollFlag(up, pos, contact.point);
 
             if(mColls.ContainsKey(contact.otherCollider)) {
                 mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
@@ -300,13 +321,15 @@ public class RigidBodyController : MonoBehaviour {
     protected virtual void Awake() {
         mGravCtrl = GetComponent<GravityController>();
 
-        mTopBottomColCos = Mathf.Cos(topBottomCollisionAngle);
+        mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
 
         if(collider != null) {
             if(collider is SphereCollider)
                 mRadius = ((SphereCollider)collider).radius;
-            else if(collider is CapsuleCollider)
-                mRadius = ((CapsuleCollider)collider).radius;
+            else if(collider is CapsuleCollider) {
+                mCapsuleColl = collider as CapsuleCollider;
+                mRadius = mCapsuleColl.radius;
+            }
         }
     }
 
@@ -316,7 +339,7 @@ public class RigidBodyController : MonoBehaviour {
     // Update is called once per frame
     protected virtual void FixedUpdate() {
 #if UNITY_EDITOR
-        mTopBottomColCos = Mathf.Cos(topBottomCollisionAngle);
+        mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
 #endif
         ComputeLocalVelocity();
 
@@ -331,12 +354,14 @@ public class RigidBodyController : MonoBehaviour {
         if(mCurMoveAxis != Vector2.zero) {
             //move
             if(isGrounded) {
-                rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
+                if(!mLockDrag)
+                    rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
 
                 Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveForce);
             }
             else {
-                rigidbody.drag = isUnderWater ? waterDrag : airDrag;
+                if(!mLockDrag)
+                    rigidbody.drag = isUnderWater ? waterDrag : airDrag;
 
                 Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveAirForce);
             }
@@ -344,7 +369,8 @@ public class RigidBodyController : MonoBehaviour {
         else {
             mCurMoveDir = Vector3.zero;
 
-            rigidbody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : standDrag : airDrag;
+            if(!mLockDrag)
+                rigidbody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : standDrag : airDrag;
         }
     }
 
@@ -362,6 +388,18 @@ public class RigidBodyController : MonoBehaviour {
             moveDelta += dirRot * right * axis.x;
 
         mCurMoveDir = moveDelta.normalized;
+
+        //allow for moving diagonally downwards
+        //TODO: test for non-platformer
+        if(isGrounded) {
+            foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
+                if(pair.Value.flag == CollisionFlags.Below) {
+                    moveDelta = M8.MathUtil.Slide(moveDelta, pair.Value.normal);
+                    mCurMoveDir = moveDelta.normalized;
+                    break;
+                }
+            }
+        }
 
         //check if we need to slide off walls
         /*foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
@@ -426,13 +464,16 @@ public class RigidBodyController : MonoBehaviour {
 
             mCollFlags |= pair.Value.flag;
 
-            if(flag == CollisionFlags.Below) {
+            //sliding
+            if(flag == CollisionFlags.Below || flag == CollisionFlags.Sides) {
                 if(!groundNoSlope) {
                     float a = Vector3.Angle(up, n);
-                    mIsSlopSlide = a > slopLimit;
-                    if(mIsSlopSlide)
+                    mIsSlopSlide = a > slopLimit && a <= slideLimit;
+                    if(mIsSlopSlide) {
+                        //Debug.Log("a: " + a);
                         mSlopNormal = n;
-                    else {
+                    }
+                    else if(flag == CollisionFlags.Below) {
                         mIsSlopSlide = false;
                         groundNoSlope = true;
                     }

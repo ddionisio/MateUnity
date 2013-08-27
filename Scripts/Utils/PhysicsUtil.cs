@@ -31,6 +31,29 @@ namespace M8 {
             return GetCollisionFlagsSphereCos(up, center, defaultSphereCosCheck, contactPoint);
         }
 
+        public static CollisionFlags GetCollisionFlagsCapsule(Transform t, float height, float radius, float distOfs, Vector3 localCenter, Vector3 contactPoint) {
+            CollisionFlags ret = CollisionFlags.None;
+
+            float midLine = (height - (radius * 2.0f)) * 0.5f + distOfs;
+
+            Vector3 lp = t.worldToLocalMatrix.MultiplyPoint(contactPoint) - localCenter;
+
+
+            if(lp.y > midLine) {
+                ret |= CollisionFlags.Above;
+                //Debug.Log("lp: " + lp);
+            }
+
+            if(lp.y < -midLine) {
+                ret |= CollisionFlags.Below;
+            }
+
+            if(lp.y >= -midLine && lp.y <= midLine)
+                ret |= CollisionFlags.Sides;
+
+            return ret;
+        }
+
         public static CollisionFlags GetCollisionFlagsCapsule(Vector3 up, Vector3 scale, Vector3 center, float height, float radius, Vector3 contactPoint) {
             Vector3 p = (up * ((height - (radius * 2.0f)) * 0.5f));
             p = Vector3.Scale(p, scale);
