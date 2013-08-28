@@ -21,7 +21,7 @@ public class RigidBodyController : MonoBehaviour {
     public delegate void CollisionCallbackEvent(RigidBodyController controller, Collision col);
 
     public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
-                                //you'll want this as an attach for camera as well.
+    //you'll want this as an attach for camera as well.
 
     public float moveForce = 50.0f;
     public float moveAirForce = 20.0f;
@@ -29,10 +29,11 @@ public class RigidBodyController : MonoBehaviour {
 
     public float slopSlideForce = 20.0f;
 
+    public float airMaxSpeed = 1.5f;
     public float airDrag = 0.015f; //if there is no ground collision, this is the drag
-    
+
     public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
-    
+
     public float standDrag = 10.0f;
     public LayerMask standDragLayer;
 
@@ -44,14 +45,15 @@ public class RigidBodyController : MonoBehaviour {
     public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag
     public float slideLimit = 75.0f;
 
-    public float capsuleCollisionDistOfs = 0.15f; //offset for the center line of the capsule to avoid marking collision as top/bottom
+    public float capsuleCollisionAbove = 0.15f; //offset for the center line of the capsule to avoid marking collision as top/bottom
+    public float capsuleCollisionBelow = 0.01f; //offset for the center line of the capsule to avoid marking collision as top/bottom
     public float sphereCollisionAngle = 30.0f; //criteria to determine collision flag
 
     public event CallbackEvent waterEnterCallback;
     public event CallbackEvent waterExitCallback;
     public event CollisionCallbackEvent collisionEnterCallback;
     public event CollisionCallbackEvent collisionStayCallback;
-        
+
     private Vector2 mCurMoveAxis;
     private Vector3 mCurMoveDir;
 
@@ -81,7 +83,7 @@ public class RigidBodyController : MonoBehaviour {
     private CapsuleCollider mCapsuleColl;
 
     private bool mLockDrag = false;
-        
+
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
@@ -91,7 +93,7 @@ public class RigidBodyController : MonoBehaviour {
     /// Use this to override the rigidbody's drag such that ground/air/stand drag is ignored
     /// </summary>
     public bool lockDrag { get { return mLockDrag; } set { mLockDrag = value; } }
-    
+
     public Vector3 moveDir { get { return mCurMoveDir; } }
     public CollisionFlags collisionFlags { get { return mCollFlags; } }
     public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
@@ -101,7 +103,7 @@ public class RigidBodyController : MonoBehaviour {
     public Vector3 groundMoveVelocity { get { return mGroundMoveVel; } }
     public GravityController gravityController { get { return mGravCtrl; } }
     public Vector3 localVelocity { get { return mLocalVelocity; } }
-    
+
     /// <summary>
     /// Get the first occurence of CollideInfo based on given flags
     /// </summary>
@@ -177,7 +179,7 @@ public class RigidBodyController : MonoBehaviour {
 
     CollisionFlags GenCollFlag(Vector3 up, Vector3 pos, Vector3 contactPt) {
         if(mCapsuleColl) {
-            return M8.PhysicsUtil.GetCollisionFlagsCapsule(transform, mCapsuleColl.height, mRadius, capsuleCollisionDistOfs, mCapsuleColl.center, contactPt);
+            return M8.PhysicsUtil.GetCollisionFlagsCapsule(transform, mCapsuleColl.height, mRadius, capsuleCollisionAbove, capsuleCollisionBelow, mCapsuleColl.center, contactPt);
             //return M8.PhysicsUtil.GetCollisionFlagsCapsule(up, transform.localScale, pos, mCapsuleColl.height, mRadius*0.9f, contactPt);
         }
         else {
@@ -254,7 +256,7 @@ public class RigidBodyController : MonoBehaviour {
 
     void OnCollisionExit(Collision col) {
         //Debug.Log("exit: " + col.gameObject.name);
-        
+
         foreach(ContactPoint contact in col.contacts) {
             //Debug.Log("exit other coll: " + contact.otherCollider.name);
             //Debug.Log("exit this coll: " + contact.thisCollider.name);
@@ -317,7 +319,7 @@ public class RigidBodyController : MonoBehaviour {
         waterEnterCallback = null;
         waterExitCallback = null;
     }
-        
+
     protected virtual void Awake() {
         mGravCtrl = GetComponent<GravityController>();
 
@@ -389,6 +391,8 @@ public class RigidBodyController : MonoBehaviour {
 
         mCurMoveDir = moveDelta.normalized;
 
+        float maxSpeed = 0.0f;
+
         //allow for moving diagonally downwards
         //TODO: test for non-platformer
         if(isGrounded) {
@@ -399,6 +403,11 @@ public class RigidBodyController : MonoBehaviour {
                     break;
                 }
             }
+
+            maxSpeed = moveMaxSpeed;
+        }
+        else {
+            maxSpeed = airMaxSpeed;
         }
 
         //check if we need to slide off walls
@@ -416,8 +425,8 @@ public class RigidBodyController : MonoBehaviour {
         //M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
 
         //check if we can move based on speed or if going against new direction
-        bool canMove = CanMove();
-        
+        bool canMove = CanMove(mCurMoveDir, maxSpeed);
+
         if(canMove) {
             //M8.Debug.
             rigidbody.AddForce(moveDelta * force);
@@ -427,16 +436,16 @@ public class RigidBodyController : MonoBehaviour {
         return false;
     }
 
-    protected virtual bool CanMove() {
+    protected virtual bool CanMove(Vector3 dir,  float maxSpeed) {
         Vector3 vel = rigidbody.velocity - mGroundMoveVel;
         float sqrMag = vel.sqrMagnitude;
 
-        bool ret = sqrMag < moveMaxSpeed * moveMaxSpeed;
+        bool ret = sqrMag < maxSpeed * maxSpeed;
 
         //see if we are trying to move the opposite dir
         if(!ret) { //see if we are trying to move the opposite dir
             Vector3 velDir = rigidbody.velocity.normalized;
-            ret = Vector3.Dot(mCurMoveDir, velDir) < moveCosCheck;
+            ret = Vector3.Dot(dir, velDir) < moveCosCheck;
         }
 
         return ret;

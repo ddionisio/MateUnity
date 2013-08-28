@@ -384,6 +384,9 @@ public class InputManager : MonoBehaviour {
     }
 
     public bool IsDown(int player, int action) {
+        if(action == ActionInvalid)
+            return false;
+
         Key[] keys = mBinds[action].players[player].keys;
 
         foreach(Key key in keys) {

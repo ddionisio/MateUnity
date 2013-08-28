@@ -27,6 +27,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
         }
     }
 
+    public bool gravityOverride = false; //if true, use the gravity value to controller
     public float gravity = -9.8f;
     public bool retainGravity = false; //if true, then gravity and up orientation of GravityController will persist when it exits the field
     public bool isGlobal = false; //check as the default gravity field, there should only be one of these.
@@ -133,7 +134,8 @@ public abstract class GravityFieldBase : MonoBehaviour {
 
                     ctrl.up = GetUpVector(t);
 
-                    ctrl.gravity = gravity;
+                    if(gravityOverride)
+                        ctrl.gravity = gravity;
                 }
             }
 
