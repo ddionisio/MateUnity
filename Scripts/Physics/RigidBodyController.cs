@@ -42,12 +42,9 @@ public class RigidBodyController : MonoBehaviour {
     public string waterTag = "Water";
     public LayerMask waterLayer;
 
-    public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag
+    public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag, also determines collideflag below
+    public float aboveLimit = 145.0f; //determines collideflag above, should be > 90, around 140'ish
     public float slideLimit = 75.0f;
-
-    public float capsuleCollisionAbove = 0.15f; //offset for the center line of the capsule to avoid marking collision as top/bottom
-    public float capsuleCollisionBelow = 0.01f; //offset for the center line of the capsule to avoid marking collision as top/bottom
-    public float sphereCollisionAngle = 30.0f; //criteria to determine collision flag
 
     public event CallbackEvent waterEnterCallback;
     public event CallbackEvent waterExitCallback;
@@ -63,7 +60,8 @@ public class RigidBodyController : MonoBehaviour {
     private CollisionFlags mCollFlags;
     private int mCollGroundLayerMask = 0;
 
-    private float mTopBottomColCos;
+    private float mSlopLimitCos;
+    private float mAboveLimitCos;
 
     private bool mIsSlopSlide;
     private Vector3 mSlopNormal;
@@ -177,14 +175,28 @@ public class RigidBodyController : MonoBehaviour {
         mCollFlags = 0;
     }
 
-    CollisionFlags GenCollFlag(Vector3 up, Vector3 pos, Vector3 contactPt) {
+    CollisionFlags GenCollFlag(Vector3 up, ContactPoint contact) {
+
+        float dot = Vector3.Dot(up, contact.normal);
+
+        //Debug.Log("dot: " + dot);
+        //Debug.Log("deg: " + (Mathf.Acos(dot)*Mathf.Rad2Deg));
+
+        if(dot >= mSlopLimitCos)
+            return CollisionFlags.Below;
+        else if(dot <= mAboveLimitCos)
+            return CollisionFlags.Above;
+
+        return CollisionFlags.Sides;
+        /*if((
+
         if(mCapsuleColl) {
-            return M8.PhysicsUtil.GetCollisionFlagsCapsule(transform, mCapsuleColl.height, mRadius, capsuleCollisionAbove, capsuleCollisionBelow, mCapsuleColl.center, contactPt);
+            return M8.PhysicsUtil.GetCollisionFlagsCapsule(transform, mCapsuleColl.height, mRadius, capsuleCollisionAbove, capsuleCollisionBelow, mCapsuleColl.center, contact.point);
             //return M8.PhysicsUtil.GetCollisionFlagsCapsule(up, transform.localScale, pos, mCapsuleColl.height, mRadius*0.9f, contactPt);
         }
         else {
-            return M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contactPt);
-        }
+            return M8.PhysicsUtil.GetCollisionFlagsSphereCos(up, pos, mTopBottomColCos, contact.point);
+        }*/
     }
 
     void OnCollisionEnter(Collision col) {
@@ -202,7 +214,7 @@ public class RigidBodyController : MonoBehaviour {
         //mColls.Clear();
 
         Vector3 up = transform.up;
-        Vector3 pos = collider.bounds.center;
+        //Vector3 pos = collider.bounds.center;
 
         foreach(ContactPoint contact in col.contacts) {
             if(contact.thisCollider != collider)
@@ -211,7 +223,7 @@ public class RigidBodyController : MonoBehaviour {
             if(!mColls.ContainsKey(contact.otherCollider)) {
                 //mColls.Add(contact.otherCollider, contact);
 
-                CollisionFlags colFlag = GenCollFlag(up, pos, contact.point);
+                CollisionFlags colFlag = GenCollFlag(up, contact);
 
                 mColls.Add(contact.otherCollider, new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
             }
@@ -230,14 +242,14 @@ public class RigidBodyController : MonoBehaviour {
         }
 
         Vector3 up = transform.up;
-        Vector3 pos = collider.bounds.center;
+        //Vector3 pos = collider.bounds.center;
 
         //refresh contact infos
         foreach(ContactPoint contact in col.contacts) {
             if(contact.thisCollider != collider)
                 continue;
 
-            CollisionFlags colFlag = GenCollFlag(up, pos, contact.point);
+            CollisionFlags colFlag = GenCollFlag(up, contact);
 
             if(mColls.ContainsKey(contact.otherCollider)) {
                 mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
@@ -323,7 +335,9 @@ public class RigidBodyController : MonoBehaviour {
     protected virtual void Awake() {
         mGravCtrl = GetComponent<GravityController>();
 
-        mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
+        //mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
+        mSlopLimitCos = Mathf.Cos(slopLimit * Mathf.Deg2Rad);
+        mAboveLimitCos = Mathf.Cos(aboveLimit * Mathf.Deg2Rad);
 
         if(collider != null) {
             if(collider is SphereCollider)
@@ -341,7 +355,9 @@ public class RigidBodyController : MonoBehaviour {
     // Update is called once per frame
     protected virtual void FixedUpdate() {
 #if UNITY_EDITOR
-        mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
+        //mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
+        mSlopLimitCos = Mathf.Cos(slopLimit * Mathf.Deg2Rad);
+        mAboveLimitCos = Mathf.Cos(aboveLimit * Mathf.Deg2Rad);
 #endif
         ComputeLocalVelocity();
 
@@ -436,7 +452,7 @@ public class RigidBodyController : MonoBehaviour {
         return false;
     }
 
-    protected virtual bool CanMove(Vector3 dir,  float maxSpeed) {
+    protected virtual bool CanMove(Vector3 dir, float maxSpeed) {
         Vector3 vel = rigidbody.velocity - mGroundMoveVel;
         float sqrMag = vel.sqrMagnitude;
 

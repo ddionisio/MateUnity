@@ -16,8 +16,8 @@ public class GravityController : MonoBehaviour {
     private WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
 
     private GravityFieldBase mGravityField; //which field we are currently attached to
-    private GravityFieldBase mGravityFieldPrev; //for gravity field that retains, overwritten by a new gravity field
     private Vector3 mUp;
+    private bool mStarted;
 
     public Vector3 up {
         get { return mUp; }
@@ -37,10 +37,20 @@ public class GravityController : MonoBehaviour {
         } 
     }
 
+    void OnEnable() {
+        if(mStarted) {
+            Init();
+        }
+    }
+
     void OnDisable() {
         if(mIsOrienting) {
             mIsOrienting = false;
             transform.up = mUp;
+        }
+
+        if(mGravityField) {
+            mGravityField.RemoveItem(collider, false);
         }
     }
 
@@ -48,8 +58,7 @@ public class GravityController : MonoBehaviour {
         rigidbody.useGravity = false;
     }
 
-    // Use this for initialization
-    void Start() {
+    void Init() {
         if(GravityFieldBase.global != null)
             GravityFieldBase.global.Add(this);
 
@@ -59,6 +68,12 @@ public class GravityController : MonoBehaviour {
         else {
             mUp = transform.up;
         }
+    }
+
+    // Use this for initialization
+    void Start() {
+        mStarted = true;
+        Init();
     }
 
     // Update is called once per frame
