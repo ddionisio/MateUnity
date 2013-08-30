@@ -11,9 +11,9 @@ public class GravityController : MonoBehaviour {
 
     public float orientationSpeed = 90.0f;
 
-    private bool mIsOrienting;
-    private Quaternion mRotateTo;
-    private WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
+    protected bool mIsOrienting;
+    protected Quaternion mRotateTo;
+    protected WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
 
     private GravityFieldBase mGravityField; //which field we are currently attached to
     private Vector3 mUp;
@@ -53,9 +53,30 @@ public class GravityController : MonoBehaviour {
             mGravityField.RemoveItem(collider, false);
         }
     }
-
-    void Awake() {
+    
+    protected virtual void Awake() {
         rigidbody.useGravity = false;
+    }
+
+    // Use this for initialization
+    protected virtual void Start() {
+        mStarted = true;
+        Init();
+    }
+
+    // Update is called once per frame
+    protected virtual void FixedUpdate() {
+        rigidbody.AddForce(mUp * gravity * rigidbody.mass, ForceMode.Force);
+    }
+
+    protected virtual void ApplyUp() {
+        if(orientUp) {
+            //TODO: figure out better math
+            if(M8.MathUtil.RotateToUp(mUp, -transform.right, transform.forward, ref mRotateTo)) {
+                if(!mIsOrienting)
+                    StartCoroutine(OrientUp());
+            }
+        }
     }
 
     void Init() {
@@ -70,28 +91,7 @@ public class GravityController : MonoBehaviour {
         }
     }
 
-    // Use this for initialization
-    void Start() {
-        mStarted = true;
-        Init();
-    }
-
-    // Update is called once per frame
-    void FixedUpdate() {
-        rigidbody.AddForce(mUp * gravity * rigidbody.mass, ForceMode.Force);
-    }
-
-    void ApplyUp() {
-        if(orientUp) {
-            //TODO: figure out better math
-            if(M8.MathUtil.RotateToUp(mUp, -transform.right, transform.forward, ref mRotateTo)) {
-                if(!mIsOrienting)
-                    StartCoroutine(OrientUp());
-            }
-        }
-    }
-
-    IEnumerator OrientUp() {
+    protected IEnumerator OrientUp() {
         mIsOrienting = true;
 
         while(transform.up != mUp) {
