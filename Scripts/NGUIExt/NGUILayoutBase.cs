@@ -35,6 +35,12 @@ public abstract class NGUILayoutBase : MonoBehaviour {
         }
     }
 
+    public static IEnumerator RefreshLate(Transform t) {
+        yield return new WaitForFixedUpdate();
+
+        RefreshNow(t);
+    }
+
     public abstract void Reposition();
 
     protected virtual void OnEnable() {
