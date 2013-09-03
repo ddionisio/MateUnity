@@ -19,6 +19,7 @@ public class RigidBodyController : MonoBehaviour {
 
     public delegate void CallbackEvent(RigidBodyController controller);
     public delegate void CollisionCallbackEvent(RigidBodyController controller, Collision col);
+    public delegate void TriggerCallbackEvent(RigidBodyController controller, Collider col);
 
     public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
     //you'll want this as an attach for camera as well.
@@ -50,6 +51,7 @@ public class RigidBodyController : MonoBehaviour {
     public event CallbackEvent waterExitCallback;
     public event CollisionCallbackEvent collisionEnterCallback;
     public event CollisionCallbackEvent collisionStayCallback;
+    public event TriggerCallbackEvent triggerEnterCallback;
 
     private Vector2 mCurMoveAxis;
     private Vector3 mCurMoveDir;
@@ -293,6 +295,10 @@ public class RigidBodyController : MonoBehaviour {
             if(waterEnterCallback != null)
                 waterEnterCallback(this);
         }
+        else {
+            if(triggerEnterCallback != null)
+                triggerEnterCallback(this, col);
+        }
     }
 
     protected virtual void OnTriggerStay(Collider col) {
@@ -330,6 +336,7 @@ public class RigidBodyController : MonoBehaviour {
         collisionStayCallback = null;
         waterEnterCallback = null;
         waterExitCallback = null;
+        triggerEnterCallback = null;
     }
 
     protected virtual void Awake() {
