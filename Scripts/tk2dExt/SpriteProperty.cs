@@ -6,7 +6,7 @@ using System.Collections;
 public class SpriteProperty : MonoBehaviour {
 
     private tk2dBaseSprite mSprite;
-    private int mSpriteId;
+    //private int mSpriteId;
 
     public string spriteName {
         get {
@@ -15,12 +15,12 @@ public class SpriteProperty : MonoBehaviour {
 
         set {
             mSprite.SetSprite(value);
-            mSpriteId = mSprite.spriteId;
+            //mSpriteId = mSprite.spriteId;
         }
     }
 
     void Awake() {
         mSprite = GetComponent<tk2dBaseSprite>();
-        mSpriteId = mSprite.spriteId;
+        //mSpriteId = mSprite.spriteId;
     }
 }

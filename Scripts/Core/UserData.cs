@@ -191,12 +191,12 @@ public class UserData : MonoBehaviour {
     protected virtual void Awake() {
         if(mInstance == null)
             mInstance = this;
+
+        if(loadOnStart)
+            Load();
     }
 
     protected virtual void Start() {
         mStarted = true;
-
-        if(loadOnStart)
-            Load();
     }
 }

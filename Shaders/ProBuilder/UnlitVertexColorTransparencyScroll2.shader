@@ -16,8 +16,8 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency Scroll 2" {
 
     //ZWrite Off // on might hide behind pixels, off might miss order
     //Blend SrcAlpha OneMinusSrcAlpha
-	Blend SrcAlpha OneMinusSrcAlpha
-	//Blend One One
+	//Blend SrcAlpha OneMinusSrcAlpha
+	Blend One One
     ColorMask RGB
 	Lighting Off Fog { Mode Off }
 
@@ -82,7 +82,7 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency Scroll 2" {
 				return col1 * i.color;
 			}
 			else {
-				fixed4 col = fixed4(col1.r + col2.r*col2.a, col1.g + col2.g*col2.a, col1.b + col2.b*col2.a, col1.a);
+				fixed4 col = fixed4(col1.r + col2.r*col2.a, col1.g + col2.g*col2.a, col1.b + col2.b*col2.a, col1.a*col2.a);
 				return col * i.color;
 			}
 		}
