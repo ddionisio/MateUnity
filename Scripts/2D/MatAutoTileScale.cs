@@ -17,6 +17,12 @@ public class MatAutoTileScale : MonoBehaviour {
     [SerializeField]
     Color _color = Color.white;
 
+    [SerializeField]
+    bool _flipX = false;
+
+    [SerializeField]
+    bool _flipY = false;
+
     private Color mColor;
     private Transform mTrans = null;
     private Material mMat = null;
@@ -59,11 +65,14 @@ public class MatAutoTileScale : MonoBehaviour {
         if(mMat != null) {
             Vector2 s = mTrans.localScale;
             if(mCurScale.x != s.x) {
-                mMat.SetFloat("tileX", s.x * (pixelPerUnit / mTextureSize.x));
+                //_flipX
+                float tileX = s.x * (pixelPerUnit / mTextureSize.x);
+                mMat.SetFloat("tileX", _flipX ? -tileX : tileX);
                 mCurScale.x = s.x;
             }
             if(mCurScale.y != s.y) {
-                mMat.SetFloat("tileY", s.y * (pixelPerUnit / mTextureSize.y));
+                float tileY = s.y * (pixelPerUnit / mTextureSize.y);
+                mMat.SetFloat("tileY", _flipY ? -tileY : tileY);
                 mCurScale.y = s.y;
             }
         }

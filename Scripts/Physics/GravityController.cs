@@ -15,9 +15,12 @@ public class GravityController : MonoBehaviour {
     protected Quaternion mRotateTo;
     protected WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
 
+    private bool mGravityLocked = false;
     private GravityFieldBase mGravityField; //which field we are currently attached to
     private Vector3 mUp;
     private bool mStarted;
+
+    public bool gravityLocked { get { return mGravityLocked; } set { mGravityLocked = value; } }
 
     public Vector3 up {
         get { return mUp; }
@@ -66,7 +69,8 @@ public class GravityController : MonoBehaviour {
 
     // Update is called once per frame
     protected virtual void FixedUpdate() {
-        rigidbody.AddForce(mUp * gravity * rigidbody.mass, ForceMode.Force);
+        if(!mGravityLocked)
+            rigidbody.AddForce(mUp * gravity * rigidbody.mass, ForceMode.Force);
     }
 
     protected virtual void ApplyUp() {

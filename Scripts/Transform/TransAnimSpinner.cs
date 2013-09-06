@@ -7,6 +7,12 @@ public class TransAnimSpinner : MonoBehaviour {
     public Vector3 rotatePerSecond;
     public bool local = true;
 
+    private Vector3 mEulerAnglesOrig;
+
+    void OnEnable() {
+        mEulerAnglesOrig = transform.eulerAngles;
+    }
+
     // Use this for initialization
     void Start() {
 
@@ -18,7 +24,8 @@ public class TransAnimSpinner : MonoBehaviour {
             transform.localEulerAngles = transform.localEulerAngles + rotatePerSecond * Time.deltaTime;
         }
         else {
-            transform.eulerAngles = transform.eulerAngles + rotatePerSecond * Time.deltaTime;
+            mEulerAnglesOrig += rotatePerSecond * Time.deltaTime;
+            transform.eulerAngles = mEulerAnglesOrig;
         }
     }
 }
