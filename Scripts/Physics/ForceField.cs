@@ -24,6 +24,9 @@ public class ForceField : MonoBehaviour {
 
     public float force;
 
+    public bool dragSet;
+    public float drag;
+
     [SerializeField]
     float _updateDelay = 0.2f;
 
@@ -126,6 +129,9 @@ public class ForceField : MonoBehaviour {
             foreach(Rigidbody body in mBodies) {
                 Vector3 dir = inverse ? pos - body.position : body.position - pos;
                 dir.Normalize();
+
+                if(dragSet)
+                    body.drag = drag;
 
                 body.AddForce(dir * force, ForceMode.Force);
             }

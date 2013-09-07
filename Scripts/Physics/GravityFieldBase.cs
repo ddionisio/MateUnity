@@ -34,16 +34,31 @@ public abstract class GravityFieldBase : MonoBehaviour {
     public float updateDelay = 0.0f;
 
     private static GravityFieldBase mGlobal = null;
-    
-    private Dictionary<Collider, ItemData> mItems = new Dictionary<Collider,ItemData>(16);
 
-    private YieldInstruction mWaitDelay;
+    private Dictionary<Collider, ItemData> mItems = new Dictionary<Collider, ItemData>(16);
+
+    private bool mIsProcessing = false;
 
     public static GravityFieldBase global { get { return mGlobal; } }
 
     public void Add(GravityController ctrl) {
-        mItems.Add(ctrl.collider, new ItemData(ctrl));
-        ctrl.gravityField = this;
+        if(!mItems.ContainsKey(ctrl.collider) && ctrl.rigidbody != null && !ctrl.rigidbody.isKinematic) {
+            if(ctrl.gravityField != null) { //another field holds the item, transfer ownership
+                ItemData item = ctrl.gravityField.RemoveItem(ctrl.collider, false);
+                if(item.controller != null) {//invalid for some reason?
+
+                    mItems.Add(ctrl.collider, item);
+                    if(!mIsProcessing) StartCoroutine(DoEval());
+
+                    ctrl.gravityField = this;
+                }
+            }
+            else {
+                mItems.Add(ctrl.collider, new ItemData(ctrl));
+                if(!mIsProcessing) StartCoroutine(DoEval());
+                ctrl.gravityField = this;
+            }
+        }
     }
 
     /// <summary>
@@ -71,6 +86,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
         if(mGlobal == this)
             mGlobal = null;
 
+        mIsProcessing = false;
         StopAllCoroutines();
     }
 
@@ -78,31 +94,15 @@ public abstract class GravityFieldBase : MonoBehaviour {
         if(isGlobal)
             mGlobal = this;
 
-        if(mWaitDelay == null) {
-            if(updateDelay > 0.0f)
-                mWaitDelay = new WaitForSeconds(updateDelay);
-            else
-                mWaitDelay = new WaitForFixedUpdate();
-        }
-
-        StartCoroutine(DoEval());
+        if(mItems.Count > 0 && !mIsProcessing)
+            StartCoroutine(DoEval());
     }
 
     void OnTriggerEnter(Collider col) {
         if(!mItems.ContainsKey(col)) {
             GravityController ctrl = col.GetComponent<GravityController>();
-            if(ctrl != null && col.rigidbody != null && !col.rigidbody.isKinematic) {
-                if(ctrl.gravityField != null) { //another field holds the item, transfer ownership
-                    ItemData item = ctrl.gravityField.RemoveItem(col, false);
-                    if(item.controller != null) {//invalid for some reason?
-                        mItems.Add(col, item);
-                        ctrl.gravityField = this;
-                    }
-                }
-                else {
-                    Add(ctrl);
-                }
-            }
+            if(ctrl != null)
+                Add(ctrl);
         }
     }
 
@@ -110,7 +110,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
         ItemData itm;
         if(mItems.TryGetValue(col, out itm)) {
             mItems.Remove(col);
-                        
+
             if(!retainGravity) {
                 itm.Restore();
             }
@@ -118,6 +118,8 @@ public abstract class GravityFieldBase : MonoBehaviour {
             //add to global
             if(mGlobal != null) {
                 mGlobal.mItems.Add(col, itm);
+                if(!mIsProcessing) StartCoroutine(DoEval());
+
                 itm.controller.gravityField = mGlobal;
             }
             else
@@ -126,8 +128,19 @@ public abstract class GravityFieldBase : MonoBehaviour {
     }
 
     IEnumerator DoEval() {
-        while(true) {
+        mIsProcessing = true;
+
+        YieldInstruction wait;
+        if(updateDelay > 0.0f)
+            wait = new WaitForSeconds(updateDelay);
+        else
+            wait = new WaitForFixedUpdate();
+
+        while(mItems.Count > 0) {
             foreach(KeyValuePair<Collider, ItemData> pair in mItems) {
+                if(!pair.Key)
+                    continue;
+
                 GravityController ctrl = pair.Value.controller;
                 if(ctrl.enabled) {
                     Transform t = ctrl.transform;
@@ -139,7 +152,9 @@ public abstract class GravityFieldBase : MonoBehaviour {
                 }
             }
 
-            yield return mWaitDelay;
+            yield return wait;
         }
+
+        mIsProcessing = false;
     }
 }
