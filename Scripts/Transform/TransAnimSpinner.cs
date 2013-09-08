@@ -20,12 +20,27 @@ public class TransAnimSpinner : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if(local) {
-            transform.localEulerAngles = transform.localEulerAngles + rotatePerSecond * Time.deltaTime;
+        if(rigidbody == null) {
+            if(local) {
+                transform.localEulerAngles = transform.localEulerAngles + rotatePerSecond * Time.deltaTime;
+            }
+            else {
+                mEulerAnglesOrig += rotatePerSecond * Time.deltaTime;
+                transform.eulerAngles = mEulerAnglesOrig;
+            }
         }
-        else {
-            mEulerAnglesOrig += rotatePerSecond * Time.deltaTime;
-            transform.eulerAngles = mEulerAnglesOrig;
+    }
+
+    void FixedUpdate() {
+        if(rigidbody != null) {
+            if(local) {
+                Vector3 eulers = transform.eulerAngles;
+                rigidbody.MoveRotation(Quaternion.Euler(eulers + rotatePerSecond * Time.fixedDeltaTime));
+            }
+            else {
+                mEulerAnglesOrig += rotatePerSecond * Time.fixedDeltaTime;
+                rigidbody.MoveRotation(Quaternion.Euler(mEulerAnglesOrig));
+            }
         }
     }
 }

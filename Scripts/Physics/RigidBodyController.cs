@@ -219,15 +219,16 @@ public class RigidBodyController : MonoBehaviour {
         //Vector3 pos = collider.bounds.center;
 
         foreach(ContactPoint contact in col.contacts) {
-            if(contact.thisCollider != collider)
-                continue;
+            Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
+            //if(contact.thisCollider != collider)
+                //continue;
 
-            if(!mColls.ContainsKey(contact.otherCollider)) {
+            if(!mColls.ContainsKey(whichColl)) {
                 //mColls.Add(contact.otherCollider, contact);
 
                 CollisionFlags colFlag = GenCollFlag(up, contact);
 
-                mColls.Add(contact.otherCollider, new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
+                mColls.Add(whichColl, new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
             }
         }
 
@@ -248,16 +249,17 @@ public class RigidBodyController : MonoBehaviour {
 
         //refresh contact infos
         foreach(ContactPoint contact in col.contacts) {
-            if(contact.thisCollider != collider)
-                continue;
+            Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
+            //if(contact.thisCollider != collider)
+                //continue;
 
             CollisionFlags colFlag = GenCollFlag(up, contact);
 
-            if(mColls.ContainsKey(contact.otherCollider)) {
-                mColls[contact.otherCollider] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
+            if(mColls.ContainsKey(whichColl)) {
+                mColls[whichColl] = new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point };
             }
             else {
-                mColls.Add(contact.otherCollider, new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
+                mColls.Add(whichColl, new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
             }
         }
 
