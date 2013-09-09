@@ -8,6 +8,7 @@ using System.Collections;
 [AddComponentMenu("M8/Physics/RigidBodyMoveToTarget")]
 public class RigidBodyMoveToTarget : MonoBehaviour {
     public Transform target;
+    public Vector3 offset;
 
 #if UNITY_EDITOR
     // Update is called once per frame
@@ -16,7 +17,7 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
             if(collider != null) {
                 Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
 
-                transform.position = target.localToWorldMatrix.MultiplyPoint(-ofs);
+                transform.position = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
             }
             else {
                 transform.position = target.position;
@@ -30,7 +31,7 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
     void FixedUpdate() {
         if(collider != null) {
             Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
-            rigidbody.MovePosition(target.localToWorldMatrix.MultiplyPoint(-ofs));
+            rigidbody.MovePosition(target.localToWorldMatrix.MultiplyPoint(offset - ofs));
         }
         else
             rigidbody.MovePosition(target.position);
