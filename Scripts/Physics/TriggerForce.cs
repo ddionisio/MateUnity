@@ -21,6 +21,9 @@ public class TriggerForce : MonoBehaviour {
     [SerializeField]
     Axis _dir;
 
+    [SerializeField]
+    string[] _tags;
+
     public bool inverse;
     public bool resetVelocityByAxis;
 
@@ -42,7 +45,9 @@ public class TriggerForce : MonoBehaviour {
         if(!mColliders.Contains(col)) {
             Rigidbody body = col.rigidbody;
 
-            if(body != null && !body.isKinematic) {
+            if(body != null && !body.isKinematic && (_tags.Length == 0 || _tags.Contains(col.gameObject.tag))) {
+                //check tags
+
                 Vector3 dir;
                 switch(_dir) {
                     case Axis.Right:

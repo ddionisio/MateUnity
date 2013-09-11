@@ -70,7 +70,7 @@ public class GravityController : MonoBehaviour {
     // Update is called once per frame
     protected virtual void FixedUpdate() {
         if(!mGravityLocked)
-            rigidbody.AddForce(mUp * gravity * rigidbody.mass, ForceMode.Force);
+            rigidbody.AddForce(mUp * gravity, ForceMode.Acceleration);
     }
 
     protected virtual void ApplyUp() {
