@@ -3,9 +3,9 @@ using System.Collections;
 
 [AddComponentMenu("M8/Transform/AnimSpinner")]
 public class TransAnimSpinner : MonoBehaviour {
-
     public Vector3 rotatePerSecond;
     public bool local = true;
+    public bool forceFixedUpdate;
 
     private Vector3 mEulerAnglesOrig;
 
@@ -40,6 +40,15 @@ public class TransAnimSpinner : MonoBehaviour {
             else {
                 mEulerAnglesOrig += rotatePerSecond * Time.fixedDeltaTime;
                 rigidbody.MoveRotation(Quaternion.Euler(mEulerAnglesOrig));
+            }
+        }
+        else if(forceFixedUpdate) {
+            if(local) {
+                transform.localEulerAngles = transform.localEulerAngles + rotatePerSecond * Time.fixedDeltaTime;
+            }
+            else {
+                mEulerAnglesOrig += rotatePerSecond * Time.fixedDeltaTime;
+                transform.eulerAngles = mEulerAnglesOrig;
             }
         }
     }

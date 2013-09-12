@@ -59,8 +59,8 @@ public class RigidBodyController : MonoBehaviour {
     //private HashSet<Collider> mColls = new HashSet<Collider>();
     protected Dictionary<Collider, CollideInfo> mColls = new Dictionary<Collider, CollideInfo>(16);
 
-    private CollisionFlags mCollFlags;
-    private int mCollGroundLayerMask = 0;
+    protected CollisionFlags mCollFlags;
+    protected int mCollGroundLayerMask = 0;
 
     private float mSlopLimitCos;
     private float mAboveLimitCos;
@@ -525,6 +525,6 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected void ComputeLocalVelocity() {
-        mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(rigidbody.velocity - mGroundMoveVel);
+        mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(rigidbody.velocity);
     }
 }
