@@ -29,12 +29,17 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
 #endif
 
     void FixedUpdate() {
+        Vector3 newPos;
+
         if(collider != null) {
             Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
-            rigidbody.MovePosition(target.localToWorldMatrix.MultiplyPoint(offset - ofs));
+            newPos = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
         }
         else
-            rigidbody.MovePosition(target.position);
+            newPos = target.position;
+
+        if(transform.position != newPos)
+            rigidbody.MovePosition(newPos);
 
         rigidbody.MoveRotation(target.rotation);
     }

@@ -9,7 +9,7 @@ using System.Collections;
 ///</summary>
 [AddComponentMenu("M8/Entity/EntityActivator")]
 public class EntityActivator : MonoBehaviour {
-    public const string ActivatorHolderTag = "ActivatorHolder"; //make sure this is in the scene root
+    //public const string ActivatorHolderTag = "ActivatorHolder"; //make sure this is in the scene root
 
     public delegate void Callback();
 
@@ -18,6 +18,8 @@ public class EntityActivator : MonoBehaviour {
 
     public event Callback awakeCallback;
     public event Callback sleepCallback;
+
+    private static GameObject mActivatorGO;
 
     private bool mIsActive = true;
     private GameObject mParentGo;
@@ -33,8 +35,15 @@ public class EntityActivator : MonoBehaviour {
     /// Initialize, call this when you are about to be re-added to the scene
     /// </summary>
     public void Start() {
-        GameObject go = GameObject.FindGameObjectWithTag(ActivatorHolderTag);
-        mActivatorHolder = go != null ? go.transform : null;
+        //if(mActivatorGO == null) {
+            //mActivatorGO = GameObject.FindGameObjectWithTag(ActivatorHolderTag);
+            if(mActivatorGO == null) {
+                mActivatorGO = new GameObject("_activate");
+                //mActivatorGO.tag = ActivatorHolderTag;
+            }
+        //}
+
+        mActivatorHolder = mActivatorGO.transform;
 
         if(deactivateOnStart) {
             DoInActive(false);
