@@ -21,4 +21,5 @@ public struct EntityEvent {
     public const string Save = "EntitySave"; //if there is a need to save some states for later restore
     public const string Interact = "EntityInteract"; //when player interacts with entity, will attempt to set FSM's the variable 'interact' game object if available
     public const string Hit = "EntityHit"; //generic 'hit'
+    public const string Contact = "EntityContact"; //generic 'contact'
 }

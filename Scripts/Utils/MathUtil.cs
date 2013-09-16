@@ -112,6 +112,28 @@ namespace M8 {
 
         //-------------- 3D --------------
 
+        /// <summary>
+        /// Caps given destDir with angleLimit (degree) of srcDir, returns dir.
+        /// </summary>
+        /// <returns>
+        /// The capped dir
+        /// </returns>
+        public static Vector3 DirCap(Vector3 srcDir, Vector3 destDir, float angleLimit) {
+            float angle = Mathf.Acos(Vector3.Dot(srcDir, destDir));
+
+            if(Mathf.Abs(angle) > angleLimit * Mathf.Deg2Rad) {
+                Vector3 cross = Vector3.Cross(srcDir, destDir);
+                Quaternion r = Quaternion.AngleAxis(angleLimit, cross);
+                return r * destDir;
+            }
+
+            return destDir;
+        }
+
+        public static Vector3 Steer(Vector3 velocity, Vector3 desired, float cap, float factor) {
+            return Limit(desired - velocity, cap) * factor;
+        }
+
         public static void Limit(ref Vector3 v, float limit) {
             float d = v.magnitude;
             if(d > limit) {
