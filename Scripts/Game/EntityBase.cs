@@ -83,6 +83,8 @@ public class EntityBase : MonoBehaviour {
 
     private SceneSerializer mSerializer = null;
 
+    private float mBlinkTime;
+
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
         //TODO: use ours if no 3rd party pool manager
 #if POOLMANAGER
@@ -200,11 +202,13 @@ public class EntityBase : MonoBehaviour {
     }
 
     public void Blink(float delay) {
-        if(mBlinking)
-            StopCoroutine("DoBlink");
-
         if(delay > 0.0f) {
-            StartCoroutine(DoBlink(delay));
+            if(mBlinking)
+                mBlinkTime = delay;
+            else {
+                mBlinkTime = delay;
+                StartCoroutine(DoBlink());
+            }
         }
         else {
             BlinkStateSet(false);
@@ -354,6 +358,7 @@ public class EntityBase : MonoBehaviour {
         mState = mPrevState = StateInvalid; //avoid invalid updates
 
         mBlinking = false;
+        mBlinkTime = 0.0f;
 
         //allow activator to start and check if we need to spawn now or later
         //ensure start is called before spawning if we are freshly allocated from entity manager
@@ -503,10 +508,15 @@ public class EntityBase : MonoBehaviour {
         }
     }
 
-    IEnumerator DoBlink(float delay) {
+    IEnumerator DoBlink() {
         BlinkStateSet(true);
 
-        yield return new WaitForSeconds(delay);
+        WaitForFixedUpdate wait = new WaitForFixedUpdate();
+
+        while(mBlinkTime > 0.0f) {
+            yield return wait;
+            mBlinkTime -= Time.fixedDeltaTime;
+        }
 
         BlinkStateSet(false);
     }
