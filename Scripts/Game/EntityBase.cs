@@ -58,8 +58,8 @@ public class EntityBase : MonoBehaviour {
     /// if we want FSM/other stuff to activate on start (when placing entities on scene).
     /// Set this to true if the entity is not gonna be spawned via Pool
     /// </summary>
-    public bool activateOnStart = false; 
-    
+    public bool activateOnStart = false;
+
     public event OnSetState setStateCallback;
     public event OnSetBool setBlinkCallback;
     public event OnFinish spawnCallback;
@@ -126,7 +126,7 @@ public class EntityBase : MonoBehaviour {
                 return name;
             }
 
-            return poolData.factoryKey; 
+            return poolData.factoryKey;
         }
     }
 
@@ -199,6 +199,10 @@ public class EntityBase : MonoBehaviour {
 
     public SceneSerializer serializer {
         get { return mSerializer; }
+    }
+
+    public EntityActivator activator {
+        get { return mActivator; }
     }
 
     public void Blink(float delay) {
@@ -321,7 +325,7 @@ public class EntityBase : MonoBehaviour {
             mFSM.Fsm.RestartOnEnable = false; //not when we want to sleep/wake
             mFSM.enabled = false;
         }
-#endif  
+#endif
     }
 
     // Use this for initialization
@@ -439,7 +443,7 @@ public class EntityBase : MonoBehaviour {
             //restart
             mFSM.Fsm.Reinitialize();
             mFSM.enabled = true;
-                        
+
             //allow fsm to boot up, then tell it to spawn
             yield return new WaitForFixedUpdate();
 
@@ -452,7 +456,7 @@ public class EntityBase : MonoBehaviour {
             mFSM.SendEvent(EntityEvent.Spawn);
         }
         else {
-             yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
 
             SpawnStart();
 

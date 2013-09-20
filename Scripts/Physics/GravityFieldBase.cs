@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 [AddComponentMenu("")]
 public abstract class GravityFieldBase : MonoBehaviour {
+    public const int startCapacity = 5;
+
     public struct ItemData {
         public GravityController controller;
         public Vector3 prevUp;
@@ -35,7 +37,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
 
     private static GravityFieldBase mGlobal = null;
 
-    private Dictionary<Collider, ItemData> mItems = new Dictionary<Collider, ItemData>(16);
+    private Dictionary<Collider, ItemData> mItems = new Dictionary<Collider, ItemData>(startCapacity);
 
     private bool mIsProcessing = false;
 
@@ -73,6 +75,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
             itm.controller.gravityField = null;
 
             mItems.Remove(col);
+            ItemRemoved(itm.controller);
         }
         else
             itm = new ItemData(null);
@@ -80,7 +83,10 @@ public abstract class GravityFieldBase : MonoBehaviour {
         return itm;
     }
 
-    protected abstract Vector3 GetUpVector(Transform entity);
+    protected abstract Vector3 GetUpVector(GravityController entity);
+
+    protected virtual void ItemRemoved(GravityController ctrl) {
+    }
 
     protected virtual void OnDisable() {
         if(mGlobal == this)
@@ -110,6 +116,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
         ItemData itm;
         if(mItems.TryGetValue(col, out itm)) {
             mItems.Remove(col);
+            ItemRemoved(itm.controller);
 
             if(!retainGravity) {
                 itm.Restore();
@@ -143,9 +150,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
 
                 GravityController ctrl = pair.Value.controller;
                 if(ctrl.enabled) {
-                    Transform t = ctrl.transform;
-
-                    ctrl.up = GetUpVector(t);
+                    ctrl.up = GetUpVector(ctrl);
 
                     if(gravityOverride)
                         ctrl.gravity = gravity;

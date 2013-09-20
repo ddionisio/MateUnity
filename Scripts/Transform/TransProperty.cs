@@ -5,6 +5,7 @@ using System.Collections;
 /// This allows for individual axis to be set for scale, position, rotation
 /// </summary>
 [AddComponentMenu("M8/Transform/Property")]
+[ExecuteInEditMode]
 public class TransProperty : MonoBehaviour {
 
     public float localScaleX {

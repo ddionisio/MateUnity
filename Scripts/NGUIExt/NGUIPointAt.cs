@@ -4,6 +4,7 @@ using System.Collections;
 [AddComponentMenu("M8/NGUI/PointAt")]
 public class NGUIPointAt : MonoBehaviour {
     public Transform pointer;
+    public bool ignorePOIActive = false;
 
     private Transform mPOI;
     private Camera mPOICam;
@@ -44,7 +45,7 @@ public class NGUIPointAt : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if(mPOI != null && mPOI.gameObject.activeInHierarchy) {
+        if(mPOI != null && (ignorePOIActive || mPOI.gameObject.activeInHierarchy)) {
             Vector3 vp = mPOICam.WorldToViewportPoint(mPOI.position);
 
             bool isEdge = false;
