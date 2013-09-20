@@ -6,6 +6,9 @@ using System.Collections.Generic;
 public class GravityFieldSurfaceNormal : GravityFieldBase {
     public Transform center;
 
+    public bool inverse = false;
+    public bool useEntityUp = false; //for when checking the surface
+
     public LayerMask checkLayer;
     public float checkDistance = 20.0f;
     //public float checkEntityAngle = 45.0f; //this is the angle limit to check for surface with given entity, otherwise use dir towards center.
@@ -37,7 +40,7 @@ public class GravityFieldSurfaceNormal : GravityFieldBase {
         Vector3 entPos = entity.transform.position;
         Vector3 entUp = entity.up;
 
-        Vector3 dir = mCenter - entPos;
+        Vector3 dir = inverse ? entPos - mCenter : mCenter - entPos;
         dir.Normalize();
 
         //check if we are within reasonable angle between entity's up and dir from center
@@ -45,7 +48,7 @@ public class GravityFieldSurfaceNormal : GravityFieldBase {
         //check downward and see if we collide
         RaycastHit hit;
 
-        if(Physics.Raycast(entPos, -dir, out hit, checkDistance, checkLayer)) {
+        if(Physics.Raycast(entPos, useEntityUp ? -entUp : -dir, out hit, checkDistance, checkLayer)) {
             if(Vector3.Angle(dir, hit.normal) < checkSurfaceAngle) {
                 if(info == null) {
                     if(hit.normal != entUp) //TODO: tolerance value?
