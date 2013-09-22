@@ -165,6 +165,40 @@ public class RigidBodyController : MonoBehaviour {
         mRenewColls = true;
     }
 
+    public bool CheckPenetrate(float reduceOfs, LayerMask mask) {
+        if(mCapsuleColl) {
+            Vector3 p1 = mCapsuleColl.center, p2 = p1;
+            float h = mCapsuleColl.height - reduceOfs*2.0f;
+            float hHalf = h * 0.5f;
+            float r = mCapsuleColl.radius - reduceOfs;
+
+            switch(mCapsuleColl.direction) {
+                case 0: //x
+                    p1.x -= hHalf - r;
+                    p2.x += hHalf - r;
+                    break;
+                case 1: //y
+                    p1.y -= hHalf - r;
+                    p2.y += hHalf - r;
+                    break;
+                case 2: //z
+                    p1.z -= hHalf - r;
+                    p2.z += hHalf - r;
+                    break;
+            }
+
+            Matrix4x4 wrldMtx = transform.localToWorldMatrix;
+
+            p1 = wrldMtx.MultiplyPoint(p1);
+            p2 = wrldMtx.MultiplyPoint(p2);
+
+            return Physics.CheckCapsule(p1, p2, r, mask);
+        }
+        else {
+            return Physics.CheckSphere(transform.position, mRadius - reduceOfs, mask);
+        }
+    }
+
     // implements
 
     protected virtual void WaterEnter() {
