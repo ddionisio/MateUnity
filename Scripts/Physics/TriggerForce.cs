@@ -83,7 +83,7 @@ public class TriggerForce : MonoBehaviour {
 
                 body.AddForce(dir * force, mode);
 
-                if(forceLingerDelay > 0) {
+                if(forceLingerDelay > 0 && col.enabled && col.gameObject.activeSelf) {
                     StartCoroutine(DoForceLinger(col, dir));
                 }
             }
@@ -100,7 +100,7 @@ public class TriggerForce : MonoBehaviour {
         while(t < forceLingerDelay) {
             yield return wait;
 
-            if(col == null)
+            if(col == null || !col.enabled || !col.gameObject.activeSelf)
                 break;
 
             col.rigidbody.AddForce(dir * forceLinger);
