@@ -20,7 +20,7 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
                 transform.position = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
             }
             else {
-                transform.position = target.position;
+                transform.position = target.position + target.rotation*offset;
             }
 
             transform.rotation = target.rotation;
@@ -36,7 +36,7 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
             newPos = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
         }
         else
-            newPos = target.position;
+            newPos = target.position + target.rotation * offset;
 
         if(transform.position != newPos)
             rigidbody.MovePosition(newPos);
