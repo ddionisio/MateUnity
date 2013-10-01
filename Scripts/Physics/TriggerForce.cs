@@ -13,10 +13,12 @@ public class TriggerForce : MonoBehaviour {
     public enum Mode {
         Dir,
         Center,
+        Velocity,
+        Reflect
     }
 
     [SerializeField]
-    Mode _mode;
+    Mode _dirMode = Mode.Dir;
 
     [SerializeField]
     Axis _dir;
@@ -40,6 +42,24 @@ public class TriggerForce : MonoBehaviour {
         StopAllCoroutines();
     }
 
+    Vector3 GetWorldDir() {
+        Vector3 dir;
+
+        switch(_dir) {
+            case Axis.Right:
+                dir = Vector3.right;
+                break;
+            case Axis.Forward:
+                dir = Vector3.forward;
+                break;
+            default:
+                dir = Vector3.up;
+                break;
+        }
+
+        return transform.rotation * (inverse ? -dir : dir);
+    }
+
     void OnTriggerStay(Collider col) {
 
         if(!mColliders.Contains(col)) {
@@ -49,39 +69,72 @@ public class TriggerForce : MonoBehaviour {
                 //check tags
 
                 Vector3 dir;
-                switch(_dir) {
-                    case Axis.Right:
-                        dir = Vector3.right;
 
-                        if(resetVelocityByAxis) {
-                            Vector3 localVel = body.transform.worldToLocalMatrix.MultiplyVector(body.velocity);
-                            localVel.x = 0.0f;
-                            body.velocity = body.transform.localToWorldMatrix.MultiplyVector(localVel);
-                        }
-                        break;
-                    case Axis.Forward:
-                        dir = Vector3.forward;
+                switch(_dirMode) {
+                    case Mode.Center:
+                        dir = inverse ? transform.position - body.transform.position : body.transform.position - transform.position;
+                        dir.Normalize();
 
-                        if(resetVelocityByAxis) {
-                            Vector3 localVel = body.transform.worldToLocalMatrix.MultiplyVector(body.velocity);
-                            localVel.z = 0.0f;
-                            body.velocity = body.transform.localToWorldMatrix.MultiplyVector(localVel);
-                        }
+                        if(resetVelocityByAxis)
+                            body.velocity = Vector3.zero;
                         break;
+
+                    case Mode.Dir:
+                        switch(_dir) {
+                            case Axis.Right:
+                                dir = Vector3.right;
+
+                                if(resetVelocityByAxis) {
+                                    Vector3 localVel = body.transform.worldToLocalMatrix.MultiplyVector(body.velocity);
+                                    localVel.x = 0.0f;
+                                    body.velocity = body.transform.localToWorldMatrix.MultiplyVector(localVel);
+                                }
+                                break;
+                            case Axis.Forward:
+                                dir = Vector3.forward;
+
+                                if(resetVelocityByAxis) {
+                                    Vector3 localVel = body.transform.worldToLocalMatrix.MultiplyVector(body.velocity);
+                                    localVel.z = 0.0f;
+                                    body.velocity = body.transform.localToWorldMatrix.MultiplyVector(localVel);
+                                }
+                                break;
+                            default:
+                                dir = Vector3.up;
+
+                                if(resetVelocityByAxis) {
+                                    Vector3 localVel = body.transform.worldToLocalMatrix.MultiplyVector(body.velocity);
+                                    localVel.y = 0.0f;
+                                    body.velocity = body.transform.localToWorldMatrix.MultiplyVector(localVel);
+                                }
+                                break;
+                        }
+
+                        dir = transform.rotation * (inverse ? -dir : dir);
+                        break;
+
+                    case Mode.Velocity:
+                        dir = inverse ? -body.velocity.normalized : body.velocity.normalized;
+
+                        if(resetVelocityByAxis)
+                            body.velocity = Vector3.zero;
+                        break;
+
+                    case Mode.Reflect:
+                        dir = Vector3.Reflect(body.velocity, GetWorldDir());
+                        dir.Normalize();
+
+                        if(resetVelocityByAxis)
+                            body.velocity = Vector3.zero;
+                        break;
+
                     default:
-                        dir = Vector3.up;
-
-                        if(resetVelocityByAxis) {
-                            Vector3 localVel = body.transform.worldToLocalMatrix.MultiplyVector(body.velocity);
-                            localVel.y = 0.0f;
-                            body.velocity = body.transform.localToWorldMatrix.MultiplyVector(localVel);
-                        }
+                        dir = Vector3.zero;
                         break;
                 }
 
-                dir = transform.rotation * (inverse ? -dir : dir);
-
-                body.AddForce(dir * force, mode);
+                if(force != 0.0f)
+                    body.AddForce(dir * force, mode);
 
                 if(forceLingerDelay > 0 && col.enabled && col.gameObject.activeSelf) {
                     StartCoroutine(DoForceLinger(col, dir));

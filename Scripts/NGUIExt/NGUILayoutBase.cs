@@ -13,7 +13,7 @@ public abstract class NGUILayoutBase : MonoBehaviour {
     public bool repositionNow = false;
 
     private bool mStarted = false;
-        
+
     public static int Comparer(NGUILayoutBase l1, NGUILayoutBase l2) {
         return (M8.Util.GetNodeLayer(l1.transform)*1000 + l1.priority).CompareTo(M8.Util.GetNodeLayer(l2.transform)*1000 + l2.priority);
     }
