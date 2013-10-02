@@ -35,6 +35,9 @@ public class TriggerForce : MonoBehaviour {
     public float forceLingerDelay;
     public float forceLinger;
 
+    public bool lingerDragOverride = true;
+    public float lingerDrag = 0.0f;
+
     private HashSet<Collider> mColliders = new HashSet<Collider>();
 
     void OnDisable() {
@@ -155,6 +158,9 @@ public class TriggerForce : MonoBehaviour {
 
             if(col == null || !col.enabled || !col.gameObject.activeSelf)
                 break;
+
+            if(lingerDragOverride)
+                col.rigidbody.drag = lingerDrag;
 
             col.rigidbody.AddForce(dir * forceLinger);
 
