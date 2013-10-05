@@ -63,12 +63,21 @@ public class TriggerForce : MonoBehaviour {
         return transform.rotation * (inverse ? -dir : dir);
     }
 
+    bool CheckTag(string aTag) {
+        for(int i = 0, max = _tags.Length; i < max; i++) {
+            if(_tags[i] == collider.gameObject.tag)
+                return true;
+        }
+
+        return false;
+    }
+
     void OnTriggerStay(Collider col) {
 
         if(!mColliders.Contains(col)) {
             Rigidbody body = col.rigidbody;
 
-            if(body != null && !body.isKinematic && (_tags.Length == 0 || _tags.Contains(col.gameObject.tag))) {
+            if(body != null && !body.isKinematic && (_tags.Length == 0 || CheckTag(col.gameObject.tag))) {
                 //check tags
 
                 Vector3 dir;

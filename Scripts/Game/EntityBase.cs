@@ -169,9 +169,10 @@ public class EntityBase : MonoBehaviour {
                 }
 
                 StateChanged();
-
+#if PLAYMAKER
                 if(mFSM != null)
                     mFSM.SendEvent(EntityEvent.StateChanged);
+#endif
             }
         }
     }
