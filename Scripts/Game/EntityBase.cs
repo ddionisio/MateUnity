@@ -48,9 +48,8 @@ Basic Framework would be something like this:
 public class EntityBase : MonoBehaviour {
     public const int StateInvalid = -1;
 
-    public delegate void OnSetState(EntityBase ent, int state);
+    public delegate void OnGenericCall(EntityBase ent);
     public delegate void OnSetBool(EntityBase ent, bool b);
-    public delegate void OnFinish(EntityBase ent);
 
     public float spawnDelay = 0.1f;
 
@@ -60,10 +59,10 @@ public class EntityBase : MonoBehaviour {
     /// </summary>
     public bool activateOnStart = false;
 
-    public event OnSetState setStateCallback;
+    public event OnGenericCall setStateCallback;
     public event OnSetBool setBlinkCallback;
-    public event OnFinish spawnCallback;
-    public event OnFinish releaseCallback;
+    public event OnGenericCall spawnCallback;
+    public event OnGenericCall releaseCallback;
 
     private int mState = StateInvalid;
     private int mPrevState = StateInvalid;
@@ -165,7 +164,7 @@ public class EntityBase : MonoBehaviour {
                 mState = value;
 
                 if(setStateCallback != null) {
-                    setStateCallback(this, value);
+                    setStateCallback(this);
                 }
 
                 StateChanged();
@@ -274,12 +273,18 @@ public class EntityBase : MonoBehaviour {
             mDoSpawnOnWake = false;
             StartCoroutine(DoSpawn());
         }
+        else {
+            //resume blinking
+            if(mBlinking)
+                StartCoroutine(DoBlink());
+
 #if PLAYMAKER
-        else if(mFSM != null && mStartedCounter > 0) {
-            //resume FSM
-            mFSM.Fsm.Event(EntityEvent.Wake);
-        }
+            if(mFSM != null && mStartedCounter > 0) {
+                //resume FSM
+                mFSM.Fsm.Event(EntityEvent.Wake);
+            }
 #endif
+        }
     }
 
     protected virtual void ActivatorSleep() {
