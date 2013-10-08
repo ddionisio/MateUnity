@@ -403,15 +403,19 @@ public class InputManager : MonoBehaviour {
     }
 
     public void AddButtonCall(int player, int action, OnButton callback) {
-        PlayerData pd = mBinds[action].players[player];
+        if(action < mBinds.Length && player < mBinds[action].players.Length) {
+            PlayerData pd = mBinds[action].players[player];
 
-        mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = true });
+            mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = true });
+        }
     }
 
     public void RemoveButtonCall(int player, int action, OnButton callback) {
-        PlayerData pd = mBinds[action].players[player];
+        if(action < mBinds.Length && player < mBinds[action].players.Length) {
+            PlayerData pd = mBinds[action].players[player];
 
-        mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = false });
+            mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = false });
+        }
     }
 
     public void ClearButtonCall(int action) {

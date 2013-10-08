@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[AddComponentMenu("M8/Physics/ForceField")]
 public class ForceField : MonoBehaviour {
     public enum Axis {
         Up,
@@ -23,9 +24,7 @@ public class ForceField : MonoBehaviour {
     public bool inverse;
 
     public float force;
-
-    public bool dragSet;
-    public float drag;
+    public float impulse;
 
     [SerializeField]
     float _updateDelay = 0.2f;
@@ -37,7 +36,34 @@ public class ForceField : MonoBehaviour {
 
     void OnTriggerEnter(Collider t) {
         Rigidbody body = t.rigidbody;
-        if(body != null) {
+        if(body != null && !mBodies.Contains(body)) {
+            if(impulse != 0.0f) {
+                Vector3 dir = Vector3.zero;
+                switch(_mode) {
+                    case Mode.Dir:
+                        switch(_dir) {
+                            case Axis.Right:
+                                dir = Vector3.right;
+                                break;
+                            case Axis.Forward:
+                                dir = Vector3.forward;
+                                break;
+                            default:
+                                dir = Vector3.up;
+                                break;
+                        }
+                        break;
+
+                    case Mode.Center:
+                        Vector3 pos = transform.localToWorldMatrix.MultiplyPoint(mCenterLocal);
+                        dir = inverse ? pos - body.position : body.position - pos;
+                        dir.Normalize();
+                        break;
+                }
+
+                body.AddForce(dir * impulse, ForceMode.Impulse);
+            }
+
             mBodies.Add(body);
 
             StartRoutine();
@@ -52,6 +78,7 @@ public class ForceField : MonoBehaviour {
     }
 
     void OnDisable() {
+        mBodies.Clear();
         mModeRunning = false;
         StopAllCoroutines();
     }
@@ -129,9 +156,6 @@ public class ForceField : MonoBehaviour {
             foreach(Rigidbody body in mBodies) {
                 Vector3 dir = inverse ? pos - body.position : body.position - pos;
                 dir.Normalize();
-
-                if(dragSet)
-                    body.drag = drag;
 
                 body.AddForce(dir * force, ForceMode.Force);
             }

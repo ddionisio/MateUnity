@@ -65,7 +65,7 @@ public class TriggerForce : MonoBehaviour {
 
     bool CheckTag(string aTag) {
         for(int i = 0, max = _tags.Length; i < max; i++) {
-            if(_tags[i] == collider.gameObject.tag)
+            if(_tags[i] == aTag)
                 return true;
         }
 
