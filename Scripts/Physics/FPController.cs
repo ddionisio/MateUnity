@@ -349,14 +349,18 @@ public class FPController : RigidBodyController {
                 bool found = false;
                 CollideInfo inf = new CollideInfo();
 
-                foreach(KeyValuePair<Collider, CollideInfo> pair in mColls) {
-                    if(pair.Value.flag == CollisionFlags.Sides) {
-                        if(Vector3.Angle(dirHolder.forward, pair.Value.normal) > 120.0f) {
-                            inf = pair.Value;
-                            found = true;
-                            break;
+                foreach(KeyValuePair<Collider, List<CollideInfo>> pair in mColls) {
+                    foreach(CollideInfo cInf in pair.Value) {
+                        if(cInf.flag == CollisionFlags.Sides) {
+                            if(Vector3.Angle(dirHolder.forward, cInf.normal) > 120.0f) {
+                                inf = cInf;
+                                found = true;
+                                break;
+                            }
                         }
                     }
+                    if(found)
+                        break;
                 }
 
                 if(found) {

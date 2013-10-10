@@ -14,6 +14,11 @@ public class NGUIColorBlink : MonoBehaviour {
         StartCoroutine(DoBlink());
     }
 
+    void OnDisable() {
+        StopAllCoroutines();
+        target.color = mOrigColor;
+    }
+
     void Awake() {
         if(target == null)
             target = GetComponent<UIWidget>();
