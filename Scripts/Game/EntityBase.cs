@@ -59,6 +59,8 @@ public class EntityBase : MonoBehaviour {
     /// </summary>
     public bool activateOnStart = false;
 
+    public EntityActivator activator;
+
     public event OnGenericCall setStateCallback;
     public event OnSetBool setBlinkCallback;
     public event OnGenericCall spawnCallback;
@@ -70,9 +72,7 @@ public class EntityBase : MonoBehaviour {
 #if PLAYMAKER
     private PlayMakerFSM mFSM;
 #endif
-
-    private EntityActivator mActivator = null;
-
+        
     private bool mDoSpawnOnWake = false;
     private bool mAutoSpawnFinish = true;
 
@@ -201,10 +201,6 @@ public class EntityBase : MonoBehaviour {
         get { return mSerializer; }
     }
 
-    public EntityActivator activator {
-        get { return mActivator; }
-    }
-
     public void Blink(float delay) {
         if(delay > 0.0f) {
             if(mBlinking)
@@ -252,8 +248,8 @@ public class EntityBase : MonoBehaviour {
         }
 #endif
 
-        if(mActivator != null) {
-            mActivator.Release(false);
+        if(activator != null) {
+            activator.Release(false);
         }
 
         if(releaseCallback != null) {
@@ -296,8 +292,8 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void OnDestroy() {
-        if(mActivator != null) {
-            mActivator.Release(true);
+        if(activator != null) {
+            activator.Release(activator.transform.parent == transform);
         }
 
         setStateCallback = null;
@@ -308,7 +304,7 @@ public class EntityBase : MonoBehaviour {
 
     protected virtual void OnEnable() {
         //we didn't get a chance to start properly before being inactivated
-        if((mActivator == null || mActivator.isActive) && activateOnStart && mStartedCounter == 1) {
+        if((activator == null || activator.isActive) && activateOnStart && mStartedCounter == 1) {
             StartCoroutine(DoStart());
         }
     }
@@ -318,10 +314,12 @@ public class EntityBase : MonoBehaviour {
 
         mSerializer = GetComponent<SceneSerializer>();
 
-        mActivator = GetComponentInChildren<EntityActivator>();
-        if(mActivator != null) {
-            mActivator.awakeCallback += ActivatorWakeUp;
-            mActivator.sleepCallback += ActivatorSleep;
+        if(activator == null)
+            activator = GetComponentInChildren<EntityActivator>();
+
+        if(activator != null) {
+            activator.awakeCallback += ActivatorWakeUp;
+            activator.sleepCallback += ActivatorSleep;
         }
 
 #if PLAYMAKER
@@ -372,10 +370,10 @@ public class EntityBase : MonoBehaviour {
 
         //allow activator to start and check if we need to spawn now or later
         //ensure start is called before spawning if we are freshly allocated from entity manager
-        if(mActivator != null) {
-            mActivator.Start();
+        if(activator != null) {
+            activator.Start();
 
-            if(mActivator.deactivateOnStart) {
+            if(activator.deactivateOnStart) {
                 mDoSpawnOnWake = true; //do it later when we wake up
             }
             else {
