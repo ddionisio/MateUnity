@@ -26,6 +26,14 @@ public class NGUIPage : MonoBehaviour, IComparer<GameObject> {
     private int mCurPageInd = 0;
     private GameObject[] mPages;
 
+    public void NextPage() {
+        NextClick(gameObject);
+    }
+
+    public void End() {
+        EndClick(gameObject);
+    }
+
     public int Compare(GameObject x, GameObject y) {
         string xNumStr = Regex.Match(x.name, @"\d+").Value;
         string yNumStr = Regex.Match(y.name, @"\d+").Value;
