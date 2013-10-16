@@ -70,7 +70,7 @@ namespace M8.Editor {
 
             string[] lines = textFile.text.Split('\n');
 
-            for(int i = 2; i < lines.Length-2; i++) {
+            for(int i = 2; i < lines.Length-3; i++) {
                 string[] words = lines[i].Split(' ', '\t', ';', '=');
 
                 bool publicFound = false;
@@ -79,7 +79,9 @@ namespace M8.Editor {
 
                 string name = null;
 
-                foreach(string word in words) {
+                for(int wInd = 0, max = words.Length; wInd < max; wInd++) {
+                    string word = words[wInd];
+
                     if(word.Length > 0) {
                         if(publicFound && constFound && declFound) {
                             name = word;
