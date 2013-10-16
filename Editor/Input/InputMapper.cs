@@ -247,6 +247,9 @@ namespace M8.Editor {
                         sb.AppendLine();
                     }
 
+                    sb.AppendFormat("    public const int _count = {0};", mActions.Count);
+                    sb.AppendLine();
+
                     sb.AppendLine("}");
 
                     using(StreamWriter output = new StreamWriter(mTextFilePath)) {

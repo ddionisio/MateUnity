@@ -10,11 +10,11 @@ using System.Collections.Generic;
 public class RigidBodyController : MonoBehaviour {
     protected const float moveCosCheck = 0.01745240643728351281941897851632f; //cos(89)
 
-    public struct CollideInfo {
+    public class CollideInfo {
+        public Collider collider;
         public CollisionFlags flag;
         public Vector3 contactPoint;
         public Vector3 normal;
-
     }
 
     public delegate void CallbackEvent(RigidBodyController controller);
@@ -57,7 +57,11 @@ public class RigidBodyController : MonoBehaviour {
     private Vector3 mCurMoveDir;
 
     //private HashSet<Collider> mColls = new HashSet<Collider>();
-    protected Dictionary<Collider, List<CollideInfo>> mColls = new Dictionary<Collider, List<CollideInfo>>(16);
+    protected const int maxColls = 10;
+    protected CollideInfo[] mColls;
+    protected int mCollCount = 0;
+
+    //protected Dictionary<Collider, List<CollideInfo>> mColls = new Dictionary<Collider, List<CollideInfo>>(16);
 
     protected CollisionFlags mCollFlags;
     protected int mCollGroundLayerMask = 0;
@@ -73,8 +77,6 @@ public class RigidBodyController : MonoBehaviour {
     private Vector3 mLocalVelocity;
 
     private int mWaterCounter; //counter for water triggers
-
-    private bool mRenewColls = false;
 
     private float mRadius = 0.0f;
 
@@ -97,7 +99,13 @@ public class RigidBodyController : MonoBehaviour {
     public Vector3 moveDir { get { return mCurMoveDir; } }
     public CollisionFlags collisionFlags { get { return mCollFlags; } }
     public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
-    public Dictionary<Collider, List<CollideInfo>> collisions { get { return mColls; } }
+    
+    /// <summary>
+    /// Note: This will return the entire array, actual length is collisionCount
+    /// </summary>
+    public CollideInfo[] collisionData { get { return mColls; } }
+    public int collisionCount { get { return mCollCount; } }
+
     public bool isUnderWater { get { return mWaterCounter > 0; } }
     public float radius { get { return mRadius; } }
     public Vector3 groundMoveVelocity { get { return mGroundMoveVel; } }
@@ -107,25 +115,26 @@ public class RigidBodyController : MonoBehaviour {
     /// <summary>
     /// Get the first occurence of CollideInfo based on given flags
     /// </summary>
-    public bool GetCollideInfo(CollisionFlags flags, out CollideInfo info) {
-        foreach(KeyValuePair<Collider, List<CollideInfo>> pair in mColls) {
-            foreach(CollideInfo inf in pair.Value) {
-                if((inf.flag & flags) != 0) {
-                    info = inf;
-                    return true;
-                }
-            }
+    public CollideInfo GetCollideInfo(CollisionFlags flags) {
+        for(int i = 0; i < mCollCount; i++) {
+            CollideInfo inf = mColls[i];
+            if((inf.flag & flags) != 0)
+                return inf;
         }
 
-        info = new CollideInfo();
-        return false;
+        return null;
     }
 
     /// <summary>
     /// Check if given collision is currently colliding with this object.
     /// </summary>
     public bool CheckCollide(Collider col) {
-        return mColls.ContainsKey(col);
+        for(int i = 0; i < mCollCount; i++) {
+            if(mColls[i].collider == col)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -159,12 +168,10 @@ public class RigidBodyController : MonoBehaviour {
         mCollGroundLayerMask = 0;
         mIsSlopSlide = false;
         mGroundMoveVel = Vector3.zero;
-        mColls.Clear();
+        mCollCount = 0;
         mWaterCounter = 0;
         mCurMoveAxis = Vector2.zero;
         mCurMoveDir = Vector3.zero;
-
-        mRenewColls = true;
     }
 
     public bool CheckPenetrate(float reduceOfs, LayerMask mask) {
@@ -237,51 +244,51 @@ public class RigidBodyController : MonoBehaviour {
         }*/
     }
 
+    void GenerateColls(Collision col) {
+        mCollCount = 0;
+
+        Vector3 up = transform.up;
+
+        for(int i = 0, max = col.contacts.Length; i < max; i++) {
+            if(mCollCount >= maxColls) {
+                Debug.LogWarning("Ran out of collideInfo");
+                break;
+            }
+
+            ContactPoint contact = col.contacts[i];
+
+            Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
+
+            CollideInfo newInfo = mColls[mCollCount];
+
+            newInfo.collider = whichColl;
+            newInfo.contactPoint = contact.point;
+            newInfo.normal = contact.normal;
+            newInfo.flag = GenCollFlag(up, contact);
+
+            mCollCount++;
+        }
+    }
+
+    void RemoveColl(int ind) {
+        if(mCollCount > 0) {
+            int lastInd = mCollCount - 1;
+            if(ind < lastInd && mCollCount > 1) {
+                CollideInfo removeInf = mColls[ind];
+                removeInf.collider = null;
+                removeInf.flag = CollisionFlags.None;
+
+                CollideInfo lastInf = mColls[lastInd];
+                mColls[ind] = lastInf;
+            }
+            mCollCount--;
+        }
+    }
+
     void OnCollisionEnter(Collision col) {
         //Debug.Log("enter: " + col.gameObject.name);
 
-        if(mRenewColls) {
-            mColls.Clear();
-            mRenewColls = false;
-        }
-
-        //refresh during stay
-        //mCollFlags = CollisionFlags.None;
-        //mSlide = false;
-
-        //mColls.Clear();
-
-        Vector3 up = transform.up;
-        //Vector3 pos = collider.bounds.center;
-
-        foreach(ContactPoint contact in col.contacts) {
-            Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
-            //if(contact.thisCollider != collider)
-            //continue;
-
-            if(!mColls.ContainsKey(whichColl)) {
-                //mColls.Add(contact.otherCollider, contact);
-
-                CollisionFlags colFlag = GenCollFlag(up, contact);
-
-                List<CollideInfo> infs = new List<CollideInfo>();
-                infs.Add(new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
-
-                mColls.Add(whichColl, infs);
-            }
-            else {
-                List<CollideInfo> infs = mColls[whichColl];
-                bool doAdd = true;
-                foreach(CollideInfo inf in infs) {
-                    if(inf.normal == contact.normal) {
-                        doAdd = false;
-                        break;
-                    }
-                }
-                if(doAdd)
-                    infs.Add(new CollideInfo() { flag = GenCollFlag(up, contact), normal = contact.normal, contactPoint = contact.point });
-            }
-        }
+        GenerateColls(col);
 
         RefreshCollInfo();
 
@@ -290,42 +297,7 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void OnCollisionStay(Collision col) {
-        /*if(mRenewColls) {
-            mColls.Clear();
-            mRenewColls = false;
-        }*/
-        mColls.Clear();
-
-        Vector3 up = transform.up;
-        //Vector3 pos = collider.bounds.center;
-
-        //refresh contact infos
-        foreach(ContactPoint contact in col.contacts) {
-            Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
-            //if(contact.thisCollider != collider)
-            //continue;
-
-            CollisionFlags colFlag = GenCollFlag(up, contact);
-
-            if(mColls.ContainsKey(whichColl)) {
-                List<CollideInfo> infs = mColls[whichColl];
-                bool doAdd = true;
-                foreach(CollideInfo inf in infs) {
-                    if(inf.normal == contact.normal) {
-                        doAdd = false;
-                        break;
-                    }
-                }
-                if(doAdd)
-                    infs.Add(new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
-            }
-            else {
-                List<CollideInfo> infs = new List<CollideInfo>();
-                infs.Add(new CollideInfo() { flag = colFlag, normal = contact.normal, contactPoint = contact.point });
-
-                mColls.Add(whichColl, infs);
-            }
-        }
+        GenerateColls(col);
 
         //recalculate flags
         RefreshCollInfo();
@@ -336,42 +308,18 @@ public class RigidBodyController : MonoBehaviour {
 
     void OnCollisionExit(Collision col) {
         //Debug.Log("exit: " + col.gameObject.name);
-        
 
         foreach(ContactPoint contact in col.contacts) {
-            //Debug.Log("exit other coll: " + contact.otherCollider.name);
-            //Debug.Log("exit this coll: " + contact.thisCollider.name);
+            Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
+            Vector3 n = contact.normal;
 
-            List<CollideInfo> infs = null;
-            Collider c = null;
-            if(!mColls.TryGetValue(contact.otherCollider, out infs)) {
-                if(mColls.TryGetValue(contact.thisCollider, out infs))
-                    c = contact.thisCollider;
-            }
-            else
-                c = contact.otherCollider;
-
-            if(infs != null) {
-                int ind = -1;
-                for(int i = 0, max = infs.Count; i < max; i++) {
-                    if(infs[i].normal == contact.normal) {
-                        //if(gameObject.name == "player")
-                            //Debug.Log("found");
-                        ind = i;
-                        break;
-                    }
-                }
-                if(ind != -1) {
-                    infs.RemoveAt(ind);
-                    if(infs.Count == 0)
-                        mColls.Remove(c);
+            for(int i = 0; i < mCollCount; i++) {
+                CollideInfo inf = mColls[i];
+                if(inf.collider == whichColl && inf.normal == n) {
+                    RemoveColl(i);
+                    break;
                 }
             }
-            /*
-            if(mColls.ContainsKey(contact.otherCollider))
-                mColls.Remove(contact.otherCollider);
-            else if(mColls.ContainsKey(contact.thisCollider))
-                mColls.Remove(contact.thisCollider);*/
         }
 
         RefreshCollInfo();
@@ -433,6 +381,10 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void Awake() {
+        mColls = new CollideInfo[maxColls];
+        for(int i = 0; i < maxColls; i++)
+            mColls[i] = new CollideInfo();
+
         mGravCtrl = GetComponent<GravityController>();
 
         //mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
@@ -512,18 +464,13 @@ public class RigidBodyController : MonoBehaviour {
         //allow for moving diagonally downwards
         //TODO: test for non-platformer
         if(isGrounded) {
-            foreach(KeyValuePair<Collider, List<CollideInfo>> pair in mColls) {
-                bool found = false;
-                foreach(CollideInfo inf in pair.Value) {
-                    if(inf.flag == CollisionFlags.Below) {
-                        moveDelta = M8.MathUtil.Slide(moveDelta, inf.normal);
-                        mCurMoveDir = moveDelta.normalized;
-                        found = true;
-                        break;
-                    }
-                }
-                if(found)
+            for(int i = 0; i < mCollCount; i++) {
+                CollideInfo inf = mColls[i];
+                if(inf.flag == CollisionFlags.Below) {
+                    moveDelta = M8.MathUtil.Slide(moveDelta, inf.normal);
+                    mCurMoveDir = moveDelta.normalized;
                     break;
+                }
             }
 
             maxSpeed = moveMaxSpeed;
@@ -584,41 +531,41 @@ public class RigidBodyController : MonoBehaviour {
         Vector3 up = transform.up;
         //
 
-        foreach(KeyValuePair<Collider, List<CollideInfo>> pair in mColls) {
-            if(pair.Key == null || !pair.Key.gameObject.activeSelf) {
-                mRenewColls = true;
+        for(int i = 0; i < mCollCount; i++) {
+            CollideInfo inf = mColls[i];
+            if(inf.collider == null || !inf.collider.gameObject.activeSelf) {
+                //remove
+                RemoveColl(i);
                 continue;
             }
 
-            foreach(CollideInfo inf in pair.Value) {
-                Vector3 n = inf.normal;
-                CollisionFlags flag = inf.flag;
+            Vector3 n = inf.normal;
+            CollisionFlags flag = inf.flag;
 
-                mCollFlags |= inf.flag;
+            mCollFlags |= inf.flag;
 
-                //sliding
-                if(flag == CollisionFlags.Below || flag == CollisionFlags.Sides) {
-                    if(!groundNoSlope) {
-                        float a = Vector3.Angle(up, n);
-                        mIsSlopSlide = a > slopLimit && a <= slideLimit;
-                        if(mIsSlopSlide) {
-                            //Debug.Log("a: " + a);
-                            mSlopNormal = n;
-                        }
-                        else if(flag == CollisionFlags.Below) {
-                            mIsSlopSlide = false;
-                            groundNoSlope = true;
-                        }
+            //sliding
+            if(flag == CollisionFlags.Below || flag == CollisionFlags.Sides) {
+                if(!groundNoSlope) {
+                    float a = Vector3.Angle(up, n);
+                    mIsSlopSlide = a > slopLimit && a <= slideLimit;
+                    if(mIsSlopSlide) {
+                        //Debug.Log("a: " + a);
+                        mSlopNormal = n;
                     }
-
-                    //for platforms
-                    Rigidbody body = pair.Key.rigidbody;
-                    if(body != null) {
-                        mGroundMoveVel += body.velocity;
+                    else if(flag == CollisionFlags.Below) {
+                        mIsSlopSlide = false;
+                        groundNoSlope = true;
                     }
-
-                    mCollGroundLayerMask |= 1 << pair.Key.gameObject.layer;
                 }
+
+                //for platforms
+                Rigidbody body = inf.collider.rigidbody;
+                if(body != null) {
+                    mGroundMoveVel += body.velocity;
+                }
+
+                mCollGroundLayerMask |= 1 << inf.collider.gameObject.layer;
             }
         }
     }
