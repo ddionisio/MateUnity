@@ -112,6 +112,16 @@ namespace M8 {
 
         //-------------- 3D --------------
 
+        public static bool CompareApprox(Vector3 v1, Vector3 v2, float approx = Mathf.Epsilon) {
+            if(Mathf.Abs(v2.x - v1.x) > approx) return false;
+
+            if(Mathf.Abs(v2.y - v1.y) > approx) return false;
+
+            if(Mathf.Abs(v2.z - v1.z) > approx) return false;
+
+            return true;
+        }
+
         /// <summary>
         /// Caps given destDir with angleLimit (degree) of srcDir, returns dir.
         /// </summary>

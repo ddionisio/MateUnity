@@ -148,7 +148,7 @@ public class TriggerForce : MonoBehaviour {
                 if(force != 0.0f)
                     body.AddForce(dir * force, mode);
 
-                if(forceLingerDelay > 0 && col.enabled && col.gameObject.activeSelf) {
+                if(collider.enabled && forceLingerDelay > 0 && col.enabled && col.gameObject.activeSelf) {
                     StartCoroutine(DoForceLinger(col, dir));
                 }
             }

@@ -57,7 +57,7 @@ public class RigidBodyController : MonoBehaviour {
     private Vector3 mCurMoveDir;
 
     //private HashSet<Collider> mColls = new HashSet<Collider>();
-    protected const int maxColls = 10;
+    protected const int maxColls = 32;
     protected CollideInfo[] mColls;
     protected int mCollCount = 0;
 
@@ -99,7 +99,7 @@ public class RigidBodyController : MonoBehaviour {
     public Vector3 moveDir { get { return mCurMoveDir; } }
     public CollisionFlags collisionFlags { get { return mCollFlags; } }
     public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
-    
+
     /// <summary>
     /// Note: This will return the entire array, actual length is collisionCount
     /// </summary>
@@ -244,11 +244,14 @@ public class RigidBodyController : MonoBehaviour {
         }*/
     }
 
-    void GenerateColls(Collision col) {
-        mCollCount = 0;
+    private const float _nCompareApprox = 0.01f;
+
+    void GenerateColls(Collision col, bool resetCount) {
+        if(resetCount)
+            mCollCount = 0;
 
         Vector3 up = transform.up;
-
+        
         for(int i = 0, max = col.contacts.Length; i < max; i++) {
             if(mCollCount >= maxColls) {
                 Debug.LogWarning("Ran out of collideInfo");
@@ -259,14 +262,40 @@ public class RigidBodyController : MonoBehaviour {
 
             Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
 
-            CollideInfo newInfo = mColls[mCollCount];
+            Vector3 n = contact.normal;
+            Vector3 p = contact.point;
+
+            //check if already exists
+            int ind = -1;
+            for(int j = 0; j < mCollCount; j++) {
+                CollideInfo inf = mColls[j];
+                if(inf.collider == whichColl) {
+                    //if(cf == CollisionFlags.None)
+                        //cf = GenCollFlag(up, contact);
+
+                   // if(inf.flag == cf) {
+                        ind = j;
+                        break;
+                   // }
+                }
+                /*else {
+                    Debug.Log("fuck: " + inf.flag + " ass: " + cf + " hash: " + whichColl.GetHashCode());
+                }*/
+            }
+
+            CollideInfo newInfo;
+            if(ind == -1) {
+                newInfo = mColls[mCollCount];
+                mCollCount++;
+            }
+            else {
+                newInfo = mColls[ind];
+            }
 
             newInfo.collider = whichColl;
-            newInfo.contactPoint = contact.point;
-            newInfo.normal = contact.normal;
+            newInfo.contactPoint = p;
+            newInfo.normal = n;
             newInfo.flag = GenCollFlag(up, contact);
-
-            mCollCount++;
         }
     }
 
@@ -288,41 +317,66 @@ public class RigidBodyController : MonoBehaviour {
     void OnCollisionEnter(Collision col) {
         //Debug.Log("enter: " + col.gameObject.name);
 
-        GenerateColls(col);
+        /*foreach(ContactPoint cp in col.contacts) {
+            Debug.Log("in: " + cp.otherCollider.name + " n: " + cp.normal);
+        }*/
+
+        GenerateColls(col, false);
 
         RefreshCollInfo();
 
         if(collisionEnterCallback != null)
             collisionEnterCallback(this, col);
+
+        //Debug.Log("count: " + mCollCount);
     }
 
     void OnCollisionStay(Collision col) {
-        GenerateColls(col);
+        //int pc = mCollCount;
+
+        GenerateColls(col, false);
 
         //recalculate flags
         RefreshCollInfo();
 
         if(collisionStayCallback != null)
             collisionStayCallback(this, col);
+
+        /*if(pc != mCollCount)
+            Debug.Log("scount: " + mCollCount);*/
     }
 
     void OnCollisionExit(Collision col) {
+
+        /*foreach(ContactPoint cp in col.contacts) {
+            Debug.Log("out: " + cp.otherCollider.name + " n: " + cp.normal);
+        }*/
+
         //Debug.Log("exit: " + col.gameObject.name);
 
+        //Vector3 up = transform.up;
+        
         foreach(ContactPoint contact in col.contacts) {
             Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
-            Vector3 n = contact.normal;
+            //Vector3 n = contact.normal;
+            //Vector3 p = contact.point;
+            //CollisionFlags cf = CollisionFlags.None;
 
             for(int i = 0; i < mCollCount; i++) {
                 CollideInfo inf = mColls[i];
-                if(inf.collider == whichColl && inf.normal == n) {
-                    RemoveColl(i);
-                    break;
+                if(inf.collider == whichColl) {
+                    //if(cf == CollisionFlags.None)
+                        //cf = GenCollFlag(up, contact);
+
+                    //if(inf.flag == cf)
+                        RemoveColl(i);
                 }
             }
         }
 
         RefreshCollInfo();
+
+        //Debug.Log("exit count: " + mCollCount);
     }
 
     protected virtual void OnTriggerEnter(Collider col) {
