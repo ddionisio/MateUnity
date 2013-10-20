@@ -10,6 +10,10 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
     public Transform target;
     public Vector3 offset;
 
+    public Vector3 rotOfs;
+
+    private Quaternion mRotQ;
+
 #if UNITY_EDITOR
     // Update is called once per frame
     void Update() {
@@ -23,7 +27,7 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
                 transform.position = target.position + target.rotation*offset;
             }
 
-            transform.rotation = target.rotation;
+            transform.rotation = Quaternion.Euler(rotOfs) * target.rotation;
         }
     }
 #endif
@@ -41,6 +45,10 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
         if(transform.position != newPos)
             rigidbody.MovePosition(newPos);
 
-        rigidbody.MoveRotation(target.rotation);
+        rigidbody.MoveRotation(mRotQ * target.rotation);
+    }
+
+    void Awake() {
+        mRotQ = Quaternion.Euler(rotOfs);
     }
 }
