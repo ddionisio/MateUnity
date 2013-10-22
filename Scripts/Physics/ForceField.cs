@@ -26,6 +26,9 @@ public class ForceField : MonoBehaviour {
     public float force;
     public float impulse;
 
+    public bool setDrag = false;
+    public float drag = 0.0f;
+
     [SerializeField]
     float _updateDelay = 0.2f;
 
@@ -138,6 +141,9 @@ public class ForceField : MonoBehaviour {
             dir = transform.rotation * (inverse ? -dir : dir);
 
             foreach(Rigidbody body in mBodies) {
+                if(setDrag)
+                    body.drag = drag;
+
                 body.AddForce(dir * force, ForceMode.Force);
             }
 
@@ -154,6 +160,9 @@ public class ForceField : MonoBehaviour {
             Vector3 pos = transform.localToWorldMatrix.MultiplyPoint(mCenterLocal);
 
             foreach(Rigidbody body in mBodies) {
+                if(setDrag)
+                    body.drag = drag;
+
                 Vector3 dir = inverse ? pos - body.position : body.position - pos;
                 dir.Normalize();
 

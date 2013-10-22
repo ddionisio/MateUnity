@@ -24,6 +24,8 @@ public class RigidBodyController : MonoBehaviour {
     public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
     //you'll want this as an attach for camera as well.
 
+    public float speedCap = 0.0f; //set to > 0 to cap speed
+
     public float moveForce = 50.0f;
     public float moveAirForce = 20.0f;
     public float moveMaxSpeed = 2.5f;
@@ -251,7 +253,7 @@ public class RigidBodyController : MonoBehaviour {
             mCollCount = 0;
 
         Vector3 up = transform.up;
-        
+
         for(int i = 0, max = col.contacts.Length; i < max; i++) {
             if(mCollCount >= maxColls) {
                 Debug.LogWarning("Ran out of collideInfo");
@@ -271,12 +273,12 @@ public class RigidBodyController : MonoBehaviour {
                 CollideInfo inf = mColls[j];
                 if(inf.collider == whichColl) {
                     //if(cf == CollisionFlags.None)
-                        //cf = GenCollFlag(up, contact);
+                    //cf = GenCollFlag(up, contact);
 
-                   // if(inf.flag == cf) {
-                        ind = j;
-                        break;
-                   // }
+                    // if(inf.flag == cf) {
+                    ind = j;
+                    break;
+                    // }
                 }
                 /*else {
                     Debug.Log("fuck: " + inf.flag + " ass: " + cf + " hash: " + whichColl.GetHashCode());
@@ -355,7 +357,7 @@ public class RigidBodyController : MonoBehaviour {
         //Debug.Log("exit: " + col.gameObject.name);
 
         //Vector3 up = transform.up;
-        
+
         foreach(ContactPoint contact in col.contacts) {
             Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
             //Vector3 n = contact.normal;
@@ -366,10 +368,10 @@ public class RigidBodyController : MonoBehaviour {
                 CollideInfo inf = mColls[i];
                 if(inf.collider == whichColl) {
                     //if(cf == CollisionFlags.None)
-                        //cf = GenCollFlag(up, contact);
+                    //cf = GenCollFlag(up, contact);
 
                     //if(inf.flag == cf)
-                        RemoveColl(i);
+                    RemoveColl(i);
                 }
             }
         }
@@ -460,6 +462,14 @@ public class RigidBodyController : MonoBehaviour {
 
     // Update is called once per frame
     protected virtual void FixedUpdate() {
+        if(speedCap > 0.0f) {
+            Vector3 vel = rigidbody.velocity;
+            float spdSqr = vel.sqrMagnitude;
+            if(spdSqr > speedCap * speedCap) {
+                rigidbody.velocity = (vel / Mathf.Sqrt(spdSqr)) * speedCap;
+            }
+        }
+
 #if UNITY_EDITOR
         //mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
         mSlopLimitCos = Mathf.Cos(slopLimit * Mathf.Deg2Rad);
