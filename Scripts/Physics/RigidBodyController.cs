@@ -262,10 +262,11 @@ public class RigidBodyController : MonoBehaviour {
 
             ContactPoint contact = col.contacts[i];
 
-            Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
+            Collider whichColl = col.collider;// contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
 
             Vector3 n = contact.normal;
             Vector3 p = contact.point;
+            CollisionFlags cf = GenCollFlag(up, contact);
 
             //check if already exists
             int ind = -1;
@@ -275,14 +276,11 @@ public class RigidBodyController : MonoBehaviour {
                     //if(cf == CollisionFlags.None)
                     //cf = GenCollFlag(up, contact);
 
-                    // if(inf.flag == cf) {
-                    ind = j;
-                    break;
-                    // }
+                    if(inf.flag == cf) {
+                        ind = j;
+                        break;
+                    }
                 }
-                /*else {
-                    Debug.Log("fuck: " + inf.flag + " ass: " + cf + " hash: " + whichColl.GetHashCode());
-                }*/
             }
 
             CollideInfo newInfo;
@@ -297,20 +295,25 @@ public class RigidBodyController : MonoBehaviour {
             newInfo.collider = whichColl;
             newInfo.contactPoint = p;
             newInfo.normal = n;
-            newInfo.flag = GenCollFlag(up, contact);
+            newInfo.flag = cf;
         }
     }
 
     void RemoveColl(int ind) {
         if(mCollCount > 0) {
             int lastInd = mCollCount - 1;
-            if(ind < lastInd && mCollCount > 1) {
+            if(ind == lastInd) {
+                mColls[ind].collider = null;
+                mColls[ind].flag = CollisionFlags.None;
+            }
+            else {
                 CollideInfo removeInf = mColls[ind];
                 removeInf.collider = null;
                 removeInf.flag = CollisionFlags.None;
 
                 CollideInfo lastInf = mColls[lastInd];
                 mColls[ind] = lastInf;
+                mColls[lastInd] = removeInf;
             }
             mCollCount--;
         }
@@ -323,9 +326,9 @@ public class RigidBodyController : MonoBehaviour {
             Debug.Log("in: " + cp.otherCollider.name + " n: " + cp.normal);
         }*/
 
-        GenerateColls(col, false);
-
-        RefreshCollInfo();
+        //GenerateColls(col, false);
+        //mCollCount = 0;
+        //RefreshCollInfo();
 
         if(collisionEnterCallback != null)
             collisionEnterCallback(this, col);
@@ -334,7 +337,14 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void OnCollisionStay(Collision col) {
-        //int pc = mCollCount;
+        //remove existing information with given collider
+        for(int j = 0; j < mCollCount; j++) {
+            CollideInfo inf = mColls[j];
+            if(inf.collider == col.collider) {
+                RemoveColl(j);
+                j--;
+            }
+        }
 
         GenerateColls(col, false);
 
@@ -349,7 +359,18 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void OnCollisionExit(Collision col) {
-
+        //foreach(ContactPoint cp in col.contacts) {
+            //Debug.Log("out: " + cp.otherCollider.name + " n: " + cp.normal);
+        //}
+        //mCollCount = 0;
+        //remove existing information with given collider
+        for(int j = 0; j < mCollCount; j++) {
+            CollideInfo inf = mColls[j];
+            if(inf.collider == col.collider) {
+                RemoveColl(j);
+                j--;
+            }
+        }
         /*foreach(ContactPoint cp in col.contacts) {
             Debug.Log("out: " + cp.otherCollider.name + " n: " + cp.normal);
         }*/
@@ -358,7 +379,7 @@ public class RigidBodyController : MonoBehaviour {
 
         //Vector3 up = transform.up;
 
-        foreach(ContactPoint contact in col.contacts) {
+        /*foreach(ContactPoint contact in col.contacts) {
             Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
             //Vector3 n = contact.normal;
             //Vector3 p = contact.point;
@@ -374,7 +395,7 @@ public class RigidBodyController : MonoBehaviour {
                     RemoveColl(i);
                 }
             }
-        }
+        }*/
 
         RefreshCollInfo();
 
