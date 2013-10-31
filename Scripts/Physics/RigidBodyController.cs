@@ -27,17 +27,17 @@ public class RigidBodyController : MonoBehaviour {
     public float speedCap = 0.0f; //set to > 0 to cap speed
 
     public float moveForce = 50.0f;
-    public float moveAirForce = 20.0f;
-    public float moveMaxSpeed = 2.5f;
+    public float moveAirForce = 30.0f;
+    public float moveMaxSpeed = 8.5f;
 
-    public float slopSlideForce = 20.0f;
+    public float slopSlideForce = 40.0f;
 
-    public float airMaxSpeed = 1.5f;
+    public float airMaxSpeed = 6f;
     public float airDrag = 0.015f; //if there is no ground collision, this is the drag
 
     public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
 
-    public float standDrag = 10.0f;
+    public float standDrag = 60.0f;
     public LayerMask standDragLayer;
 
     public float waterDrag = 15.0f; //if within water
@@ -45,9 +45,9 @@ public class RigidBodyController : MonoBehaviour {
     public string waterTag = "Water";
     public LayerMask waterLayer;
 
-    public float slopLimit = 45.0f; //if we are standing still and slope is high, just use groundDrag, also determines collideflag below
+    public float slopLimit = 50.0f; //if we are standing still and slope is high, just use groundDrag, also determines collideflag below
     public float aboveLimit = 145.0f; //determines collideflag above, should be > 90, around 140'ish
-    public float slideLimit = 75.0f;
+    public float slideLimit = 80.0f;
 
     public event CallbackEvent waterEnterCallback;
     public event CallbackEvent waterExitCallback;
