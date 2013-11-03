@@ -1,5 +1,5 @@
 using UnityEngine;
-//using System.Collections;
+//using System.Collections.Generic;
 
 namespace M8 {
     public struct PhysicsUtil {
@@ -85,6 +85,25 @@ namespace M8 {
                 return CollisionFlags.Above;
 
             return CollisionFlags.Sides;
+        }
+
+        public static int[] GetLayerIndices(int layerMask) {
+            int[] layers = new int[32];
+            int numLayers = 0;
+
+            for(int i = 0; layerMask != 0; layerMask >>= 1, i++) {
+                if((layerMask & 1) != 0) {
+                    layers[numLayers] = i;
+                    numLayers++;
+                }
+            }
+                        
+            if(numLayers > 0) {
+                System.Array.Resize(ref layers, numLayers);
+                return layers;
+            }
+
+            return null;
         }
     }
 }

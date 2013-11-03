@@ -113,6 +113,7 @@ public class RigidBodyController : MonoBehaviour {
     public Vector3 groundMoveVelocity { get { return mGroundMoveVel; } }
     public GravityController gravityController { get { return mGravCtrl; } }
     public Vector3 localVelocity { get { return mLocalVelocity; } }
+    public CapsuleCollider capsuleCollider { get { return mCapsuleColl; } }
 
     /// <summary>
     /// Get the first occurence of CollideInfo based on given flags
@@ -299,7 +300,7 @@ public class RigidBodyController : MonoBehaviour {
         }
     }
 
-    void RemoveColl(int ind) {
+    protected void RemoveColl(int ind) {
         if(mCollCount > 0) {
             int lastInd = mCollCount - 1;
             if(ind == lastInd) {
@@ -329,6 +330,21 @@ public class RigidBodyController : MonoBehaviour {
         //GenerateColls(col, false);
         //mCollCount = 0;
         //RefreshCollInfo();
+
+        //remove existing information with given collider
+        /*for(int j = 0; j < mCollCount; j++) {
+            CollideInfo inf = mColls[j];
+            if(inf.collider == col.collider) {
+                RemoveColl(j);
+                j--;
+            }
+        }*/
+
+        GenerateColls(col, false);
+
+        //recalculate flags
+        RefreshCollInfo();
+
 
         if(collisionEnterCallback != null)
             collisionEnterCallback(this, col);
@@ -450,6 +466,8 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void OnDestroy() {
+        ResetCollision();
+
         collisionEnterCallback = null;
         collisionStayCallback = null;
         waterEnterCallback = null;
@@ -657,5 +675,12 @@ public class RigidBodyController : MonoBehaviour {
 
     protected void ComputeLocalVelocity() {
         mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(rigidbody.velocity);
+    }
+
+    /// <summary>
+    /// This will override the rigidbody's velocity to the current local velocity
+    /// </summary>
+    protected void SetLocalVelocityToBody() {
+        rigidbody.velocity = dirHolder.localToWorldMatrix.MultiplyVector(mLocalVelocity);
     }
 }
