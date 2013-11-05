@@ -636,9 +636,9 @@ public class RigidBodyController : MonoBehaviour {
 
         for(int i = 0; i < mCollCount; i++) {
             CollideInfo inf = mColls[i];
-            if(inf.collider == null || !inf.collider.gameObject.activeSelf) {
-                //remove
+            if(inf.collider == null || inf.collider.gameObject == null || !inf.collider.gameObject.activeInHierarchy) {
                 RemoveColl(i);
+                i--;
                 continue;
             }
 

@@ -293,7 +293,7 @@ public class EntityBase : MonoBehaviour {
 
     protected virtual void OnDestroy() {
         if(activator != null) {
-            activator.Release(activator.transform.parent == transform);
+            activator.Release(activator.defaultParent == transform);
         }
 
         setStateCallback = null;

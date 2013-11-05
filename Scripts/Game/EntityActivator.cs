@@ -10,7 +10,7 @@ using System.Collections;
 [AddComponentMenu("M8/Entity/EntityActivator")]
 public class EntityActivator : MonoBehaviour {
     //public const string ActivatorHolderTag = "ActivatorHolder"; //make sure this is in the scene root
-
+    
     public delegate void Callback();
 
     public bool deactivateOnStart = true;
@@ -19,22 +19,31 @@ public class EntityActivator : MonoBehaviour {
     public event Callback awakeCallback;
     public event Callback sleepCallback;
 
+    protected const string InActiveDelayInvoke = "InActiveDelay";
+
     private static GameObject mActivatorGO;
 
     private bool mIsActive = true;
-    private GameObject mParentGo;
 
+    private Transform mDefaultParent; //the parent when we are instantiated
     private Transform mActivatorHolder = null;
-
+    private Vector3 mLocalPos;
+    
     /// <summary>
     /// If true, then we are currently waiting for trigger. If false, then parent should be inactive
     /// </summary>
     public bool isActive { get { return mIsActive; } }
 
+    public Transform defaultParent { get { return mDefaultParent; } }
+
+    public void ForceActivate() {
+        DoActive();
+    }
+
     /// <summary>
     /// Initialize, call this when you are about to be re-added to the scene
     /// </summary>
-    public void Start() {
+    public virtual void Start() {
         //if(mActivatorGO == null) {
             //mActivatorGO = GameObject.FindGameObjectWithTag(ActivatorHolderTag);
             if(mActivatorGO == null) {
@@ -51,9 +60,9 @@ public class EntityActivator : MonoBehaviour {
     }
 
     /// <summary>
-    /// Call this when you are about to be released or destroyed
+    /// Call this when you are about to be released or destroyed. If destroy = true, then destroy this object
     /// </summary>
-    public void Release(bool destroy) {
+    public virtual void Release(bool destroy) {
         if(!mIsActive) {
             //put ourself back in parent
             if(destroy) {
@@ -61,14 +70,23 @@ public class EntityActivator : MonoBehaviour {
             }
             else {
                 //put back to parent
-                transform.parent = mParentGo.transform;
+                SetParent(mDefaultParent);
             }
 
             //StopCoroutine("DoActive");
-            CancelInvoke("InActiveDelay");
-            mParentGo = null;
+            CancelInvoke(InActiveDelayInvoke);
             mIsActive = true;
         }
+    }
+
+    protected virtual void Awake() {
+        mDefaultParent = transform.parent;
+        mLocalPos = transform.localPosition;
+    }
+
+    protected virtual void SetParent(Transform toParent) {
+        transform.parent = toParent;
+        transform.localPosition = mLocalPos;
     }
 
     void OnDestroy() {
@@ -84,7 +102,7 @@ public class EntityActivator : MonoBehaviour {
     void OnTriggerExit(Collider c) {
         if(mIsActive) {
             if(deactivateDelay > 0.0f) {
-                Invoke("InActiveDelay", deactivateDelay);
+                Invoke(InActiveDelayInvoke, deactivateDelay);
             }
             else {
                 DoInActive(true);
@@ -93,13 +111,11 @@ public class EntityActivator : MonoBehaviour {
     }
 
     /*IEnumerator*/
-    void DoActive() {
+    protected void DoActive() {
         if(!mIsActive) {
             //put ourself back in parent
-            mParentGo.SetActive(true);
-            transform.parent = mParentGo.transform;
-
-            mParentGo = null;
+            mDefaultParent.gameObject.SetActive(true);
+            SetParent(mDefaultParent);
 
             mIsActive = true;
 
@@ -110,7 +126,7 @@ public class EntityActivator : MonoBehaviour {
             }
         }
         else {
-            CancelInvoke("InActiveDelay");
+            CancelInvoke(InActiveDelayInvoke);
         }
 
         //yield break;
@@ -120,27 +136,25 @@ public class EntityActivator : MonoBehaviour {
         DoInActive(true);
     }
 
-    void DoInActive(bool notifySleep) {
+    protected void DoInActive(bool notifySleep) {
         if(mIsActive) {
             //StopCoroutine("DoActive");
+                        
+            //remove from parent
+            if(mActivatorHolder != null) {
+                SetParent(mActivatorHolder);
+            }
+            else {
+                SetParent(null);
+            }
+
+            mDefaultParent.gameObject.SetActive(false);
+
+            mIsActive = false;
 
             if(notifySleep && sleepCallback != null) {
                 sleepCallback();
             }
-
-            //remove from parent
-            mParentGo = transform.parent.gameObject;
-
-            if(mActivatorHolder != null) {
-                transform.parent = mActivatorHolder;
-            }
-            else {
-                transform.parent = null;
-            }
-
-            mParentGo.SetActive(false);
-
-            mIsActive = false;
         }
     }
 }
