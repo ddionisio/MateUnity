@@ -40,6 +40,10 @@ public class EntityActivator : MonoBehaviour {
         DoActive();
     }
 
+    public void ForceInactive(bool notifySleep) {
+        DoInActive(notifySleep);
+    }
+
     /// <summary>
     /// Initialize, call this when you are about to be re-added to the scene
     /// </summary>
@@ -85,8 +89,15 @@ public class EntityActivator : MonoBehaviour {
     }
 
     protected virtual void SetParent(Transform toParent) {
-        transform.parent = toParent;
-        transform.localPosition = mLocalPos;
+        if(toParent != mDefaultParent) {
+            Vector3 pos = transform.position;
+            transform.parent = toParent;
+            transform.position = pos;
+        }
+        else {
+            transform.parent = toParent;
+            transform.localPosition = mLocalPos;
+        }
     }
 
     void OnDestroy() {

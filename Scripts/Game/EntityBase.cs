@@ -201,6 +201,10 @@ public class EntityBase : MonoBehaviour {
         get { return mSerializer; }
     }
 
+    /// <summary>
+    /// Set to blinking, if delay = 0, stops blink immediately.
+    /// </summary>
+    /// <param name="delay"></param>
     public void Blink(float delay) {
         if(delay > 0.0f) {
             if(mBlinking)
