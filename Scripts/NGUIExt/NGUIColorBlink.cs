@@ -9,14 +9,22 @@ public class NGUIColorBlink : MonoBehaviour {
 
     private Color mOrigColor;
     private WaitForSeconds mWait;
+    private bool mStarted;
+    private bool mBlinkActive;
 
     void OnEnable() {
-        StartCoroutine(DoBlink());
+        if(mStarted && !mBlinkActive)
+            StartCoroutine(DoBlink());
     }
 
     void OnDisable() {
-        StopAllCoroutines();
-        target.color = mOrigColor;
+        if(mStarted) {
+            mBlinkActive = false;
+            StopAllCoroutines();
+
+            if(target != null)
+                target.color = mOrigColor;
+        }
     }
 
     void Awake() {
@@ -28,8 +36,15 @@ public class NGUIColorBlink : MonoBehaviour {
         mWait = new WaitForSeconds(delay);
     }
 
+    void Start() {
+        mStarted = true;
+        StartCoroutine(DoBlink());
+    }
+
     IEnumerator DoBlink() {
-        while(true) {
+        mBlinkActive = true;
+
+        while(mBlinkActive) {
             target.color = color;
 
             yield return mWait;
@@ -38,6 +53,5 @@ public class NGUIColorBlink : MonoBehaviour {
 
             yield return mWait;
         }
-
     }
 }

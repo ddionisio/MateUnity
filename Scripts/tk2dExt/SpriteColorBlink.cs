@@ -9,16 +9,22 @@ public class SpriteColorBlink : MonoBehaviour {
 
     private Color mOrigColor;
     private WaitForSeconds mWait;
+    private bool mStarted;
+    private bool mBlinkActive;
 
     void OnEnable() {
-        StartCoroutine(DoBlink());
+        if(mStarted && !mBlinkActive)
+            StartCoroutine(DoBlink());
     }
 
     void OnDisable() {
-        StopAllCoroutines();
+        if(mStarted) {
+            mBlinkActive = false;
+            StopAllCoroutines();
 
-        if(sprite != null)
-            sprite.color = mOrigColor;
+            if(sprite != null)
+                sprite.color = mOrigColor;
+        }
     }
 
     void Awake() {
@@ -30,8 +36,15 @@ public class SpriteColorBlink : MonoBehaviour {
         mWait = new WaitForSeconds(delay);
     }
 
+    void Start() {
+        mStarted = true;
+        StartCoroutine(DoBlink());
+    }
+
     IEnumerator DoBlink() {
-        while(true) {
+        mBlinkActive = true;
+
+        while(mBlinkActive) {
             sprite.color = color;
 
             yield return mWait;
@@ -40,6 +53,5 @@ public class SpriteColorBlink : MonoBehaviour {
 
             yield return mWait;
         }
-
     }
 }
