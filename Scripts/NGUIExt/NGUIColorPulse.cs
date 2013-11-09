@@ -8,16 +8,19 @@ public class NGUIColorPulse : MonoBehaviour {
     public float pulsePerSecond;
     public Color startColor;
     public Color endColor = Color.white;
+    public bool realtime = false;
 
     private float mCurPulseTime = 0;
     private bool mStarted = false;
 
     private Color mDefaultColor;
+    private float mLastRealtime;
 
     void OnEnable() {
         if(mStarted) {
             mCurPulseTime = 0;
             target.color = startColor;
+            mLastRealtime = Time.realtimeSinceStartup;
         }
     }
 
@@ -42,7 +45,13 @@ public class NGUIColorPulse : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        mCurPulseTime += Time.deltaTime;
+        if(realtime) {
+            mCurPulseTime += Time.realtimeSinceStartup - mLastRealtime;
+            mLastRealtime = Time.realtimeSinceStartup;
+        }
+        else {
+            mCurPulseTime += Time.deltaTime;
+        }
 
         float t = Mathf.Sin(Mathf.PI * mCurPulseTime * pulsePerSecond);
         t *= t;
