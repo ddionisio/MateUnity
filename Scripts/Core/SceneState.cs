@@ -9,7 +9,7 @@ public class SceneState : MonoBehaviour {
     public const string DataFormat = "{0}:{1}";
 
     public delegate void StateCallback(bool isGlobal, string name, StateValue val);
-        
+
     [System.Serializable]
     public class InitData {
         public string name = "";
@@ -45,7 +45,7 @@ public class SceneState : MonoBehaviour {
     public InitSceneData[] startData; //use for debug
 
     public event StateCallback onValueChange;
-        
+
     private static SceneState mInstance = null;
 
     private Dictionary<string, InitData[]> mStartData;
@@ -98,7 +98,7 @@ public class SceneState : MonoBehaviour {
             mStates = new Dictionary<string, StateValue>();
         }
 
-        StateValue v = new StateValue(defaultVal, 0.0f);
+        StateValue v;
         //try local
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
@@ -106,10 +106,13 @@ public class SceneState : MonoBehaviour {
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
                 mStates.Add(name, v);
+                return v.ival;
             }
         }
-        
-        return v.ival;
+        else
+            return v.ival;
+
+        return defaultVal;
     }
 
     public void SetValue(string name, int val, bool persistent) {
@@ -171,7 +174,7 @@ public class SceneState : MonoBehaviour {
             mStates = new Dictionary<string, StateValue>();
         }
 
-        StateValue v = new StateValue(0, defaultVal);
+        StateValue v;
         //try local
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
@@ -179,10 +182,13 @@ public class SceneState : MonoBehaviour {
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
                 mStates.Add(name, v);
+                return v.fval;
             }
         }
+        else
+            return v.fval;
 
-        return v.fval;
+        return defaultVal;
     }
 
     public void SetValueFloat(string name, float val, bool persistent) {
@@ -239,7 +245,7 @@ public class SceneState : MonoBehaviour {
             mGlobalStates = new Dictionary<string, StateValue>();
         }
 
-        StateValue v = new StateValue(defaultVal, 0.0f);
+        StateValue v;
         //try local
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
@@ -247,10 +253,13 @@ public class SceneState : MonoBehaviour {
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
                 mGlobalStates.Add(name, v);
+                return v.ival;
             }
         }
+        else
+            return v.ival;
 
-        return v.ival;
+        return defaultVal;
     }
 
     public void SetGlobalValue(string name, int val, bool persistent) {
@@ -308,7 +317,7 @@ public class SceneState : MonoBehaviour {
             mGlobalStates = new Dictionary<string, StateValue>();
         }
 
-        StateValue v = new StateValue(0, defaultVal);
+        StateValue v;
         //try local
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
@@ -316,10 +325,13 @@ public class SceneState : MonoBehaviour {
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
                 mGlobalStates.Add(name, v);
+                return v.fval;
             }
         }
+        else
+            return v.fval;
 
-        return v.fval;
+        return defaultVal;
     }
 
     public void SetGlobalValueFloat(string name, float val, bool persistent) {
@@ -409,7 +421,7 @@ public class SceneState : MonoBehaviour {
                 mStates = new Dictionary<string, StateValue>();
                 AppendInitData();
             }
-                        
+
             mPrevScene = curScene;
             mPrevStates = curStates;
         }

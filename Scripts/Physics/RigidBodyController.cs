@@ -112,7 +112,16 @@ public class RigidBodyController : MonoBehaviour {
     public float radius { get { return mRadius; } }
     public Vector3 groundMoveVelocity { get { return mGroundMoveVel; } }
     public GravityController gravityController { get { return mGravCtrl; } }
-    public Vector3 localVelocity { get { return mLocalVelocity; } }
+    public Vector3 localVelocity {
+        get { return mLocalVelocity; }
+        set {
+            if(mLocalVelocity != value) {
+                mLocalVelocity = value;
+                SetLocalVelocityToBody();
+            }
+        }
+    }
+
     public CapsuleCollider capsuleCollider { get { return mCapsuleColl; } }
 
     /// <summary>
@@ -376,7 +385,7 @@ public class RigidBodyController : MonoBehaviour {
 
     void OnCollisionExit(Collision col) {
         //foreach(ContactPoint cp in col.contacts) {
-            //Debug.Log("out: " + cp.otherCollider.name + " n: " + cp.normal);
+        //Debug.Log("out: " + cp.otherCollider.name + " n: " + cp.normal);
         //}
         //mCollCount = 0;
         //remove existing information with given collider
