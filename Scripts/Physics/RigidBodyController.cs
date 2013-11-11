@@ -24,7 +24,8 @@ public class RigidBodyController : MonoBehaviour {
     public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
     //you'll want this as an attach for camera as well.
 
-    public float speedCap = 0.0f; //set to > 0 to cap speed
+    [SerializeField]
+    float speedCap = 0.0f; //set to > 0 to cap speed
 
     public float moveForce = 50.0f;
     public float moveAirForce = 30.0f;
@@ -87,6 +88,8 @@ public class RigidBodyController : MonoBehaviour {
     private CapsuleCollider mCapsuleColl;
 
     private bool mLockDrag = false;
+
+    private float mDefaultSpeedCap;
 
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
@@ -218,6 +221,14 @@ public class RigidBodyController : MonoBehaviour {
         else {
             return Physics.CheckSphere(transform.position, mRadius - reduceOfs, mask);
         }
+    }
+
+    public void SetSpeedCap(float cap) {
+        speedCap = cap;
+    }
+
+    public void RevertSpeedCap() {
+        speedCap = mDefaultSpeedCap;
     }
 
     // implements
@@ -471,6 +482,7 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void OnDisable() {
+        RevertSpeedCap();
         ResetCollision();
     }
 
@@ -503,6 +515,8 @@ public class RigidBodyController : MonoBehaviour {
                 mRadius = mCapsuleColl.radius;
             }
         }
+
+        mDefaultSpeedCap = speedCap;
     }
 
     protected virtual void Start() {

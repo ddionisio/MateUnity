@@ -246,6 +246,12 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void OnDespawned() {
+        if(mBlinking) {
+            SetBlink(false);
+            mBlinking = false;
+            mBlinkTime = 0.0f;
+        }
+
 #if PLAYMAKER
         if(mFSM != null) {
             mFSM.enabled = false;

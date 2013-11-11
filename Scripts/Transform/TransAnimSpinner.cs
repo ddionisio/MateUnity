@@ -8,9 +8,21 @@ public class TransAnimSpinner : MonoBehaviour {
     public bool forceFixedUpdate;
 
     private Vector3 mEulerAnglesOrig;
+    private float mSpeedScale = 1.0f;
+
+    public float speedScale {
+        get { return mSpeedScale; }
+        set {
+            mSpeedScale = value;
+        }
+    }
 
     void OnEnable() {
         mEulerAnglesOrig = transform.eulerAngles;
+    }
+
+    void OnDisable() {
+        mSpeedScale = 1.0f;
     }
 
     // Use this for initialization
@@ -22,10 +34,10 @@ public class TransAnimSpinner : MonoBehaviour {
     void Update() {
         if(rigidbody == null) {
             if(local) {
-                transform.localEulerAngles = transform.localEulerAngles + rotatePerSecond * Time.deltaTime;
+                transform.localEulerAngles = transform.localEulerAngles + (rotatePerSecond * mSpeedScale * Time.deltaTime);
             }
             else {
-                mEulerAnglesOrig += rotatePerSecond * Time.deltaTime;
+                mEulerAnglesOrig += rotatePerSecond * mSpeedScale * Time.deltaTime;
                 transform.eulerAngles = mEulerAnglesOrig;
             }
         }
@@ -35,19 +47,19 @@ public class TransAnimSpinner : MonoBehaviour {
         if(rigidbody != null) {
             if(local) {
                 Vector3 eulers = transform.eulerAngles;
-                rigidbody.MoveRotation(Quaternion.Euler(eulers + rotatePerSecond * Time.fixedDeltaTime));
+                rigidbody.MoveRotation(Quaternion.Euler(eulers + (rotatePerSecond * mSpeedScale * Time.fixedDeltaTime)));
             }
             else {
-                mEulerAnglesOrig += rotatePerSecond * Time.fixedDeltaTime;
+                mEulerAnglesOrig += rotatePerSecond * mSpeedScale * Time.fixedDeltaTime;
                 rigidbody.MoveRotation(Quaternion.Euler(mEulerAnglesOrig));
             }
         }
         else if(forceFixedUpdate) {
             if(local) {
-                transform.localEulerAngles = transform.localEulerAngles + rotatePerSecond * Time.fixedDeltaTime;
+                transform.localEulerAngles = transform.localEulerAngles + (rotatePerSecond * mSpeedScale * Time.fixedDeltaTime);
             }
             else {
-                mEulerAnglesOrig += rotatePerSecond * Time.fixedDeltaTime;
+                mEulerAnglesOrig += rotatePerSecond * mSpeedScale * Time.fixedDeltaTime;
                 transform.eulerAngles = mEulerAnglesOrig;
             }
         }
