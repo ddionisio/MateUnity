@@ -91,7 +91,7 @@ public class RigidBodyController : MonoBehaviour {
 
     private float mDefaultSpeedCap;
 
-    private float mMoveScale = 1.0f; //NOTE: this is reset during disable
+    private float mMoveScale = 1.0f;
 
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
@@ -130,14 +130,8 @@ public class RigidBodyController : MonoBehaviour {
     public CapsuleCollider capsuleCollider { get { return mCapsuleColl; } }
 
     public float moveScale { 
-        get { return mMoveScale; } 
-        set {
-            if(mMoveScale != value) {
-                mMoveScale = value;
-                if(mGravCtrl)
-                    mGravCtrl.moveScale = mMoveScale;
-            }
-        } 
+        get { return mMoveScale; }
+        set { mMoveScale = value; }
     }
 
     /// <summary>
@@ -496,7 +490,6 @@ public class RigidBodyController : MonoBehaviour {
 
     protected virtual void OnDisable() {
         RevertSpeedCap();
-        mMoveScale = 1.0f;
         ResetCollision();
     }
 
