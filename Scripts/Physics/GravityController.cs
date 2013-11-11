@@ -19,8 +19,11 @@ public class GravityController : MonoBehaviour {
     private GravityFieldBase mGravityField; //which field we are currently attached to
     private Vector3 mUp;
     private bool mStarted;
+    private float mMoveScale = 1.0f; //NOTE: reset during disable
 
     public bool gravityLocked { get { return mGravityLocked; } set { mGravityLocked = value; } }
+
+    public float moveScale { get { return mMoveScale; } set { mMoveScale = value; } }
 
     public Vector3 up {
         get { return mUp; }
@@ -55,6 +58,8 @@ public class GravityController : MonoBehaviour {
         if(mGravityField) {
             mGravityField.RemoveItem(collider, false);
         }
+
+        mMoveScale = 1.0f;
     }
     
     protected virtual void Awake() {
@@ -70,7 +75,7 @@ public class GravityController : MonoBehaviour {
     // Update is called once per frame
     protected virtual void FixedUpdate() {
         if(!mGravityLocked)
-            rigidbody.AddForce(mUp * gravity * rigidbody.mass, ForceMode.Force);
+            rigidbody.AddForce(mUp * gravity * rigidbody.mass * mMoveScale, ForceMode.Force);
     }
 
     protected virtual void ApplyUp() {

@@ -91,6 +91,8 @@ public class RigidBodyController : MonoBehaviour {
 
     private float mDefaultSpeedCap;
 
+    private float mMoveScale = 1.0f; //NOTE: this is reset during disable
+
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
@@ -126,6 +128,17 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     public CapsuleCollider capsuleCollider { get { return mCapsuleColl; } }
+
+    public float moveScale { 
+        get { return mMoveScale; } 
+        set {
+            if(mMoveScale != value) {
+                mMoveScale = value;
+                if(mGravCtrl)
+                    mGravCtrl.moveScale = mMoveScale;
+            }
+        } 
+    }
 
     /// <summary>
     /// Get the first occurence of CollideInfo based on given flags
@@ -483,6 +496,7 @@ public class RigidBodyController : MonoBehaviour {
 
     protected virtual void OnDisable() {
         RevertSpeedCap();
+        mMoveScale = 1.0f;
         ResetCollision();
     }
 
@@ -544,7 +558,7 @@ public class RigidBodyController : MonoBehaviour {
 
             Vector3 dir = M8.MathUtil.Slide(-transform.up, mSlopNormal);
             dir.Normalize();
-            rigidbody.AddForce(dir * slopSlideForce);
+            rigidbody.AddForce(dir * slopSlideForce * moveScale);
         }
 
         if(mCurMoveAxis != Vector2.zero) {
@@ -620,11 +634,11 @@ public class RigidBodyController : MonoBehaviour {
         //M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
 
         //check if we can move based on speed or if going against new direction
-        bool canMove = CanMove(mCurMoveDir, maxSpeed);
+        bool canMove = CanMove(mCurMoveDir, maxSpeed * moveScale);
 
         if(canMove) {
             //M8.Debug.
-            rigidbody.AddForce(moveDelta * force);
+            rigidbody.AddForce(moveDelta * force * moveScale);
             return true;
         }
 
