@@ -369,7 +369,7 @@ public class EntityBase : MonoBehaviour {
     /// Spawn this entity, resets stats, set action to spawning, then later calls OnEntitySpawnFinish.
     /// NOTE: calls after an update to ensure Awake and Start is called.
     /// </summary>
-    void OnSpawned() {
+    protected virtual void OnSpawned() {
         if(mPoolData == null)
             mPoolData = GetComponent<PoolDataController>();
 
