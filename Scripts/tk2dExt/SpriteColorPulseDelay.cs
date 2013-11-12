@@ -17,20 +17,26 @@ public class SpriteColorPulseDelay : MonoBehaviour {
     private WaitForFixedUpdate mDoUpdate;
     private WaitForSeconds mWaitSecondsStart;
     private WaitForSeconds mWaitSecondsUpdate;
+
+    private bool mStarted = false;
         
     void OnEnable() {
-        if(sprite != null) {
+        if(mStarted) {
             StartCoroutine(DoPulseUpdate());
         }
     }
 
     void OnDisable() {
-        if(sprite != null) {
+        if(mStarted) {
+            StopAllCoroutines();
             sprite.color = startColor;
         }
     }
 
     void Awake() {
+        if(sprite == null)
+            sprite = GetComponent<tk2dBaseSprite>();
+
         mDoUpdate = new WaitForFixedUpdate();
         mWaitSecondsStart = new WaitForSeconds(startDelay);
         mWaitSecondsUpdate = new WaitForSeconds(pauseDelay);
@@ -38,9 +44,7 @@ public class SpriteColorPulseDelay : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        if(sprite == null)
-            sprite = GetComponent<tk2dBaseSprite>();
-
+        mStarted = true;
         StartCoroutine(DoPulseUpdate());
     }
 
