@@ -238,6 +238,13 @@ public class RigidBodyController : MonoBehaviour {
         speedCap = mDefaultSpeedCap;
     }
 
+    /// <summary>
+    /// This will override the rigidbody's velocity to the current local velocity
+    /// </summary>
+    public void SetLocalVelocityToBody() {
+        rigidbody.velocity = dirHolder.localToWorldMatrix.MultiplyVector(mLocalVelocity);
+    }
+
     // implements
 
     protected virtual void WaterEnter() {
@@ -705,12 +712,5 @@ public class RigidBodyController : MonoBehaviour {
 
     protected void ComputeLocalVelocity() {
         mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(rigidbody.velocity);
-    }
-
-    /// <summary>
-    /// This will override the rigidbody's velocity to the current local velocity
-    /// </summary>
-    protected void SetLocalVelocityToBody() {
-        rigidbody.velocity = dirHolder.localToWorldMatrix.MultiplyVector(mLocalVelocity);
     }
 }
