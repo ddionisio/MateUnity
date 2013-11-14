@@ -287,7 +287,7 @@ public class RigidBodyController : MonoBehaviour {
         if(resetCount)
             mCollCount = 0;
 
-        Vector3 up = transform.up;
+        Vector3 up = dirHolder.up;
 
         for(int i = 0, max = col.contacts.Length; i < max; i++) {
             if(mCollCount >= maxColls) {
@@ -427,7 +427,7 @@ public class RigidBodyController : MonoBehaviour {
 
         //Debug.Log("exit: " + col.gameObject.name);
 
-        //Vector3 up = transform.up;
+        //Vector3 up = dirHolder.up;
 
         /*foreach(ContactPoint contact in col.contacts) {
             Collider whichColl = contact.thisCollider != collider ? contact.thisCollider : contact.otherCollider;
@@ -556,7 +556,7 @@ public class RigidBodyController : MonoBehaviour {
         if(mIsSlopSlide) {
             //rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
 
-            Vector3 dir = M8.MathUtil.Slide(-transform.up, mSlopNormal);
+            Vector3 dir = M8.MathUtil.Slide(-dirHolder.up, mSlopNormal);
             dir.Normalize();
             rigidbody.AddForce(dir * slopSlideForce * moveScale);
         }
@@ -668,7 +668,7 @@ public class RigidBodyController : MonoBehaviour {
 
         bool groundNoSlope = false; //prevent slope slide if we are also touching a non-slidable ground (standing on the corner base of slope)
 
-        Vector3 up = transform.up;
+        Vector3 up = dirHolder.up;
         //
 
         for(int i = 0; i < mCollCount; i++) {

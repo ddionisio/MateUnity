@@ -50,7 +50,11 @@ Shader "M8/2D/MultVertexColor"
 
 			fixed4 frag_mult(v2f_vct i) : COLOR
 			{
-				fixed4 col = tex2D(_MainTex, i.texcoord) * i.color;
+				fixed4 col = tex2D(_MainTex, i.texcoord);
+				fixed ofs = (1 - 1*i.color.a);
+				col.r = col.r * i.color.r + ofs;
+				col.g = col.g * i.color.g + ofs;
+				col.b = col.b * i.color.b + ofs;
 				return col;
 			}
 			

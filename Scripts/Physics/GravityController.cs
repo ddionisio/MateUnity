@@ -3,7 +3,7 @@ using System.Collections;
 
 [AddComponentMenu("M8/Physics/GravityController")]
 public class GravityController : MonoBehaviour {
-    public Vector3 startUp = Vector3.zero; //initial up vector, this is to orient the object's up to match this, if zero, init with transform's up
+    public Vector3 startUp = Vector3.up; //initial up vector, this is to orient the object's up to match this, if zero, init with transform's up
 
     public bool orientUp = true; //allow orientation of the up vector
 

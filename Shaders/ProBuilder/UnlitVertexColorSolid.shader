@@ -1,6 +1,6 @@
-Shader "M8/ProBuilder/Unlit Vertex Color" {
+Shader "M8/ProBuilder/Unlit Solid Vertex Color" {
   Properties {
-    _MainTex ("Texture", 2D) = "white" {}
+    _Color ("Color", Color) = (1,1,1,1)
   }
   SubShader {
     Tags { "RenderType" = "Opaque" }
@@ -14,7 +14,7 @@ Shader "M8/ProBuilder/Unlit Vertex Color" {
 		#pragma fragmentoption ARB_precision_hint_fastest
 		#include "UnityCG.cginc"
 
-		sampler2D _MainTex;
+		fixed4 _Color;
 
 		struct vin_vct 
 		{
@@ -27,7 +27,6 @@ Shader "M8/ProBuilder/Unlit Vertex Color" {
 		{
 			float4 vertex : POSITION;
 			fixed4 color : COLOR;
-			float2 texcoord : TEXCOORD0;
 		};
 
 		v2f_vct vert_vct(vin_vct v)
@@ -35,13 +34,12 @@ Shader "M8/ProBuilder/Unlit Vertex Color" {
 			v2f_vct o;
 			o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
 			o.color = v.color;
-			o.texcoord = v.texcoord;
 			return o;
 		}
 
 		fixed4 frag_mult(v2f_vct i) : COLOR
 		{
-			fixed4 col = tex2D(_MainTex, i.texcoord) * i.color;
+			fixed4 col = _Color * i.color;
 			return col;
 		}
 

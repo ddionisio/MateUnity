@@ -159,6 +159,20 @@ public class PoolController : MonoBehaviour {
         }
     }
 
+    public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation) {
+        PoolController pc = GetPool(group);
+        if(pc != null) {
+            Transform t = pc.Spawn(type, name, toParent, position, rotation);
+            Vector3 p = t.localPosition;
+            p.z = 0.0f;
+            t.localPosition = p;
+            return t;
+        }
+        else {
+            return null;
+        }
+    }
+
     public static void ReleaseAuto(Transform entity) {
         PoolDataController pdc = entity.GetComponent<PoolDataController>();
         if(pdc != null) {

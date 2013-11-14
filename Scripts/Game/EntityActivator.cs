@@ -41,6 +41,7 @@ public class EntityActivator : MonoBehaviour {
     }
 
     public void ForceInactive(bool notifySleep) {
+        CancelInvoke(InActiveDelayInvoke);
         DoInActive(notifySleep);
     }
 
@@ -113,7 +114,8 @@ public class EntityActivator : MonoBehaviour {
     void OnTriggerExit(Collider c) {
         if(mIsActive) {
             if(deactivateDelay > 0.0f) {
-                Invoke(InActiveDelayInvoke, deactivateDelay);
+                if(!IsInvoking(InActiveDelayInvoke))
+                    Invoke(InActiveDelayInvoke, deactivateDelay);
             }
             else {
                 DoInActive(true);
@@ -136,9 +138,8 @@ public class EntityActivator : MonoBehaviour {
                 awakeCallback();
             }
         }
-        else {
+        else
             CancelInvoke(InActiveDelayInvoke);
-        }
 
         //yield break;
     }
