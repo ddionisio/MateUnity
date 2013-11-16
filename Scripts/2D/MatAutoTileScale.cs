@@ -58,6 +58,11 @@ public class MatAutoTileScale : MonoBehaviour {
         }
     }
 
+    void OnDestroy() {
+        if(mMat)
+            DestroyImmediate(mMat);
+    }
+
     void OnEnable() {
         mCurScale = Vector2.zero;
     }
@@ -89,7 +94,8 @@ public class MatAutoTileScale : MonoBehaviour {
             _target = renderer;
 
         if(_target != null) {
-            mMat = _target.material;
+            mMat = new Material(_target.sharedMaterial);
+            _target.sharedMaterial = mMat;
 
             if(_texture != null)
                 mMat.mainTexture = _texture;

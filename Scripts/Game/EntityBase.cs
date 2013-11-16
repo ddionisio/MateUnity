@@ -232,10 +232,15 @@ public class EntityBase : MonoBehaviour {
 #endif
         }
         else {
+            //just disable the object, really no need to destroy
+            OnDespawned();
+            gameObject.SetActive(false);
+            /*
             if(gameObject.activeInHierarchy)
                 StartCoroutine(DestroyDelay());
-            else
+            else {
                 Destroy(gameObject);
+            }*/
         }
     }
 
@@ -258,7 +263,7 @@ public class EntityBase : MonoBehaviour {
         }
 #endif
 
-        if(activator != null) {
+        if(activator != null && activator.defaultParent == transform) {
             activator.Release(false);
         }
 
@@ -302,8 +307,8 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void OnDestroy() {
-        if(activator != null) {
-            activator.Release(activator.defaultParent == transform);
+        if(activator != null && activator.defaultParent == transform) {
+            activator.Release(true);
         }
 
         setStateCallback = null;
