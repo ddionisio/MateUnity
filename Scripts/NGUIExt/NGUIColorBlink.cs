@@ -7,20 +7,18 @@ public class NGUIColorBlink : MonoBehaviour {
     public Color color;
     public float delay;
 
+    private const string blinkFunc = "DoBlink";
     private Color mOrigColor;
-    private WaitForSeconds mWait;
     private bool mStarted;
-    private bool mBlinkActive;
 
     void OnEnable() {
-        if(mStarted && !mBlinkActive)
-            StartCoroutine(DoBlink());
+        if(mStarted && !IsInvoking(blinkFunc))
+            InvokeRepeating(blinkFunc, 0, delay);
     }
 
     void OnDisable() {
         if(mStarted) {
-            mBlinkActive = false;
-            StopAllCoroutines();
+            CancelInvoke();
 
             if(target != null)
                 target.color = mOrigColor;
@@ -32,26 +30,17 @@ public class NGUIColorBlink : MonoBehaviour {
             target = GetComponent<UIWidget>();
 
         mOrigColor = target.color;
-
-        mWait = new WaitForSeconds(delay);
     }
 
     void Start() {
         mStarted = true;
-        StartCoroutine(DoBlink());
+        InvokeRepeating(blinkFunc, 0, delay);
     }
 
-    IEnumerator DoBlink() {
-        mBlinkActive = true;
-
-        while(mBlinkActive) {
+    void DoBlink() {
+        if(target.color == mOrigColor)
             target.color = color;
-
-            yield return mWait;
-
+        else
             target.color = mOrigColor;
-
-            yield return mWait;
-        }
     }
 }
