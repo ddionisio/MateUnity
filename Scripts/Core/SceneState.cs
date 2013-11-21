@@ -5,6 +5,7 @@ using System.Collections.Generic;
 //Put this in the core object, or on an object with DontDestroyOnLoad
 [AddComponentMenu("M8/Core/SceneState")]
 public class SceneState : MonoBehaviour {
+    public const string GlobalDataPrefix = "g:";
     public const string GlobalDataFormat = "g:{0}";
     public const string DataFormat = "{0}:{1}";
 
@@ -375,6 +376,22 @@ public class SceneState : MonoBehaviour {
         mPrevScene = null;
 
         AppendInitData();
+    }
+
+    public void ClearAllSavedData(bool resetValues = true) {
+        if(mGlobalStates != null) {
+            UserData.instance.DeleteAllByNameContain(GlobalDataPrefix);
+
+            if(resetValues)
+                ResetGlobalValues();
+        }
+
+        if(mStates != null && !string.IsNullOrEmpty(mScene)) {
+            UserData.instance.DeleteAllByNameContain(mScene + ":");
+
+            if(resetValues)
+                ResetValues();
+        }
     }
 
     void OnDestroy() {

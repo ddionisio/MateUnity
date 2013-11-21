@@ -15,7 +15,9 @@ public class UIModalInputNGUI : MonoBehaviour {
     public float axisThreshold = 0.75f;
 
     public int enter = InputManager.ActionInvalid;
+    public int enterAlt = InputManager.ActionInvalid;
     public int cancel = InputManager.ActionInvalid;
+    public int cancelAlt = InputManager.ActionInvalid;
 
     private enum AxisState {
         Up,
@@ -135,8 +137,14 @@ public class UIModalInputNGUI : MonoBehaviour {
             if(enter != InputManager.ActionInvalid)
                 input.AddButtonCall(player, enter, OnInputEnter);
 
+            if(enterAlt != InputManager.ActionInvalid)
+                input.AddButtonCall(player, enterAlt, OnInputEnter);
+
             if(cancel != InputManager.ActionInvalid)
                 input.AddButtonCall(player, cancel, OnInputCancel);
+
+            if(cancelAlt != InputManager.ActionInvalid)
+                input.AddButtonCall(player, cancelAlt, OnInputCancel);
 
             mInputActive = true;
 
@@ -155,8 +163,14 @@ public class UIModalInputNGUI : MonoBehaviour {
                 if(enter != InputManager.ActionInvalid)
                     input.RemoveButtonCall(player, enter, OnInputEnter);
 
+                if(enterAlt != InputManager.ActionInvalid)
+                    input.RemoveButtonCall(player, enterAlt, OnInputEnter);
+
                 if(cancel != InputManager.ActionInvalid)
                     input.RemoveButtonCall(player, cancel, OnInputCancel);
+
+                if(cancelAlt != InputManager.ActionInvalid)
+                    input.RemoveButtonCall(player, cancelAlt, OnInputCancel);
             }
 
             mInputActive = false;

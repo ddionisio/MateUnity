@@ -136,7 +136,7 @@ public class UserData : MonoBehaviour {
             //ew
             foreach(string key in new List<string>(mValues.Keys)) {
                 if(key.Contains(nameContains))
-                    mValues.Remove(name);
+                    mValues.Remove(key);
             }
         }
     }
