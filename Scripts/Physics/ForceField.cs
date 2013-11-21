@@ -21,6 +21,12 @@ public class ForceField : MonoBehaviour {
     [SerializeField]
     Axis _dir;
 
+    [SerializeField]
+    Vector3 _forceOfs;
+
+    [SerializeField]
+    float _maxSpeed = 15.0f;
+
     public bool inverse;
 
     public float force;
@@ -138,13 +144,18 @@ public class ForceField : MonoBehaviour {
                     break;
             }
 
+            dir += _forceOfs;
+
             dir = transform.rotation * (inverse ? -dir : dir);
 
             foreach(Rigidbody body in mBodies) {
                 if(setDrag)
                     body.drag = drag;
 
-                body.AddForce(dir * force, ForceMode.Force);
+                Vector3 vel = body.rigidbody.velocity;
+                if(vel.sqrMagnitude < _maxSpeed * _maxSpeed || Vector3.Angle(dir, vel) >= 90.0f) {
+                    body.AddForce(dir * force, ForceMode.Force);
+                }
             }
 
             yield return mWait;
