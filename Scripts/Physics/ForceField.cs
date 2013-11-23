@@ -16,28 +16,25 @@ public class ForceField : MonoBehaviour {
     }
 
     [SerializeField]
-    Mode _mode;
-
+    Mode
+        _mode;
     [SerializeField]
-    Axis _dir;
-
+    Axis
+        _dir;
     [SerializeField]
-    Vector3 _forceOfs;
-
+    Vector3
+        _forceOfs;
     [SerializeField]
-    float _maxSpeed = 15.0f;
-
+    float
+        _maxSpeed = 15.0f;
     public bool inverse;
-
     public float force;
     public float impulse;
-
     public bool setDrag = false;
     public float drag = 0.0f;
-
     [SerializeField]
-    float _updateDelay = 0.2f;
-
+    float
+        _updateDelay = 0.2f;
     private bool mModeRunning = false;
     private YieldInstruction mWait;
     private Vector3 mCenterLocal;
@@ -144,9 +141,12 @@ public class ForceField : MonoBehaviour {
                     break;
             }
 
+            if(inverse)
+                dir *= -1;
+
             dir += _forceOfs;
 
-            dir = transform.rotation * (inverse ? -dir : dir);
+            dir = transform.rotation * dir;
 
             foreach(Rigidbody body in mBodies) {
                 if(setDrag)
