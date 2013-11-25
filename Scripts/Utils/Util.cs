@@ -10,6 +10,31 @@ namespace M8 {
             return obj1.name.CompareTo(obj2.name);
         }
 
+        public static GameObject FindGameObjectByNameRecursive(GameObject go, string name) {
+            if(go.name == name) {
+                return go;
+            }
+            else {
+                //first find it in children
+                Transform found = go.transform.Find(name);
+                
+                if(found != null) {
+                    return found.gameObject;
+                }
+                
+                //find it inside each child
+                foreach(Transform t in go.transform) {
+                    GameObject item = FindGameObjectByNameRecursive(t.gameObject, name);
+                    
+                    if(item != null) {
+                        return item;
+                    }
+                }
+                
+                return null;
+            }
+        }
+
         public static T[] GetComponentsInChildrenAlphaSort<T>(Component c, bool includeInactive) where T : Component {
             T[] items = c.GetComponentsInChildren<T>(includeInactive);
             System.Array.Sort<T>(items, ComponentNameCompare);
