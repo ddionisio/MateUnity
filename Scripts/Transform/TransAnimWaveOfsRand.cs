@@ -85,7 +85,7 @@ public class TransAnimWaveOfsRand : MonoBehaviour {
                 if(mCurPulseTime < mPulseDelay) {
                     float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / mPulseDelay));
 
-                    Vector2 newPos = Vector2.Lerp(mStartPos, mEndPos, squared ? t * t : t);
+                    Vector3 newPos = Vector3.Lerp(mStartPos, mEndPos, squared ? t * t : t);
 
                     if(local)
                         target.localPosition = newPos;

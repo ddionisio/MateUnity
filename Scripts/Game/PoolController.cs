@@ -174,6 +174,7 @@ public class PoolController : MonoBehaviour {
     }
 
     public static void ReleaseAuto(Transform entity) {
+        //NOTE: don't really need to destroy
         PoolDataController pdc = entity.GetComponent<PoolDataController>();
         if(pdc != null) {
             PoolController pc = GetPool(pdc.group);
@@ -181,10 +182,12 @@ public class PoolController : MonoBehaviour {
                 pc.Release(entity);
             }
             else
-                Object.Destroy(entity.gameObject);
+                entity.gameObject.SetActive(false);
+                //Object.Destroy(entity.gameObject);
         }
         else
-            Object.Destroy(entity.gameObject);
+            entity.gameObject.SetActive(false);
+            //Object.Destroy(entity.gameObject);
     }
 
     public static void ReleaseByGroup(string group, Transform entity) {

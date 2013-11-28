@@ -147,6 +147,15 @@ public class RigidBodyController : MonoBehaviour {
         return null;
     }
 
+    public CollideInfo GetCollideInfo(Collider col) {
+        for(int i = 0; i < mCollCount; i++) {
+            if(mColls[i].collider == col)
+                return mColls[i];
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Check if given collision is currently colliding with this object.
     /// </summary>
