@@ -10,6 +10,14 @@ public class TransAttachTo : MonoBehaviour {
     public Transform target;
     public Vector3 offset;
 
+    public Vector3 rotOfs;
+    
+    private Quaternion mRotQ;
+
+    void Awake() {
+        mRotQ = Quaternion.Euler(rotOfs);
+    }
+
     // Update is called once per frame
     void Update() {
         if(target != null) {
@@ -22,7 +30,12 @@ public class TransAttachTo : MonoBehaviour {
                 transform.position = target.position + target.rotation * offset;
             }
 
-            transform.rotation = target.rotation;
+#if UNITY_EDITOR
+            if(!Application.isPlaying)
+                mRotQ = Quaternion.Euler(rotOfs);
+#endif
+
+            transform.rotation = mRotQ * target.rotation;
         }
     }
 }

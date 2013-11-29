@@ -1,6 +1,5 @@
 Shader "M8/SolidColorNoLight" {
 	Properties {
-		_MainTex ("Base (RGB)", 2D) = "white" {}
 		_Color ("Color", Color) = (1,1,1,1)
 	}
 	SubShader {
@@ -18,31 +17,26 @@ Shader "M8/SolidColorNoLight" {
 
 			half4 _Color;
 
-			sampler2D _MainTex;
-
 			struct vin_vct 
 			{
 				float4 vertex : POSITION;
-				float2 texcoord : TEXCOORD0;
 			};
 
 			struct v2f_vct
 			{
 				float4 vertex : POSITION;
-				float2 texcoord : TEXCOORD0;
 			};
 
 			v2f_vct vert_vct(vin_vct v)
 			{
 				v2f_vct o;
 				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
-				o.texcoord = v.texcoord;
 				return o;
 			}
 
 			half4 frag_mult(v2f_vct i) : COLOR
 			{
-				half4 col = tex2D(_MainTex, i.texcoord) * _Color;
+				half4 col = _Color;
 				return col;
 			}
 

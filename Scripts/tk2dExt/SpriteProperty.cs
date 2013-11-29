@@ -36,6 +36,32 @@ public class SpriteProperty : MonoBehaviour {
         }
     }
 
+    public float absoluteScaleX {
+        get {
+            Vector3 s = mSprite.scale;
+            return Mathf.Abs(s.x);
+        }
+
+        set {
+            Vector3 s = mSprite.scale;
+            s.x = Mathf.Sign(s.x) * value;
+            mSprite.scale = s;
+        }
+    }
+
+    public float absoluteScaleY {
+        get {
+            Vector3 s = mSprite.scale;
+            return Mathf.Abs(s.y);
+        }
+
+        set {
+            Vector3 s = mSprite.scale;
+            s.y = Mathf.Sign(s.y) * value;
+            mSprite.scale = s;
+        }
+    }
+
     void Awake() {
         mSprite = GetComponent<tk2dBaseSprite>();
         //mSpriteId = mSprite.spriteId;
