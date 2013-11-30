@@ -171,6 +171,16 @@ public class TriggerForce : MonoBehaviour {
             if(lingerDragOverride)
                 col.rigidbody.drag = lingerDrag;
 
+            switch(_dirMode) {
+                case Mode.Center:
+                    dir = inverse ? transform.position - col.transform.position : col.transform.position - transform.position;
+                    dir.Normalize();
+                    
+                    if(resetVelocityByAxis)
+                        col.rigidbody.velocity = Vector3.zero;
+                    break;
+            }
+
             col.rigidbody.AddForce(dir * forceLinger);
 
             t += Time.fixedDeltaTime;

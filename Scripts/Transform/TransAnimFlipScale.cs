@@ -15,11 +15,11 @@ public class TransAnimFlipScale : MonoBehaviour {
     private Vector3 mPrevScale;
     private bool mIsPrev;
 
-    void OnEnable() {
-        mPrevScale = target.localScale;
-        mIsPrev = true;
+    private bool mStarted;
 
-        InvokeRepeating("DoFlip", delay, delay);
+    void OnEnable() {
+        if(mStarted && !IsInvoking("DoFlip"))
+            InvokeRepeating("DoFlip", delay, delay);
     }
 
     void OnDisable() {
@@ -27,11 +27,20 @@ public class TransAnimFlipScale : MonoBehaviour {
             target.localScale = mPrevScale;
             mIsPrev = true;
         }
+
+        CancelInvoke();
     }
 
     void Awake() {
         if(target == null)
             target = transform;
+    }
+
+    void Start() {
+        mPrevScale = target.localScale;
+        mIsPrev = true;
+        mStarted = true;
+        InvokeRepeating("DoFlip", delay, delay);
     }
 
     void DoFlip() {
