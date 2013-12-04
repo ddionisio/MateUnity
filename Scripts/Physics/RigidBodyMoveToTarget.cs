@@ -33,19 +33,21 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
 #endif
 
     void FixedUpdate() {
-        Vector3 newPos;
+        if(target) {
+            Vector3 newPos;
 
-        if(collider != null) {
-            Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
-            newPos = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
+            if(collider != null) {
+                Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
+                newPos = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
+            }
+            else
+                newPos = target.position + target.rotation * offset;
+
+            if(transform.position != newPos)
+                rigidbody.MovePosition(newPos);
+
+            rigidbody.MoveRotation(mRotQ * target.rotation);
         }
-        else
-            newPos = target.position + target.rotation * offset;
-
-        if(transform.position != newPos)
-            rigidbody.MovePosition(newPos);
-
-        rigidbody.MoveRotation(mRotQ * target.rotation);
     }
 
     void Awake() {
