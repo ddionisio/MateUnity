@@ -35,6 +35,9 @@ public class EntityActivator : MonoBehaviour {
     public bool isActive { get { return mIsActive; } }
 
     public Transform defaultParent { get { return mDefaultParent; } }
+    
+    //TODO: need something for this
+    public virtual bool isVisible { get { return true; } }
 
     public void ForceActivate() {
         DoActive();
@@ -44,7 +47,7 @@ public class EntityActivator : MonoBehaviour {
         CancelInvoke(InActiveDelayInvoke);
         DoInActive(notifySleep);
     }
-
+        
     /// <summary>
     /// Initialize, call this when you are about to be re-added to the scene
     /// </summary>
