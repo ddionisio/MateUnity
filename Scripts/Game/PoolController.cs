@@ -204,6 +204,10 @@ public class PoolController : MonoBehaviour {
         }
     }
 
+    public FactoryData[] types {
+        get { return factory; }
+    }
+
     public Transform GetDefaultParent(string type) {
         FactoryData dat;
         if(mFactory.TryGetValue(type, out dat)) {
