@@ -330,7 +330,7 @@ public class PoolController : MonoBehaviour {
     }
 
     void Awake() {
-        if(group == null)
+        if(string.IsNullOrEmpty(group))
             group = name;
 
         if(mControllers == null) {
