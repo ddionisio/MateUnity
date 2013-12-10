@@ -16,12 +16,15 @@ public class GravityController : MonoBehaviour {
     protected WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
 
     private bool mGravityLocked = false;
-    private GravityFieldBase mGravityField; //which field we are currently attached to
     private Vector3 mUp;
+    private float mStartGravity;
     private bool mStarted;
     private float mMoveScale = 1.0f; //NOTE: reset during disable
+    private int mGravityFieldCounter;
 
+    public int gravityFieldCounter { get { return mGravityFieldCounter; } set { mGravityFieldCounter = Mathf.Clamp(value, 0, int.MaxValue); } }
     public bool gravityLocked { get { return mGravityLocked; } set { mGravityLocked = value; } }
+    public float startGravity { get { return mStartGravity; } }
 
     public float moveScale { get { return mMoveScale; } set { mMoveScale = value; } }
 
@@ -36,13 +39,6 @@ public class GravityController : MonoBehaviour {
         }
     }
 
-    public GravityFieldBase gravityField { 
-        get { return mGravityField; } 
-        set {
-            mGravityField = value; 
-        } 
-    }
-
     void OnEnable() {
         if(mStarted) {
             Init();
@@ -55,15 +51,15 @@ public class GravityController : MonoBehaviour {
             transform.up = mUp;
         }
 
-        if(mGravityField) {
-            mGravityField.RemoveItem(collider, false);
-        }
+        mGravityFieldCounter = 0;
 
         mMoveScale = 1.0f;
     }
     
     protected virtual void Awake() {
         rigidbody.useGravity = false;
+
+        mStartGravity = gravity;
     }
 
     // Use this for initialization
@@ -96,7 +92,7 @@ public class GravityController : MonoBehaviour {
             up = startUp;
         }
         else {
-            mUp = transform.up;
+            startUp = mUp = transform.up;
         }
     }
 

@@ -8,24 +8,22 @@ public abstract class GravityFieldBase : MonoBehaviour {
 
     public struct ItemData {
         public GravityController controller;
-        public Vector3 prevUp;
-        public float prevGravity;
 
         public ItemData(GravityController ctrl) {
             controller = ctrl;
             if(ctrl != null) {
-                prevUp = ctrl.up;
-                prevGravity = ctrl.gravity;
-            }
-            else {
-                prevUp = Vector3.zero;
-                prevGravity = 0.0f;
+                ctrl.gravityFieldCounter++;
             }
         }
 
-        public void Restore() {
-            controller.up = prevUp;
-            controller.gravity = prevGravity;
+        public void Revert(bool restore) {
+            if(controller.gameObject.activeSelf && controller.enabled) {
+                controller.gravityFieldCounter--;
+                if(controller.gravityFieldCounter <= 0 && restore) {
+                    controller.up = controller.startUp;
+                    controller.gravity = controller.startGravity;
+                }
+            }
         }
     }
 
@@ -34,6 +32,9 @@ public abstract class GravityFieldBase : MonoBehaviour {
     public bool retainGravity = false; //if true, then gravity and up orientation of GravityController will persist when it exits the field
     public bool isGlobal = false; //check as the default gravity field, there should only be one of these.
     public float updateDelay = 0.0f;
+
+    public bool fallLimit; //if enabled, reduce speed based on fallSpeedLimit
+    public float fallSpeedLimit;
 
     private static GravityFieldBase mGlobal = null;
 
@@ -45,42 +46,9 @@ public abstract class GravityFieldBase : MonoBehaviour {
 
     public void Add(GravityController ctrl) {
         if(!mItems.ContainsKey(ctrl.collider) && ctrl.rigidbody != null && !ctrl.rigidbody.isKinematic) {
-            if(ctrl.gravityField != null) { //another field holds the item, transfer ownership
-                ItemData item = ctrl.gravityField.RemoveItem(ctrl.collider, false);
-                if(item.controller != null) {//invalid for some reason?
-
-                    mItems.Add(ctrl.collider, item);
-                    if(!mIsProcessing) StartCoroutine(DoEval());
-
-                    ctrl.gravityField = this;
-                }
-            }
-            else {
-                mItems.Add(ctrl.collider, new ItemData(ctrl));
-                if(!mIsProcessing) StartCoroutine(DoEval());
-                ctrl.gravityField = this;
-            }
+            mItems.Add(ctrl.collider, new ItemData(ctrl));
+            if(!mIsProcessing) StartCoroutine(DoEval());
         }
-    }
-
-    /// <summary>
-    /// Used by other field to transfer ownership of item
-    /// </summary>
-    public ItemData RemoveItem(Collider col, bool restore) {
-        ItemData itm;
-        if(mItems.TryGetValue(col, out itm)) {
-            if(restore)
-                itm.Restore();
-
-            itm.controller.gravityField = null;
-
-            mItems.Remove(col);
-            ItemRemoved(itm.controller);
-        }
-        else
-            itm = new ItemData(null);
-
-        return itm;
     }
 
     protected abstract Vector3 GetUpVector(GravityController entity);
@@ -117,20 +85,7 @@ public abstract class GravityFieldBase : MonoBehaviour {
         if(mItems.TryGetValue(col, out itm)) {
             mItems.Remove(col);
             ItemRemoved(itm.controller);
-
-            if(!retainGravity) {
-                itm.Restore();
-            }
-
-            //add to global
-            if(mGlobal != null) {
-                mGlobal.mItems.Add(col, itm);
-                if(!mIsProcessing) StartCoroutine(DoEval());
-
-                itm.controller.gravityField = mGlobal;
-            }
-            else
-                itm.controller.gravityField = null;
+            itm.Revert(!retainGravity);
         }
     }
 
@@ -154,6 +109,19 @@ public abstract class GravityFieldBase : MonoBehaviour {
 
                     if(gravityOverride)
                         ctrl.gravity = gravity;
+
+                    //speed limit
+                    if(fallLimit) {
+                        //assume y-axis, positive up
+                        Rigidbody body = ctrl.rigidbody;
+                        if(body && !body.isKinematic) {
+                            Vector3 localVel = ctrl.transform.worldToLocalMatrix.MultiplyVector(body.velocity);
+                            if(localVel.y < -fallSpeedLimit) {
+                                localVel.y = -fallSpeedLimit;
+                                body.velocity = ctrl.transform.localToWorldMatrix.MultiplyVector(localVel);
+                            }
+                        }
+                    }
                 }
             }
 
