@@ -134,7 +134,7 @@ namespace M8 {
             if(Mathf.Abs(angle) > angleLimit * Mathf.Deg2Rad) {
                 Vector3 cross = Vector3.Cross(srcDir, destDir);
                 Quaternion r = Quaternion.AngleAxis(angleLimit, cross);
-                return r * destDir;
+                return r * srcDir;
             }
 
             return destDir;

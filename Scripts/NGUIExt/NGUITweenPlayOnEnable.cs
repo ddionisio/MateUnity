@@ -8,7 +8,8 @@ public class NGUITweenPlayOnEnable : MonoBehaviour {
 
     void OnEnable() {
         tweener.enabled = true;
-        tweener.Reset();
+        tweener.SetStartToCurrentValue();
+        tweener.SetEndToCurrentValue();
     }
 
     void Awake() {

@@ -37,6 +37,7 @@ public class TriggerForce : MonoBehaviour {
 
     public bool lingerDragOverride = true;
     public float lingerDrag = 0.0f;
+    public bool lingerUpdateDir = true;
 
     private HashSet<Collider> mColliders = new HashSet<Collider>();
 
@@ -79,12 +80,13 @@ public class TriggerForce : MonoBehaviour {
 
             if(body != null && !body.isKinematic && (_tags.Length == 0 || CheckTag(col.gameObject.tag))) {
                 //check tags
+                Vector3 bodyPos = col.bounds.center;
 
                 Vector3 dir;
 
                 switch(_dirMode) {
                     case Mode.Center:
-                        dir = inverse ? transform.position - body.transform.position : body.transform.position - transform.position;
+                        dir = inverse ? transform.position - bodyPos : bodyPos - transform.position;
                         dir.Normalize();
 
                         if(resetVelocityByAxis)
@@ -171,14 +173,18 @@ public class TriggerForce : MonoBehaviour {
             if(lingerDragOverride)
                 col.rigidbody.drag = lingerDrag;
 
-            switch(_dirMode) {
-                case Mode.Center:
-                    dir = inverse ? transform.position - col.transform.position : col.transform.position - transform.position;
-                    dir.Normalize();
-                    
-                    if(resetVelocityByAxis)
-                        col.rigidbody.velocity = Vector3.zero;
-                    break;
+            if(lingerUpdateDir) {
+                Vector3 bodyPos = col.bounds.center;
+
+                switch(_dirMode) {
+                    case Mode.Center:
+                        dir = inverse ? transform.position - bodyPos : bodyPos - transform.position;
+                        dir.Normalize();
+                        
+                        //if(resetVelocityByAxis)
+                            //col.rigidbody.velocity = Vector3.zero;
+                        break;
+                }
             }
 
             col.rigidbody.AddForce(dir * forceLinger);

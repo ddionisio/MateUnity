@@ -494,13 +494,13 @@ public class RigidBodyController : MonoBehaviour {
             mWaterCounter--;
             if(mWaterCounter < 0)
                 mWaterCounter = 0;
-        }
 
-        if(!isUnderWater) {
-            WaterExit();
-
-            if(waterExitCallback != null)
-                waterExitCallback(this);
+            if(!isUnderWater) {
+                WaterExit();
+                
+                if(waterExitCallback != null)
+                    waterExitCallback(this);
+            }
         }
     }
 
