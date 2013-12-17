@@ -277,6 +277,9 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void ActivatorWakeUp() {
+        if(!gameObject.activeInHierarchy)
+            return;
+
         if(activateOnStart && mStartedCounter == 1) { //we didn't get a chance to start properly before being inactivated
             StartCoroutine(DoStart());
         }

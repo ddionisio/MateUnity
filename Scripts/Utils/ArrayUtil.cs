@@ -72,5 +72,15 @@ namespace M8 {
                 src = dest;
             }
         }
+
+        public static bool Contains(string[] src, string itm)
+        {
+            if(src != null) {
+                for(int i = 0; i < src.Length; i++)
+                    if(src[i] == itm)
+                        return true;
+            }
+            return false;
+        }
 	}
 }
