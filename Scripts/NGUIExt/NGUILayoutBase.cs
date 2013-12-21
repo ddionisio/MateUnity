@@ -11,6 +11,7 @@ public abstract class NGUILayoutBase : MonoBehaviour {
     public bool alwaysUpdate = false;
     public bool repositionOnEnable = false;
     public bool repositionNow = false;
+    public bool ignoreRefresh = false; //don't refresh via Refresh call
 
     private bool mStarted = false;
 
@@ -30,7 +31,7 @@ public abstract class NGUILayoutBase : MonoBehaviour {
         System.Array.Sort(layouts, NGUILayoutBase.Comparer);
 
         for(int i = layouts.Length - 1; i >= 0; i--) {
-            if(!layouts[i].alwaysUpdate)
+            if(!layouts[i].ignoreRefresh)
                 layouts[i].Reposition();
         }
     }

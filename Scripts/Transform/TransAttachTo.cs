@@ -11,6 +11,8 @@ public class TransAttachTo : MonoBehaviour {
     public Vector3 offset;
 
     public Vector3 rotOfs;
+
+    public bool ignoreRot;
     
     private Quaternion mRotQ;
 
@@ -30,12 +32,14 @@ public class TransAttachTo : MonoBehaviour {
                 transform.position = target.position + target.rotation * offset;
             }
 
+            if(!ignoreRot) {
 #if UNITY_EDITOR
-            if(!Application.isPlaying)
-                mRotQ = Quaternion.Euler(rotOfs);
+                if(!Application.isPlaying)
+                    mRotQ = Quaternion.Euler(rotOfs);
 #endif
 
-            transform.rotation = mRotQ * target.rotation;
+                transform.rotation = mRotQ * target.rotation;
+            }
         }
     }
 }

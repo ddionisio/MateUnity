@@ -56,9 +56,20 @@ public abstract class UIController : MonoBehaviour {
     }
 
     public void _close() {
+        StopCoroutine("DoLateLayoutRefresh");
+
         OnClose();
 
         if(onCloseCallback != null)
             onCloseCallback();
+    }
+
+    IEnumerator DoLateLayoutRefresh() {
+        yield return new WaitForFixedUpdate();
+        NGUILayoutBase.RefreshNow(transform);
+    }
+
+    protected void LayoutLateRefresh() {
+        StartCoroutine("DoLateLayoutRefresh");
     }
 }

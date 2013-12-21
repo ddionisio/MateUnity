@@ -72,18 +72,20 @@ public class MusicManager : MonoBehaviour {
     }
 
     public void Play(string name, bool immediate) {
-        if(immediate) {
-            Stop(false);
+        MusicData nextMusic;
+        if(!mMusic.TryGetValue(name, out nextMusic)) {
+            Debug.LogWarning("Unknown music: "+name);
+            return;
         }
 
-        if(mCurMusic == null || immediate) {
-            mCurMusic = mMusic[name];
+        if(mCurMusic == null || (immediate && mCurMusic != nextMusic)) {
+            mCurMusic = nextMusic;
             mCurMusic.source.volume = mCurMusic.defaultVolume * Main.instance.userSettings.musicVolume;
             mCurMusic.source.Play();
             SetState(State.Playing);
         }
-        else {
-            mNextMusic = mMusic[name];
+        else if(mCurMusic != nextMusic) {
+            mNextMusic = nextMusic;
             SetState(State.Changing);
         }
 
@@ -196,8 +198,13 @@ public class MusicManager : MonoBehaviour {
 
                     if(autoPlay != AutoPlayType.None)
                         AutoPlaylistNext();
-                    else if(mCurMusic.loop) //loop
-                        mCurMusic.source.Play((ulong)System.Math.Round(rate * ((double)mCurMusic.loopDelay)));
+                    else if(mCurMusic.loop) {//loop
+                        mCurMusic.source.volume = mCurMusic.defaultVolume * Main.instance.userSettings.musicVolume;
+                        if(mCurMusic.loopDelay > 0)
+                            mCurMusic.source.Play((ulong)System.Math.Round(rate * ((double)mCurMusic.loopDelay)));
+                        else
+                            mCurMusic.source.Play();
+                    }
                     else {
                         SetState(State.None);
                     }
@@ -213,9 +220,6 @@ public class MusicManager : MonoBehaviour {
                     mCurMusic.source.Stop();
 
                     if(mNextMusic != null) {
-                        mCurMusic.source.volume = mCurMusic.defaultVolume * Main.instance.userSettings.musicVolume;
-                        mNextMusic.source.Play();
-
                         mCurMusic = mNextMusic;
                         mNextMusic = null;
 
