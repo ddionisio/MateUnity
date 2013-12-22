@@ -79,6 +79,7 @@ public class MusicManager : MonoBehaviour {
         }
 
         if(mCurMusic == null || (immediate && mCurMusic != nextMusic)) {
+            Stop(false);
             mCurMusic = nextMusic;
             mCurMusic.source.volume = mCurMusic.defaultVolume * Main.instance.userSettings.musicVolume;
             mCurMusic.source.Play();
