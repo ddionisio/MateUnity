@@ -100,6 +100,7 @@ public class EntityActivator : MonoBehaviour {
         }
         else {
             transform.parent = toParent;
+            transform.position = toParent.position;
             transform.localPosition = mLocalPos;
         }
     }
