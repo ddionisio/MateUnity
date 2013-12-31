@@ -8,8 +8,10 @@ using System.Collections;
 [AddComponentMenu("M8/Physics/RigidBodyMoveToTarget")]
 public class RigidBodyMoveToTarget : MonoBehaviour {
     public Transform target;
+    public Collider thisCollider;
     public Vector3 offset;
 
+    public bool ignoreRotation = false;
     public Vector3 rotOfs;
 
     private Quaternion mRotQ;
@@ -18,8 +20,9 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         if(!Application.isPlaying && target != null) {
-            if(collider != null) {
-                Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
+            Collider col = thisCollider != null ? thisCollider : collider;
+            if(col != null) {
+                Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(col.bounds.center);
 
                 transform.position = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
             }
@@ -27,7 +30,8 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
                 transform.position = target.position + target.rotation*offset;
             }
 
-            transform.rotation = Quaternion.Euler(rotOfs) * target.rotation;
+            if(!ignoreRotation)
+                transform.rotation = Quaternion.Euler(rotOfs) * target.rotation;
         }
     }
 #endif
@@ -36,8 +40,8 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
         if(target) {
             Vector3 newPos;
 
-            if(collider != null) {
-                Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
+            if(thisCollider != null) {
+                Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(thisCollider.bounds.center);
                 newPos = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
             }
             else
@@ -46,11 +50,15 @@ public class RigidBodyMoveToTarget : MonoBehaviour {
             if(transform.position != newPos)
                 rigidbody.MovePosition(newPos);
 
-            rigidbody.MoveRotation(mRotQ * target.rotation);
+            if(!ignoreRotation)
+                rigidbody.MoveRotation(mRotQ * target.rotation);
         }
     }
 
     void Awake() {
+        if(thisCollider == null)
+            thisCollider = collider;
+
         mRotQ = Quaternion.Euler(rotOfs);
     }
 }
