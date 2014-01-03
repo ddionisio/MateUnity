@@ -5,6 +5,9 @@ using System.Collections;
 public class GODeactivateDelay : MonoBehaviour {
     public delegate void OnDeactivate();
 
+    public GameObject target;
+    public bool resetActive;
+
 	public float delay = 1.0f;
 
     public event OnDeactivate deactivateCallback;
@@ -14,11 +17,21 @@ public class GODeactivateDelay : MonoBehaviour {
     }
 	
 	void OnEnable() {
+        if(resetActive && target)
+            target.SetActive(true);
+
 		Invoke("OnDeactive", delay);
 	}
+
+    void OnDisable() {
+        CancelInvoke();
+    }
 	
 	void OnDeactive() {
-		gameObject.SetActive(false);
+        if(target)
+            target.SetActive(false);
+        else
+		    gameObject.SetActive(false);
 
         if(deactivateCallback != null)
             deactivateCallback();
