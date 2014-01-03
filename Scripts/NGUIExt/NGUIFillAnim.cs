@@ -44,6 +44,12 @@ public class NGUIFillAnim : MonoBehaviour {
         }
     }
 
+    public void Fill() {
+        target.fillAmount = end;
+        mInvert = false;
+        mState = State.None;
+    }
+
     public void Play() {
         if(mState == State.None) {
             mState = State.Start;
