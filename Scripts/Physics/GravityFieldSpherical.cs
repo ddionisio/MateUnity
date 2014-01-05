@@ -6,7 +6,7 @@ public class GravityFieldSpherical : GravityFieldBase {
 
     public bool inward = false;
 
-    protected override Vector3 GetUpVector(GravityController entity) {
+    public override Vector3 GetUpVector(GravityController entity) {
         Vector3 position = entity.transform.position;
 
         Vector3 dir = inward ? transform.position - position : position - transform.position;

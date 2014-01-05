@@ -20,9 +20,11 @@ public class GravityController : MonoBehaviour {
     private float mStartGravity;
     private bool mStarted;
     private float mMoveScale = 1.0f; //NOTE: reset during disable
-    private int mGravityFieldCounter;
 
-    public int gravityFieldCounter { get { return mGravityFieldCounter; } set { mGravityFieldCounter = Mathf.Clamp(value, 0, int.MaxValue); } }
+    private const int mMaxGravityFields = 4;
+    private GravityFieldBase[] mGravityFields = new GravityFieldBase[mMaxGravityFields];
+    private int mGravityFieldCurCount;
+
     public bool gravityLocked { get { return mGravityLocked; } set { mGravityLocked = value; } }
     public float startGravity { get { return mStartGravity; } }
 
@@ -51,13 +53,50 @@ public class GravityController : MonoBehaviour {
             transform.up = mUp;
         }
 
-        mGravityFieldCounter = 0;
+        mGravityFieldCurCount = 0;
 
+        gravity = mStartGravity;
         mMoveScale = 1.0f;
+    }
+
+    void OnTriggerEnter(Collider col) {
+        if(mGravityFieldCurCount < mMaxGravityFields) {
+            GravityFieldBase gravField = col.GetComponent<GravityFieldBase>();
+            if(gravField) {
+                int ind = System.Array.IndexOf(mGravityFields, gravField, 0, mGravityFieldCurCount);
+                if(ind == -1) {
+                    mGravityFields[mGravityFieldCurCount] = gravField;
+                    mGravityFieldCurCount++;
+                }
+            }
+        }
+    }
+    
+    void OnTriggerExit(Collider col) {
+        GravityFieldBase gravField = col.GetComponent<GravityFieldBase>();
+        if(gravField) {
+            int ind = System.Array.IndexOf(mGravityFields, gravField, 0, mGravityFieldCurCount);
+            if(ind != -1) {
+                gravField.ItemRemoved(this);
+
+                if(mGravityFieldCurCount > 1) {
+                    mGravityFields[ind] = mGravityFields[mGravityFieldCurCount - 1];
+                }
+                else { //restore
+                    up = startUp;
+                    gravity = mStartGravity;
+                }
+
+                mGravityFieldCurCount--;
+            }
+        }
     }
     
     protected virtual void Awake() {
         rigidbody.useGravity = false;
+
+        if(startUp == Vector3.zero)
+            startUp = transform.up;
 
         mStartGravity = gravity;
     }
@@ -70,6 +109,61 @@ public class GravityController : MonoBehaviour {
 
     // Update is called once per frame
     protected virtual void FixedUpdate() {
+        if(mGravityFieldCurCount > 0) {
+            bool fallLimit = false;
+            float fallSpeedLimit = Mathf.Infinity;
+
+            Vector3 newUp = Vector3.zero;
+
+            float newGravity = 0.0f;
+
+            for(int i = 0; i < mGravityFieldCurCount; i++) {
+                GravityFieldBase gf = mGravityFields[i];
+                if(gf && gf.gameObject.activeSelf && gf.enabled) {
+                    newUp += gf.GetUpVector(this);
+                    if(gf.gravityOverride)
+                        newGravity += gf.gravity;
+
+                    if(gf.fallLimit) {
+                        fallLimit = true;
+                        if(gf.fallSpeedLimit < fallSpeedLimit)
+                            fallSpeedLimit = gf.fallSpeedLimit;
+                    }
+                }
+                else { //not active, remove it
+                    if(mGravityFieldCurCount > 1) {
+                        mGravityFields[i] = mGravityFields[mGravityFieldCurCount - 1];
+                    }
+
+                    mGravityFieldCurCount--;
+                    i--;
+                }
+            }
+
+            if(mGravityFieldCurCount > 0) { //in case all were inactive
+                newUp /= ((float)mGravityFieldCurCount); newUp.Normalize();
+
+                up = newUp;
+
+                gravity = newGravity;
+
+                if(fallLimit) {
+                    //assume y-axis, positive up
+                    if(rigidbody && !rigidbody.isKinematic) {
+                        Vector3 localVel = transform.worldToLocalMatrix.MultiplyVector(rigidbody.velocity);
+                        if(localVel.y < -fallSpeedLimit) {
+                            localVel.y = -fallSpeedLimit;
+                            rigidbody.velocity = transform.localToWorldMatrix.MultiplyVector(localVel);
+                        }
+                    }
+                }
+            }
+            else { //restore
+                up = startUp;
+                gravity = mStartGravity;
+            }
+        }
+
         if(!mGravityLocked)
             rigidbody.AddForce(mUp * gravity * rigidbody.mass * mMoveScale, ForceMode.Force);
     }
@@ -85,15 +179,12 @@ public class GravityController : MonoBehaviour {
     }
 
     void Init() {
-        if(GravityFieldBase.global != null)
-            GravityFieldBase.global.Add(this);
+        if(GravityFieldBase.global != null) {
+            mGravityFields[mGravityFieldCurCount] = GravityFieldBase.global;
+            mGravityFieldCurCount++;
+        }
 
-        if(startUp != Vector3.zero) {
-            up = startUp;
-        }
-        else {
-            startUp = mUp = transform.up;
-        }
+        up = startUp;
     }
 
     protected IEnumerator OrientUp() {

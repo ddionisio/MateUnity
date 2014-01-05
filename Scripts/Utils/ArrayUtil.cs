@@ -82,5 +82,14 @@ namespace M8 {
             }
             return false;
         }
+
+        public static bool Contains<T>(T[] src, T itm) where T:Component {
+            if(src != null) {
+                for(int i = 0; i < src.Length; i++)
+                    if(src[i] == itm)
+                        return true;
+            }
+            return false;
+        }
 	}
 }

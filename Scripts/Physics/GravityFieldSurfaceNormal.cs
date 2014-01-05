@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 [AddComponentMenu("M8/Physics/GravityFieldSurfaceNormal")]
 public class GravityFieldSurfaceNormal : GravityFieldBase {
+    public const int startCapacity = 8;
+
     public Transform center;
 
     public bool inverse = false;
@@ -33,7 +35,7 @@ public class GravityFieldSurfaceNormal : GravityFieldBase {
     private Dictionary<GravityController, DirInfo> mCurDirs = new Dictionary<GravityController, DirInfo>(startCapacity);
     private List<GravityController> mRemoveDirs = new List<GravityController>(startCapacity);
 
-    protected override Vector3 GetUpVector(GravityController entity) {
+    public override Vector3 GetUpVector(GravityController entity) {
         DirInfo info = null;
         mCurDirs.TryGetValue(entity, out info);
 
@@ -75,7 +77,7 @@ public class GravityFieldSurfaceNormal : GravityFieldBase {
         base.OnDisable();
     }
 
-    protected override void ItemRemoved(GravityController ctrl) {
+    public override void ItemRemoved(GravityController ctrl) {
         mCurDirs.Remove(ctrl);
     }
 
