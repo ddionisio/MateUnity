@@ -220,6 +220,16 @@ public class EntityBase : MonoBehaviour {
     }
 
     /// <summary>
+    /// Manually perform start if it hasn't fully started yet.
+    /// </summary>
+    public virtual void Activate() {
+        if(mStartedCounter < 2) {
+            StopAllCoroutines();
+            StartCoroutine(DoStart());
+        }
+    }
+
+    /// <summary>
     /// Explicit call to remove entity.
     /// </summary>
     public virtual void Release() {
