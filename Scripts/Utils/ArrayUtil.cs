@@ -29,6 +29,16 @@ namespace M8 {
             }
         }
 
+        public static void Shuffle(Array array, int start, int length) {
+            for(int i = start; i < length; i++) {
+                int r = UnityEngine.Random.Range(i, length);
+                object obj = array.GetValue(i);
+                object robj = array.GetValue(r);
+                array.SetValue(robj, i);
+                array.SetValue(obj, r);
+            }
+        }
+
         public static T[] RemoveAt<T>(T[] src, int index) {
             T[] dest = new T[src.Length - 1];
             if(index > 0) {
