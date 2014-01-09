@@ -31,6 +31,14 @@ public class SpriteAnimPeriodicPlay : MonoBehaviour {
     private float mCurDelay;
     private bool mPlayNextClip;
 
+    public void SetDefaultClip(string clip) {
+        tk2dSpriteAnimationClip prevClip = mDefaultClip;
+        mDefaultClip = target.GetClipByName(clip);
+        if(mPlaying && target.CurrentClip == prevClip) {
+            target.Play(mDefaultClip);
+        }
+    }
+
     public void Play(bool begin) {
         if(!mPlaying) {
             mPlaying = true;
