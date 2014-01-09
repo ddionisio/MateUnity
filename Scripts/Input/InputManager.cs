@@ -43,12 +43,25 @@ public class InputManager : MonoBehaviour {
         public ButtonAxis axis = ButtonAxis.None; //for buttons as axis
         public int index = 0; //which index this key refers to
 
-        private bool mNewBind = false;
+        private bool mDirty = false;
+
+        public bool isValid {
+            get { return !string.IsNullOrEmpty(input) || code != KeyCode.None || map != InputKeyMap.None; }
+        }
 
         public void SetAsInput(string input) {
             ResetKeys();
 
             this.input = input;
+        }
+
+        public void SetAsKey(KeyCode aCode) {
+            ResetKeys();
+            code = aCode;
+        }
+
+        public void SetDirty(bool dirty) {
+            mDirty = dirty;
         }
 
         void _ApplyInfo(uint dataPak) {
@@ -58,7 +71,7 @@ public class InputManager : MonoBehaviour {
             index = M8.Util.GetLoByte(s1);
         }
 
-        public void SetAsKey(uint dataPak) {
+        public void _SetAsKey(uint dataPak) {
             ResetKeys();
 
             _ApplyInfo(dataPak);
@@ -66,7 +79,7 @@ public class InputManager : MonoBehaviour {
             code = (KeyCode)M8.Util.GetLoWord(dataPak);
         }
 
-        public void SetAsMap(uint dataPak) {
+        public void _SetAsMap(uint dataPak) {
             ResetKeys();
 
             _ApplyInfo(dataPak);
@@ -95,12 +108,8 @@ public class InputManager : MonoBehaviour {
             return ret;
         }
 
-        public void _NewBind() {
-            mNewBind = true;
-        }
-
-        public bool _IsNewBind() {
-            return mNewBind;
+        public bool IsDirty() {
+            return mDirty;
         }
     }
 
@@ -192,8 +201,6 @@ public class InputManager : MonoBehaviour {
     private ButtonCallSetData[] mButtonCallSetQueue = new ButtonCallSetData[buttonCallMax]; //prevent breaking enumeration during update when adding/removing
     private int mButtonCallSetQueueCount;
 
-    private string[] mKeyCodeString; //conversion from the enumerator
-
     //interfaces (available after awake)
 
     /// <summary>
@@ -254,16 +261,16 @@ public class InputManager : MonoBehaviour {
                                 if(pd.keys[index] == null)
                                     pd.keys[index] = new Key();
 
-                                pd.keys[index].SetAsKey((uint)PlayerPrefs.GetInt(usdKey + "_k"));
+                                pd.keys[index]._SetAsKey((uint)PlayerPrefs.GetInt(usdKey + "_k"));
                             }
                             else if(PlayerPrefs.HasKey(usdKey + "_m")) {
                                 if(pd.keys[index] == null)
                                     pd.keys[index] = new Key();
 
-                                pd.keys[index].SetAsMap((uint)PlayerPrefs.GetInt(usdKey + "_m"));
+                                pd.keys[index]._SetAsMap((uint)PlayerPrefs.GetInt(usdKey + "_m"));
                             }
                             else if(PlayerPrefs.HasKey(usdKey + "_d"))
-                                pd.keys[index] = null; //destroy
+                                pd.keys[index].ResetKeys();
                         }
                     }
                 }
@@ -296,8 +303,8 @@ public class InputManager : MonoBehaviour {
                             string usdKey = _BaseKey(act, player, index);
 
                             Key key = pd.keys[index];
-                            if(key != null) {
-                                if(key._IsNewBind()) {
+                            if(key.isValid) {
+                                if(key.IsDirty()) {
                                     //for previous bind if type is changed
                                     _DeletePlayerPrefs(usdKey);
 
@@ -326,6 +333,8 @@ public class InputManager : MonoBehaviour {
                                             PlayerPrefs.SetInt(usdKey + postfix, val);
                                         }
                                     }
+
+                                    key.SetDirty(false);
                                 }
                             }
                             else {
@@ -340,16 +349,11 @@ public class InputManager : MonoBehaviour {
     }
 
     public void UnBindKey(int player, int action, int index) {
-        mBinds[action].players[player].keys[index] = null;
-    }
-
-    public void BindKey(int action, int index, Key newKey) {
-        newKey._NewBind();
-        mBinds[action].players[newKey.player].keys[index] = newKey;
+        mBinds[action].players[player].keys[index].ResetKeys();
     }
 
     public bool CheckBindKey(int player, int action, int index) {
-        return mBinds[action] != null && mBinds[action].players[player] != null && mBinds[action].players[player].keys[index] != null;
+        return mBinds[action] != null && mBinds[action].players[player] != null && mBinds[action].players[player].keys[index].isValid;
     }
 
     public Key GetBindKey(int player, int action, int index) {
