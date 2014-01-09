@@ -179,7 +179,9 @@ public class InputManager : MonoBehaviour {
 
     protected BindData[] mBinds;
 
-    protected HashSet<PlayerData> mButtonCalls;
+    private const int buttonCallMax = 32;
+    protected PlayerData[] mButtonCalls = new PlayerData[buttonCallMax];
+    protected int mButtonCallsCount = 0;
 
     private struct ButtonCallSetData {
         public PlayerData pd;
@@ -187,7 +189,10 @@ public class InputManager : MonoBehaviour {
         public bool add;
     }
 
-    private Queue<ButtonCallSetData> mButtonCallSetQueue = new Queue<ButtonCallSetData>(64); //prevent breaking enumeration during update when adding/removing
+    private ButtonCallSetData[] mButtonCallSetQueue = new ButtonCallSetData[buttonCallMax]; //prevent breaking enumeration during update when adding/removing
+    private int mButtonCallSetQueueCount;
+
+    private string[] mKeyCodeString; //conversion from the enumerator
 
     //interfaces (available after awake)
 
@@ -406,7 +411,8 @@ public class InputManager : MonoBehaviour {
         if(action < mBinds.Length && player < mBinds[action].players.Length) {
             PlayerData pd = mBinds[action].players[player];
 
-            mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = true });
+            mButtonCallSetQueue[mButtonCallSetQueueCount] = new ButtonCallSetData() { pd = pd, cb = callback, add = true };
+            mButtonCallSetQueueCount++;
         }
     }
 
@@ -414,7 +420,8 @@ public class InputManager : MonoBehaviour {
         if(action < mBinds.Length && player < mBinds[action].players.Length) {
             PlayerData pd = mBinds[action].players[player];
 
-            mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = callback, add = false });
+            mButtonCallSetQueue[mButtonCallSetQueueCount] = new ButtonCallSetData() { pd = pd, cb = callback, add = false };
+            mButtonCallSetQueueCount++;
         }
     }
 
@@ -422,7 +429,8 @@ public class InputManager : MonoBehaviour {
         foreach(PlayerData pd in mBinds[action].players) {
             pd.callback = null;
 
-            mButtonCallSetQueue.Enqueue(new ButtonCallSetData() { pd = pd, cb = null, add = false });
+            mButtonCallSetQueue[mButtonCallSetQueueCount] = new ButtonCallSetData() { pd = pd, cb = null, add = false };
+            mButtonCallSetQueueCount++;
         }
     }
 
@@ -435,9 +443,9 @@ public class InputManager : MonoBehaviour {
             }
         }
 
-        mButtonCalls.Clear();
+        mButtonCallsCount = 0;
 
-        mButtonCallSetQueue.Clear();
+        mButtonCallSetQueueCount = 0;
     }
 
     //implements
@@ -497,8 +505,6 @@ public class InputManager : MonoBehaviour {
                 mBinds[pair.Key] = pair.Value;
             }
 
-            mButtonCalls = new HashSet<PlayerData>();
-
             //load user config binds
             LoadBinds();
         }
@@ -508,12 +514,15 @@ public class InputManager : MonoBehaviour {
     }
 
     protected virtual void Update() {
-        foreach(PlayerData pd in mButtonCalls) {
+        for(int i = 0; i < mButtonCallsCount; i++) {
+            PlayerData pd = mButtonCalls[i];
+
             pd.info.state = State.None;
 
             Key keyDown = null;
 
-            foreach(Key key in pd.keys) {
+            for(int k = 0; k < pd.keys.Length; k++) {
+                Key key = pd.keys[k];
                 if(ProcessButtonDown(key)) {
                     keyDown = key;
                     break;
@@ -543,24 +552,43 @@ public class InputManager : MonoBehaviour {
             }
         }
 
-        //add new button calls
-        while(mButtonCallSetQueue.Count > 0) {
-            ButtonCallSetData dat = mButtonCallSetQueue.Dequeue();
-            if(dat.cb != null) {
-                if(dat.add) {
+        //add or remove button calls
+        for(int i = 0; i < mButtonCallSetQueueCount; i++) {
+            ButtonCallSetData dat = mButtonCallSetQueue[i];
+
+            if(dat.add) {
+                if(dat.cb != null) {
                     if(dat.pd.callback != dat.cb) {
                         dat.pd.callback += dat.cb;
                     }
 
-                    mButtonCalls.Add(dat.pd);
+                    int ind = System.Array.IndexOf(mButtonCalls, dat.pd, 0, mButtonCallsCount);
+                    if(ind == -1) {
+                        mButtonCalls[mButtonCallsCount] = dat.pd;
+                        mButtonCallsCount++;
+                    }
                 }
-                else {
+            }
+            else {
+                if(dat.cb != null)
                     dat.pd.callback -= dat.cb;
+                else
+                    dat.pd.callback = null;
 
-                    if(dat.pd.callback == null)
-                        mButtonCalls.Remove(dat.pd);
+                //no more callbacks, don't need to poll this anymore
+                if(dat.pd.callback == null) {
+                    if(mButtonCallsCount > 1) {
+                        int ind = System.Array.IndexOf(mButtonCalls, dat.pd, 0, mButtonCallsCount);
+                        mButtonCalls[ind] = mButtonCalls[mButtonCallsCount - 1];
+
+                        mButtonCallsCount--;
+                    }
+                    else
+                        mButtonCallsCount = 0;
                 }
             }
         }
+
+        mButtonCallSetQueueCount = 0;
     }
 }
