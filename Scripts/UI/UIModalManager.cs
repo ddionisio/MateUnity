@@ -102,6 +102,17 @@ public class UIModalManager : MonoBehaviour {
                 }
 
                 prevUI._active(true);
+
+                //show modal behind this one if this is not exclusive
+                if(!prevUID.exclusive) {
+                    foreach(UIData prevUId in mModalStack) {
+                        if(prevUId != prevUID) {
+                            prevUId.ui.gameObject.SetActive(true);
+                            if(prevUId.exclusive)
+                                break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -203,8 +214,11 @@ public class UIModalManager : MonoBehaviour {
                 UIController prevUI = prevUID.ui;
                 prevUI._active(false);
 
-                if(uid.exclusive)
-                    prevUI.gameObject.SetActive(false);
+                if(uid.exclusive) {
+                    foreach(UIData prevUId in mModalStack) {
+                        prevUId.ui.gameObject.SetActive(false);
+                    }
+                }
             }
 
             UIController ui = uid.ui;

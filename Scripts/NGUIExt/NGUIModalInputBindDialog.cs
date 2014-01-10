@@ -79,8 +79,8 @@ public class NGUIModalInputBindDialog : UIModalInputBindDialog {
 
         mItems = new NGUIModalInputBindItem[actions.Length];
 
-        UIButtonKeys saveBtnKeys = saveItem.GetComponent<UIButtonKeys>();
         UIButtonKeys defaultBtnKeys = defaultItem.GetComponent<UIButtonKeys>();
+        UIButtonKeys cancelBtnKeys = cancelItem.GetComponent<UIButtonKeys>();
 
         for(int i = 0; i < mItems.Length; i++) {
             GameObject go = (GameObject)GameObject.Instantiate(template);
@@ -93,8 +93,8 @@ public class NGUIModalInputBindDialog : UIModalInputBindDialog {
             mItems[i] = go.GetComponent<NGUIModalInputBindItem>();
 
             if(i == 0) {
-                mItems[i].primaryBtnKeys.selectOnUp = defaultBtnKeys;
-                mItems[i].secondaryBtnKeys.selectOnUp = defaultBtnKeys;
+                mItems[i].primaryBtnKeys.selectOnUp = cancelBtnKeys;
+                mItems[i].secondaryBtnKeys.selectOnUp = cancelBtnKeys;
             }
             else {
                 mItems[i].primaryBtnKeys.selectOnUp = mItems[i - 1].primaryBtnKeys;
@@ -107,11 +107,11 @@ public class NGUIModalInputBindDialog : UIModalInputBindDialog {
             mItems[i].nameLabel.text = actions[i].localized ? GameLocalize.GetText(actions[i].name) : actions[i].name;
         }
 
-        mItems[mItems.Length - 1].primaryBtnKeys.selectOnDown = saveBtnKeys;
-        mItems[mItems.Length - 1].secondaryBtnKeys.selectOnDown = saveBtnKeys;
+        mItems[mItems.Length - 1].primaryBtnKeys.selectOnDown = defaultBtnKeys;
+        mItems[mItems.Length - 1].secondaryBtnKeys.selectOnDown = defaultBtnKeys;
 
-        saveBtnKeys.selectOnUp = mItems[mItems.Length - 1].primaryBtnKeys;
-        defaultBtnKeys.selectOnDown = mItems[0].primaryBtnKeys;
+        defaultBtnKeys.selectOnUp = mItems[mItems.Length - 1].primaryBtnKeys;
+        cancelBtnKeys.selectOnDown = mItems[0].primaryBtnKeys;
 
         template.SetActive(false);
 

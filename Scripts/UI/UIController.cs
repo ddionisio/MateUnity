@@ -30,21 +30,27 @@ public abstract class UIController : MonoBehaviour {
 
     protected abstract void OnClose();
 
+    private bool mActive;
+
 
     //don't call these, only uimodalmanager
 
     public void _active(bool active) {
-        if(active) {
-            OnActive(true);
+        if(mActive != active) {
+            mActive = active;
 
-            if(onActiveCallback != null)
-                onActiveCallback(true);
-        }
-        else {
-            OnActive(false);
+            if(active) {
+                OnActive(true);
 
-            if(onActiveCallback != null)
-                onActiveCallback(false);
+                if(onActiveCallback != null)
+                    onActiveCallback(true);
+            }
+            else {
+                OnActive(false);
+
+                if(onActiveCallback != null)
+                    onActiveCallback(false);
+            }
         }
     }
 
