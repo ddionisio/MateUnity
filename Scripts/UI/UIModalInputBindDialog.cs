@@ -52,11 +52,13 @@ public abstract class UIModalInputBindDialog : UIController {
     public void Save() {
         Main.instance.input.SaveBinds();
         mIsDirty = false;
+        Main.instance.localizer.Refresh(); //for labels using input stuff
     }
 
     public void Revert(bool toDefault) {
         Main.instance.input.RevertBinds(toDefault);
         mIsDirty = false;
+        Main.instance.localizer.Refresh(); //for labels using input stuff
     }
 
     protected virtual void OnDestroy() {
@@ -139,6 +141,8 @@ public abstract class UIModalInputBindDialog : UIController {
                     mActionBindKeyInd = -1;
 
                     mLastTime = Time.realtimeSinceStartup;
+
+                    Main.instance.localizer.Refresh(); //for labels using input stuff
                 }
             }
             else if(Time.realtimeSinceStartup - mLastTime >= 0.2f) {

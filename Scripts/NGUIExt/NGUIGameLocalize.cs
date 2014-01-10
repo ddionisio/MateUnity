@@ -23,16 +23,11 @@ public class NGUIGameLocalize : MonoBehaviour
     public object[] parameters { get { return mParams; } set { mParams = value; } }
 
 	/// <summary>
-	/// This function is called by the Localization manager via a broadcast SendMessage.
-	/// </summary>
-
-	void OnLocalize() { Localize(); }
-
-	/// <summary>
 	/// Localize the widget on enable, but only if it has been started already.
 	/// </summary>
 
-	void OnEnable () { if (mStarted) Localize(); }
+    void OnEnable () { Main.instance.localizer.localizeCallback += Localize; if (mStarted) Localize(); }
+    void OnDisable() { if (Main.instance && Main.instance.localizer) Main.instance.localizer.localizeCallback -= Localize; }
 
 	/// <summary>
 	/// Localize the widget on start.

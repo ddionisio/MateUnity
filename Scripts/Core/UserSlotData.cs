@@ -99,7 +99,7 @@ public class UserSlotData : UserData {
         }
     }
 
-    string OnGameLocalizeParamName() {
+    string OnGameLocalizeParamName(string key) {
         return mName;
     }
 }

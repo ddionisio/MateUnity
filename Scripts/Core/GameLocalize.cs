@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 [AddComponentMenu("M8/Core/GameLocalize")]
 public class GameLocalize : MonoBehaviour {
-    public delegate string ParameterCallback();
+    public delegate string ParameterCallback(string paramKey);
+    public delegate void LocalizeCallback();
 
     [System.Serializable]
     public class TableDataPlatform {
@@ -26,6 +27,8 @@ public class GameLocalize : MonoBehaviour {
     }
 
     public TableData[] tables; //table info for each language
+
+    public event LocalizeCallback localizeCallback;
 
     private static Dictionary<string, string> mTable;
     private static Dictionary<string, string[]> mTableParams;
@@ -63,7 +66,7 @@ public class GameLocalize : MonoBehaviour {
                         for(int i = 0; i < keyParams.Length; i++) {
                             ParameterCallback cb;
                             if(mParams.TryGetValue(keyParams[i], out cb)) {
-                                textParams[i] = cb();
+                                textParams[i] = cb(keyParams[i]);
                             }
                         }
 
@@ -83,6 +86,13 @@ public class GameLocalize : MonoBehaviour {
         }
 
         return ret;
+    }
+
+    public void Refresh() {
+        if(mLoaded) {
+            if(localizeCallback != null)
+                localizeCallback();
+        }
     }
 
     /// <summary>
@@ -127,7 +137,8 @@ public class GameLocalize : MonoBehaviour {
 
         //already loaded before? then let everyone know it has changed
         if(mLoaded) {
-            SceneManager.RootBroadcastMessage("OnLocalize", null, SendMessageOptions.DontRequireReceiver);
+            if(localizeCallback != null)
+                localizeCallback();
         }
         else {
             mLoaded = true;
@@ -137,5 +148,6 @@ public class GameLocalize : MonoBehaviour {
     void OnDestroy() {
         mTable = null;
         mLoaded = false;
+        localizeCallback = null;
     }
 }

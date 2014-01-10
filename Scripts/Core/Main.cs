@@ -15,6 +15,8 @@ public class Main : MonoBehaviour {
     public SceneManager sceneManager;
     [System.NonSerialized]
     public InputManager input;
+    [System.NonSerialized]
+    public GameLocalize localizer;
 
     private static Main mInstance = null;
 
@@ -61,9 +63,9 @@ public class Main : MonoBehaviour {
         input = GetComponentInChildren<InputManager>();
 
         //load the string table
-        GameLocalize l = GetComponentInChildren<GameLocalize>();
-        if(l != null) {
-            l.Load(userSettings.language, platform);
+        localizer = GetComponentInChildren<GameLocalize>();
+        if(localizer != null) {
+            localizer.Load(userSettings.language, platform);
         }
     }
 

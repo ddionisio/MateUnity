@@ -515,6 +515,46 @@ public class InputManager : MonoBehaviour {
         else {
             mBinds = new BindData[0];
         }
+
+        for(int i = 0; i < InputAction._count; i++) {
+            GameLocalize.RegisterParam("input_"+i, OnTextParam);
+        }
+    }
+
+    string OnTextParam(string key) {
+        //NOTE: assumes player 0
+        int delimitInd = key.LastIndexOf('_');
+        int action = int.Parse(key.Substring(delimitInd+1));
+
+        PlayerData pd = mBinds[action].players[0];
+
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+        for(int i = 0; i < pd.keys.Length; i++) {
+            int addCount = 0;
+            if(!string.IsNullOrEmpty(pd.keys[i].input)) {
+                sb.Append(pd.keys[i].input);
+                addCount++;
+            }
+
+            if(pd.keys[i].code != KeyCode.None) {
+                if(addCount > 0) sb.Append(", ");
+                sb.Append(pd.keys[i].code.ToString());
+                addCount++;
+            }
+
+            if(pd.keys[i].map != InputKeyMap.None) {
+                if(addCount > 0) sb.Append(", ");
+                sb.Append(pd.keys[i].map.ToString()); //TODO: have function to get proper string
+                addCount++;
+            }
+
+            if(addCount > 0 && pd.keys.Length > 1 && i < pd.keys.Length - 1) {
+                sb.Append(", ");
+            }
+        }
+
+        return sb.ToString();
     }
 
     protected virtual void Update() {
