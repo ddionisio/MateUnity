@@ -55,10 +55,10 @@ public class NGUIModalInputBindDialog : UIModalInputBindDialog {
         
         for(int i = 0; i < mItems.Length; i++) {
             InputManager.Key key = input.GetBindKey(playerIndex, actions[i].index, actions[i].keys[0]);
-            mItems[i].primaryLabel.text = key.code.ToString();
+            mItems[i].primaryLabel.text = key.isValid ? key.GetKeyString() : "None";
             
             key = input.GetBindKey(playerIndex, actions[i].index, actions[i].keys[1]);
-            mItems[i].secondaryLabel.text = key.code.ToString();
+            mItems[i].secondaryLabel.text = key.isValid ? key.GetKeyString() : "None";
         }
         
         NGUILayoutBase.RefreshNow(transform);

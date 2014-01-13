@@ -64,6 +64,35 @@ public class InputManager : MonoBehaviour {
             mDirty = dirty;
         }
 
+        public string GetKeyString() {
+            if(!string.IsNullOrEmpty(input))
+                return input;
+
+            if(code != KeyCode.None) {
+                if(code == KeyCode.Escape)
+                    return "ESC";
+                else {
+                    string s = code.ToString();
+
+                    int i = s.IndexOf("Joystick");
+                    if(i != -1) {
+                        int bInd = s.LastIndexOf('B');
+                        if(bInd != -1) {
+                            return s.Substring(bInd);
+                        }
+                    }
+
+                    return s;
+                }
+            }
+
+            if(map != InputKeyMap.None && map != InputKeyMap.NumKeys) {
+                return map.ToString();
+            }
+
+            return "";
+        }
+
         void _ApplyInfo(uint dataPak) {
             ushort s1 = M8.Util.GetHiWord(dataPak);
 
@@ -531,26 +560,13 @@ public class InputManager : MonoBehaviour {
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
         for(int i = 0; i < pd.keys.Length; i++) {
-            int addCount = 0;
-            if(!string.IsNullOrEmpty(pd.keys[i].input)) {
-                sb.Append(pd.keys[i].input);
-                addCount++;
-            }
+            string keyString = pd.keys[i].GetKeyString();
+            if(!string.IsNullOrEmpty(keyString)) {
+                sb.Append(keyString);
 
-            if(pd.keys[i].code != KeyCode.None) {
-                if(addCount > 0) sb.Append(", ");
-                sb.Append(pd.keys[i].code.ToString());
-                addCount++;
-            }
-
-            if(pd.keys[i].map != InputKeyMap.None) {
-                if(addCount > 0) sb.Append(", ");
-                sb.Append(pd.keys[i].map.ToString()); //TODO: have function to get proper string
-                addCount++;
-            }
-
-            if(addCount > 0 && pd.keys.Length > 1 && i < pd.keys.Length - 1) {
-                sb.Append(", ");
+                if(pd.keys.Length > 1 && i < pd.keys.Length - 1) {
+                    sb.Append(", ");
+                }
             }
         }
 

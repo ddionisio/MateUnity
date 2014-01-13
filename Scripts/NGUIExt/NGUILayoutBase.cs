@@ -23,6 +23,7 @@ public abstract class NGUILayoutBase : MonoBehaviour {
     /// Reposition any layouts within the given t's hierarchy.
     /// </summary>
     public static void RefreshNow(Transform t) {
+        t.BroadcastMessage("Localize", null, SendMessageOptions.DontRequireReceiver);
         t.BroadcastMessage("ProcessText", null, SendMessageOptions.DontRequireReceiver);
 
         NGUILayoutBase[] layouts = t.GetComponentsInChildren<NGUILayoutBase>(false);
