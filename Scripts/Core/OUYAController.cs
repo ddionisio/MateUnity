@@ -15,6 +15,9 @@ public class OUYAController : MonoBehaviour, OuyaSDK.IPauseListener, OuyaSDK.IRe
         OuyaSDK.registerResumeListener(this);
     }
 
+    void Start() {
+    }
+
     public void OuyaOnPause() {
         if(Main.instance != null) {
             SceneManager sm = Main.instance.sceneManager;

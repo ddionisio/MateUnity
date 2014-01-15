@@ -4,10 +4,20 @@ using System.Collections.Generic;
 
 [AddComponentMenu("M8/Core/Main")]
 public class Main : MonoBehaviour {
+    [System.Serializable]
+    public class Resolution {
+        public int width;
+        public int height;
+        public bool fullscreen;
+    }
+
     public GamePlatform platform = GamePlatform.Default;
 
     public string initScene = "main"; //initial scene where the main initializes, goes to startScene afterwards
     public string startScene = "start"; //the scene to load to once initScene is finish
+
+    public bool setResolution;
+    public Resolution resolution;
 
     [System.NonSerialized]
     public UserSettings userSettings;
@@ -70,6 +80,10 @@ public class Main : MonoBehaviour {
     }
 
     void Start() {
+        if(setResolution) {
+            Screen.SetResolution(resolution.width, resolution.height, resolution.fullscreen);
+        }
+
         //TODO: maybe do other things before starting the game
         //go to start if we are in main scene
         if(Application.loadedLevelName == initScene) {

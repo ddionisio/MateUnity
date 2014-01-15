@@ -24,7 +24,8 @@ public class InputManager : MonoBehaviour {
     public enum ButtonAxis {
         None,
         Plus,
-        Minus
+        Minus,
+        Both
     }
 
     public struct Info {
