@@ -51,6 +51,8 @@ public enum InputKeyMap : int {
     HARMONIX_ROCK_BAND_DRUMKIT_B,
     HARMONIX_ROCK_BAND_DRUMKIT_X,
     HARMONIX_ROCK_BAND_DRUMKIT_Y,
+
+    HACK1 = 666,
 #endif
 
     NumKeys

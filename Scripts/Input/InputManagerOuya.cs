@@ -13,6 +13,10 @@ public class InputManagerOuya : InputManager {
         if(key.map == InputKeyMap.None)
             return base.ProcessButtonDown(key);
 
+        if(key.map == InputKeyMap.HACK1) {
+            return OuyaExampleCommon.GetButton(2, GetPlayer(key));
+        }
+
         return OuyaExampleCommon.GetButton((OuyaSDK.KeyEnum)key.map, GetPlayer(key));
     }
 
