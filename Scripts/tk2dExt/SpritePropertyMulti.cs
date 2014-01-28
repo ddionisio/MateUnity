@@ -12,29 +12,70 @@ public class SpritePropertyMulti : MonoBehaviour {
     public bool applyStartColor;
 
     private Color mColor = Color.white;
+    private bool mFlipX;
+    private bool mFlipY;
 
     public Color color {
         get { return mColor; }
         set {
-            mColor = value;
+            if(mColor != value) {
+                mColor = value;
+                tk2dBaseSprite[] items = GetItems();
 
-            tk2dBaseSprite[] items;
-            if(targets == null || targets.Length == 0) {
-                if(Application.isPlaying) {
-                    items = targets = GetComponentsInChildren<tk2dBaseSprite>(autoIncludeInactive);
+                for(int i = 0; i < items.Length; i++) {
+                    if(items[i] && items[i].gameObject.activeSelf && items[i].enabled)
+                        items[i].color = mColor;
                 }
-                else {
-                    items = GetComponentsInChildren<tk2dBaseSprite>(autoIncludeInactive);
-                }
-            }
-            else
-                items = targets;
-
-            for(int i = 0; i < items.Length; i++) {
-                if(items[i] && items[i].gameObject.activeSelf && items[i].enabled)
-                    items[i].color = mColor;
             }
         }
+    }
+
+    public bool flipX {
+        get { return mFlipX; }
+        set {
+            if(mFlipX != value) {
+                mFlipX = value;
+
+                tk2dBaseSprite[] items = GetItems();
+                
+                for(int i = 0; i < items.Length; i++) {
+                    if(items[i] && items[i].gameObject.activeSelf && items[i].enabled)
+                        items[i].FlipX = mFlipX;
+                }
+            }
+        }
+    }
+
+    public bool flipY {
+        get { return mFlipY; }
+        set {
+            if(mFlipY != value) {
+                mFlipY = value;
+                
+                tk2dBaseSprite[] items = GetItems();
+                
+                for(int i = 0; i < items.Length; i++) {
+                    if(items[i] && items[i].gameObject.activeSelf && items[i].enabled)
+                        items[i].FlipY = mFlipY;
+                }
+            }
+        }
+    }
+
+    tk2dBaseSprite[] GetItems() {
+        tk2dBaseSprite[] items;
+        if(targets == null || targets.Length == 0) {
+            if(Application.isPlaying) {
+                items = targets = GetComponentsInChildren<tk2dBaseSprite>(autoIncludeInactive);
+            }
+            else {
+                items = GetComponentsInChildren<tk2dBaseSprite>(autoIncludeInactive);
+            }
+        }
+        else
+            items = targets;
+
+        return items;
     }
 
     void Awake() {
