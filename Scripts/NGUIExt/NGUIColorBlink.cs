@@ -9,19 +9,18 @@ public class NGUIColorBlink : MonoBehaviour {
 
     private const string blinkFunc = "DoBlink";
     private Color mOrigColor;
-    private bool mStarted;
+    private float mLastTime;
+    private bool mIsMod = false;
 
     void OnEnable() {
-        if(mStarted && !IsInvoking(blinkFunc))
-            InvokeRepeating(blinkFunc, 0, delay);
+        mLastTime = Time.realtimeSinceStartup;
     }
 
     void OnDisable() {
-        if(mStarted) {
-            CancelInvoke();
-
+        if(mIsMod) {
             if(target != null)
                 target.color = mOrigColor;
+            mIsMod = false;
         }
     }
 
@@ -32,15 +31,19 @@ public class NGUIColorBlink : MonoBehaviour {
         mOrigColor = target.color;
     }
 
-    void Start() {
-        mStarted = true;
-        InvokeRepeating(blinkFunc, 0, delay);
+    void Update() {
+        if(Time.realtimeSinceStartup - mLastTime >= delay) {
+            DoBlink();
+            mLastTime = Time.realtimeSinceStartup;
+        }
     }
 
     void DoBlink() {
-        if(target.color == mOrigColor)
-            target.color = color;
-        else
+        if(mIsMod)
             target.color = mOrigColor;
+        else
+            target.color = color;
+
+        mIsMod = !mIsMod;
     }
 }

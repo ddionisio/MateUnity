@@ -4,7 +4,7 @@ using System.Collections;
 [AddComponentMenu("")]
 public abstract class UIModalCharacterDialog : UIController {
     //index = -1 if there are no choices and we clicked next
-    public delegate void OnAction(int choiceIndex);
+    public delegate void OnAction(UIModalCharacterDialog dlg, int choiceIndex);
 
     public const string defaultModalRef = "CharacterDialog";
 
@@ -38,6 +38,6 @@ public abstract class UIModalCharacterDialog : UIController {
     /// </summary>
     protected void Action(int choiceIndex = -1) {
         if(actionCallback != null)
-            actionCallback(choiceIndex);
+            actionCallback(this, choiceIndex);
     }
 }
