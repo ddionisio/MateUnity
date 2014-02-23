@@ -6,6 +6,7 @@ public class NGUIColorBlink : MonoBehaviour {
     public UIWidget target;
     public Color color;
     public float delay;
+    public bool useRealtime = true;
 
     private const string blinkFunc = "DoBlink";
     private Color mOrigColor;
@@ -13,7 +14,7 @@ public class NGUIColorBlink : MonoBehaviour {
     private bool mIsMod = false;
 
     void OnEnable() {
-        mLastTime = Time.realtimeSinceStartup;
+        mLastTime = useRealtime ? Time.realtimeSinceStartup : Time.time;
     }
 
     void OnDisable() {
@@ -32,9 +33,10 @@ public class NGUIColorBlink : MonoBehaviour {
     }
 
     void Update() {
-        if(Time.realtimeSinceStartup - mLastTime >= delay) {
+        float t = useRealtime ? Time.realtimeSinceStartup : Time.time;
+        if(t - mLastTime >= delay) {
             DoBlink();
-            mLastTime = Time.realtimeSinceStartup;
+            mLastTime = t;
         }
     }
 
