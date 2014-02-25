@@ -38,6 +38,8 @@ public class SoundPlayerGlobal : MonoBehaviour {
 
     private int mNextId = 0;
 
+    private bool mPlayActive = false;
+
     public static SoundPlayerGlobal instance { get { return mInstance; } }
 
     public GameObject Play(string name, OnSoundEnd onEndCallback = null, object onEndParam = null) {
@@ -71,6 +73,9 @@ public class SoundPlayerGlobal : MonoBehaviour {
                  //   sp.StartCoroutine(OnSoundPlayFinish(dat.clip.length + dat.delay, ret, onEndCallback, onEndParam));
 
                 ret.SetActive(true);
+
+                if(!mPlayActive)
+                    StartCoroutine(DoPlay());
             }
             /*else {
                 Debug.LogWarning("Ran out of available sound player for: " + name);
@@ -159,8 +164,12 @@ public class SoundPlayerGlobal : MonoBehaviour {
             DestroyImmediate(gameObject);
     }
 
-    void Update() {
-        if(mSfxPlaying.Count > 0) {
+    IEnumerator DoPlay() {
+        mPlayActive = true;
+
+        WaitForFixedUpdate wait = new WaitForFixedUpdate();
+
+        while(mSfxPlaying.Count > 0) {
             for(int i = 0, max = mSfxPlaying.Count; i < max; i++) {
                 SoundPlaying playing = mSfxPlaying[i];
 
@@ -191,7 +200,11 @@ public class SoundPlayerGlobal : MonoBehaviour {
                         playing.onEndCallback(playing.onEndParam);
                 }
             }
+
+            yield return wait;
         }
+
+        mPlayActive = false;
     }
     
     private GameObject CreateSource(int ind) {

@@ -19,6 +19,7 @@ public class SoundPlayer : MonoBehaviour {
     private bool mStarted = false;
     private float mDefaultVolume = 1.0f;
 
+    public bool isPlaying { get { return audio.isPlaying; } }
     public float defaultVolume { get { return mDefaultVolume; } set { mDefaultVolume = value; } }
 
     public virtual void Play() {
@@ -26,9 +27,13 @@ public class SoundPlayer : MonoBehaviour {
         audio.volume = mDefaultVolume * us.soundVolume;
 
         if(playDelay > 0.0f)
-            audio.PlayDelayed(refRate * playDelay);
+            audio.PlayDelayed(playDelay);
         else
             audio.Play();
+    }
+
+    public virtual void Stop() {
+        audio.Stop();
     }
 
     protected virtual void OnEnable() {

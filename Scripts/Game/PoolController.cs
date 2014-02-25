@@ -88,8 +88,6 @@ public class PoolController : MonoBehaviour {
 
             t.name = string.IsNullOrEmpty(name) ? template.name + (nameCounter++) : name;
             t.parent = parent == null ? defaultParent : parent;
-            t.localPosition = Vector3.zero;
-            t.localRotation = Quaternion.identity;
             t.localScale = Vector3.one;
 
             t.gameObject.SetActive(true);
@@ -159,10 +157,34 @@ public class PoolController : MonoBehaviour {
         }
     }
 
+    public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position) {
+        PoolController pc = GetPool(group);
+        if(pc != null) {
+            return pc.Spawn(type, name, toParent, position);
+        }
+        else {
+            return null;
+        }
+    }
+
     public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation) {
         PoolController pc = GetPool(group);
         if(pc != null) {
             Transform t = pc.Spawn(type, name, toParent, position, rotation);
+            Vector3 p = t.localPosition;
+            p.z = 0.0f;
+            t.localPosition = p;
+            return t;
+        }
+        else {
+            return null;
+        }
+    }
+
+    public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position) {
+        PoolController pc = GetPool(group);
+        if(pc != null) {
+            Transform t = pc.Spawn(type, name, toParent, position);
             Vector3 p = t.localPosition;
             p.z = 0.0f;
             t.localPosition = p;
@@ -239,6 +261,29 @@ public class PoolController : MonoBehaviour {
         }
 
         return Spawn(type, name, toParent, position, rot);
+    }
+
+    public Transform Spawn(string type, string name, Transform toParent, Vector3 position) {
+        Transform entityRet = null;
+        
+        FactoryData dat;
+        if(mFactory.TryGetValue(type, out dat)) {
+            entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
+            
+            if(entityRet != null) {
+                entityRet.transform.position = position;
+                
+                entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
+            }
+            else {
+                Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
+            }
+        }
+        else {
+            Debug.LogWarning("No such type: " + type + " attempt to allocate: " + name);
+        }
+        
+        return entityRet;
     }
 
     public Transform Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot) {
