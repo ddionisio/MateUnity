@@ -38,8 +38,6 @@ public class SoundPlayerGlobal : MonoBehaviour {
 
     private int mNextId = 0;
 
-    private bool mPlayActive = false;
-
     public static SoundPlayerGlobal instance { get { return mInstance; } }
 
     public GameObject Play(string name, OnSoundEnd onEndCallback = null, object onEndParam = null) {
@@ -73,9 +71,6 @@ public class SoundPlayerGlobal : MonoBehaviour {
                  //   sp.StartCoroutine(OnSoundPlayFinish(dat.clip.length + dat.delay, ret, onEndCallback, onEndParam));
 
                 ret.SetActive(true);
-
-                if(!mPlayActive)
-                    StartCoroutine(DoPlay());
             }
             /*else {
                 Debug.LogWarning("Ran out of available sound player for: " + name);
@@ -164,47 +159,37 @@ public class SoundPlayerGlobal : MonoBehaviour {
             DestroyImmediate(gameObject);
     }
 
-    IEnumerator DoPlay() {
-        mPlayActive = true;
+    void Update() {
+        for(int i = 0, max = mSfxPlaying.Count; i < max; i++) {
+            SoundPlaying playing = mSfxPlaying[i];
 
-        WaitForFixedUpdate wait = new WaitForFixedUpdate();
+            bool isDone = false;
 
-        while(mSfxPlaying.Count > 0) {
-            for(int i = 0, max = mSfxPlaying.Count; i < max; i++) {
-                SoundPlaying playing = mSfxPlaying[i];
+            if(!playing.player.gameObject.activeSelf) {
+                isDone = true;
+            }
+            else if(!playing.data.loop) {
+                float duration = playing.data.clip.length + playing.data.delay;
 
-                bool isDone = false;
-
-                if(!playing.player.gameObject.activeSelf) {
-                    isDone = true;
+                if(playing.data.realtime) {
+                    isDone = Time.realtimeSinceStartup - playing.startTime >= duration;
                 }
-                else if(!playing.data.loop) {
-                    float duration = playing.data.clip.length + playing.data.delay;
-
-                    if(playing.data.realtime) {
-                        isDone = Time.realtimeSinceStartup - playing.startTime >= duration;
-                    }
-                    else {
-                        isDone = Time.time - playing.startTime >= duration;
-                    }
-                }
-
-                if(isDone) {
-                    mSfxPlaying.RemoveAt(i);
-                    max = mSfxPlaying.Count;
-                    i--;
-
-                    Stop(playing.player.gameObject);
-
-                    if(playing.onEndCallback != null)
-                        playing.onEndCallback(playing.onEndParam);
+                else {
+                    isDone = Time.time - playing.startTime >= duration;
                 }
             }
 
-            yield return wait;
-        }
+            if(isDone) {
+                mSfxPlaying.RemoveAt(i);
+                max = mSfxPlaying.Count;
+                i--;
 
-        mPlayActive = false;
+                Stop(playing.player.gameObject);
+
+                if(playing.onEndCallback != null)
+                    playing.onEndCallback(playing.onEndParam);
+            }
+        }
     }
     
     private GameObject CreateSource(int ind) {
