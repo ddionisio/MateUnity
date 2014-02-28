@@ -352,7 +352,7 @@ public class EntityBase : MonoBehaviour {
 
 #if PLAYMAKER
         //only start once we spawn
-        mFSM = GetComponentInChildren<PlayMakerFSM>();
+        mFSM = GetComponent<PlayMakerFSM>();
         if(mFSM != null) {
             mFSM.Fsm.RestartOnEnable = false; //not when we want to sleep/wake
             mFSM.enabled = false;
