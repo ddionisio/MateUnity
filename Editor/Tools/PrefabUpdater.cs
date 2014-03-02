@@ -16,7 +16,7 @@ namespace M8.Editor {
         private GameObject mMasterPrefab = null;
 
         void OnGUI() {
-            EditorGUIUtility.LookLikeControls(80.0f);
+			EditorGUIUtility.labelWidth = 80.0f;
 
             GUI.skin.label.wordWrap = true;
 

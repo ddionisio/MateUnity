@@ -32,7 +32,7 @@ public class SceneManager : MonoBehaviour {
 
     private static List<Transform> mRoots = new List<Transform>();
 
-    private bool mIsFullscreen = false;
+    //private bool mIsFullscreen = false;
     private bool mPaused = false;
 
     public bool isPaused {
@@ -188,7 +188,7 @@ public class SceneManager : MonoBehaviour {
     }
 
     void Awake() {
-        mIsFullscreen = Screen.fullScreen;
+        //mIsFullscreen = Screen.fullScreen;
 
         mPrevTimeScale = Time.timeScale;
 
@@ -200,14 +200,14 @@ public class SceneManager : MonoBehaviour {
         screenTransition.finishCallback = OnScreenTransitionFinish;
     }
 
-    void Update() {
+    /*void Update() {
         //lame
         //check resolution and fullscreen
         if(mIsFullscreen != Screen.fullScreen) {
             mIsFullscreen = Screen.fullScreen;
             RootBroadcastMessage("OnSceneScreenChanged", null, SendMessageOptions.DontRequireReceiver);
         }
-    }
+    }*/
 
     void OnScreenTransitionFinish(ScreenTransition.State state) {
         switch(state) {

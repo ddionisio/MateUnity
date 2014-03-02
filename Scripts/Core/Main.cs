@@ -8,6 +8,7 @@ public class Main : MonoBehaviour {
     public class Resolution {
         public int width;
         public int height;
+        public int refreshRate;
         public bool fullscreen;
     }
 
@@ -16,8 +17,8 @@ public class Main : MonoBehaviour {
     public string initScene = "main"; //initial scene where the main initializes, goes to startScene afterwards
     public string startScene = "start"; //the scene to load to once initScene is finish
 
-    public bool setResolution;
-    public Resolution resolution;
+    bool setResolution;
+    Resolution resolution;
 
     [System.NonSerialized]
     public UserSettings userSettings;
@@ -66,7 +67,13 @@ public class Main : MonoBehaviour {
 
         DontDestroyOnLoad(gameObject);
 
-        userSettings = new UserSettings();
+        if(setResolution) {
+            userSettings = new UserSettings(resolution.width, resolution.height, resolution.refreshRate, resolution.fullscreen);
+        }
+        else {
+            UnityEngine.Resolution r = Screen.currentResolution;
+            userSettings = new UserSettings(r.width, r.height, r.refreshRate, Screen.fullScreen);
+        }
 
         sceneManager = GetComponentInChildren<SceneManager>();
 
@@ -81,7 +88,7 @@ public class Main : MonoBehaviour {
 
     void Start() {
         if(setResolution) {
-            Screen.SetResolution(resolution.width, resolution.height, resolution.fullscreen);
+            userSettings.ApplyResolution();
         }
 
         //TODO: maybe do other things before starting the game
