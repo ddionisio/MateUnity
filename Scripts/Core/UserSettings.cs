@@ -84,6 +84,9 @@ public class UserSettings {
         }
     }
 
+    [System.NonSerialized]
+    public bool fullScreenNoSave = false; //set to true to not save the fullscreen setting
+
     //need to debug while listening to music
 #if UNITY_EDITOR
     private const float volumeDefault = 1.0f;
@@ -124,7 +127,7 @@ public class UserSettings {
         PlayerPrefs.SetFloat(soundKey, mSoundVolume);
         PlayerPrefs.SetFloat(musicKey, mMusicVolume);
         PlayerPrefs.SetInt(languageKey, (int)mLanguage);
-        PlayerPrefs.SetInt(fullscreenKey, mFullscreen ? 1 : 0);
+        if(!fullScreenNoSave) PlayerPrefs.SetInt(fullscreenKey, mFullscreen ? 1 : 0);
         PlayerPrefs.SetInt(screenWidthKey, mScreenWidth);
         PlayerPrefs.SetInt(screenHeightKey, mScreenHeight);
         PlayerPrefs.SetInt(screenRefreshRateKey, mScreenRefreshRate);

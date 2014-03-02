@@ -17,8 +17,12 @@ public class Main : MonoBehaviour {
     public string initScene = "main"; //initial scene where the main initializes, goes to startScene afterwards
     public string startScene = "start"; //the scene to load to once initScene is finish
 
+    [SerializeField]
     bool setResolution;
+    [SerializeField]
     Resolution resolution;
+    [SerializeField]
+    bool fullScreenNoSave;
 
     [System.NonSerialized]
     public UserSettings userSettings;
@@ -74,6 +78,8 @@ public class Main : MonoBehaviour {
             UnityEngine.Resolution r = Screen.currentResolution;
             userSettings = new UserSettings(r.width, r.height, r.refreshRate, Screen.fullScreen);
         }
+
+        userSettings.fullScreenNoSave = fullScreenNoSave;
 
         sceneManager = GetComponentInChildren<SceneManager>();
 

@@ -5,6 +5,7 @@ public class NGUIModalGraphicsDialog : UIController {
     public UIEventListener resolution;
     public UIEventListener fullscreen;
     public UIEventListener apply;
+    public UIEventListener back;
 
     public UILabel resolutionLabel;
     public UILabel fullscreenLabel;
@@ -23,12 +24,18 @@ public class NGUIModalGraphicsDialog : UIController {
             fullscreen.onKey = OnFullKey;
             apply.onClick = OnApplyClick;
 
+            if(back)
+                back.onClick = OnBackClick;
+
             RefreshSettings(Main.instance.userSettings);
         }
         else {
             resolution.onKey = null;
             fullscreen.onKey = null;
             apply.onClick = null;
+
+            if(back)
+                back.onClick = null;
         }
     }
     
@@ -73,6 +80,10 @@ public class NGUIModalGraphicsDialog : UIController {
     void OnApplyClick(GameObject go) {
         Resolution r = mRes[mCurResInd];
         Main.instance.userSettings.ApplyResolution(r.width, r.height, r.refreshRate, mIsFull);
+    }
+
+    void OnBackClick(GameObject go) {
+        UIModalManager.instance.ModalCloseTop();
     }
 
     void RefreshSettings(UserSettings s) {
