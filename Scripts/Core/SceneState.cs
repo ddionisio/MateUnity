@@ -231,6 +231,16 @@ public class SceneState : MonoBehaviour {
         }
     }
 
+    public string[] GetGlobalKeys(System.Predicate<KeyValuePair<string, StateValue>> predicate) {
+        List<string> items = new List<string>(mGlobalStates.Count);
+        foreach(KeyValuePair<string, StateValue> pair in mGlobalStates) {
+            if(predicate(pair))
+                items.Add(pair.Key);
+        }
+
+        return items.ToArray();
+    }
+
     public bool HasGlobalValue(string name) {
         if(!mGlobalStates.ContainsKey(name)) {
             //try user data

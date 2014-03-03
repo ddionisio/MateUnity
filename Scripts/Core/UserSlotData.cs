@@ -81,6 +81,10 @@ public class UserSlotData : UserData {
         PlayerPrefs.DeleteKey(PrefixKey + slot + "_" + key);
     }
 
+    public static bool HasSlotValue(int slot, string key) {
+        return PlayerPrefs.HasKey(PrefixKey + slot + "_" + key);
+    }
+
     public static void DeleteSlot(int slot) {
         PlayerPrefs.DeleteKey(PrefixKey + slot + "i");
         PlayerPrefs.DeleteKey(PrefixKey + slot + "name");
