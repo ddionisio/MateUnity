@@ -13,6 +13,8 @@ public class UserSlotData : UserData {
     private int mSlot = -1;
     private string mName;
 
+    public static int currentSlot { get { return instance ? ((UserSlotData)instance).mSlot : -1; } }
+
     public string slotName {
         get { return mName; }
         set {
@@ -20,22 +22,36 @@ public class UserSlotData : UserData {
         }
     }
 
-    public int curSlot { get { return mSlot; } }
+    public int slot { get { return mSlot; } set { SetSlot(value, false); } }
 
     public void SetSlot(int slot, bool forceLoad) {
         if(mSlot != slot) {
             Save(); //save previous slot
 
             mSlot = slot;
-            mKey = PrefixKey + mSlot;
+            if(slot >= 0) {
+                mKey = PrefixKey + mSlot;
 
-            Load();
+                Load();
+            }
         }
         else if(forceLoad)
             Load();
     }
 
-    public static bool IsSlotAvailable(int slot) {
+    public static void CreateSlot(int slot, string name) {
+        UserSlotData u = instance as UserSlotData;
+        if(u) {
+            if(IsSlotExist(slot))
+                DeleteSlot(slot);
+
+            u.SetSlot(slot, false);
+            u.slotName = name;
+            u.Save();
+        }
+    }
+
+    public static bool IsSlotExist(int slot) {
         return PlayerPrefs.HasKey(PrefixKey + slot + "name");
     }
 
@@ -61,11 +77,22 @@ public class UserSlotData : UserData {
         PlayerPrefs.GetFloat(PrefixKey + slot + "_" + key, val);
     }
 
+    public static void DeleteValue(int slot, string key) {
+        PlayerPrefs.DeleteKey(PrefixKey + slot + "_" + key);
+    }
+
     public static void DeleteSlot(int slot) {
         PlayerPrefs.DeleteKey(PrefixKey + slot + "i");
         PlayerPrefs.DeleteKey(PrefixKey + slot + "name");
 
         //TODO: delete global slot values
+    }
+
+    public static void LoadSlot(int slot, bool forceLoad) {
+        UserSlotData u = instance as UserSlotData;
+        if(u) {
+            u.SetSlot(slot, forceLoad);
+        }
     }
 
     public override void Load() {
@@ -93,6 +120,8 @@ public class UserSlotData : UserData {
             DeleteSlot(mSlot);
 
             base.Delete();
+
+            mSlot = -1;
         }
     }
 
