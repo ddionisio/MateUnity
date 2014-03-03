@@ -184,8 +184,12 @@ public class UserData : MonoBehaviour {
     }
 
     void OnDestroy() {
-        if(mInstance == this)
+        if(mInstance == this) {
+            if(autoSave)
+                Save();
+
             mInstance = null;
+        }
     }
 
     protected virtual void Awake() {

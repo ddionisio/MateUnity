@@ -23,9 +23,7 @@ public class UserSlotData : UserData {
     public int curSlot { get { return mSlot; } }
 
     public void SetSlot(int slot, bool forceLoad) {
-        if(forceLoad) {
-        }
-        else if(mSlot != slot || forceLoad) {
+        if(mSlot != slot) {
             Save(); //save previous slot
 
             mSlot = slot;
@@ -33,6 +31,8 @@ public class UserSlotData : UserData {
 
             Load();
         }
+        else if(forceLoad)
+            Load();
     }
 
     public static bool IsSlotAvailable(int slot) {
@@ -44,12 +44,21 @@ public class UserSlotData : UserData {
     }
 
     //individual unique value outside of setting the slot
+    //use this to have information available before loading a slot (e.g. during slot select)
     public static int GetSlotValueInt(int slot, string key, int defaultVal = 0) {
         return PlayerPrefs.GetInt(PrefixKey + slot + "_" + key, defaultVal);
     }
 
     public static void SetSlotValueInt(int slot, string key, int val) {
         PlayerPrefs.SetInt(PrefixKey + slot + "_" + key, val);
+    }
+
+    public static float GetSlotValueFloat(int slot, string key, float defaultVal = 0.0f) {
+        return PlayerPrefs.GetFloat(PrefixKey + slot + "_" + key, defaultVal);
+    }
+    
+    public static void SetSlotValueFloat(int slot, string key, float val) {
+        PlayerPrefs.GetFloat(PrefixKey + slot + "_" + key, val);
     }
 
     public static void DeleteSlot(int slot) {
