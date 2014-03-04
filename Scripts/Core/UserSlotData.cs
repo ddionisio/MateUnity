@@ -10,6 +10,8 @@ public class UserSlotData : UserData {
 
     public int loadSlotOnStart = -1; //use for debug
 
+    public bool savePrevious = false; //save previous slot when switching?
+
     private int mSlot = -1;
     private string mName;
 
@@ -26,7 +28,8 @@ public class UserSlotData : UserData {
 
     public void SetSlot(int slot, bool forceLoad) {
         if(mSlot != slot) {
-            Save(); //save previous slot
+            if(savePrevious)
+                Save(); //save previous slot
 
             mSlot = slot;
             if(slot >= 0) {
@@ -42,12 +45,13 @@ public class UserSlotData : UserData {
     public static void CreateSlot(int slot, string name) {
         UserSlotData u = instance as UserSlotData;
         if(u) {
-            if(IsSlotExist(slot))
-                DeleteSlot(slot);
+            if(u.mSlot == slot)
+                u.Delete();
 
             u.SetSlot(slot, false);
             u.slotName = name;
             u.Save();
+            PlayerPrefs.Save();
         }
     }
 
@@ -86,8 +90,14 @@ public class UserSlotData : UserData {
     }
 
     public static void DeleteSlot(int slot) {
-        PlayerPrefs.DeleteKey(PrefixKey + slot + "i");
-        PlayerPrefs.DeleteKey(PrefixKey + slot + "name");
+        UserSlotData u = instance as UserSlotData;
+        if(u && u.mSlot == slot) {
+            u.Delete();
+        }
+        else {
+            PlayerPrefs.DeleteKey(PrefixKey + slot);
+            PlayerPrefs.DeleteKey(PrefixKey + slot + "name");
+        }
 
         //TODO: delete global slot values
     }
@@ -121,9 +131,9 @@ public class UserSlotData : UserData {
     /// </summary>
     public override void Delete() {
         if(mSlot != -1) {
-            DeleteSlot(mSlot);
-
             base.Delete();
+
+            PlayerPrefs.DeleteKey(PrefixKey + slot + "name");
 
             mSlot = -1;
         }

@@ -9,9 +9,7 @@ using System.IO;
 public class UserData : MonoBehaviour {
     public enum Action {
         Load,
-        Save,
-        Enable,
-        Disable
+        Save
     }
     
     [System.Serializable]
@@ -166,20 +164,18 @@ public class UserData : MonoBehaviour {
         PlayerPrefs.SetString(mKey, System.Convert.ToBase64String(ms.GetBuffer()));
     }
 
-    void OnEnable() {
-        if(mStarted) {
-            if(actCallback != null)
-                actCallback(this, Action.Enable);
+    void OnApplicationQuit() {
+        if(autoSave) {
+            Save();
+            PlayerPrefs.Save();
         }
     }
 
-    void OnDisable() {
-        if(mStarted) {
-            if(actCallback != null)
-                actCallback(this, Action.Disable);
-
-            if(autoSave)
-                Save();
+    void SceneChange(string toScene) {
+        if(autoSave) {
+            Save();
+            PlayerPrefs.Save();
+            //Debug.Log("save");
         }
     }
 

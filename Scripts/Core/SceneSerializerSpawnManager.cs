@@ -67,30 +67,17 @@ public class SceneSerializerSpawnManager : MonoBehaviour {
         mSpawns.Remove(item.id);
     }
 
-    void OnUserDataAction(UserData ud, UserData.Action act) {
-        switch(act) {
-            case UserData.Action.Enable:
-                if(mStarted)
-                    StartCoroutine(DoSpawnWait());
-                break;
-
-            case UserData.Action.Disable:
-                DoSave();
-                mSpawns.Clear();
-                break;
-        }
-    }
-
     void OnDestroy() {
-        if(mInstance == this)
+        if(mInstance == this) {
+            DoSave();
+
             mInstance = null;
+        }
     }
 
     void Awake() {
         if(mInstance == null) {
             mInstance = this;
-
-            UserData.instance.actCallback += OnUserDataAction;
 
             mSpawns = new Dictionary<int, SpawnInfo>();
         }
@@ -133,12 +120,5 @@ public class SceneSerializerSpawnManager : MonoBehaviour {
                 spawn.Spawn();
             }
         }
-    }
-
-    IEnumerator DoSpawnWait() {
-        yield return new WaitForFixedUpdate();
-
-        //start spawning stuff
-        DoSpawns();
     }
 }
