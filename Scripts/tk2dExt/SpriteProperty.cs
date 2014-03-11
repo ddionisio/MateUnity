@@ -62,6 +62,14 @@ public class SpriteProperty : MonoBehaviour {
         }
     }
 
+    public void FlipX() {
+        mSprite.FlipX = !mSprite.FlipX;
+    }
+
+    public void FlipY() {
+        mSprite.FlipY = !mSprite.FlipY;
+    }
+
     void Awake() {
         mSprite = GetComponent<tk2dBaseSprite>();
         //mSpriteId = mSprite.spriteId;
