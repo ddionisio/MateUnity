@@ -78,7 +78,7 @@ public class UserSlotData : UserData {
     }
     
     public static void SetSlotValueFloat(int slot, string key, float val) {
-        PlayerPrefs.GetFloat(PrefixKey + slot + "_" + key, val);
+        PlayerPrefs.SetFloat(PrefixKey + slot + "_" + key, val);
     }
 
     public static void DeleteValue(int slot, string key) {
