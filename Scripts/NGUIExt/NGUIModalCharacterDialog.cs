@@ -10,6 +10,7 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
     public Transform choiceContainer; //optional: each child must have a UIEventListener
 
     public bool choiceAutoSelectFirst = true; //this should be set to true for no mouse input
+    public bool refreshLate = false;
 
     public UIEventListener proceedClick; //if there are no choices to select, this is used, if null, default click to this game object
         
@@ -94,7 +95,10 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
         if(gameObject.activeSelf) {
             ApplyActive();
 
-            NGUILayoutBase.RefreshNow(transform);
+            if(refreshLate)
+                StartCoroutine(NGUILayoutBase.RefreshLate(transform));
+            else
+                NGUILayoutBase.RefreshNow(transform);
         }
     }
 
@@ -109,11 +113,6 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
 
     void Awake() {
         InitData();
-    }
-
-    // Use this for initialization
-    void Start() {
-
     }
 
     protected override void OnActive(bool active) {
@@ -142,9 +141,17 @@ public class NGUIModalCharacterDialog : UIModalCharacterDialog {
     void ApplyActive() {
         if(mChoiceEvents != null && mNumChoices > 0) {
             UICamera.selectedObject = choiceAutoSelectFirst ? mChoiceEvents[0].listener.gameObject : null;
+
+            if(proceedClick)
+                proceedClick.gameObject.SetActive(false);
         }
         else {
-            UICamera.selectedObject = proceedClick != null ? proceedClick.gameObject : gameObject;
+            if(proceedClick) {
+                proceedClick.gameObject.SetActive(true);
+                UICamera.selectedObject = proceedClick.gameObject;
+            }
+            else
+                UICamera.selectedObject = gameObject;
         }
     }
 
