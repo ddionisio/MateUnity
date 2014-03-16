@@ -15,7 +15,20 @@ public class UserSlotData : UserData {
     private int mSlot = -1;
     private string mName;
 
-    public static int currentSlot { get { return instance ? ((UserSlotData)instance).mSlot : -1; } }
+    public static int currentSlot { 
+        get { 
+            if(instance) {
+                UserSlotData usd = (UserSlotData)instance;
+                if(usd.mSlot == -1 && !usd.mStarted) {
+                    usd.Start();
+                }
+
+                return usd.mSlot;
+            }
+            else
+                return -1;
+        } 
+    }
 
     public string slotName {
         get { return mName; }
@@ -149,6 +162,8 @@ public class UserSlotData : UserData {
         if(loadOnStart && loadSlotOnStart != -1) {
             SetSlot(loadSlotOnStart, false);
         }
+        
+        mStarted = true;
     }
 
     string OnGameLocalizeParamName(string key) {

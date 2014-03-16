@@ -29,7 +29,7 @@ public class UserData : MonoBehaviour {
 
     private Dictionary<string, object> mValues = null;
 
-    private bool mStarted = false;
+    protected bool mStarted = false;
 
     private static UserData mInstance = null;
 
