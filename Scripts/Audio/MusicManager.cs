@@ -71,6 +71,10 @@ public class MusicManager : MonoBehaviour {
         return mState == State.Playing;
     }
 
+    public bool Exists(string name) {
+        return mMusic.ContainsKey(name);
+    }
+
     public void Play(string name, bool immediate) {
         MusicData nextMusic;
         if(!mMusic.TryGetValue(name, out nextMusic)) {
