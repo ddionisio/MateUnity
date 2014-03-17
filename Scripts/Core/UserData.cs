@@ -35,6 +35,16 @@ public class UserData : MonoBehaviour {
 
     public static UserData instance { get { return mInstance; } }
 
+    public string[] GetKeys(System.Predicate<KeyValuePair<string, object>> predicate) {
+        List<string> items = new List<string>(mValues.Count);
+        foreach(KeyValuePair<string, object> pair in mValues) {
+            if(predicate(pair))
+                items.Add(pair.Key);
+        }
+        
+        return items.ToArray();
+    }
+
     public virtual void Load() {
         Data[] dat;
 
