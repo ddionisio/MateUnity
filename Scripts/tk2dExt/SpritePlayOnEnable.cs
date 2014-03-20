@@ -33,11 +33,9 @@ public class SpritePlayOnEnable : MonoBehaviour {
             sprite = GetComponent<tk2dSpriteAnimator>();
 
         if(string.IsNullOrEmpty(clip))
-            mClipPlay = sprite.DefaultClip;
+            mClipPlay = null;
         else {
             mClipPlay = sprite.GetClipByName(clip);
-            if(mClipPlay == null)
-                mClipPlay = sprite.DefaultClip;
         }
 
         sprite.playAutomatically = false;
@@ -56,11 +54,11 @@ public class SpritePlayOnEnable : MonoBehaviour {
                 Invoke("PlayDelayed", minDelay);
         }
         else {
-            sprite.Play(mClipPlay);
+            sprite.Play(mClipPlay != null ? mClipPlay : sprite.DefaultClip);
         }
     }
 
     void PlayDelayed() {
-        sprite.Play(mClipPlay);
+        sprite.Play(mClipPlay != null ? mClipPlay : sprite.DefaultClip);
     }
 }
