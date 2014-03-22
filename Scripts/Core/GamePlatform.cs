@@ -1,5 +1,6 @@
 ﻿public enum GamePlatform {
-    Default,
+    Web,
+    Desktop,
     Ouya,
 
     NumPlatforms

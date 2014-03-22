@@ -12,7 +12,7 @@ public class Main : MonoBehaviour {
         public bool fullscreen;
     }
 
-    public GamePlatform platform = GamePlatform.Default;
+    public GamePlatform platform = GamePlatform.Web;
 
     public string initScene = "main"; //initial scene where the main initializes, goes to startScene afterwards
     public string startScene = "start"; //the scene to load to once initScene is finish
