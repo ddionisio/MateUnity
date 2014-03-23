@@ -244,6 +244,7 @@ namespace M8.Editor {
 
                     if(mBinds[i].bind.control == InputManager.Control.Axis) {
                         mBinds[i].bind.deadZone = EditorGUILayout.FloatField("Deadzone", mBinds[i].bind.deadZone);
+						mBinds[i].bind.forceRaw = EditorGUILayout.Toggle("Force Raw", mBinds[i].bind.forceRaw);
                     }
 
                     int keyCount = mBinds[i].keyTypes != null ? mBinds[i].keyTypes.Length : 0;

@@ -148,6 +148,7 @@ public class InputManager : MonoBehaviour {
         public Control control = InputManager.Control.Button;
 
         public float deadZone = 0.1f;
+        public bool forceRaw;
 
         public List<Key> keys = null;
     }
@@ -176,12 +177,14 @@ public class InputManager : MonoBehaviour {
     protected class BindData {
         public Control control;
         public float deadZone;
+        public bool forceRaw;
 
         public PlayerData[] players;
 
         public BindData(Bind bind) {
             control = bind.control;
             deadZone = bind.deadZone;
+            forceRaw = bind.forceRaw;
 
             //construct player data, put in the keys
             ApplyKeys(bind);
@@ -407,7 +410,7 @@ public class InputManager : MonoBehaviour {
 
         foreach(Key key in keys) {
             if(key != null) {
-                float axis = ProcessAxis(key, bindData.deadZone);
+                float axis = ProcessAxis(key, bindData.deadZone, bindData.forceRaw);
                 if(axis != 0.0f) {
                     pd.info.axis = axis;
                     break;
@@ -484,9 +487,9 @@ public class InputManager : MonoBehaviour {
 
     //implements
 
-    protected virtual float ProcessAxis(Key key, float deadZone) {
+    protected virtual float ProcessAxis(Key key, float deadZone, bool forceRaw) {
         if(key.input.Length > 0) {
-            if(Time.timeScale == 0.0f) {
+            if(Time.timeScale == 0.0f || forceRaw) {
                 float val = Input.GetAxisRaw(key.input);
                 return Mathf.Abs(val) > deadZone ? val : 0.0f;
             }
