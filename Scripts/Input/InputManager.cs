@@ -485,6 +485,16 @@ public class InputManager : MonoBehaviour {
         mButtonCallSetQueueCount = 0;
     }
 
+	/// <summary>
+	///	Call this during game initialization to allow proper display of input in text
+	/// </summary>
+	/// <param name="count">Count.</param>
+	public void RegisterInputActionLocalize(int count) {
+		for(int i = 0; i < count; i++) {
+			GameLocalize.RegisterParam("input_"+i, OnTextParam);
+		}
+	}
+
     //implements
 
     protected virtual float ProcessAxis(Key key, float deadZone, bool forceRaw) {
@@ -547,10 +557,6 @@ public class InputManager : MonoBehaviour {
         }
         else {
             mBinds = new BindData[0];
-        }
-
-        for(int i = 0; i < InputAction._count; i++) {
-            GameLocalize.RegisterParam("input_"+i, OnTextParam);
         }
     }
 

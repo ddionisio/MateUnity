@@ -72,7 +72,7 @@ namespace M8.Editor {
         }
 
         void OnGUI() {
-            EditorGUIUtility.LookLikeControls(80.0f);
+			EditorGUIUtility.labelWidth = 80.0f;
 
             GUILayout.Space(6f);
             GUILayout.BeginHorizontal();
@@ -227,6 +227,8 @@ namespace M8.Editor {
             else {
                 GUILayout.Label("Create or select an existing text file first.");
             }
+
+			EditorGUIUtility.labelWidth = 0.0f;
         }
     }
 }

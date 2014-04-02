@@ -39,7 +39,7 @@ namespace M8.Editor {
         void OnGUI() {
             GUILayout.BeginVertical();
 
-            EditorGUIUtility.LookLikeControls(20, 50);
+			EditorGUIUtility.labelWidth = 20.0f; EditorGUIUtility.fieldWidth = 50.0f;
 
             GUILayout.BeginHorizontal();
 
@@ -72,7 +72,7 @@ namespace M8.Editor {
                 foreach(GameObject go in Selection.gameObjects) {
                     Transform t = go.transform;
 
-                    Undo.RegisterUndo(t, "Projectinate " + go.name);
+					Undo.RecordObject(t, "Projectinate " + go.name);
 
                     Vector3 dir = Vector3.forward;
 
@@ -104,10 +104,12 @@ namespace M8.Editor {
                                 break;
                         }
                     }
+
+					EditorUtility.SetDirty(t);
                 }
             }
 
-            EditorGUIUtility.LookLikeControls();
+			EditorGUIUtility.labelWidth = 0.0f; EditorGUIUtility.fieldWidth = 0.0f;
 
             GUILayout.EndVertical();
         }

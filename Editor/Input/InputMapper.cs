@@ -147,7 +147,7 @@ namespace M8.Editor {
         void OnGUI() {
             TextAsset prevTextFile = mTextFile;
 
-            EditorGUIUtility.LookLikeControls(80.0f);
+			EditorGUIUtility.labelWidth = 80.0f;
 
             GUILayout.Space(6f);
             GUILayout.BeginHorizontal();
@@ -263,6 +263,8 @@ namespace M8.Editor {
                     RefreshInputActionEdits();
                 }
             }
+
+			EditorGUIUtility.labelWidth = 0.0f;
         }
     }
 }

@@ -62,6 +62,9 @@ public class SoundPlayerMulti : MonoBehaviour {
 
             plyr.data = dat;
             plyr.src.clip = dat.clip;
+			plyr.startTime = dat.realtime ? Time.realtimeSinceStartup : Time.time;
+			plyr.onEndCallback = onEndCallback;
+			plyr.onEndParam = onEndParam;
             plyr.src.volume = dat.volume * Main.instance.userSettings.soundVolume;
             plyr.src.loop = dat.loop;
 

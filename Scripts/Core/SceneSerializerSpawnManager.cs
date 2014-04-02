@@ -43,8 +43,6 @@ public class SceneSerializerSpawnManager : MonoBehaviour {
     private Dictionary<int, SpawnInfo> mSpawns;
     private int mNextId = -1;
 
-    private bool mStarted = false;
-
     public static SceneSerializerSpawnManager instance { get { return mInstance; } }
 
     /// <summary>
@@ -85,7 +83,6 @@ public class SceneSerializerSpawnManager : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        mStarted = true;
         DoSpawns();
     }
 

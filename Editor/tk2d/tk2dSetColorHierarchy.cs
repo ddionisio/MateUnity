@@ -18,7 +18,7 @@ namespace M8.Editor {
         private Vector2 mScrollPos = Vector2.zero;
 
         void OnGUI() {
-            EditorGUIUtility.LookLikeControls(80.0f);
+			EditorGUIUtility.labelWidth = 80.0f;
 
             GUI.skin.label.wordWrap = true;
 
@@ -54,6 +54,8 @@ namespace M8.Editor {
             }
 
             GUILayout.EndScrollView();
+
+			EditorGUIUtility.labelWidth = 0.0f;
         }
 
         void ApplyColorHierarchy(GameObject go) {
