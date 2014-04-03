@@ -22,7 +22,7 @@ namespace M8.Editor {
 
             GUILayout.Label("First select a prefab as the master. Then select folder(s) and other prefab(s) to update.");
 
-            NGUIEditorTools.DrawSeparator();
+			Utility.DrawSeparator();
 
             GUILayout.Label("Master Prefab:");
 
@@ -71,7 +71,7 @@ namespace M8.Editor {
                 }
             }
 
-            NGUIEditorTools.DrawSeparator();
+			Utility.DrawSeparator();
 
             scrollPos = GUILayout.BeginScrollView(scrollPos);
 
