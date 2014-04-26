@@ -116,13 +116,16 @@ public class GravityController : MonoBehaviour {
             Vector3 newUp = Vector3.zero;
 
             float newGravity = 0.0f;
+            int numGravityOverride = 0;
 
             for(int i = 0; i < mGravityFieldCurCount; i++) {
                 GravityFieldBase gf = mGravityFields[i];
                 if(gf && gf.gameObject.activeSelf && gf.enabled) {
                     newUp += gf.GetUpVector(this);
-                    if(gf.gravityOverride)
+                    if(gf.gravityOverride) {
                         newGravity += gf.gravity;
+                        numGravityOverride++;
+                    }
 
                     if(gf.fallLimit) {
                         fallLimit = true;
@@ -145,7 +148,7 @@ public class GravityController : MonoBehaviour {
 
                 up = newUp;
 
-                gravity = newGravity;
+                gravity = numGravityOverride > 0 ? newGravity/(float)numGravityOverride : mStartGravity;
 
                 if(fallLimit) {
                     //assume y-axis, positive up
