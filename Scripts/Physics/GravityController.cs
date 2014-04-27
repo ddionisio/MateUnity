@@ -11,6 +11,8 @@ public class GravityController : MonoBehaviour {
 
     public float orientationSpeed = 90.0f;
 
+    public bool ignoreFields = false;
+
     protected bool mIsOrienting;
     protected Quaternion mRotateTo;
     protected WaitForFixedUpdate mWaitUpdate = new WaitForFixedUpdate();
@@ -60,6 +62,8 @@ public class GravityController : MonoBehaviour {
     }
 
     void OnTriggerEnter(Collider col) {
+        if(ignoreFields) return;
+
         if(mGravityFieldCurCount < mMaxGravityFields) {
             GravityFieldBase gravField = col.GetComponent<GravityFieldBase>();
             if(gravField) {
@@ -73,6 +77,8 @@ public class GravityController : MonoBehaviour {
     }
     
     void OnTriggerExit(Collider col) {
+        if(ignoreFields) return;
+
         GravityFieldBase gravField = col.GetComponent<GravityFieldBase>();
         if(gravField) {
             int ind = System.Array.IndexOf(mGravityFields, gravField, 0, mGravityFieldCurCount);
@@ -182,7 +188,7 @@ public class GravityController : MonoBehaviour {
     }
 
     void Init() {
-        if(GravityFieldBase.global != null) {
+        if(!ignoreFields && GravityFieldBase.global != null) {
             mGravityFields[mGravityFieldCurCount] = GravityFieldBase.global;
             mGravityFieldCurCount++;
         }

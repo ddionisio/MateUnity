@@ -12,6 +12,7 @@ public class GravityFieldSurfaceNormal : GravityFieldBase {
     public bool useEntityUp = false; //for when checking the surface
 
     public LayerMask checkLayer;
+    public float checkRadius = 0.5f; //this is the sphere-cast radius when checking
     public float checkDistance = 20.0f;
     //public float checkEntityAngle = 45.0f; //this is the angle limit to check for surface with given entity, otherwise use dir towards center.
     public float checkSurfaceAngle = 45.0f; //this is the angle limit to allow a surface to be the gravity up vector.
@@ -39,7 +40,7 @@ public class GravityFieldSurfaceNormal : GravityFieldBase {
         DirInfo info = null;
         mCurDirs.TryGetValue(entity, out info);
 
-        Vector3 entPos = entity.transform.position;
+        Vector3 entPos = entity.collider ? entity.collider.bounds.center : entity.transform.position;
         Vector3 entUp = entity.up;
 
         Vector3 dir = inverse ? entPos - mCenter : mCenter - entPos;
@@ -50,7 +51,7 @@ public class GravityFieldSurfaceNormal : GravityFieldBase {
         //check downward and see if we collide
         RaycastHit hit;
 
-        if(Physics.Raycast(entPos, useEntityUp ? -entUp : -dir, out hit, checkDistance, checkLayer)) {
+        if(Physics.SphereCast(entPos, checkRadius, useEntityUp ? -entUp : -dir, out hit, checkDistance, checkLayer)) {
             if(Vector3.Angle(dir, hit.normal) < checkSurfaceAngle) {
                 if(info == null) {
                     if(hit.normal != entUp) //TODO: tolerance value?
