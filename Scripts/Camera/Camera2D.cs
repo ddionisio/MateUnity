@@ -52,6 +52,18 @@ public class Camera2D : MonoBehaviour {
 
 	private Camera mCamera;
 
+    private static Camera2D mMain;
+
+    public static Camera2D main { 
+        get { 
+            if(mMain == null) {
+                Camera cam = Camera.main;
+                mMain = cam != null ? cam.GetComponent<Camera2D>() : null;
+            }
+            return mMain;
+        } 
+    }
+
 	public Rect screenExtent { get { return mScreenExtent; } }
 	public Rect fixedScreenExtent { get { return mFixedScreenExtent; } }
 
@@ -84,6 +96,11 @@ public class Camera2D : MonoBehaviour {
 	void OnPreCull() {
 		DoUpdate();
 	}
+
+    void OnDestroy() {
+        if(mMain == this)
+            mMain = null;
+    }
 
 	void Awake() {
 		mCamera = camera;
