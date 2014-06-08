@@ -16,16 +16,6 @@ public class CameraParallax : MonoBehaviour {
         if(view != null) {
             mLastViewPos = view.transform.position;
         }
-
-        camera.transparencySortMode = TransparencySortMode.Orthographic;
-    }
-
-    void Awake() {
-        camera.transparencySortMode = TransparencySortMode.Orthographic;
-    }
-
-    void OnPreCull() {
-        camera.transparencySortMode = TransparencySortMode.Orthographic;
     }
 
     // Update is called once per frame
@@ -43,12 +33,4 @@ public class CameraParallax : MonoBehaviour {
             }
         }
     }
-
-#if UNITY_EDITOR
-    void LateUpdate() {
-        if(!Application.isPlaying) {
-            camera.transparencySortMode = TransparencySortMode.Orthographic;
-        }
-    }
-#endif
 }

@@ -245,6 +245,10 @@ namespace M8 {
 
             return false;
         }
+
+        public static bool VectorEqualApproximately(Vector3 lhs, Vector3 rhs) {
+            return Mathf.Approximately(lhs.x, rhs.x) && Mathf.Approximately(lhs.y, rhs.y) && Mathf.Approximately(lhs.z, rhs.z);
+        }
     }
         
 
