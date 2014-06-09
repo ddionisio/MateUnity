@@ -35,6 +35,27 @@ namespace M8.Editor {
             }
         }
 
+        /// <summary>
+        /// Iterate through all transforms in the scene, breath-first.
+        /// </summary>
+        public static IEnumerable<Transform> sceneAllObjects {
+            get {
+                var q = new Queue<Transform>();
+                foreach(var root in sceneRoots) {
+                    var t = root.transform;
+                    yield return t;
+                    q.Enqueue(t);
+                }
+
+                while(q.Count > 0) {
+                    foreach(Transform child in q.Dequeue()) {
+                        yield return child;
+                        q.Enqueue(child);
+                    }
+                }
+            }
+        }
+
         public static string[] GenerateGenericMaskString() {
             string[] ret = new string[32];
             for(int i = 0; i < ret.Length; i++) {
