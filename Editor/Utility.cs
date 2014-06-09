@@ -15,6 +15,26 @@ namespace M8.Editor {
             }
         }
 
+        public static IEnumerable<GameObject> sceneRoots {
+            get {
+                var prop = new HierarchyProperty(HierarchyType.GameObjects);
+                var expanded = new int[0];
+                while(prop.Next(expanded))
+                    yield return prop.pptrValue as GameObject;
+            }
+        }
+
+        public static int sceneRootCount {
+            get {
+                int count = 0;
+                var prop = new HierarchyProperty(HierarchyType.GameObjects);
+                var expanded = new int[0];
+                while(prop.Next(expanded))
+                    count++;
+                return count;
+            }
+        }
+
         public static string[] GenerateGenericMaskString() {
             string[] ret = new string[32];
             for(int i = 0; i < ret.Length; i++) {
