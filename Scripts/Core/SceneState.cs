@@ -413,6 +413,9 @@ public class SceneState : MonoBehaviour {
     void OnDestroy() {
         if(mInstance == this) {
             mInstance = null;
+
+            if(SceneManager.instance)
+                SceneManager.instance.sceneChangeCallback -= SceneChange;
         }
     }
 
@@ -435,6 +438,8 @@ public class SceneState : MonoBehaviour {
                 mStates = new Dictionary<string, StateValue>();
                 AppendInitData();
             }
+
+            SceneManager.instance.sceneChangeCallback += SceneChange;
         }
     }
 

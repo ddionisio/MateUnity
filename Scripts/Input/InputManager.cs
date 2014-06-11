@@ -231,10 +231,14 @@ public class InputManager : MonoBehaviour {
         public bool add;
     }
 
+    private static InputManager mInstance;
+
     private ButtonCallSetData[] mButtonCallSetQueue = new ButtonCallSetData[buttonCallMax]; //prevent breaking enumeration during update when adding/removing
     private int mButtonCallSetQueueCount;
 
     //interfaces (available after awake)
+
+    public static InputManager instance { get { return mInstance; } }
 
     /// <summary>
     /// Call this to reload binds from config and prefs.  This is to cancel editing key binds.
@@ -491,7 +495,7 @@ public class InputManager : MonoBehaviour {
 	/// <param name="count">Count.</param>
 	public void RegisterInputActionLocalize(int count) {
 		for(int i = 0; i < count; i++) {
-			GameLocalize.RegisterParam("input_"+i, OnTextParam);
+			GameLocalize.instance.RegisterParam("input_"+i, OnTextParam);
 		}
 	}
 
@@ -526,10 +530,19 @@ public class InputManager : MonoBehaviour {
     //internal
 
     protected virtual void OnDestroy() {
-        ClearAllButtonCalls();
+        if(mInstance == this) {
+            mInstance = null;
+
+            ClearAllButtonCalls();
+        }
     }
 
     protected virtual void Awake() {
+        if(mInstance != null)
+            return;
+        else
+            mInstance = this;
+
         if(config != null) {
             Dictionary<int, BindData> binds = new Dictionary<int, BindData>();
 

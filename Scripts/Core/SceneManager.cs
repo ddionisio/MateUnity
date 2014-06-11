@@ -8,13 +8,20 @@ public class SceneManager : MonoBehaviour {
     public const string levelString = "level";
     public const int stackCapacity = 8;
 
-    public ScreenTransition screenTransition;
+    public delegate void OnSceneBoolCallback(bool b);
+    public delegate void OnSceneStringCallback(string s);
+
+    public event OnSceneBoolCallback pauseCallback;
+    public event OnSceneStringCallback sceneChangeCallback;
+
+    [SerializeField]
+    ScreenTransition screenTransition;
 
     [SerializeField]
     bool stackEnable = false;
 
-    private SceneController mSceneController;
-    
+    private static SceneManager mInstance;
+
     private string mCurSceneStr;
 
     private int mCurLevel;
@@ -23,17 +30,14 @@ public class SceneManager : MonoBehaviour {
 
     private float mPrevTimeScale;
 
-    private SceneCheckpoint mCheckPoint = null;
-    private string mCheckPointForScene = "";
-
     private bool mFirstTime = true;
 
     private string mSceneToLoad = null;
-
-    private static List<Transform> mRoots = new List<Transform>();
-
+    
     //private bool mIsFullscreen = false;
     private bool mPaused = false;
+
+    public static SceneManager instance { get { return mInstance; } }
 
     public bool isPaused {
         get {
@@ -45,34 +49,6 @@ public class SceneManager : MonoBehaviour {
         get {
             return mCurLevel;
         }
-    }
-
-    public SceneController sceneController {
-        get {
-            return mSceneController;
-        }
-    }
-
-    public static void RootBroadcastMessage(string methodName, object param, SendMessageOptions options) {
-        if(mRoots.Count == 0) {
-            //refresh roots
-            Transform[] trans = (Transform[])FindObjectsOfType(typeof(Transform));
-            foreach(Transform tran in trans) {
-                if(tran.parent == null) {
-                    mRoots.Add(tran);
-                }
-            }
-        }
-
-        foreach(Transform t in mRoots) {
-            if(t != null)
-                t.BroadcastMessage(methodName, param, options);    
-        }
-    }
-
-    public void SetCheckPoint(SceneCheckpoint check) {
-        mCheckPointForScene = mCurSceneStr;
-        mCheckPoint = check;
     }
 
     void _LoadScene(string scene) {
@@ -142,7 +118,7 @@ public class SceneManager : MonoBehaviour {
                 Time.timeScale = 0.0f;
             }
 
-            RootBroadcastMessage("OnScenePause", null, SendMessageOptions.DontRequireReceiver);
+            if(pauseCallback != null) pauseCallback(mPaused);
         }
     }
 
@@ -152,31 +128,12 @@ public class SceneManager : MonoBehaviour {
 
             Time.timeScale = mPrevTimeScale;
 
-            RootBroadcastMessage("OnSceneResume", null, SendMessageOptions.DontRequireReceiver);
-        }
-    }
-
-    /// <summary>
-    /// Internal use only. Called at OnLevelWasLoaded in SceneManager or in Main (for debug/dev)
-    /// </summary>
-    public void InitScene() {
-        if(mSceneController == null) {
-            mCurSceneStr = Application.loadedLevelName;
-            mSceneController = (SceneController)Object.FindObjectOfType(typeof(SceneController));
+            if(pauseCallback != null) pauseCallback(mPaused);
         }
     }
 
     void OnLevelWasLoaded(int sceneInd) {
-        mRoots.Clear();
-
-        InitScene();
-
-        if(mCheckPoint != null && mCurSceneStr == mCheckPointForScene) {
-            mSceneController.OnCheckPoint(mCheckPoint);
-        }
-
-        mCheckPoint = null;
-        mCheckPointForScene = "";
+        mCurSceneStr = Application.loadedLevelName;
 
         if(screenTransition.state == ScreenTransition.State.Done) { //we were at out a while back
             mFirstTime = false;
@@ -185,19 +142,29 @@ public class SceneManager : MonoBehaviour {
     }
 
     void OnDestroy() {
+        if(mInstance == this) {
+            pauseCallback = null;
+            sceneChangeCallback = null;
+        }
     }
 
     void Awake() {
-        //mIsFullscreen = Screen.fullScreen;
+        if(mInstance == null) {
+            mInstance = this;
 
-        mPrevTimeScale = Time.timeScale;
+            mCurSceneStr = Application.loadedLevelName;
+            //mIsFullscreen = Screen.fullScreen;
 
-        mPaused = false;
+            mPrevTimeScale = Time.timeScale;
 
-        if(stackEnable)
-            mSceneStack = new Stack<string>(stackCapacity);
+            mPaused = false;
 
-        screenTransition.finishCallback = OnScreenTransitionFinish;
+            if(stackEnable)
+                mSceneStack = new Stack<string>(stackCapacity);
+
+            if(screenTransition)
+                screenTransition.finishCallback = OnScreenTransitionFinish;
+        }
     }
 
     /*void Update() {
@@ -222,7 +189,7 @@ public class SceneManager : MonoBehaviour {
     }
 
     void DoLoad() {
-        RootBroadcastMessage("SceneChange", mSceneToLoad, SendMessageOptions.DontRequireReceiver);
+        if(sceneChangeCallback != null) sceneChangeCallback(mSceneToLoad);
 
         mCurSceneStr = mSceneToLoad;
 

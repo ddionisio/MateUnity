@@ -65,7 +65,7 @@ public class SoundPlayerMulti : MonoBehaviour {
 			plyr.startTime = dat.realtime ? Time.realtimeSinceStartup : Time.time;
 			plyr.onEndCallback = onEndCallback;
 			plyr.onEndParam = onEndParam;
-            plyr.src.volume = dat.volume * Main.instance.userSettings.soundVolume;
+            plyr.src.volume = dat.volume * Main.userSettings.soundVolume;
             plyr.src.loop = dat.loop;
 
             if(dat.delay > 0.0f)
@@ -135,6 +135,11 @@ public class SoundPlayerMulti : MonoBehaviour {
 
         StopAllCoroutines();
     }
+
+    void OnDestroy() {
+        if(Main.userSettings != null)
+            Main.userSettings.changeCallback -= UserSettingsChanged;
+    }
         
     void Awake() {
         if(max <= 0)
@@ -161,6 +166,8 @@ public class SoundPlayerMulti : MonoBehaviour {
             
             go.SetActive(false);
         }
+
+        Main.userSettings.changeCallback += UserSettingsChanged;
     }
 
     IEnumerator DoSounds() {

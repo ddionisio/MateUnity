@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 [AddComponentMenu("M8/UI/ModalManager")]
 public class UIModalManager : MonoBehaviour {
+    public delegate void CallbackBool(bool b);
+
     [System.Serializable]
     public class UIData {
         public string name;
@@ -14,20 +16,23 @@ public class UIModalManager : MonoBehaviour {
     public UIData[] uis;
 
     public string openOnStart = "";
-
-    public static UIModalManager instance {
-        get {
-            return mInstance;
-        }
-    }
-
-    public bool persistent = false;
-
+        
+    [SerializeField]
+    bool persistent = false;
+        
     private static UIModalManager mInstance;
 
     private Dictionary<string, UIData> mModals;
     private Stack<UIData> mModalStack;
     private Queue<UIData> mModalToOpen;
+
+    public event CallbackBool activeCallback;
+        
+    public static UIModalManager instance {
+        get {
+            return mInstance;
+        }
+    }
 
     public int activeCount {
         get {
@@ -126,7 +131,8 @@ public class UIModalManager : MonoBehaviour {
 
     void ModalPushToStack(string modal, bool evokeActive) {
         if(evokeActive && mModalStack.Count == 0) {
-            SceneManager.RootBroadcastMessage("OnUIModalActive", null, SendMessageOptions.DontRequireReceiver);
+            if(activeCallback != null)
+                activeCallback(true);
         }
 
         UIData uid = null;
@@ -157,16 +163,15 @@ public class UIModalManager : MonoBehaviour {
     }
 
     void ModalInactive() {
-        SceneManager.RootBroadcastMessage("OnUIModalInactive", null, SendMessageOptions.DontRequireReceiver);
-    }
-
-    void SceneChange() {
-        ModalCloseAll();
+        if(activeCallback != null)
+            activeCallback(false);
     }
 
     void OnDestroy() {
         if(mInstance == this) {
             mInstance = null;
+
+            activeCallback = null;
         }
     }
 

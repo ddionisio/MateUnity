@@ -192,15 +192,21 @@ public class UserData : MonoBehaviour {
     void OnDestroy() {
         if(mInstance == this) {
             mInstance = null;
+
+            if(SceneManager.instance)
+                SceneManager.instance.sceneChangeCallback -= SceneChange;
         }
     }
 
     protected virtual void Awake() {
-        if(mInstance == null)
+        if(mInstance == null) {
             mInstance = this;
 
-        if(loadOnStart)
-            Load();
+            SceneManager.instance.sceneChangeCallback += SceneChange;
+
+            if(loadOnStart)
+                Load();
+        }
     }
 
     protected virtual void Start() {

@@ -155,7 +155,7 @@ public class UserSlotData : UserData {
     protected override void Awake() {
         base.Awake();
 
-        GameLocalize.RegisterParam(LocalizeParamUserName, OnGameLocalizeParamName);
+        GameLocalize.instance.RegisterParam(LocalizeParamUserName, OnGameLocalizeParamName);
     }
 
     protected override void Start() {

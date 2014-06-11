@@ -30,16 +30,20 @@ public class GameLocalize : MonoBehaviour {
 
     public event LocalizeCallback localizeCallback;
 
-    private static Dictionary<string, string> mTable;
-    private static Dictionary<string, string[]> mTableParams;
-    private static bool mLoaded = false;
+    private static GameLocalize mInstance;
 
-    private static Dictionary<string, ParameterCallback> mParams = null;
+    private Dictionary<string, string> mTable;
+    private Dictionary<string, string[]> mTableParams;
+    private bool mLoaded = false;
+
+    private Dictionary<string, ParameterCallback> mParams = null;
+
+    public static GameLocalize instance { get { return mInstance; } }
 
     /// <summary>
     /// Register during Awake such that GetText will be able to fill params correctly
     /// </summary>
-    public static void RegisterParam(string paramKey, ParameterCallback cb) {
+    public void RegisterParam(string paramKey, ParameterCallback cb) {
         if(mParams == null)
             mParams = new Dictionary<string, ParameterCallback>();
 
@@ -49,7 +53,7 @@ public class GameLocalize : MonoBehaviour {
     /// <summary>
     /// Only call this after Load.
     /// </summary>
-    public static string GetText(string key) {
+    public string GetText(string key) {
         string ret = "";
 
         if(mTable != null) {
@@ -103,51 +107,65 @@ public class GameLocalize : MonoBehaviour {
 
         TableData dat = tables[langInd];
 
-        fastJSON.JSON.Instance.Parameters.UseExtensions = false;
-        List<Entry> tableEntries = fastJSON.JSON.Instance.ToObject<List<Entry>>(dat.file.text);
+        if(dat.file) {
+            fastJSON.JSON.Instance.Parameters.UseExtensions = false;
+            List<Entry> tableEntries = fastJSON.JSON.Instance.ToObject<List<Entry>>(dat.file.text);
 
-        mTable = new Dictionary<string, string>(tableEntries.Count);
-        mTableParams = new Dictionary<string, string[]>(tableEntries.Count);
+            mTable = new Dictionary<string, string>(tableEntries.Count);
+            mTableParams = new Dictionary<string, string[]>(tableEntries.Count);
 
-        foreach(Entry entry in tableEntries) {
-            mTable.Add(entry.key, entry.text);
+            foreach(Entry entry in tableEntries) {
+                mTable.Add(entry.key, entry.text);
 
-            if(entry.param != null && entry.param.Length > 0)
-                mTableParams.Add(entry.key, entry.param);
-        }
-
-        //append platform specific entries
-        TableDataPlatform platform = null;
-        foreach(TableDataPlatform platformDat in dat.platforms) {
-            if(platformDat.platform == platformType) {
-                platform = platformDat;
-                break;
+                if(entry.param != null && entry.param.Length > 0)
+                    mTableParams.Add(entry.key, entry.param);
             }
-        }
 
-        if(platform != null) {
-            List<Entry> platformEntries = fastJSON.JSON.Instance.ToObject<List<Entry>>(platform.file.text);
-
-            foreach(Entry platformEntry in platformEntries) {
-                if(mTable.ContainsKey(platformEntry.key)) {
-                    mTable[platformEntry.key] = platformEntry.text;
+            //append platform specific entries
+            TableDataPlatform platform = null;
+            foreach(TableDataPlatform platformDat in dat.platforms) {
+                if(platformDat.platform == platformType) {
+                    platform = platformDat;
+                    break;
                 }
             }
-        }
 
-        //already loaded before? then let everyone know it has changed
-        if(mLoaded) {
-            if(localizeCallback != null)
-                localizeCallback();
+            if(platform != null) {
+                List<Entry> platformEntries = fastJSON.JSON.Instance.ToObject<List<Entry>>(platform.file.text);
+
+                foreach(Entry platformEntry in platformEntries) {
+                    if(mTable.ContainsKey(platformEntry.key)) {
+                        mTable[platformEntry.key] = platformEntry.text;
+                    }
+                }
+            }
+
+            //already loaded before? then let everyone know it has changed
+            if(mLoaded) {
+                if(localizeCallback != null)
+                    localizeCallback();
+            }
+            else {
+                mLoaded = true;
+            }
         }
-        else {
-            mLoaded = true;
-        }
+        else
+            Debug.LogWarning("File not found for language: " + language);
     }
 
     void OnDestroy() {
-        mTable = null;
-        mLoaded = false;
-        localizeCallback = null;
+        if(mInstance == this) {
+            mInstance = null;
+
+            localizeCallback = null;
+        }
+    }
+
+    void Awake() {
+        if(mInstance == null) {
+            mInstance = this;
+
+            Load(Main.userSettings.language, Main.platform);
+        }
     }
 }

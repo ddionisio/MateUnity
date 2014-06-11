@@ -31,7 +31,7 @@ public class UIModalInputStackPop : MonoBehaviour {
     }
 
     void UIActive(bool active) {
-        InputManager input = Main.instance.input;
+        InputManager input = InputManager.instance;
 
         if(active) {
             input.AddButtonCall(player, escape, OnInputEscape);

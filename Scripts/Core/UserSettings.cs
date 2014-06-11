@@ -11,6 +11,8 @@ public class UserSettings {
     public const string screenHeightKey = "sh";
     public const string screenRefreshRateKey = "sr";
 
+    public delegate void Callback(UserSettings us);
+
     public float soundVolume {
         get { return mSoundVolume; }
 
@@ -87,6 +89,8 @@ public class UserSettings {
     [System.NonSerialized]
     public bool fullScreenNoSave = false; //set to true to not save the fullscreen setting
 
+    public event Callback changeCallback;
+
     //need to debug while listening to music
 #if UNITY_EDITOR
     private const float volumeDefault = 1.0f;
@@ -147,7 +151,15 @@ public class UserSettings {
         Screen.SetResolution(mScreenWidth, mScreenHeight, mFullscreen, mScreenRefreshRate);
     }
 
+    /// <summary>
+    /// Called by Main on destruction
+    /// </summary>
+    public void DeInit() {
+        changeCallback = null;
+    }
+
     private void RelaySettingsChanged() {
-        SceneManager.RootBroadcastMessage("UserSettingsChanged", this, SendMessageOptions.DontRequireReceiver);
+        if(changeCallback != null)
+            changeCallback(this);
     }
 }

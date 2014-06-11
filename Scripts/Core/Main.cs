@@ -12,47 +12,34 @@ public class Main : MonoBehaviour {
         public bool fullscreen;
     }
 
-    public GamePlatform platform = GamePlatform.Web;
-
-    public string initScene = "main"; //initial scene where the main initializes, goes to startScene afterwards
-    public string startScene = "start"; //the scene to load to once initScene is finish
+    [SerializeField]
+    string _startScene = "start"; //the scene to load to once initScene is finish
+    [SerializeField]
+    string _mainScene = "main"; //load start scene after initialization, assumes we are in scene index 0
 
     [SerializeField]
-    bool setResolution;
+    bool _setResolution;
     [SerializeField]
-    Resolution resolution;
+    Resolution _resolution;
     [SerializeField]
-    bool fullScreenNoSave;
+    bool _fullScreenNoSave;
+    [SerializeField]
+    GamePlatform _platform = GamePlatform.Web;
 
-    [System.NonSerialized]
-    public UserSettings userSettings;
-    [System.NonSerialized]
-    public SceneManager sceneManager;
-    [System.NonSerialized]
-    public InputManager input;
-    [System.NonSerialized]
-    public GameLocalize localizer;
-
+    [SerializeField]
+    UserSettings _userSettings;
+            
     private static Main mInstance = null;
 
-    public static Main instance {
-        get {
-            return mInstance;
-        }
-    }
-
-    public SceneController sceneController {
-        get {
-            return sceneManager.sceneController;
-        }
-    }
+    public static GamePlatform platform { get { return mInstance ? mInstance._platform : GamePlatform.NumPlatforms; } }
+    public static UserSettings userSettings { get { return mInstance ? mInstance._userSettings : null; } }
 
     void OnDestroy() {
-        if(mInstance == this)
+        if(mInstance == this) {
             mInstance = null;
-    }
 
-    void OnEnable() {
+            _userSettings.DeInit();
+        }
     }
 
     void OnDisable() {
@@ -71,40 +58,28 @@ public class Main : MonoBehaviour {
 
         DontDestroyOnLoad(gameObject);
 
-        if(setResolution) {
-            userSettings = new UserSettings(resolution.width, resolution.height, resolution.refreshRate, resolution.fullscreen);
+        if(_setResolution) {
+            _userSettings = new UserSettings(_resolution.width, _resolution.height, _resolution.refreshRate, _resolution.fullscreen);
         }
         else {
             UnityEngine.Resolution r = Screen.currentResolution;
-            userSettings = new UserSettings(r.width, r.height, r.refreshRate, Screen.fullScreen);
+            _userSettings = new UserSettings(r.width, r.height, r.refreshRate, Screen.fullScreen);
         }
 
-        userSettings.fullScreenNoSave = fullScreenNoSave;
-
-        sceneManager = GetComponentInChildren<SceneManager>();
-
-        input = GetComponentInChildren<InputManager>();
-
-        //load the string table
-        localizer = GetComponentInChildren<GameLocalize>();
-        if(localizer != null) {
-            localizer.Load(userSettings.language, platform);
-        }
+        _userSettings.fullScreenNoSave = _fullScreenNoSave;
     }
 
-    void Start() {
-        if(setResolution) {
+    IEnumerator Start() {
+        if(_setResolution) {
             userSettings.ApplyResolution();
         }
-
-        //TODO: maybe do other things before starting the game
+                
         //go to start if we are in main scene
-        if(Application.loadedLevelName == initScene) {
-            sceneManager.LoadScene(startScene);
-        }
-        else {
-            sceneManager.InitScene();
-        }
+        if(Application.loadedLevelName == _mainScene && !string.IsNullOrEmpty(_startScene)) {
+            //wait for one frame to ensure all initialization has occured during main
+            yield return new WaitForFixedUpdate();
 
+            SceneManager.instance.LoadScene(_startScene);
+        }
     }
 }

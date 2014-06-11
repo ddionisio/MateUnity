@@ -64,7 +64,7 @@ public class FPController : RigidBodyController {
             if(mInputEnabled != value) {
                 mInputEnabled = value;
 
-                InputManager input = Main.instance != null ? Main.instance.input : null;
+                InputManager input = InputManager.instance;
                 if(input != null) {
                     if(mInputEnabled) {
                         input.AddButtonCall(player, jumpInput, OnInputJump);
@@ -222,7 +222,7 @@ public class FPController : RigidBodyController {
         Quaternion dirRot = dirHolder.rotation;
 
         if(mInputEnabled) {
-            InputManager input = Main.instance.input;
+            InputManager input = InputManager.instance;
 
             float moveX, moveY;
 

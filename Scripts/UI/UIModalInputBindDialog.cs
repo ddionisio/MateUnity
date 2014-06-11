@@ -50,15 +50,15 @@ public abstract class UIModalInputBindDialog : UIController {
     }
 
     public void Save() {
-        Main.instance.input.SaveBinds();
+        InputManager.instance.SaveBinds();
         mIsDirty = false;
-        Main.instance.localizer.Refresh(); //for labels using input stuff
+        GameLocalize.instance.Refresh(); //for labels using input stuff
     }
 
     public void Revert(bool toDefault) {
-        Main.instance.input.RevertBinds(toDefault);
+        InputManager.instance.RevertBinds(toDefault);
         mIsDirty = false;
-        Main.instance.localizer.Refresh(); //for labels using input stuff
+        GameLocalize.instance.Refresh(); //for labels using input stuff
     }
 
     protected virtual void OnDestroy() {
@@ -75,7 +75,7 @@ public abstract class UIModalInputBindDialog : UIController {
     void Update() {
         if(mBindActive) {
             if(mActionBindInd != -1 && mActionBindKeyInd != -1) {
-                InputManager input = Main.instance.input;
+                InputManager input = InputManager.instance;
 
                 bool done = false;
 
@@ -142,7 +142,7 @@ public abstract class UIModalInputBindDialog : UIController {
 
                     mLastTime = Time.realtimeSinceStartup;
 
-                    Main.instance.localizer.Refresh(); //for labels using input stuff
+                    GameLocalize.instance.Refresh(); //for labels using input stuff
                 }
             }
             else if(Time.realtimeSinceStartup - mLastTime >= 0.2f) {
