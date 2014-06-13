@@ -6,6 +6,16 @@ using System.Collections.Generic;
 
 namespace M8 {
     public struct Util {
+        static int CameraCompareDepth(Camera c1, Camera c2) {
+            return Mathf.RoundToInt(c1.depth - c2.depth);
+        }
+
+        public static Camera[] GetAllCameraDepthSorted() {
+            Camera[] cams = Camera.allCameras;
+            System.Array.Sort<Camera>(cams, CameraCompareDepth);
+            return cams;
+        }
+
         static int ComponentNameCompare<T>(T obj1, T obj2) where T : Component {
             return obj1.name.CompareTo(obj2.name);
         }

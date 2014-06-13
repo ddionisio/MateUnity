@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("")]
 public class ScreenTrans : MonoBehaviour {
     
     public enum ToType {
@@ -22,7 +23,7 @@ public class ScreenTrans : MonoBehaviour {
 
     public enum CameraType {
         Main, //use Camera.main
-        Top, //use the camera with the highest depth
+        All, //use the camera with the highest depth
         Target, //use cameraTarget
     }
 
@@ -72,7 +73,7 @@ public class ScreenTrans : MonoBehaviour {
                 if(!cam)
                     cam = Camera.main;
                 break;
-            case CameraType.Top:
+            case CameraType.All:
                 Camera[] cams = Camera.allCameras;
                 float minDepth = float.MinValue;
                 int minIndex = -1;

@@ -39,7 +39,11 @@ public class ScreenTransManager : MonoBehaviour {
         RenderTexture lastRT = RenderTexture.active;
         RenderTexture.active = renderTexture;
         GL.Clear(false, true, Color.clear);
-        cam.Render();
+        if(!cam.targetTexture) {
+            cam.targetTexture = renderTexture;
+            cam.Render();
+            cam.targetTexture = null;
+        }
         RenderTexture.active = lastRT;
 
         return renderTexture;
@@ -51,11 +55,16 @@ public class ScreenTransManager : MonoBehaviour {
 
         RenderTexture lastRT = RenderTexture.active;
         RenderTexture.active = renderTexture;
-        GL.Clear(false, true, Color.black);
+        GL.Clear(false, true, Color.clear);
 
         //NOTE: assumes cams are in the correct depth order
-        for(int i = 0; i < cams.Length; i++)
-            cams[i].Render();
+        for(int i = 0; i < cams.Length; i++) {
+            if(!cams[i].targetTexture) {
+                cams[i].targetTexture = renderTexture;
+                cams[i].Render();
+                cams[i].targetTexture = null;
+            }
+        }
 
         RenderTexture.active = lastRT;
 
@@ -71,14 +80,13 @@ public class ScreenTransManager : MonoBehaviour {
     }
 
     public void Play(ScreenTrans trans) {
-        if(mCurTrans)
-            StopAllCoroutines();
-
-        mCurTrans = trans;
         if(mCurTrans) {
-
-            StartCoroutine(DoPlay());
+            StopAllCoroutines();
+            mCurTrans = null;
         }
+
+        if(trans)
+            StartCoroutine(DoPlay(trans));
     }
 
     public void Play(string transName) {
@@ -104,7 +112,18 @@ public class ScreenTransManager : MonoBehaviour {
             DestroyImmediate(gameObject);
     }
 
-    IEnumerator DoPlay() {
+    IEnumerator DoPlay(ScreenTrans trans) {
+        mCurTrans = trans;
+
+        Camera cam = trans.GetCameraTarget();
+        if(cam) {
+            ScreenTransPlayer player = cam.GetComponent<ScreenTransPlayer>();
+            if(!player)
+                player = cam.gameObject.AddComponent<ScreenTransPlayer>();
+
+            player.Play(trans);
+        }
+
         WaitForFixedUpdate wait = new WaitForFixedUpdate();
         while(mCurTrans && !mCurTrans.isDone)
             yield return wait;
