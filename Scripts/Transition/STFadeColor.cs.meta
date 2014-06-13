@@ -1,0 +1,11 @@
+fileFormatVersion: 2
+guid: c3cbec2d4a1909448b51dec81908d762
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - shader: {fileID: 4800000, guid: fdf1c6e931a297840a3eca7e04480aa3, type: 3}
+  - cameraTarget: {instanceID: 0}
+  - targetTexture: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
