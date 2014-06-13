@@ -43,6 +43,7 @@ public class ScreenTrans : MonoBehaviour {
     private Material mMat;
 
     public float curTime { get { return mCurTime; } }
+    public float curTimeNormalized { get { return mCurTime/delay; } }
 
     /// <summary>
     /// Returns current curve value based on current time

@@ -4,13 +4,26 @@ using System.Collections.Generic;
 
 [AddComponentMenu("M8/Screen Transition/Manager")]
 public class ScreenTransManager : MonoBehaviour {
+    public enum Action {
+        Begin, //transition is about to play, called after transition's Prepare
+        End //transition has ended
+    }
+
+    public delegate void Callback(ScreenTrans trans, Action act);
+
     public ScreenTrans[] library;
 
+    /// <summary>
+    /// Get a call each time when transition begins and ends
+    /// </summary>
+    public event Callback transitionCallback;
+
     private ScreenTrans mPrevTrans;
-    private ScreenTrans mCurTrans;
 
     private RenderTexture mRenderTexture;
     private Vector2 mRenderTextureScreenSize;
+    private Queue<ScreenTrans> mProgress = new Queue<ScreenTrans>(8);
+    private IEnumerator mProgressRoutine;
 
     private static ScreenTransManager mInstance;
 
@@ -76,20 +89,28 @@ public class ScreenTransManager : MonoBehaviour {
             if(library[i].name == transName)
                 return library[i];
         }
+        Debug.LogWarning("Transition not found: " + transName);
         return null;
     }
 
     public void Play(ScreenTrans trans) {
-        if(mCurTrans) {
-            StopAllCoroutines();
-            mCurTrans = null;
+        if(trans) {
+            mProgress.Enqueue(trans);
+            if(mProgressRoutine == null)
+                StartCoroutine(mProgressRoutine = DoProgress());
         }
-
-        if(trans)
-            StartCoroutine(DoPlay(trans));
     }
 
     public void Play(string transName) {
+        Play(GetTransition(transName));
+    }
+
+    public void Prepare(ScreenTrans trans) {
+        if(trans)
+            trans.Prepare();
+    }
+
+    public void Prepare(string transName) {
         Play(GetTransition(transName));
     }
 
@@ -99,6 +120,8 @@ public class ScreenTransManager : MonoBehaviour {
 
             if(mRenderTexture)
                 DestroyImmediate(mRenderTexture);
+
+            transitionCallback = null;
         }
     }
 
@@ -112,23 +135,34 @@ public class ScreenTransManager : MonoBehaviour {
             DestroyImmediate(gameObject);
     }
 
-    IEnumerator DoPlay(ScreenTrans trans) {
-        mCurTrans = trans;
+    IEnumerator DoProgress() {
+        WaitForFixedUpdate wait = new WaitForFixedUpdate();
+        while(mProgress.Count > 0) {
+            ScreenTrans trans = mProgress.Dequeue();
 
-        Camera cam = trans.GetCameraTarget();
-        if(cam) {
-            ScreenTransPlayer player = cam.GetComponent<ScreenTransPlayer>();
-            if(!player)
-                player = cam.gameObject.AddComponent<ScreenTransPlayer>();
+            trans.Prepare();
 
-            player.Play(trans);
+            if(transitionCallback != null)
+                transitionCallback(trans, Action.Begin);
+
+            Camera cam = trans.GetCameraTarget();
+            if(cam) {
+                ScreenTransPlayer player = cam.GetComponent<ScreenTransPlayer>();
+                if(!player)
+                    player = cam.gameObject.AddComponent<ScreenTransPlayer>();
+
+                player.Play(trans);
+            }
+
+            while(!trans.isDone)
+                yield return wait;
+
+            mPrevTrans = trans;
+
+            if(transitionCallback != null)
+                transitionCallback(trans, Action.End);
         }
 
-        WaitForFixedUpdate wait = new WaitForFixedUpdate();
-        while(mCurTrans && !mCurTrans.isDone)
-            yield return wait;
-
-        mPrevTrans = mCurTrans;
-        mCurTrans = null;
+        mProgressRoutine = null;
     }
 }

@@ -4,22 +4,11 @@ using System.Collections;
 [AddComponentMenu("M8/Screen Transition/Player")]
 [RequireComponent(typeof(Camera))]
 public class ScreenTransPlayer : MonoBehaviour {
+    private ScreenTrans mPrevTrans; //do a one frame render before going to next transition
     private ScreenTrans mCurrentTrans;
 
-    /*public static void Play(ScreenTrans trans) {
-        //get camera
-        Camera cam = trans.GetCameraTarget();
-        if(cam) {
-            ScreenTransPlayer player = cam.GetComponent<ScreenTransPlayer>();
-            if(!player)
-                player = cam.gameObject.AddComponent<ScreenTransPlayer>();
-
-            player.DoPlay(trans);
-        }
-    }*/
-    
     public void Play(ScreenTrans trans) {
-        if(mCurrentTrans) mCurrentTrans.End();
+        mPrevTrans = mCurrentTrans;
 
         mCurrentTrans = trans;
         if(mCurrentTrans) {
@@ -52,6 +41,11 @@ public class ScreenTransPlayer : MonoBehaviour {
     }
 
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
+        if(mPrevTrans) {
+            mPrevTrans.OnRenderImage(source, destination);
+            mPrevTrans = null;
+        }
+
         if(mCurrentTrans)
             mCurrentTrans.OnRenderImage(source, destination);
     }
