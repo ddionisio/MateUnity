@@ -2,8 +2,12 @@
 using System.Collections;
 
 [AddComponentMenu("")]
-public class ScreenTrans : MonoBehaviour {
-    
+public abstract class ScreenTrans : MonoBehaviour {
+    public enum SourceType {
+        CameraSnapShot,
+        Texture
+    }
+
     public enum ToType {
         Camera,
         Texture
@@ -125,6 +129,118 @@ public class ScreenTrans : MonoBehaviour {
                 OnFinish();
             }
         }
+    }
+
+    protected void SetSourceTexture(SourceType source, Texture sourceTexture) {
+        switch(source) {
+            case SourceType.CameraSnapShot:
+                switch(cameraType) {
+                    case CameraType.Main:
+                        material.SetTexture("_SourceTex", ScreenTransManager.instance.CameraSnapshot(Camera.main));
+                        break;
+                    case CameraType.Target:
+                        material.SetTexture("_SourceTex", ScreenTransManager.instance.CameraSnapshot(cameraTarget ? cameraTarget : Camera.main));
+                        break;
+                    case CameraType.All:
+                        material.SetTexture("_SourceTex", ScreenTransManager.instance.CameraSnapshot(M8.Util.GetAllCameraDepthSorted()));
+                        break;
+                }
+                break;
+
+            case SourceType.Texture:
+                material.SetTexture("_SourceTex", sourceTexture);
+                break;
+        }
+    }
+
+    protected Vector2 GetUVScroll(Anchor anchor, float t) {
+        Vector2 ret = Vector2.zero;
+        switch(anchor) {
+            case Anchor.TopLeft:
+                ret.x = -1f + t * 2f;
+                ret.y = -1f + (1f - t) * 2f;
+                break;
+            case Anchor.Top:
+                ret.x = 0f;
+                ret.y = -1f + (1f - t) * 2f;
+                break;
+            case Anchor.TopRight:
+                ret.x = -1f + (1f - t) * 2f;
+                ret.y = -1f + (1f - t) * 2f;
+                break;
+            case Anchor.Right:
+                ret.x = -1f + (1f - t) * 2f;
+                ret.y = 0f;
+                break;
+            case Anchor.BottomRight:
+                ret.x = -1f + (1f - t) * 2f;
+                ret.y = -1f + t * 2f;
+                break;
+            case Anchor.Bottom:
+                ret.x = 0f;
+                ret.y = -1f + t * 2f;
+                break;
+            case Anchor.BottomLeft:
+                ret.x = -1f + t * 2f;
+                ret.y = -1f + t * 2f;
+                break;
+            case Anchor.Left:
+                ret.x = -1f + t * 2f;
+                ret.y = 0f;
+                break;
+            default:
+                ret.x = 0f;
+                ret.y = 0f;
+                break;
+        }
+
+        return ret;
+    }
+
+    protected Vector2 GetAnchorPoint(Anchor anchor) {
+        Vector2 ret = Vector2.zero;
+        switch(anchor) {
+            case Anchor.TopLeft:
+                ret.x = -1f;
+                ret.y = 1f;
+                break;
+            case Anchor.Top:
+                ret.x = 0f;
+                ret.y = 1f;
+                break;
+            case Anchor.TopRight:
+                ret.x = 1f;
+                ret.y = 1f;
+                break;
+            case Anchor.Right:
+                ret.x = 1f;
+                ret.y = 0f;
+                break;
+            case Anchor.BottomRight:
+                ret.x = 1f;
+                ret.y = -1f;
+                break;
+            case Anchor.Bottom:
+                ret.x = 0f;
+                ret.y = -1f;
+                break;
+            case Anchor.BottomLeft:
+                ret.x = -1f;
+                ret.y = -1f;
+                break;
+            case Anchor.Left:
+                ret.x = -1f;
+                ret.y = 0f;
+                break;
+            default:
+                ret.x = 0f;
+                ret.y = 0f;
+                break;
+        }
+
+        ret = ret / 2f + new Vector2(0.5f, 0.5f);
+
+        return ret;
     }
 
     protected virtual void OnDestroy() {

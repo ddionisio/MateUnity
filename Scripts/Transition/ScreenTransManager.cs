@@ -12,6 +12,7 @@ public class ScreenTransManager : MonoBehaviour {
     public delegate void Callback(ScreenTrans trans, Action act);
 
     public ScreenTrans[] library;
+    public bool libraryFromChildren;
 
     /// <summary>
     /// Get a call each time when transition begins and ends
@@ -130,6 +131,8 @@ public class ScreenTransManager : MonoBehaviour {
             mInstance = this;
 
             //
+            if(libraryFromChildren)
+                library = GetComponentsInChildren<ScreenTrans>();
         }
         else
             DestroyImmediate(gameObject);
@@ -141,10 +144,7 @@ public class ScreenTransManager : MonoBehaviour {
             ScreenTrans trans = mProgress.Dequeue();
 
             trans.Prepare();
-
-            if(transitionCallback != null)
-                transitionCallback(trans, Action.Begin);
-
+                        
             Camera cam = trans.GetCameraTarget();
             if(cam) {
                 ScreenTransPlayer player = cam.GetComponent<ScreenTransPlayer>();
@@ -153,6 +153,12 @@ public class ScreenTransManager : MonoBehaviour {
 
                 player.Play(trans);
             }
+
+            //wait one frame to render before sending Begin request
+            yield return wait;
+
+            if(transitionCallback != null)
+                transitionCallback(trans, Action.Begin);
 
             while(!trans.isDone)
                 yield return wait;
