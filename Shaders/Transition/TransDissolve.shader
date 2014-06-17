@@ -26,9 +26,9 @@
 			half4 dmask = tex2D(_DissolveTex, i.uv);
 
 			half4 cblend = tex2D(_SourceTex, i.uv);
-			if (dmask.r < _Params.y + _Params.x)
+			if (dmask.r < _Params.x + _Params.y)
 				cblend = tex2D(_EmissionTex, i.uv);
-			if (dmask.r <= _Params.y)
+			if (dmask.r <= _Params.x)
 				cblend = original;
 
 			return lerp(original, cblend, _t);
