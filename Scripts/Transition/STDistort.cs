@@ -7,9 +7,10 @@ public class STDistort : ScreenTrans {
     public Texture sourceTexture; //if source = SourceType.Texture
 
     public Texture distortTexture;
-    public float distortTime; //[0, 2]
+    public float distortTime = 0.35f; //[0, 2]
+    public AnimationCurve distortMag;
 
-    public Vector2 force;
+    public Vector2 force = new Vector2(0.2f, 0.2f); //[0, 2]
 
     private Vector4 mParam;
 
@@ -21,11 +22,12 @@ public class STDistort : ScreenTrans {
         mParam.x = force.x;
         mParam.y = force.y;
         mParam.z = distortTime;
-
         material.SetVector("_Params", mParam);
     }
 
     protected override void OnUpdate() {
         material.SetFloat("_t", curCurveValue);
+
+        material.SetFloat("_distortT", distortMag.Evaluate(curTime));
     }
 }

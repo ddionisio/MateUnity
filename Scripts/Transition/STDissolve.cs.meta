@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1ab02f42bed83844188e84586038f8a8
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - shader: {fileID: 4800000, guid: c0fe09fe219a0b84a97a35e1af1615ce, type: 3}
+  - cameraTarget: {instanceID: 0}
+  - targetTexture: {instanceID: 0}
+  - sourceTexture: {instanceID: 0}
+  - dissolveTexture: {instanceID: 0}
+  - emissionTexture: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 

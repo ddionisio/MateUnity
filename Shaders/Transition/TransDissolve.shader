@@ -1,8 +1,9 @@
-﻿Shader "Hidden/TransDistort" {
+﻿Shader "Hidden/TransDissolve" {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "white" {}
         _SourceTex ("Base (RGB)", 2D) = "white" {}
-		_DistortTex ("Base (RGB)", 2D) = "white" {}
+		_DissolveTex ("Base (RGB)", 2D) = "white" {}
+		_EmissionTex ("Base (RGB)", 2D) = "white" {}
 	}
 	
 	CGINCLUDE
@@ -15,20 +16,22 @@
 		
 		sampler2D _MainTex;
         sampler2D _SourceTex;
-		sampler2D _DistortTex;
-		fixed3 _Params; //[xy: force, z = distort time]
+		sampler2D _DissolveTex;
+		sampler2D _EmissionTex;
+		fixed2 _Params; //[x: dissolve power, y: emission thickness]
 		fixed _t;
-		fixed _distortT;
 				
 		half4 frag(v2f i) : COLOR {
-			half2 distortUV = i.uv;
-			fixed4 offsetColor1 = tex2D(_DistortTex, i.uv + _Time.xz*_Params.z);
-			fixed4 offsetColor2 = tex2D(_DistortTex, i.uv + _Time.yx*_Params.z);
-			distortUV.x += ((offsetColor1.r + offsetColor2.r) - 1) * _Params.x;
-			distortUV.y += ((offsetColor1.r + offsetColor2.r) - 1) * _Params.y;
-			distortUV = lerp(i.uv, distortUV, _distortT);
+			half4 original = tex2D(_MainTex, i.uv);
+			half4 dmask = tex2D(_DissolveTex, i.uv);
 
-			return lerp(tex2D(_MainTex, i.uv), tex2D(_SourceTex, distortUV), _t);
+			half4 cblend = tex2D(_SourceTex, i.uv);
+			if (dmask.r < _Params.y + _Params.x)
+				cblend = tex2D(_EmissionTex, i.uv);
+			if (dmask.r <= _Params.y)
+				cblend = original;
+
+			return lerp(original, cblend, _t);
 		}
 
 		v2f vert(appdata_img v) {
