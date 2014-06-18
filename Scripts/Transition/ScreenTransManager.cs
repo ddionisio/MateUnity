@@ -14,6 +14,8 @@ public class ScreenTransManager : MonoBehaviour {
     public ScreenTrans[] library;
     public bool libraryFromChildren;
 
+    public bool persistent;
+
     /// <summary>
     /// Get a call each time when transition begins and ends
     /// </summary>
@@ -115,6 +117,12 @@ public class ScreenTransManager : MonoBehaviour {
         Play(GetTransition(transName));
     }
 
+    /*void OnLevelWasLoaded(int lvl) {
+        Debug.Log("a: " + mProgressRoutine);
+        if(mProgress.Count > 0)
+            StartCoroutine(mProgressRoutine = DoProgress());
+    }*/
+
     void OnDestroy() {
         if(mInstance == this) {
             mInstance = null;
@@ -133,6 +141,9 @@ public class ScreenTransManager : MonoBehaviour {
             //
             if(libraryFromChildren)
                 library = GetComponentsInChildren<ScreenTrans>();
+
+            if(persistent)
+                DontDestroyOnLoad(gameObject);
         }
         else
             DestroyImmediate(gameObject);
@@ -146,8 +157,9 @@ public class ScreenTransManager : MonoBehaviour {
             trans.Prepare();
                         
             Camera cam = trans.GetCameraTarget();
+            ScreenTransPlayer player = null;
             if(cam) {
-                ScreenTransPlayer player = cam.GetComponent<ScreenTransPlayer>();
+                player = cam.GetComponent<ScreenTransPlayer>();
                 if(!player)
                     player = cam.gameObject.AddComponent<ScreenTransPlayer>();
 
@@ -160,8 +172,21 @@ public class ScreenTransManager : MonoBehaviour {
             if(transitionCallback != null)
                 transitionCallback(trans, Action.Begin);
 
-            while(!trans.isDone)
+            while(!trans.isDone) {
+                //Debug.Log("playing: "+trans);
+
+                if(!player) { //grab player again
+                    cam = trans.GetCameraTarget();
+                    if(cam) {
+                        player = cam.GetComponent<ScreenTransPlayer>();
+                        if(!player)
+                            player = cam.gameObject.AddComponent<ScreenTransPlayer>();
+
+                        player.Play(trans);
+                    }
+                }
                 yield return wait;
+            }
 
             mPrevTrans = trans;
 

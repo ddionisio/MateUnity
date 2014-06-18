@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 [AddComponentMenu("M8/Core/SceneManager")]
 public class SceneManager : MonoBehaviour {
-
     public const string levelString = "level";
     public const int stackCapacity = 8;
 
@@ -14,9 +13,15 @@ public class SceneManager : MonoBehaviour {
     public event OnSceneBoolCallback pauseCallback;
     public event OnSceneStringCallback sceneChangeCallback;
 
-    [SerializeField]
-    ScreenTransition screenTransition;
+    //transitions, make sure ScreenTransitionManager is available
 
+    [Tooltip("The Screen Transition to play when exiting the scene.  Make sure ScreenTransManager is available.")]
+    [SerializeField]
+    string sceneTransitionOut;
+    [Tooltip("The Screen Transition to play when entering the new scene.  Make sure ScreenTransManager is available.")]
+    [SerializeField]
+    string sceneTransitionIn;
+    
     [SerializeField]
     bool stackEnable = false;
 
@@ -31,8 +36,10 @@ public class SceneManager : MonoBehaviour {
     private float mPrevTimeScale;
 
     private bool mFirstTime = true;
-
+    
     private string mSceneToLoad = null;
+
+    private string mScreenTransOut, mScreenTransIn;
     
     //private bool mIsFullscreen = false;
     private bool mPaused = false;
@@ -51,25 +58,30 @@ public class SceneManager : MonoBehaviour {
         }
     }
 
-    void _LoadScene(string scene) {
+    void _LoadScene(string scene, string transOut, string transIn) {
         //make sure the scene is not paused
         Resume();
 
         mSceneToLoad = scene;
-
-        if(mFirstTime) {
-            screenTransition.state = ScreenTransition.State.Done;
+        mFirstTime = false;
+        if(mFirstTime || (string.IsNullOrEmpty(transOut) && string.IsNullOrEmpty(transIn))) {
             DoLoad();
         }
         else {
-            screenTransition.state = ScreenTransition.State.Out;
+            mScreenTransOut = transOut;
+            mScreenTransIn = transIn;
+
+            if(!string.IsNullOrEmpty(mScreenTransOut))
+                ScreenTransManager.instance.Play(mScreenTransOut);
+            if(!string.IsNullOrEmpty(mScreenTransIn))
+                ScreenTransManager.instance.Play(mScreenTransIn);
         }
     }
 
     public void LoadScene(string scene) {
         SceneStackPush(mCurSceneStr, scene);
 
-        _LoadScene(scene);
+        _LoadScene(scene, sceneTransitionOut, sceneTransitionIn);
     }
 
     public void LoadLevel(int level) {
@@ -89,7 +101,7 @@ public class SceneManager : MonoBehaviour {
     public void LoadLastSceneStack() {
         if(stackEnable) {
             if(mSceneStack.Count > 0) {
-                _LoadScene(mSceneStack.Pop());
+                _LoadScene(mSceneStack.Pop(), sceneTransitionOut, sceneTransitionIn);
             }
             else {
                 Debug.Log("No more scenes to pop!");
@@ -134,11 +146,7 @@ public class SceneManager : MonoBehaviour {
 
     void OnLevelWasLoaded(int sceneInd) {
         mCurSceneStr = Application.loadedLevelName;
-
-        if(screenTransition.state == ScreenTransition.State.Done) { //we were at out a while back
-            mFirstTime = false;
-            StartCoroutine(DoScreenTransitionIn());
-        }
+        mFirstTime = false;
     }
 
     void OnDestroy() {
@@ -162,8 +170,8 @@ public class SceneManager : MonoBehaviour {
             if(stackEnable)
                 mSceneStack = new Stack<string>(stackCapacity);
 
-            if(screenTransition)
-                screenTransition.finishCallback = OnScreenTransitionFinish;
+            if(ScreenTransManager.instance)
+                ScreenTransManager.instance.transitionCallback += OnScreenTransition;
         }
     }
 
@@ -176,18 +184,6 @@ public class SceneManager : MonoBehaviour {
         }
     }*/
 
-    void OnScreenTransitionFinish(ScreenTransition.State state) {
-        switch(state) {
-            case ScreenTransition.State.In:
-                //notify?
-                break;
-
-            case ScreenTransition.State.Out:
-                DoLoad();
-                break;
-        }
-    }
-
     void DoLoad() {
         if(sceneChangeCallback != null) sceneChangeCallback(mSceneToLoad);
 
@@ -195,13 +191,18 @@ public class SceneManager : MonoBehaviour {
 
         Application.LoadLevel(mSceneToLoad);
     }
-
-    IEnumerator DoScreenTransitionIn() {
-        yield return new WaitForFixedUpdate();
-
-        screenTransition.state = ScreenTransition.State.In;
-
-        yield break;
+    
+    void OnScreenTransition(ScreenTrans trans, ScreenTransManager.Action act) {
+        switch(act) {
+            case ScreenTransManager.Action.Begin:
+                if(trans.name == mScreenTransIn)
+                    DoLoad();
+                break;
+            case ScreenTransManager.Action.End:
+                if(trans.name == mScreenTransOut && string.IsNullOrEmpty(mScreenTransIn)) //highly unlikely
+                    DoLoad();
+                break;
+        }
     }
 
     private void SceneStackPush(string scene, string nextScene) {

@@ -21,8 +21,8 @@ public class ScreenTransPlayer : MonoBehaviour {
     }
 
     void OnDestroy() {
-        if(mCurrentTrans)
-            mCurrentTrans.End();
+        //if(mCurrentTrans)
+            //mCurrentTrans.End();
     }
 
     void Update() {
