@@ -38,6 +38,9 @@ public class RigidBodyController : MonoBehaviour {
 
     public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
 
+    [Tooltip("Ease towards standDrag, make sure to start < 1, then end at 1.")]
+    public AnimationCurve standEase;
+    public float standEaseDelay = 0; //if > 0, use standEase
     public float standDrag = 60.0f;
     public LayerMask standDragLayer;
 
@@ -88,6 +91,8 @@ public class RigidBodyController : MonoBehaviour {
     private CapsuleCollider mCapsuleColl;
 
     private bool mLockDrag = false;
+    private bool mStanding = false;
+    private float mStandingLastTime;
 
     private float mDefaultSpeedCap;
 
@@ -203,6 +208,7 @@ public class RigidBodyController : MonoBehaviour {
         mWaterCounter = 0;
         mCurMoveAxis = Vector2.zero;
         mCurMoveDir = Vector3.zero;
+        mStanding = false;
     }
 
     public bool CheckPenetrate(float reduceOfs, LayerMask mask) {
@@ -584,13 +590,30 @@ public class RigidBodyController : MonoBehaviour {
 
                 Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveAirForce);
             }
+
+            mStanding = false;
         }
         else {
             mCurMoveDir = Vector3.zero;
 
             if(!mLockDrag)
-                rigidbody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : standDrag : airDrag;
+                rigidbody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : GetStandDrag() : airDrag;
         }
+    }
+
+    private float GetStandDrag() {
+        if(!mStanding) {
+            mStanding = true;
+            mStandingLastTime = Time.fixedTime;
+        }
+
+        float curT = Time.fixedTime - mStandingLastTime;
+        if(standEaseDelay > 0 && curT <= standEaseDelay) {
+            float t = curT/standEaseDelay; if(t > 1.0f) t = 1.0f;
+            return standEase.Evaluate(t) * standDrag;
+        }
+        else
+            return standDrag;
     }
 
     //return true if we moved
@@ -717,6 +740,10 @@ public class RigidBodyController : MonoBehaviour {
                 mCollGroundLayerMask |= 1 << inf.collider.gameObject.layer;
             }
         }
+
+        //no longer standing?
+        if(!isGrounded)
+            mStanding = false;
     }
 
     protected void ComputeLocalVelocity() {
