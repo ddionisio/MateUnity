@@ -36,14 +36,14 @@ Shader "M8/ProBuilder/Unlit Vertex Color Mod" {
 		{
 			v2f_vct o;
 			o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
-			o.color = v.color;
+			o.color = v.color * _Mod;
 			o.texcoord = v.texcoord;
 			return o;
 		}
 
 		fixed4 frag_mult(v2f_vct i) : COLOR
 		{
-			fixed4 col = tex2D(_MainTex, i.texcoord) * i.color * _Mod;
+			fixed4 col = tex2D(_MainTex, i.texcoord) * i.color;
 			return col;
 		}
 
