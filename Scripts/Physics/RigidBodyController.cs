@@ -211,37 +211,61 @@ public class RigidBodyController : MonoBehaviour {
         mStanding = false;
     }
 
+    void GetCapsuleInfo(out Vector3 p1, out Vector3 p2, out float r, float reduceOfs) {
+        p1 = mCapsuleColl.center; 
+        p2 = p1;
+
+        float h = mCapsuleColl.height - reduceOfs * 2.0f;
+        float hHalf = h * 0.5f;
+
+        r = mCapsuleColl.radius - reduceOfs;
+
+        switch(mCapsuleColl.direction) {
+            case 0: //x
+                p1.x -= hHalf - r;
+                p2.x += hHalf - r;
+                break;
+            case 1: //y
+                p1.y -= hHalf - r;
+                p2.y += hHalf - r;
+                break;
+            case 2: //z
+                p1.z -= hHalf - r;
+                p2.z += hHalf - r;
+                break;
+        }
+
+        Matrix4x4 wrldMtx = transform.localToWorldMatrix;
+
+        p1 = wrldMtx.MultiplyPoint(p1);
+        p2 = wrldMtx.MultiplyPoint(p2);
+    }
+
     public bool CheckPenetrate(float reduceOfs, LayerMask mask) {
         if(mCapsuleColl) {
-            Vector3 p1 = mCapsuleColl.center, p2 = p1;
-            float h = mCapsuleColl.height - reduceOfs * 2.0f;
-            float hHalf = h * 0.5f;
-            float r = mCapsuleColl.radius - reduceOfs;
+            Vector3 p1, p2;
+            float r;
 
-            switch(mCapsuleColl.direction) {
-                case 0: //x
-                    p1.x -= hHalf - r;
-                    p2.x += hHalf - r;
-                    break;
-                case 1: //y
-                    p1.y -= hHalf - r;
-                    p2.y += hHalf - r;
-                    break;
-                case 2: //z
-                    p1.z -= hHalf - r;
-                    p2.z += hHalf - r;
-                    break;
-            }
-
-            Matrix4x4 wrldMtx = transform.localToWorldMatrix;
-
-            p1 = wrldMtx.MultiplyPoint(p1);
-            p2 = wrldMtx.MultiplyPoint(p2);
+            GetCapsuleInfo(out p1, out p2, out r, reduceOfs);
 
             return Physics.CheckCapsule(p1, p2, r, mask);
         }
         else {
             return Physics.CheckSphere(transform.position, mRadius - reduceOfs, mask);
+        }
+    }
+
+    public bool CheckCast(float reduceOfs, Vector3 dir, out RaycastHit hit, float dist, int mask) {
+        if(mCapsuleColl) {
+            Vector3 p1, p2;
+            float r;
+
+            GetCapsuleInfo(out p1, out p2, out r, reduceOfs);
+
+            return Physics.CapsuleCast(p1, p2, r, dir, out hit, dist, mask);
+        }
+        else {
+            return Physics.SphereCast(transform.position, mRadius - reduceOfs, dir, out hit, dist, mask);
         }
     }
 
