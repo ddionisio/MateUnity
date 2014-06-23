@@ -14,6 +14,8 @@ public class TransFollow : MonoBehaviour {
 
     private Vector3 mCurVel;
 
+    public Vector3 currentVelocity { get { return mCurVel; } }
+
     public void SnapToTarget() {
         Vector3 pos = transform.position;
             Vector3 tgt = target.position + target.rotation*ofs;
