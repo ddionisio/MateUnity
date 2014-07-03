@@ -41,6 +41,8 @@ public class InputManager : MonoBehaviour {
         public KeyCode code = KeyCode.None; //unity
         public InputKeyMap map = InputKeyMap.None; //for external (like ouya!)
 
+        public bool invert; //for axis, flip sign
+
         public ButtonAxis axis = ButtonAxis.None; //for buttons as axis
         public int index = 0; //which index this key refers to
 
@@ -416,7 +418,7 @@ public class InputManager : MonoBehaviour {
             if(key != null) {
                 float axis = ProcessAxis(key, bindData.deadZone, bindData.forceRaw);
                 if(axis != 0.0f) {
-                    pd.info.axis = axis;
+                    pd.info.axis = key.invert ? -axis : axis;
                     break;
                 }
             }
@@ -489,15 +491,15 @@ public class InputManager : MonoBehaviour {
         mButtonCallSetQueueCount = 0;
     }
 
-	/// <summary>
-	///	Call this during game initialization to allow proper display of input in text
-	/// </summary>
-	/// <param name="count">Count.</param>
-	public void RegisterInputActionLocalize(int count) {
-		for(int i = 0; i < count; i++) {
-			GameLocalize.instance.RegisterParam("input_"+i, OnTextParam);
-		}
-	}
+    /// <summary>
+    ///	Call this during game initialization to allow proper display of input in text
+    /// </summary>
+    /// <param name="count">Count.</param>
+    public void RegisterInputActionLocalize(int count) {
+        for(int i = 0; i < count; i++) {
+            GameLocalize.instance.RegisterParam("input_"+i, OnTextParam);
+        }
+    }
 
     //implements
 

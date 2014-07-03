@@ -137,7 +137,7 @@ namespace M8.Editor {
         void OnGUI() {
             TextAsset prevTextFile = mTextFile;
 
-			EditorGUIUtility.labelWidth = 80.0f;
+            EditorGUIUtility.labelWidth = 80.0f;
 
             GUILayout.Space(6f);
             GUILayout.BeginHorizontal();
@@ -239,12 +239,12 @@ namespace M8.Editor {
                     GUILayout.FlexibleSpace();
 
                     mBinds[i].bind.control = (InputManager.Control)EditorGUILayout.EnumPopup(mBinds[i].bind.control);
-                                        
+
                     GUILayout.EndHorizontal();
 
                     if(mBinds[i].bind.control == InputManager.Control.Axis) {
                         mBinds[i].bind.deadZone = EditorGUILayout.FloatField("Deadzone", mBinds[i].bind.deadZone);
-						mBinds[i].bind.forceRaw = EditorGUILayout.Toggle("Force Raw", mBinds[i].bind.forceRaw);
+                        mBinds[i].bind.forceRaw = EditorGUILayout.Toggle("Force Raw", mBinds[i].bind.forceRaw);
                     }
 
                     int keyCount = mBinds[i].keyTypes != null ? mBinds[i].keyTypes.Length : 0;
@@ -259,7 +259,7 @@ namespace M8.Editor {
 
                             GUILayout.BeginHorizontal();
                             mBinds[i].bind.keys[key].player = EditorGUILayout.IntField("Player", mBinds[i].bind.keys[key].player, GUILayout.MaxWidth(200));
-                            
+
                             GUILayout.FlexibleSpace();
 
                             if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
@@ -268,10 +268,10 @@ namespace M8.Editor {
                             GUILayout.EndHorizontal();
 
                             GUILayout.BeginHorizontal();
-                                                        
+
                             //key bind
                             mBinds[i].keyTypes[key] = (InputType)EditorGUILayout.EnumPopup(mBinds[i].keyTypes[key]);
-                            
+
                             switch(mBinds[i].keyTypes[key]) {
                                 case InputType.Unity:
                                     mBinds[i].bind.keys[key].input = EditorGUILayout.TextField(mBinds[i].bind.keys[key].input, GUILayout.MinWidth(250));
@@ -289,10 +289,15 @@ namespace M8.Editor {
                             GUILayout.EndHorizontal();
 
                             //other configs
-                            if(mBinds[i].keyTypes[key] != InputType.Unity)
-                                mBinds[i].bind.keys[key].axis = (InputManager.ButtonAxis)EditorGUILayout.EnumPopup("Axis", mBinds[i].bind.keys[key].axis, GUILayout.MaxWidth(200));
+                            if(mBinds[i].bind.control == InputManager.Control.Axis) {
+                                if(mBinds[i].keyTypes[key] != InputType.Unity)
+                                    mBinds[i].bind.keys[key].axis = (InputManager.ButtonAxis)EditorGUILayout.EnumPopup("Axis", mBinds[i].bind.keys[key].axis, GUILayout.MaxWidth(200));
 
-                            mBinds[i].bind.keys[key].index = EditorGUILayout.IntField("Index", mBinds[i].bind.keys[key].index, GUILayout.MaxWidth(200));
+                                if(mBinds[i].keyTypes[key] == InputType.Unity || mBinds[i].bind.keys[key].axis == InputManager.ButtonAxis.Both)
+                                    mBinds[i].bind.keys[key].invert = EditorGUILayout.Toggle("Invert", mBinds[i].bind.keys[key].invert);
+                            }
+                            else
+                                mBinds[i].bind.keys[key].index = EditorGUILayout.IntField("Index", mBinds[i].bind.keys[key].index, GUILayout.MaxWidth(200));
 
                             GUILayout.EndVertical();
                         }
@@ -313,7 +318,7 @@ namespace M8.Editor {
 
                 if(GUILayout.Button("Save")) {
                     fastJSON.JSON.Instance.Parameters.UseExtensions = false;
-                    
+
                     List<InputManager.Bind> saveBinds = new List<InputManager.Bind>(mBinds.Length);
 
                     for(int i = 0; i < mBinds.Length; i++) {
@@ -330,7 +335,7 @@ namespace M8.Editor {
                 }
             }
 
-			EditorGUIUtility.labelWidth = 0.0f;
+            EditorGUIUtility.labelWidth = 0.0f;
         }
     }
 }
