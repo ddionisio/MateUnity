@@ -27,6 +27,8 @@ public class GravityController : MonoBehaviour {
     private GravityFieldBase[] mGravityFields = new GravityFieldBase[mMaxGravityFields];
     private int mGravityFieldCurCount;
 
+    private Rigidbody mBody;
+
     public bool gravityLocked { get { return mGravityLocked; } set { mGravityLocked = value; } }
     public float startGravity { get { return mStartGravity; } }
 
@@ -75,7 +77,7 @@ public class GravityController : MonoBehaviour {
             }
         }
     }
-    
+
     void OnTriggerExit(Collider col) {
         if(ignoreFields) return;
 
@@ -97,9 +99,10 @@ public class GravityController : MonoBehaviour {
             }
         }
     }
-    
+
     protected virtual void Awake() {
-        rigidbody.useGravity = false;
+        mBody = rigidbody;
+        mBody.useGravity = false;
 
         if(startUp == Vector3.zero)
             startUp = transform.up;
@@ -158,11 +161,11 @@ public class GravityController : MonoBehaviour {
 
                 if(fallLimit) {
                     //assume y-axis, positive up
-                    if(rigidbody && !rigidbody.isKinematic) {
-                        Vector3 localVel = transform.worldToLocalMatrix.MultiplyVector(rigidbody.velocity);
+                    if(mBody && !mBody.isKinematic) {
+                        Vector3 localVel = transform.worldToLocalMatrix.MultiplyVector(mBody.velocity);
                         if(localVel.y < -fallSpeedLimit) {
                             localVel.y = -fallSpeedLimit;
-                            rigidbody.velocity = transform.localToWorldMatrix.MultiplyVector(localVel);
+                            mBody.velocity = transform.localToWorldMatrix.MultiplyVector(localVel);
                         }
                     }
                 }
@@ -174,7 +177,7 @@ public class GravityController : MonoBehaviour {
         }
 
         if(!mGravityLocked)
-            rigidbody.AddForce(mUp * gravity * rigidbody.mass * mMoveScale, ForceMode.Force);
+            mBody.AddForce(mUp * gravity * mBody.mass * mMoveScale, ForceMode.Force);
     }
 
     protected virtual void ApplyUp() {
@@ -201,7 +204,7 @@ public class GravityController : MonoBehaviour {
 
         while(transform.up != mUp) {
             float step = orientationSpeed * Time.fixedDeltaTime;
-            rigidbody.MoveRotation(Quaternion.RotateTowards(transform.rotation, mRotateTo, step));
+            mBody.MoveRotation(Quaternion.RotateTowards(transform.rotation, mRotateTo, step));
 
             yield return mWaitUpdate;
         }

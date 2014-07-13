@@ -57,7 +57,7 @@ public class FPController : RigidBodyController {
     private bool mEyeLocked = true;
     private bool mEyeOrienting = false;
     private Vector3 mEyeOrientVel;
-    
+
     public bool inputEnabled {
         get { return mInputEnabled; }
         set {
@@ -112,7 +112,7 @@ public class FPController : RigidBodyController {
             if(gravityController != null)
                 gravityController.enabled = true;
             else
-                rigidbody.useGravity = mLadderLastGravity;
+                mBody.useGravity = mLadderLastGravity;
 
             mLadderCounter = 0;
         }
@@ -121,7 +121,7 @@ public class FPController : RigidBodyController {
     protected override void WaterExit() {
         if(mJump) {
             if(jumpImpulse > 0.0f)
-                rigidbody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
+                mBody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
 
             mJumpLastTime = Time.fixedTime;
         }
@@ -133,7 +133,7 @@ public class FPController : RigidBodyController {
         if(M8.Util.CheckLayerAndTag(col.gameObject, ladderLayer, ladderTag)) {
             mLadderUp = col.transform.up;
 
-            if(!M8.MathUtil.RotateToUp(mLadderUp, transform.right, transform.forward, ref mLadderRot))
+            if(!M8.MathUtil.RotateToUp(mLadderUp, -transform.right, transform.forward, ref mLadderRot))
                 transform.up = mLadderUp;
 
             mLadderCounter++;
@@ -145,8 +145,8 @@ public class FPController : RigidBodyController {
                 gravityController.enabled = false;
             }
             else {
-                mLadderLastGravity = rigidbody.useGravity;
-                rigidbody.useGravity = false;
+                mLadderLastGravity = mBody.useGravity;
+                mBody.useGravity = false;
             }
         }
     }
@@ -163,15 +163,15 @@ public class FPController : RigidBodyController {
                     gravityController.enabled = false;
                 }
                 else {
-                    mLadderLastGravity = rigidbody.useGravity;
-                    rigidbody.useGravity = false;
+                    mLadderLastGravity = mBody.useGravity;
+                    mBody.useGravity = false;
                 }
             }
 
             if(mLadderUp != col.transform.up) {
                 mLadderUp = col.transform.up;
 
-                if(!M8.MathUtil.RotateToUp(mLadderUp, transform.right, transform.forward, ref mLadderRot))
+                if(!M8.MathUtil.RotateToUp(mLadderUp, -transform.right, transform.forward, ref mLadderRot))
                     transform.up = mLadderUp;
             }
         }
@@ -188,7 +188,7 @@ public class FPController : RigidBodyController {
             if(gravityController != null)
                 gravityController.enabled = true;
             else
-                rigidbody.useGravity = mLadderLastGravity;
+                mBody.useGravity = mLadderLastGravity;
         }
     }
 
@@ -204,21 +204,14 @@ public class FPController : RigidBodyController {
         mEyeOrienting = false;
         mLookCurRot = 0.0f;
     }
-
-    protected override void Awake() {
-        base.Awake();
-    }
-
+    
     // Use this for initialization
-    protected override void Start() {
-        base.Start();
-
+    void Start() {
         inputEnabled = startInputEnabled;
     }
 
     // Update is called once per frame
     protected override void FixedUpdate() {
-        Rigidbody body = rigidbody;
         Quaternion dirRot = dirHolder.rotation;
 
         if(mInputEnabled) {
@@ -258,7 +251,7 @@ public class FPController : RigidBodyController {
                 moveForward = moveY;
                 moveSide = moveX;
             }
-                        
+
             //look
             if(mEyeLocked && !mEyeOrienting) {
                 mLookCurInputAxis.x = lookInputX != InputManager.ActionInvalid ? input.GetAxis(player, lookInputX) : 0.0f;
@@ -288,17 +281,17 @@ public class FPController : RigidBodyController {
             //jump
             if(mJump) {
                 if(isOnLadder) {
-                    body.AddForce(dirRot * Vector3.up * ladderJumpForce);
+                    mBody.AddForce(dirRot * Vector3.up * ladderJumpForce);
                 }
                 else if(isUnderWater) {
-                    body.AddForce(dirRot * Vector3.up * jumpWaterForce);
+                    mBody.AddForce(dirRot * Vector3.up * jumpWaterForce);
                 }
                 else {
                     if(Time.fixedTime - mJumpLastTime >= jumpDelay || (collisionFlags & CollisionFlags.Above) != 0) {
                         mJump = false;
                     }
                     else {
-                        body.AddForce(dirRot * Vector3.up * jumpForce);
+                        mBody.AddForce(dirRot * Vector3.up * jumpForce);
                     }
                 }
             }
@@ -336,7 +329,7 @@ public class FPController : RigidBodyController {
         base.FixedUpdate();
 
         if(isOnLadder)
-            rigidbody.drag = ladderDrag;
+            mBody.drag = ladderDrag;
     }
 
     void OnInputJump(InputManager.Info dat) {
@@ -365,8 +358,8 @@ public class FPController : RigidBodyController {
 
                     if(jumpImpulse > 0.0f) {
                         ClearCollFlags();
-                        rigidbody.drag = airDrag;
-                        rigidbody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
+                        mBody.drag = airDrag;
+                        mBody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
                     }
 
                     mJump = true;
@@ -386,8 +379,8 @@ public class FPController : RigidBodyController {
                     if(isGrounded) {
                         if(jumpImpulse > 0.0f) {
                             ClearCollFlags();
-                            rigidbody.drag = airDrag;
-                            rigidbody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
+                            mBody.drag = airDrag;
+                            mBody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
                         }
 
                         mJump = true;
@@ -418,7 +411,7 @@ public class FPController : RigidBodyController {
         while(isOnLadder) {
             if(transform.up != mLadderUp) {
                 float step = ladderOrientSpeed * Time.fixedDeltaTime;
-                rigidbody.MoveRotation(Quaternion.RotateTowards(transform.rotation, mLadderRot, step));
+                mBody.MoveRotation(Quaternion.RotateTowards(transform.rotation, mLadderRot, step));
             }
 
             yield return waitUpdate;

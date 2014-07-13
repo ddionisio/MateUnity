@@ -98,6 +98,8 @@ public class RigidBodyController : MonoBehaviour {
 
     private float mMoveScale = 1.0f;
 
+    protected Rigidbody mBody;
+
     public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
     public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
@@ -134,7 +136,7 @@ public class RigidBodyController : MonoBehaviour {
 
     public CapsuleCollider capsuleCollider { get { return mCapsuleColl; } }
 
-    public float moveScale { 
+    public float moveScale {
         get { return mMoveScale; }
         set { mMoveScale = value; }
     }
@@ -212,7 +214,7 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     void GetCapsuleInfo(out Vector3 p1, out Vector3 p2, out float r, float reduceOfs) {
-        p1 = mCapsuleColl.center; 
+        p1 = mCapsuleColl.center;
         p2 = p1;
 
         float h = mCapsuleColl.height - reduceOfs * 2.0f;
@@ -281,7 +283,7 @@ public class RigidBodyController : MonoBehaviour {
     /// This will override the rigidbody's velocity to the current local velocity
     /// </summary>
     public void SetLocalVelocityToBody() {
-        rigidbody.velocity = dirHolder.localToWorldMatrix.MultiplyVector(mLocalVelocity);
+        mBody.velocity = dirHolder.localToWorldMatrix.MultiplyVector(mLocalVelocity);
     }
 
     // implements
@@ -527,7 +529,7 @@ public class RigidBodyController : MonoBehaviour {
 
             if(!isUnderWater) {
                 WaterExit();
-                
+
                 if(waterExitCallback != null)
                     waterExitCallback(this);
             }
@@ -550,6 +552,8 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual void Awake() {
+        mBody = rigidbody;
+
         mColls = new CollideInfo[maxColls];
         for(int i = 0; i < maxColls; i++)
             mColls[i] = new CollideInfo();
@@ -572,16 +576,13 @@ public class RigidBodyController : MonoBehaviour {
         mDefaultSpeedCap = speedCap;
     }
 
-    protected virtual void Start() {
-    }
-
     // Update is called once per frame
     protected virtual void FixedUpdate() {
         if(speedCap > 0.0f) {
-            Vector3 vel = rigidbody.velocity;
+            Vector3 vel = mBody.velocity;
             float spdSqr = vel.sqrMagnitude;
             if(spdSqr > speedCap * speedCap) {
-                rigidbody.velocity = (vel / Mathf.Sqrt(spdSqr)) * speedCap;
+                mBody.velocity = (vel / Mathf.Sqrt(spdSqr)) * speedCap;
             }
         }
 
@@ -593,24 +594,24 @@ public class RigidBodyController : MonoBehaviour {
         ComputeLocalVelocity();
 
         if(mIsSlopSlide) {
-            //rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
+            //mBody.drag = isUnderWater ? waterDrag : groundDrag;
 
             Vector3 dir = M8.MathUtil.Slide(-dirHolder.up, mSlopNormal);
             dir.Normalize();
-            rigidbody.AddForce(dir * slopSlideForce * moveScale);
+            mBody.AddForce(dir * slopSlideForce * moveScale);
         }
 
         if(mCurMoveAxis != Vector2.zero) {
             //move
             if(isGrounded) {
                 if(!mLockDrag)
-                    rigidbody.drag = isUnderWater ? waterDrag : groundDrag;
+                    mBody.drag = isUnderWater ? waterDrag : groundDrag;
 
                 Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveForce);
             }
             else {
                 if(!mLockDrag)
-                    rigidbody.drag = isUnderWater ? waterDrag : airDrag;
+                    mBody.drag = isUnderWater ? waterDrag : airDrag;
 
                 Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveAirForce);
             }
@@ -621,7 +622,7 @@ public class RigidBodyController : MonoBehaviour {
             mCurMoveDir = Vector3.zero;
 
             if(!mLockDrag)
-                rigidbody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : GetStandDrag() : airDrag;
+                mBody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : GetStandDrag() : airDrag;
         }
     }
 
@@ -694,7 +695,7 @@ public class RigidBodyController : MonoBehaviour {
 
         if(canMove) {
             //M8.Debug.
-            rigidbody.AddForce(moveDelta * force * moveScale);
+            mBody.AddForce(moveDelta * force * moveScale);
             return true;
         }
 
@@ -702,14 +703,14 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected virtual bool CanMove(Vector3 dir, float maxSpeed) {
-        Vector3 vel = rigidbody.velocity - mGroundMoveVel;
+        Vector3 vel = mBody.velocity - mGroundMoveVel;
         float sqrMag = vel.sqrMagnitude;
 
         bool ret = sqrMag < maxSpeed * maxSpeed;
 
         //see if we are trying to move the opposite dir
         if(!ret) { //see if we are trying to move the opposite dir
-            Vector3 velDir = rigidbody.velocity.normalized;
+            Vector3 velDir = mBody.velocity.normalized;
             ret = Vector3.Dot(dir, velDir) < moveCosCheck;
         }
 
@@ -771,6 +772,6 @@ public class RigidBodyController : MonoBehaviour {
     }
 
     protected void ComputeLocalVelocity() {
-        mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(rigidbody.velocity);
+        mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(mBody.velocity);
     }
 }
