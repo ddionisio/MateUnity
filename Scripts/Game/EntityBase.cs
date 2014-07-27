@@ -62,7 +62,6 @@ public class EntityBase : MonoBehaviour {
     public EntityActivator activator;
 
     public event OnGenericCall setStateCallback;
-    public event OnSetBool setBlinkCallback;
     public event OnGenericCall spawnCallback;
     public event OnGenericCall releaseCallback;
 
@@ -76,13 +75,9 @@ public class EntityBase : MonoBehaviour {
     private bool mDoSpawnOnWake = false;
     private bool mAutoSpawnFinish = true;
 
-    private bool mBlinking = false;
-
     private byte mStartedCounter = 0;
 
     private SceneSerializer mSerializer = null;
-
-    private float mBlinkTime;
 
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
         //TODO: use ours if no 3rd party pool manager
@@ -193,30 +188,8 @@ public class EntityBase : MonoBehaviour {
         }
     }
 
-    public bool isBlinking {
-        get { return mBlinking; }
-    }
-
     public SceneSerializer serializer {
         get { return mSerializer; }
-    }
-
-    /// <summary>
-    /// Set to blinking, if delay = 0, stops blink immediately.
-    /// </summary>
-    /// <param name="delay"></param>
-    public void Blink(float delay) {
-        if(delay > 0.0f) {
-            if(mBlinking)
-                mBlinkTime = delay;
-            else {
-                mBlinkTime = delay;
-                StartCoroutine(DoBlink());
-            }
-        }
-        else {
-            BlinkStateSet(false);
-        }
     }
 
     /// <summary>
@@ -261,12 +234,6 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void OnDespawned() {
-        if(mBlinking) {
-            SetBlink(false);
-            mBlinking = false;
-            mBlinkTime = 0.0f;
-        }
-
 #if PLAYMAKER
         if(mFSM != null) {
             mFSM.enabled = false;
@@ -298,10 +265,6 @@ public class EntityBase : MonoBehaviour {
             StartCoroutine(DoSpawn());
         }
         else {
-            //resume blinking
-            if(mBlinking)
-                StartCoroutine(DoBlink());
-
 #if PLAYMAKER
             if(mFSM != null && mStartedCounter > 0) {
                 //resume FSM
@@ -325,7 +288,6 @@ public class EntityBase : MonoBehaviour {
         }
 
         setStateCallback = null;
-        setBlinkCallback = null;
         spawnCallback = null;
         releaseCallback = null;
     }
@@ -374,10 +336,7 @@ public class EntityBase : MonoBehaviour {
 
     protected virtual void StateChanged() {
     }
-
-    protected virtual void SetBlink(bool blink) {
-    }
-
+    
     protected virtual void SpawnStart() {
     }
 
@@ -392,9 +351,6 @@ public class EntityBase : MonoBehaviour {
             mPoolData = GetComponent<PoolDataController>();
 
         mState = mPrevState = StateInvalid; //avoid invalid updates
-
-        mBlinking = false;
-        mBlinkTime = 0.0f;
 
         //allow activator to start and check if we need to spawn now or later
         //ensure start is called before spawning if we are freshly allocated from entity manager
@@ -533,27 +489,5 @@ public class EntityBase : MonoBehaviour {
         GameObject.Destroy(gameObject);
 
         yield break;
-    }
-
-    void BlinkStateSet(bool blink) {
-        if(mBlinking != blink) {
-            mBlinking = blink;
-            if(setBlinkCallback != null)
-                setBlinkCallback(this, blink);
-            SetBlink(blink);
-        }
-    }
-
-    IEnumerator DoBlink() {
-        BlinkStateSet(true);
-
-        WaitForFixedUpdate wait = new WaitForFixedUpdate();
-
-        while(mBlinkTime > 0.0f) {
-            yield return wait;
-            mBlinkTime -= Time.fixedDeltaTime;
-        }
-
-        BlinkStateSet(false);
     }
 }
