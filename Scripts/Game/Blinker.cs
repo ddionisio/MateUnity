@@ -14,7 +14,7 @@ public class Blinker : MonoBehaviour {
     public event Callback activeCallback;
 
     private bool mBlinking;
-    private bool mOn;
+    private bool mYes;
     private float mDuration;
     private float mBlinkTime;
 
@@ -25,7 +25,7 @@ public class Blinker : MonoBehaviour {
             mBlinking = false;
             mDuration = 0.0f;
             mBlinkTime = 0.0f;
-            mOn = false;
+            mYes = false;
             OnBlink(false);
         }
     }
@@ -56,7 +56,7 @@ public class Blinker : MonoBehaviour {
         Blink(0.0f);
     }
 
-    protected virtual void OnBlink(bool on) {
+    protected virtual void OnBlink(bool yes) {
         //implement
     }
 
@@ -71,7 +71,7 @@ public class Blinker : MonoBehaviour {
                 activeCallback(blink);
 
             if(!mBlinking) {
-                mOn = false;
+                mYes = false;
                 OnBlink(false);
             }
 
@@ -91,7 +91,7 @@ public class Blinker : MonoBehaviour {
                         
             mBlinkTime += dt;
             if(mBlinkTime >= _interval) {
-                OnBlink(mOn = !mOn);
+                OnBlink(mYes = !mYes);
                 mBlinkTime -= _interval;
             }
 

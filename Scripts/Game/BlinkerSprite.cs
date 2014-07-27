@@ -6,23 +6,23 @@ public class BlinkerSprite : Blinker {
     public SpriteRenderer[] targets; //manually select targets, leave empty to grab recursively
 
     void Awake() {
-        if(targets == null) {
+        if(targets == null || targets.Length == 0) {
             targets = GetComponentsInChildren<SpriteRenderer>(true);
         }
     }
 
-    protected override void OnBlink(bool on) {
-        if(on) {
+    protected override void OnBlink(bool yes) {
+        if(yes) {
             for(int i = 0; i < targets.Length; i++) {
                 Color c = targets[i].color;
-                c.a = 1.0f;
+                c.a = 0.0f;
                 targets[i].color = c;
             }
         }
         else {
             for(int i = 0; i < targets.Length; i++) {
                 Color c = targets[i].color;
-                c.a = 0.0f;
+                c.a = 1.0f;
                 targets[i].color = c;
             }
         }

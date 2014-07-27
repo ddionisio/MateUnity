@@ -49,8 +49,8 @@ public class BlinkerMaterialColor : Blinker {
         }
     }
 
-    protected override void OnBlink(bool on) {
-        if(on) {
+    protected override void OnBlink(bool yes) {
+        if(yes) {
             for(int i = 0, max = mBlinkMats.Length; i < max; i++) {
                 mRenderers[i].sharedMaterial = mBlinkMats[i];
             }
