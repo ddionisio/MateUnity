@@ -1,63 +1,50 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 [AddComponentMenu("M8/Game/Blinker Material Color")]
 public class BlinkerMaterialColor : Blinker {
+    public Material material;
     public string modProperty = "_ColorOverlay";
     public Color color = Color.white;
 
     public Renderer[] targets; //manually select targets, leave empty to grab recursively
 
-    private Renderer[] mRenderers;
-    private Material[] mBlinkMats;
-    private Material[] mBlinkDefaultMats;
+    private Material[] mTargetDefaultMats;
 
+    private Material mMatInstance;
     private int mModID;
 
     void OnDestroy() {
-        if(mBlinkMats != null) {
-            for(int i = 0, max = mBlinkMats.Length; i < max; i++) {
-                if(mBlinkMats[i])
-                    DestroyImmediate(mBlinkMats[i]);
-            }
-        }
+        if(mMatInstance)
+            DestroyImmediate(mMatInstance);
+        mMatInstance = null;
     }
 
     void Awake() {
+        mMatInstance = new Material(material);
         mModID = Shader.PropertyToID(modProperty);
 
-        Renderer[] renders = targets == null || targets.Length == 0 ? GetComponentsInChildren<Renderer>(true) : targets;
-        if(renders.Length > 0) {
-            List<Renderer> validRenders = new List<Renderer>(renders.Length);
-            foreach(Renderer r in renders) {
-                if(r.sharedMaterial.HasProperty(mModID)) {
-                    validRenders.Add(r);
-                }
-            }
+        mMatInstance.SetColor(mModID, color);
 
-            mRenderers = new Renderer[validRenders.Count];
-            mBlinkMats = new Material[validRenders.Count];
-            mBlinkDefaultMats = new Material[validRenders.Count];
+        if(targets == null || targets.Length == 0)
+            targets = GetComponentsInChildren<Renderer>(true);
 
-            for(int i = 0, max = mBlinkMats.Length; i < max; i++) {
-                mRenderers[i] = validRenders[i];
+        mTargetDefaultMats = new Material[targets.Length];
 
-                mBlinkMats[i] = new Material(mBlinkDefaultMats[i] = validRenders[i].sharedMaterial);
-                mBlinkMats[i].SetColor(mModID, color);
-            }
+        for(int i = 0, max = targets.Length; i < max; i++) {
+            mTargetDefaultMats[i] = targets[i].sharedMaterial;
         }
     }
 
     protected override void OnBlink(bool yes) {
         if(yes) {
-            for(int i = 0, max = mBlinkMats.Length; i < max; i++) {
-                mRenderers[i].sharedMaterial = mBlinkMats[i];
+            for(int i = 0, max = targets.Length; i < max; i++) {
+                targets[i].sharedMaterial = mMatInstance;
             }
         }
         else {
-            for(int i = 0, max = mBlinkMats.Length; i < max; i++) {
-                mRenderers[i].sharedMaterial = mBlinkDefaultMats[i];
+            for(int i = 0, max = targets.Length; i < max; i++) {
+                targets[i].sharedMaterial = mTargetDefaultMats[i];
             }
         }
     }

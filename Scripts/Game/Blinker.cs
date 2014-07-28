@@ -44,6 +44,7 @@ public class Blinker : MonoBehaviour {
             }
         }
         else {
+            StopAllCoroutines();
             BlinkStateSet(false);
         }
     }
