@@ -6,7 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
 [AddComponentMenu("M8/Core/UserData")]
-public class UserData : MonoBehaviour {
+public class UserData : MonoBehaviour, System.Collections.IEnumerable {
     public enum Action {
         Load,
         Save
@@ -43,6 +43,10 @@ public class UserData : MonoBehaviour {
         }
         
         return items.ToArray();
+    }
+
+    public System.Collections.IEnumerator GetEnumerator() {
+        return mValues.GetEnumerator();
     }
 
     public virtual void Load() {

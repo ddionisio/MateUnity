@@ -126,7 +126,25 @@ namespace M8 {
         }
 
         public static bool CheckLayerAndTag(GameObject go, int layerMask, string tag) {
-            return (layerMask & (1 << go.layer)) != 0 && go.tag == tag;
+            return (layerMask & (1 << go.layer)) != 0 && go.CompareTag(tag);
+        }
+
+        public static bool CheckTag(GameObject go, params string[] tags) {
+            for(int i = 0; i < tags.Length; i++) {
+                if(go.CompareTag(tags[i]))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool CheckTag(Component comp, params string[] tags) {
+            for(int i = 0; i < tags.Length; i++) {
+                if(comp.CompareTag(tags[i]))
+                    return true;
+            }
+
+            return false;
         }
 
         public static ushort MakeWord(byte hb, byte lb) {
