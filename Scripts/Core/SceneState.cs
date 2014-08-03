@@ -74,7 +74,7 @@ public class SceneState : MonoBehaviour {
             return UserData.instance.HasKey(string.Format(DataFormat, mScene, name));
         }
 
-        return false;
+        return true;
     }
 
     public void DeleteValuesByNameContain(string nameContains) {
@@ -247,7 +247,7 @@ public class SceneState : MonoBehaviour {
             return UserData.instance.HasKey(string.Format(GlobalDataFormat, name));
         }
 
-        return false;
+        return true;
     }
 
     public void DeleteGlobalValue(string name, bool persistent) {
