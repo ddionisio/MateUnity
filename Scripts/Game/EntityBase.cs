@@ -71,7 +71,7 @@ public class EntityBase : MonoBehaviour {
 #if PLAYMAKER
     private PlayMakerFSM mFSM;
 #endif
-        
+
     private bool mDoSpawnOnWake = false;
     private bool mAutoSpawnFinish = true;
 
@@ -324,8 +324,6 @@ public class EntityBase : MonoBehaviour {
 
     // Use this for initialization
     protected virtual void Start() {
-        BroadcastMessage("EntityStart", this, SendMessageOptions.DontRequireReceiver);
-
         mStartedCounter = 1;
 
         //for when putting entities on scene, skip the spawning state
@@ -336,7 +334,7 @@ public class EntityBase : MonoBehaviour {
 
     protected virtual void StateChanged() {
     }
-    
+
     protected virtual void SpawnStart() {
     }
 

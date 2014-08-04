@@ -6,6 +6,36 @@ using System.Collections.Generic;
 
 namespace M8 {
     public struct Util {
+        public static int CellToIndex(int row, int col, int numCols) {
+            return (row * numCols) + col;
+        }
+
+        public static void CellToRowCol(int index, int numCols, out int row, out int col) {
+            row = index / numCols;
+            col = index % numCols;
+        }
+
+        public static int FlagSet(int data, int mask, bool set) {
+            return set ? data | mask : data & (~mask);
+        }
+
+        public static int FlagSetBit(int data, int bit, bool set) {
+            return FlagSet(data, 1<<bit, set);
+        }
+
+        public static int FlagFlip(int data, int mask) {
+            return data ^ mask;
+        }
+
+        public static bool FlagCheck(int data, int mask) {
+            return (data & mask) == mask;
+        }
+
+        public static bool FlagCheckBit(int data, int bit) {
+            return FlagCheck(data, 1<<bit);
+        }
+
+
         static int CameraCompareDepth(Camera c1, Camera c2) {
             return Mathf.RoundToInt(c1.depth - c2.depth);
         }
@@ -27,20 +57,20 @@ namespace M8 {
             else {
                 //first find it in children
                 Transform found = go.transform.Find(name);
-                
+
                 if(found != null) {
                     return found.gameObject;
                 }
-                
+
                 //find it inside each child
                 foreach(Transform t in go.transform) {
                     GameObject item = FindGameObjectByNameRecursive(t.gameObject, name);
-                    
+
                     if(item != null) {
                         return item;
                     }
                 }
-                
+
                 return null;
             }
         }

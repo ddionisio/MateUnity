@@ -10,15 +10,6 @@ namespace M8 {
 
         public const float TwoPI = 2.0f * Mathf.PI;
 
-        public static int CellToIndex(int row, int col, int numCols) {
-            return (row * numCols) + col;
-        }
-
-        public static void CellToRowCol(int index, int numCols, out int row, out int col) {
-            row = index / numCols;
-            col = index % numCols;
-        }
-
         //-------------- 2D --------------
 
         public static void Limit(ref Vector2 v, float limit) {
@@ -250,7 +241,7 @@ namespace M8 {
             return Mathf.Approximately(lhs.x, rhs.x) && Mathf.Approximately(lhs.y, rhs.y) && Mathf.Approximately(lhs.z, rhs.z);
         }
     }
-        
+
 
     //-------------- Easing --------------
 
