@@ -9,6 +9,7 @@ public class SpriteFrameBlink : MonoBehaviour {
     public float blinkDelay = 0.5f;
     public int blinkCount = 1;
     public float blinkWaitDelay = 0.0f;
+    public bool blinkStartWait;
 
     private Sprite mFrameDefault;
 
@@ -44,6 +45,9 @@ public class SpriteFrameBlink : MonoBehaviour {
     IEnumerator DoBlink() {
         WaitForSeconds waitBlink = new WaitForSeconds(blinkDelay);
         WaitForSeconds waitBlinkRest = new WaitForSeconds(blinkWaitDelay);
+
+        if(blinkStartWait)
+            yield return waitBlinkRest;
 
         while(true) {
             for(int i = 0; i < blinkCount; i++) {

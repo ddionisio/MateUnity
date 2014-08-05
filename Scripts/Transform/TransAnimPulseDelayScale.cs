@@ -3,11 +3,20 @@ using System.Collections;
 
 [AddComponentMenu("M8/Transform/AnimPulseDelayScale")]
 public class TransAnimPulseDelayScale : MonoBehaviour {
-    public float pauseStart;
+    public enum UpdateType {
+        Update,
+        FixedUpdate,
+        Realtime
+    }
+
+    public UpdateType updateType = UpdateType.Update;
+
+    public float pauseDelay;
     public float pulseDelay;
 
     public Vector3 ofs;
 
+    public bool startPause;
     public bool roundOutput = true; //only works for pixel-coordinate
     public bool squared = false;
 
@@ -19,6 +28,7 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
     }
 
     private float mCurPulseTime = 0;
+    private float mLastTime = 0;
 
     private Vector3 mStart;
     private Vector3 mEnd;
@@ -29,8 +39,9 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
     void OnEnable() {
         if(mStarted) {
             target.localScale = mStart;
-            mState = State.Pause;
+            mState = startPause ? State.Pause : State.Pulse;
             mCurPulseTime = 0;
+            mLastTime = GetTime();
         }
     }
 
@@ -50,17 +61,30 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        mState = pauseStart > 0.0f ? State.Pause : State.Pulse;
-        mCurPulseTime = 0;
         mStarted = true;
+        OnEnable();
+    }
+
+    float GetTime() {
+        switch(updateType) {
+            case UpdateType.Update:
+                return Time.time;
+            case UpdateType.FixedUpdate:
+                return Time.fixedTime;
+            case UpdateType.Realtime:
+                return Time.realtimeSinceStartup;
+        }
+        return 0.0f;
     }
 
     void Update() {
-        mCurPulseTime += Time.deltaTime;
+        float time = GetTime();
+        mCurPulseTime += time - mLastTime;
+        mLastTime = time;
 
         switch(mState) {
             case State.Pause:
-                if(mCurPulseTime >= pauseStart) {
+                if(mCurPulseTime >= pauseDelay) {
                     mState = State.Pulse;
                     mCurPulseTime = 0.0f;
                 }
@@ -79,7 +103,7 @@ public class TransAnimPulseDelayScale : MonoBehaviour {
                 else {
                     target.localScale = mStart;
 
-                    if(pauseStart > 0.0f) {
+                    if(pauseDelay > 0.0f) {
                         mState = State.Pause;
                         mCurPulseTime = 0.0f;
                     }

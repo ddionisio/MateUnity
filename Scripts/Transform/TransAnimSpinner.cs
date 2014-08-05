@@ -59,7 +59,7 @@ public class TransAnimSpinner : MonoBehaviour {
     void Update() {
         if(updateType == UpdateType.Update || updateType == UpdateType.RealTime) {
             float time = updateType == UpdateType.Update ? Time.time : Time.realtimeSinceStartup;
-            float dt = mLastTime - time;
+            float dt = time - mLastTime;
             mLastTime = time;
 
             if(local) {
@@ -75,7 +75,7 @@ public class TransAnimSpinner : MonoBehaviour {
     void FixedUpdate() {
         if(updateType == UpdateType.FixedUpdate) {
             float time = Time.fixedTime;
-            float dt = mLastTime - time;
+            float dt = time - mLastTime;
             mLastTime = time;
 
             if(local) {
@@ -88,7 +88,7 @@ public class TransAnimSpinner : MonoBehaviour {
         }
         else if(updateType == UpdateType.RigidBody && mBody) {
             float time = Time.fixedTime;
-            float dt = mLastTime - time;
+            float dt = time - mLastTime;
             mLastTime = time;
 
             if(local) {
