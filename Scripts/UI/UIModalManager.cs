@@ -9,8 +9,37 @@ public class UIModalManager : MonoBehaviour {
     [System.Serializable]
     public class UIData {
         public string name;
-        public UIController ui;
+        
+        [SerializeField]
+        UIController _ui;
+
         public bool exclusive = true; //hide modals behind
+        public bool isPrefab;
+        public Transform instantiateTo; //target to instantiate ui if it's a prefab
+        public Vector3 instantiateOfs;
+
+        private UIController mUI;
+
+        public UIController ui {
+            get {
+                if(!mUI) {
+                    if(isPrefab) {
+                        mUI = (UIController)Object.Instantiate(_ui);
+                        mUI.transform.parent = instantiateTo;
+                        mUI.transform.localPosition = instantiateOfs;
+                        mUI.transform.localScale = Vector3.one;
+                    }
+                    else
+                        mUI = _ui;
+                }
+
+                return mUI;
+            }
+        }
+
+#if UNITY_EDITOR
+        public UIController e_ui { get { return _ui; } set { _ui = value; } }
+#endif
     }
 
     public UIData[] uis;
@@ -190,9 +219,6 @@ public class UIModalManager : MonoBehaviour {
                 if(ui != null) {
                     ui.gameObject.SetActive(false);
                 }
-
-                if(string.IsNullOrEmpty(uid.name))
-                    uid.name = uid.ui.gameObject.name;
 
                 mModals.Add(uid.name, uid);
             }

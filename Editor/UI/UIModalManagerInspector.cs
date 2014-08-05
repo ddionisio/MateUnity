@@ -25,8 +25,8 @@ public class UIModalManagerInspector : Editor {
 
             GUILayout.BeginHorizontal();
 
-            if(dat.ui != null) {
-                GUILayout.Label(dat.ui.name);
+            if(dat.e_ui != null) {
+                GUILayout.Label(dat.e_ui.name);
             }
             else {
                 GUILayout.Label("(Need target!)");
@@ -34,9 +34,9 @@ public class UIModalManagerInspector : Editor {
 
             GUILayout.FlexibleSpace();
 
-            if(dat.ui != null) {
+            if(dat.e_ui != null) {
                 if(M8.Editor.Utility.DrawCopyButton()) {
-                    mTE.content = new GUIContent(dat.ui.name);
+                    mTE.content = new GUIContent(dat.e_ui.name);
                     mTE.SelectAll();
                     mTE.Copy();
                 }
@@ -50,7 +50,17 @@ public class UIModalManagerInspector : Editor {
 
             GUILayout.EndHorizontal();
 
-            dat.ui = EditorGUILayout.ObjectField("target", dat.ui, typeof(UIController), true) as UIController;
+            dat.e_ui = EditorGUILayout.ObjectField("target", dat.e_ui, typeof(UIController), true) as UIController;
+            if(dat.e_ui) {
+                dat.name = dat.e_ui.name;
+
+                dat.isPrefab = PrefabUtility.GetPrefabType(dat.e_ui) == PrefabType.Prefab;
+                if(dat.isPrefab) {
+                    dat.instantiateTo = EditorGUILayout.ObjectField("instantiateTo", dat.instantiateTo, typeof(Transform), true) as Transform;
+                    dat.instantiateOfs = dat.e_ui.transform.localPosition;
+                }
+            }
+
             dat.exclusive = EditorGUILayout.Toggle("exclusive", dat.exclusive);
 
             GUILayout.EndVertical();
@@ -72,7 +82,7 @@ public class UIModalManagerInspector : Editor {
         if(GUILayout.Button("Add")) {
             System.Array.Resize(ref input.uis, input.uis.Length + 1);
             UIModalManager.UIData newDat = new UIModalManager.UIData();
-            newDat.ui = mNewUI;
+            newDat.e_ui = mNewUI;
             newDat.exclusive = true;
             input.uis[input.uis.Length - 1] = newDat;
             mNewUI = null;
