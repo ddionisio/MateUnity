@@ -20,6 +20,11 @@ public class ScreenTransPlayer : MonoBehaviour {
             enabled = false;
     }
 
+    public void Stop() {
+        mPrevTrans = mCurrentTrans = null;
+        enabled = false;
+    }
+
     void OnDestroy() {
         //if(mCurrentTrans)
             //mCurrentTrans.End();

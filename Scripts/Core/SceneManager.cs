@@ -78,15 +78,29 @@ public class SceneManager : MonoBehaviour {
         }
     }
 
+    public void LoadSceneNoTransition(string scene) {
+        SceneStackPush(mCurSceneStr, scene);
+        _LoadScene(scene, null, null);
+    }
+
     public void LoadScene(string scene) {
         SceneStackPush(mCurSceneStr, scene);
-
         _LoadScene(scene, sceneTransitionOut, sceneTransitionIn);
+    }
+
+    public void LoadScene(string scene, string transitionOut, string transitionIn) {
+        SceneStackPush(mCurSceneStr, scene);
+        _LoadScene(scene, transitionOut, transitionIn);
     }
 
     public void LoadLevel(int level) {
         mCurLevel = level;
         LoadScene(levelString + level);
+    }
+
+    public void LoadLevel(int level, string transitionOut, string transitionIn) {
+        mCurLevel = level;
+        LoadScene(levelString + level, transitionOut, transitionIn);
     }
 
     public void Reload() {

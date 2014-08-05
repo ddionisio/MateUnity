@@ -28,7 +28,7 @@ public class Main : MonoBehaviour {
 
     [SerializeField]
     UserSettings _userSettings;
-            
+
     private static Main mInstance = null;
 
     public static GamePlatform platform { get { return mInstance ? mInstance._platform : GamePlatform.NumPlatforms; } }
@@ -73,13 +73,13 @@ public class Main : MonoBehaviour {
         if(_setResolution) {
             userSettings.ApplyResolution();
         }
-                
+
         //go to start if we are in main scene
         if(Application.loadedLevelName == _mainScene && !string.IsNullOrEmpty(_startScene)) {
             //wait for one frame to ensure all initialization has occured during main
             yield return new WaitForFixedUpdate();
 
-            SceneManager.instance.LoadScene(_startScene);
+            SceneManager.instance.LoadSceneNoTransition(_startScene);
         }
     }
 }

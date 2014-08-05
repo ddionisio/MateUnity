@@ -80,16 +80,16 @@ public abstract class ScreenTrans : MonoBehaviour {
                 break;
             case CameraType.All:
                 Camera[] cams = Camera.allCameras;
-                float minDepth = float.MinValue;
-                int minIndex = -1;
+                float maxDepth = float.MinValue;
+                int maxIndex = -1;
                 for(int i = 0; i < cams.Length; i++) {
-                    if(cams[i].depth < minDepth) {
-                        minDepth = cams[i].depth;
-                        minIndex = i;
+                    if(cams[i].depth > maxDepth) {
+                        maxDepth = cams[i].depth;
+                        maxIndex = i;
                     }
                 }
 
-                cam = minIndex == -1 ? Camera.main : cams[minIndex];
+                cam = maxIndex == -1 ? Camera.main : cams[maxIndex];
                 break;
         }
 
