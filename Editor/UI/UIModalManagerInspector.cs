@@ -57,7 +57,6 @@ public class UIModalManagerInspector : Editor {
                 dat.isPrefab = PrefabUtility.GetPrefabType(dat.e_ui) == PrefabType.Prefab;
                 if(dat.isPrefab) {
                     dat.instantiateTo = EditorGUILayout.ObjectField("instantiateTo", dat.instantiateTo, typeof(Transform), true) as Transform;
-                    dat.instantiateOfs = dat.e_ui.transform.localPosition;
                 }
             }
 

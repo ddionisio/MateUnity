@@ -16,7 +16,6 @@ public class UIModalManager : MonoBehaviour {
         public bool exclusive = true; //hide modals behind
         public bool isPrefab;
         public Transform instantiateTo; //target to instantiate ui if it's a prefab
-        public Vector3 instantiateOfs;
 
         private UIController mUI;
 
@@ -24,9 +23,10 @@ public class UIModalManager : MonoBehaviour {
             get {
                 if(!mUI) {
                     if(isPrefab) {
+                        Vector3 p = _ui.transform.localPosition;
                         mUI = (UIController)Object.Instantiate(_ui);
                         mUI.transform.parent = instantiateTo;
-                        mUI.transform.localPosition = instantiateOfs;
+                        mUI.transform.localPosition = p;
                         mUI.transform.localScale = Vector3.one;
                     }
                     else
