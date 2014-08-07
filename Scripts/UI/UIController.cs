@@ -1,37 +1,36 @@
 using UnityEngine;
 using System.Collections;
 
-/*
-
-    protected override void OnActive(bool active) {
-        if(active) {
-        }
-        else {
-        }
-    }
-
-    protected override void OnOpen() {
-    }
-
-    protected override void OnClose() {
-    }
- */
+[AddComponentMenu("")]
 public abstract class UIController : MonoBehaviour {
     public delegate void ActiveCallback(bool active);
     public delegate void Callback();
 
     public event ActiveCallback onActiveCallback;
-    public event Callback onOpenCallback;
-    public event Callback onCloseCallback;
 
-    protected abstract void OnActive(bool active);
+    protected virtual void OnActive(bool active) { }
 
-    protected abstract void OnOpen();
+    /// <summary>
+    /// Called when modal needs to show up
+    /// </summary>
+    public virtual void Open() { }
 
-    protected abstract void OnClose();
+    /// <summary>
+    /// After Open, this is continually called until it returns false.  Optional override for when opening (e.g. animation)
+    /// </summary>
+    public virtual bool Opening() { return false; }
+
+    /// <summary>
+    /// Called when modal needs to hide
+    /// </summary>
+    public virtual void Close() { }
+
+    /// <summary>
+    /// After Close, this is continually called until it returns false.  Optional override for when closing (e.g. animation)
+    /// </summary>
+    public virtual bool Closing() { return false; }
 
     private bool mActive;
-
 
     //don't call these, only uimodalmanager
 
@@ -52,19 +51,5 @@ public abstract class UIController : MonoBehaviour {
                     onActiveCallback(false);
             }
         }
-    }
-
-    public void _open() {
-        OnOpen();
-
-        if(onOpenCallback != null)
-            onOpenCallback();
-    }
-
-    public void _close() {
-        OnClose();
-
-        if(onCloseCallback != null)
-            onCloseCallback();
     }
 }

@@ -15,6 +15,8 @@ public class UIModalManagerInspector : Editor {
         GUI.changed = false;
 
         UIModalManager input = target as UIModalManager;
+        if(input.uis == null)
+            input.uis = new UIModalManager.UIData[0];
 
         int delInd = -1;
 

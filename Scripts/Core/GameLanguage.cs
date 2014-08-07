@@ -1,3 +1,7 @@
 ﻿public enum GameLanguage {
-    English
+    English,
+    French,
+    Italian,
+    German,
+    Spanish
 }

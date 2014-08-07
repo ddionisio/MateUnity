@@ -47,7 +47,10 @@ public class GameLocalize : MonoBehaviour {
         if(mParams == null)
             mParams = new Dictionary<string, ParameterCallback>();
 
-        mParams.Add(paramKey, cb);
+        if(mParams.ContainsKey(paramKey))
+            mParams[paramKey] = cb;
+        else
+            mParams.Add(paramKey, cb);
     }
 
     /// <summary>
