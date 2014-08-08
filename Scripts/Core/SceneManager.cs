@@ -21,7 +21,7 @@ public class SceneManager : MonoBehaviour {
     [Tooltip("The Screen Transition to play when entering the new scene.  Make sure ScreenTransManager is available.")]
     [SerializeField]
     string sceneTransitionIn;
-    
+
     [SerializeField]
     bool stackEnable = false;
 
@@ -36,11 +36,11 @@ public class SceneManager : MonoBehaviour {
     private float mPrevTimeScale;
 
     private bool mFirstTime = true;
-    
+
     private string mSceneToLoad = null;
 
     private string mScreenTransOut, mScreenTransIn;
-    
+
     //private bool mIsFullscreen = false;
     private bool mPaused = false;
 
@@ -106,6 +106,12 @@ public class SceneManager : MonoBehaviour {
     public void Reload() {
         if(!string.IsNullOrEmpty(mCurSceneStr)) {
             LoadScene(mCurSceneStr);
+        }
+    }
+
+    public void Reload(string transitionOut, string transitionIn) {
+        if(!string.IsNullOrEmpty(mCurSceneStr)) {
+            LoadScene(mCurSceneStr, transitionOut, transitionIn);
         }
     }
 
@@ -205,7 +211,7 @@ public class SceneManager : MonoBehaviour {
 
         Application.LoadLevel(mSceneToLoad);
     }
-    
+
     void OnScreenTransition(ScreenTrans trans, ScreenTransManager.Action act) {
         switch(act) {
             case ScreenTransManager.Action.Begin:
@@ -247,7 +253,7 @@ public class SceneManager : MonoBehaviour {
                     mSceneStack.Pop();
             }
             else
-                mSceneStack.Push(scene);                
+                mSceneStack.Push(scene);
         }
     }
 }
