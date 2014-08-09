@@ -29,6 +29,8 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
 
     private Dictionary<string, object> mValues = null;
 
+    private Dictionary<string, object> mValuesSnapshot = null;
+
     protected bool mStarted = false;
 
     private static UserData mInstance = null;
@@ -47,6 +49,23 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
 
     public System.Collections.IEnumerator GetEnumerator() {
         return mValues.GetEnumerator();
+    }
+
+    public void SnapshotSave() {
+        mValuesSnapshot = mValues != null ? new Dictionary<string, object>(mValues) : null;
+    }
+
+    public void SnapshotRestore() {
+        if(mValuesSnapshot != null) {
+            mValues = new Dictionary<string, object>(mValuesSnapshot);
+
+            if(actCallback != null)
+                actCallback(this, Action.Load);
+        }
+    }
+
+    public void SnapshotDelete() {
+        mValuesSnapshot = null;
     }
 
     public virtual void Load() {

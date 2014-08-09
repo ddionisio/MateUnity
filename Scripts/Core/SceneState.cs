@@ -93,6 +93,8 @@ public class SceneState : MonoBehaviour {
 
     private Dictionary<string, StateValue> mGlobalStates = new Dictionary<string, StateValue>();
 
+    private Dictionary<string, StateValue> mGlobalStatesSnapshot;
+
     //only buffer one level previous for now
     private string mPrevScene = null;
     private Dictionary<string, StateValue> mPrevStates = null;
@@ -165,7 +167,7 @@ public class SceneState : MonoBehaviour {
         }
 
         bool isValueSet = false;
-        StateValue curVal = new StateValue(val);
+        StateValue curVal;
         if(mStates.TryGetValue(name, out curVal)) {
             if(curVal.type == Type.Integer) {
                 isValueSet = curVal.ival != val;
@@ -177,12 +179,12 @@ public class SceneState : MonoBehaviour {
             }
             else {
                 isValueSet = true;
-                mStates[name] = curVal;
+                mStates[name] = curVal = new StateValue(val);
             }
         }
         else {
             isValueSet = true;
-            mStates.Add(name, curVal);
+            mStates.Add(name, curVal = new StateValue(val));
         }
 
         if(isValueSet) {
@@ -248,7 +250,7 @@ public class SceneState : MonoBehaviour {
         }
 
         bool isValueSet = false;
-        StateValue curVal = new StateValue(val);
+        StateValue curVal;
         if(mStates.TryGetValue(name, out curVal)) {
             if(curVal.type == Type.Float) {
                 isValueSet = curVal.fval != val;
@@ -260,12 +262,12 @@ public class SceneState : MonoBehaviour {
             }
             else {
                 isValueSet = true;
-                mStates[name] = curVal;
+                mStates[name] = curVal = new StateValue(val);
             }
         }
         else {
             isValueSet = true;
-            mStates.Add(name, curVal);
+            mStates.Add(name, curVal = new StateValue(val));
         }
 
         if(isValueSet) {
@@ -310,7 +312,7 @@ public class SceneState : MonoBehaviour {
         }
 
         bool isValueSet = false;
-        StateValue curVal = new StateValue(val);
+        StateValue curVal;
         if(mStates.TryGetValue(name, out curVal)) {
             if(curVal.type == Type.String) {
                 isValueSet = curVal.sval != val;
@@ -322,12 +324,12 @@ public class SceneState : MonoBehaviour {
             }
             else {
                 isValueSet = true;
-                mStates[name] = curVal;
+                mStates[name] = curVal = new StateValue(val);
             }
         }
         else {
             isValueSet = true;
-            mStates.Add(name, curVal);
+            mStates.Add(name, curVal = new StateValue(val));
         }
 
         if(isValueSet) {
@@ -340,6 +342,22 @@ public class SceneState : MonoBehaviour {
                 onValueChange(false, name, curVal);
             }
         }
+    }
+
+    public void GlobalSnapshotSave() {
+        if(mGlobalStates != null)
+            mGlobalStatesSnapshot = new Dictionary<string, StateValue>(mGlobalStates);
+        else
+            mGlobalStatesSnapshot = null;
+    }
+
+    public void GlobalSnapshotRestore() {
+        if(mGlobalStatesSnapshot != null)
+            mGlobalStates = new Dictionary<string, StateValue>(mGlobalStatesSnapshot);
+    }
+
+    public void GlobalSnapshotDelete() {
+        mGlobalStatesSnapshot = null;
     }
 
     public string[] GetGlobalKeys(System.Predicate<KeyValuePair<string, StateValue>> predicate) {
@@ -394,7 +412,7 @@ public class SceneState : MonoBehaviour {
 
     public void SetGlobalValue(string name, int val, bool persistent) {
         bool isValueSet = false;
-        StateValue curVal = new StateValue(val);
+        StateValue curVal;
         if(mGlobalStates.TryGetValue(name, out curVal)) {
             if(curVal.type == Type.Integer) {
                 isValueSet = curVal.ival != val;
@@ -406,12 +424,12 @@ public class SceneState : MonoBehaviour {
             }
             else {
                 isValueSet = true;
-                mGlobalStates[name] = curVal;
+                mGlobalStates[name] = curVal = new StateValue(val);
             }
         }
         else {
             isValueSet = true;
-            mGlobalStates.Add(name, curVal);
+            mGlobalStates.Add(name, curVal = new StateValue(val));
         }
 
         if(isValueSet) {
@@ -473,7 +491,7 @@ public class SceneState : MonoBehaviour {
 
     public void SetGlobalValueFloat(string name, float val, bool persistent) {
         bool isValueSet = false;
-        StateValue curVal = new StateValue(val);
+        StateValue curVal;
         if(mGlobalStates.TryGetValue(name, out curVal)) {
             if(curVal.type == Type.Float) {
                 isValueSet = curVal.fval != val;
@@ -485,12 +503,12 @@ public class SceneState : MonoBehaviour {
             }
             else {
                 isValueSet = true;
-                mGlobalStates[name] = curVal;
+                mGlobalStates[name] = curVal = new StateValue(val);
             }
         }
         else {
             isValueSet = true;
-            mGlobalStates.Add(name, curVal);
+            mGlobalStates.Add(name, curVal = new StateValue(val));
         }
 
         if(isValueSet) {
@@ -531,7 +549,7 @@ public class SceneState : MonoBehaviour {
 
     public void SetGlobalValueString(string name, string val, bool persistent) {
         bool isValueSet = false;
-        StateValue curVal = new StateValue(val);
+        StateValue curVal;
         if(mGlobalStates.TryGetValue(name, out curVal)) {
             if(curVal.type == Type.String) {
                 isValueSet = curVal.sval != val;
@@ -543,12 +561,12 @@ public class SceneState : MonoBehaviour {
             }
             else {
                 isValueSet = true;
-                mGlobalStates[name] = curVal;
+                mGlobalStates[name] = curVal = new StateValue(val);
             }
         }
         else {
             isValueSet = true;
-            mGlobalStates.Add(name, curVal);
+            mGlobalStates.Add(name, curVal = new StateValue(val));
         }
 
         if(isValueSet) {
