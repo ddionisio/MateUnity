@@ -14,8 +14,10 @@ public class SceneStateInspector : Editor {
     private string[] mMasks;
 
     private string mApplyName = "";
+    private SceneState.Type mApplyType;
     private int mApplyValue = 0;
     private float mApplyFValue = 0.0f;
+    private string mApplySValue = "";
     private bool mApplyToGlobal = false;
     private bool mApplyPersistent = false;
 
@@ -55,9 +57,19 @@ public class SceneStateInspector : Editor {
 
                     GUILayout.EndHorizontal();
 
-                    initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
-                    initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
-                    initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
+                    initDat.type = (SceneState.Type)EditorGUILayout.EnumPopup("Type", initDat.type);
+                    switch(initDat.type) {
+                        case SceneState.Type.Integer:
+                            initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
+                            initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
+                            break;
+                        case SceneState.Type.Float:
+                            initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
+                            break;
+                        case SceneState.Type.String:
+                            initDat.sval = EditorGUILayout.TextField("String", initDat.sval);
+                            break;
+                    }
 
                     GUILayout.EndVertical();
                 }
@@ -95,7 +107,7 @@ public class SceneStateInspector : Editor {
                     sceneDat.editFoldout = EditorGUILayout.Foldout(sceneDat.editFoldout, "Scene:");
 
                     GUILayout.Space(4);
-                                        
+
                     sceneDat.scene = GUILayout.TextField(sceneDat.scene, GUILayout.MinWidth(200));
 
                     GUILayout.Space(32);
@@ -126,9 +138,19 @@ public class SceneStateInspector : Editor {
 
                                 GUILayout.EndHorizontal();
 
-                                initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
-                                initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
-                                initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
+                                initDat.type = (SceneState.Type)EditorGUILayout.EnumPopup("Type", initDat.type);
+                                switch(initDat.type) {
+                                    case SceneState.Type.Integer:
+                                        initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
+                                        initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
+                                        break;
+                                    case SceneState.Type.Float:
+                                        initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
+                                        break;
+                                    case SceneState.Type.String:
+                                        initDat.sval = EditorGUILayout.TextField("String", initDat.sval);
+                                        break;
+                                }
 
                                 GUILayout.EndVertical();
                             }
@@ -137,7 +159,7 @@ public class SceneStateInspector : Editor {
                                 M8.ArrayUtil.RemoveAt(ref sceneDat.data, delSubKey);
                         }
 
-                        if(GUILayout.Button("New Value: "+sceneDat.scene)) {
+                        if(GUILayout.Button("New Value")) {
                             if(sceneDat.data == null)
                                 sceneDat.data = new SceneState.InitData[1];
                             else
@@ -146,7 +168,7 @@ public class SceneStateInspector : Editor {
                             sceneDat.data[sceneDat.data.Length - 1] = new SceneState.InitData();
                         }
                     }
-                                        
+
                     GUILayout.EndVertical();
                 }
 
@@ -175,9 +197,21 @@ public class SceneStateInspector : Editor {
 
                         GUILayout.Label(dat.Key);
 
-                        EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
-                        EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
-                        EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
+                        switch(dat.Value.type) {
+                            case SceneState.Type.Integer:
+                                EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
+                                EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
+                                break;
+                            case SceneState.Type.Float:
+                                EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
+                                break;
+                            case SceneState.Type.String:
+                                EditorGUILayout.LabelField("String", dat.Value.sval);
+                                break;
+                            case SceneState.Type.Invalid:
+                                EditorGUILayout.LabelField("Invalid!");
+                                break;
+                        }
 
                         GUILayout.EndVertical();
                     }
@@ -196,9 +230,21 @@ public class SceneStateInspector : Editor {
 
                         GUILayout.Label(dat.Key);
 
-                        EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
-                        EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
-                        EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
+                        switch(dat.Value.type) {
+                            case SceneState.Type.Integer:
+                                EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
+                                EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
+                                break;
+                            case SceneState.Type.Float:
+                                EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
+                                break;
+                            case SceneState.Type.String:
+                                EditorGUILayout.LabelField("String", dat.Value.sval);
+                                break;
+                            case SceneState.Type.Invalid:
+                                EditorGUILayout.LabelField("Invalid!");
+                                break;
+                        }
 
                         GUILayout.EndVertical();
                     }
@@ -213,21 +259,38 @@ public class SceneStateInspector : Editor {
             GUILayout.Label("Override");
 
             mApplyName = GUILayout.TextField(mApplyName);
+            mApplyType = (SceneState.Type)EditorGUILayout.EnumPopup("Type", mApplyType);
+            switch(mApplyType) {
+                case SceneState.Type.Integer:
+                    mApplyValue = EditorGUILayout.IntField("Value", mApplyValue);
+                    mApplyValue = EditorGUILayout.MaskField("Flags", mApplyValue, mMasks);
+                    break;
+                case SceneState.Type.Float:
+                    mApplyFValue = EditorGUILayout.FloatField("Float", mApplyFValue);
+                    break;
+                case SceneState.Type.String:
+                    mApplySValue = EditorGUILayout.TextField("String", mApplySValue);
+                    break;
+            }
 
-            mApplyValue = EditorGUILayout.IntField("Value", mApplyValue);
-            mApplyValue = EditorGUILayout.MaskField("Flags", mApplyValue, mMasks);
-            mApplyFValue = EditorGUILayout.FloatField("Float", mApplyFValue);
+
             mApplyToGlobal = GUILayout.Toggle(mApplyToGlobal, "Global");
             mApplyPersistent = GUILayout.Toggle(mApplyPersistent, "Persistent");
 
             if(GUILayout.Button("Apply") && !string.IsNullOrEmpty(mApplyName)) {
-                if(mApplyToGlobal) {
-                    data.SetGlobalValue(mApplyName, mApplyValue, mApplyPersistent);
-                    data.SetGlobalValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
-                }
-                else {
-                    data.SetValue(mApplyName, mApplyValue, mApplyPersistent);
-                    data.SetValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                switch(mApplyType) {
+                    case SceneState.Type.Integer:
+                        if(mApplyToGlobal) data.SetGlobalValue(mApplyName, mApplyValue, mApplyPersistent);
+                        else data.SetValue(mApplyName, mApplyValue, mApplyPersistent);
+                        break;
+                    case SceneState.Type.Float:
+                        if(mApplyToGlobal) data.SetGlobalValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                        else data.SetValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                        break;
+                    case SceneState.Type.String:
+                        if(mApplyToGlobal) data.SetGlobalValueString(mApplyName, mApplySValue, mApplyPersistent);
+                        else data.SetValueString(mApplyName, mApplySValue, mApplyPersistent);
+                        break;
                 }
 
                 Repaint();

@@ -11,7 +11,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         Load,
         Save
     }
-    
+
     [System.Serializable]
     public struct Data {
         public string name;
@@ -41,7 +41,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
             if(predicate(pair))
                 items.Add(pair.Key);
         }
-        
+
         return items.ToArray();
     }
 
@@ -62,7 +62,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         if(actCallback != null)
             actCallback(this, Action.Load);
     }
-        
+
     public virtual void Save() {
         if(actCallback != null)
             actCallback(this, Action.Save);
@@ -84,6 +84,14 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
 
     public virtual bool HasKey(string name) {
         return mValues != null && mValues.ContainsKey(name);
+    }
+
+    public virtual System.Type GetType(string name) {
+        object ret;
+        if(mValues != null && mValues.TryGetValue(name, out ret)) {
+            if(ret != null) return ret.GetType();
+        }
+        return null;
     }
 
     public virtual int GetInt(string name, int defaultValue = 0) {

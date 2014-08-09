@@ -11,11 +11,34 @@ public class SceneState : MonoBehaviour {
 
     public delegate void StateCallback(bool isGlobal, string name, StateValue val);
 
+    public enum Type {
+        Invalid,
+        Integer,
+        Float,
+        String
+    }
+
     [System.Serializable]
     public class InitData {
         public string name = "";
+        public Type type = Type.Integer;
         public int ival = 0;
         public float fval = 0.0f;
+        public string sval = "";
+
+        public StateValue stateValue {
+            get {
+                switch(type) {
+                    case Type.Integer:
+                        return new StateValue(ival);
+                    case Type.Float:
+                        return new StateValue(fval);
+                    case Type.String:
+                        return new StateValue(sval);
+                }
+                return new StateValue() { type=Type.Invalid };
+            }
+        }
     }
 
     [System.Serializable]
@@ -27,17 +50,31 @@ public class SceneState : MonoBehaviour {
     }
 
     public struct StateValue {
+        public Type type;
         public int ival;
         public float fval;
+        public string sval;
 
-        public StateValue(int aVal, float aFval) {
-            ival = aVal;
-            fval = aFval;
+        public StateValue(int aVal) {
+            type = Type.Integer;
+            ival = aVal; fval = 0.0f; sval = "";
+        }
+
+        public StateValue(float aFval) {
+            type = Type.Float;
+            ival = 0; fval = aFval; sval = "";
+        }
+
+        public StateValue(string aSval) {
+            type = Type.String;
+            ival = 0; fval = 0.0f; sval = aSval;
         }
 
         public void Apply(UserData ud, string key) {
-            ival = ud.GetInt(key, ival);
-            fval = ud.GetFloat(key, fval);
+            System.Type t = ud.GetType(key);
+            if(t == typeof(int)) { type = Type.Integer; ival = ud.GetInt(key, ival); }
+            if(t == typeof(float)) { type = Type.Integer; fval = ud.GetFloat(key, fval); }
+            if(t == typeof(string)) { type = Type.Integer; sval = ud.GetString(key, sval); }
         }
     }
 
@@ -61,8 +98,6 @@ public class SceneState : MonoBehaviour {
     private Dictionary<string, StateValue> mPrevStates = null;
 
     public static SceneState instance { get { return mInstance; } }
-
-    public static StateValue zeroValueData { get { return new StateValue(0, 0.0f); } }
 
     public Dictionary<string, StateValue> globalStates { get { return mGlobalStates; } }
 
@@ -112,11 +147,13 @@ public class SceneState : MonoBehaviour {
             string key = string.Format(DataFormat, mScene, name);
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
-                mStates.Add(name, v);
-                return v.ival;
+                if(v.type == Type.Integer) {
+                    mStates.Add(name, v);
+                    return v.ival;
+                }
             }
         }
-        else
+        else if(v.type == Type.Integer)
             return v.ival;
 
         return defaultVal;
@@ -128,18 +165,23 @@ public class SceneState : MonoBehaviour {
         }
 
         bool isValueSet = false;
-        StateValue curVal = zeroValueData;
+        StateValue curVal = new StateValue(val);
         if(mStates.TryGetValue(name, out curVal)) {
-            isValueSet = curVal.ival != val;
+            if(curVal.type == Type.Integer) {
+                isValueSet = curVal.ival != val;
 
-            if(isValueSet) {
-                curVal.ival = val;
+                if(isValueSet) {
+                    curVal.ival = val;
+                    mStates[name] = curVal;
+                }
+            }
+            else {
+                isValueSet = true;
                 mStates[name] = curVal;
             }
         }
         else {
             isValueSet = true;
-            curVal.ival = val;
             mStates.Add(name, curVal);
         }
 
@@ -188,11 +230,13 @@ public class SceneState : MonoBehaviour {
             string key = string.Format(DataFormat, mScene, name);
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
-                mStates.Add(name, v);
-                return v.fval;
+                if(v.type == Type.Float) {
+                    mStates.Add(name, v);
+                    return v.fval;
+                }
             }
         }
-        else
+        else if(v.type == Type.Float)
             return v.fval;
 
         return defaultVal;
@@ -204,18 +248,23 @@ public class SceneState : MonoBehaviour {
         }
 
         bool isValueSet = false;
-        StateValue curVal = zeroValueData;
+        StateValue curVal = new StateValue(val);
         if(mStates.TryGetValue(name, out curVal)) {
-            isValueSet = curVal.fval != val;
+            if(curVal.type == Type.Float) {
+                isValueSet = curVal.fval != val;
 
-            if(isValueSet) {
-                curVal.fval = val;
+                if(isValueSet) {
+                    curVal.fval = val;
+                    mStates[name] = curVal;
+                }
+            }
+            else {
+                isValueSet = true;
                 mStates[name] = curVal;
             }
         }
         else {
             isValueSet = true;
-            curVal.fval = val;
             mStates.Add(name, curVal);
         }
 
@@ -223,6 +272,68 @@ public class SceneState : MonoBehaviour {
             if(persistent) {
                 string key = string.Format(DataFormat, mScene, name);
                 UserData.instance.SetFloat(key, val);
+            }
+
+            if(onValueChange != null) {
+                onValueChange(false, name, curVal);
+            }
+        }
+    }
+
+    public string GetValueString(string name, string defaultVal = "") {
+        if(mStates == null) {
+            mStates = new Dictionary<string, StateValue>();
+        }
+
+        StateValue v;
+        //try local
+        if(!mStates.TryGetValue(name, out v)) {
+            //try user data
+            string key = string.Format(DataFormat, mScene, name);
+            if(UserData.instance.HasKey(key)) {
+                v.Apply(UserData.instance, key);
+                if(v.type == Type.String) {
+                    mStates.Add(name, v);
+                    return v.sval;
+                }
+            }
+        }
+        else if(v.type == Type.String)
+            return v.sval;
+
+        return defaultVal;
+    }
+
+    public void SetValueString(string name, string val, bool persistent) {
+        if(mStates == null) {
+            mStates = new Dictionary<string, StateValue>();
+        }
+
+        bool isValueSet = false;
+        StateValue curVal = new StateValue(val);
+        if(mStates.TryGetValue(name, out curVal)) {
+            if(curVal.type == Type.String) {
+                isValueSet = curVal.sval != val;
+
+                if(isValueSet) {
+                    curVal.sval = val;
+                    mStates[name] = curVal;
+                }
+            }
+            else {
+                isValueSet = true;
+                mStates[name] = curVal;
+            }
+        }
+        else {
+            isValueSet = true;
+            mStates.Add(name, curVal);
+        }
+
+        if(isValueSet) {
+            if(persistent) {
+                string key = string.Format(DataFormat, mScene, name);
+                UserData.instance.SetString(key, val);
             }
 
             if(onValueChange != null) {
@@ -269,11 +380,13 @@ public class SceneState : MonoBehaviour {
             string key = string.Format(GlobalDataFormat, name);
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
-                mGlobalStates.Add(name, v);
-                return v.ival;
+                if(v.type == Type.Integer) {
+                    mGlobalStates.Add(name, v);
+                    return v.ival;
+                }
             }
         }
-        else
+        else if(v.type == Type.Integer)
             return v.ival;
 
         return defaultVal;
@@ -281,18 +394,23 @@ public class SceneState : MonoBehaviour {
 
     public void SetGlobalValue(string name, int val, bool persistent) {
         bool isValueSet = false;
-        StateValue curVal = zeroValueData;
+        StateValue curVal = new StateValue(val);
         if(mGlobalStates.TryGetValue(name, out curVal)) {
-            isValueSet = curVal.ival != val;
+            if(curVal.type == Type.Integer) {
+                isValueSet = curVal.ival != val;
 
-            if(isValueSet) {
-                curVal.ival = val;
+                if(isValueSet) {
+                    curVal.ival = val;
+                    mGlobalStates[name] = curVal;
+                }
+            }
+            else {
+                isValueSet = true;
                 mGlobalStates[name] = curVal;
             }
         }
         else {
             isValueSet = true;
-            curVal.ival = val;
             mGlobalStates.Add(name, curVal);
         }
 
@@ -341,11 +459,13 @@ public class SceneState : MonoBehaviour {
             string key = string.Format(GlobalDataFormat, name);
             if(UserData.instance.HasKey(key)) {
                 v.Apply(UserData.instance, key);
-                mGlobalStates.Add(name, v);
-                return v.fval;
+                if(v.type == Type.Float) {
+                    mGlobalStates.Add(name, v);
+                    return v.fval;
+                }
             }
         }
-        else
+        else if(v.type == Type.Float)
             return v.fval;
 
         return defaultVal;
@@ -353,18 +473,23 @@ public class SceneState : MonoBehaviour {
 
     public void SetGlobalValueFloat(string name, float val, bool persistent) {
         bool isValueSet = false;
-        StateValue curVal = zeroValueData;
+        StateValue curVal = new StateValue(val);
         if(mGlobalStates.TryGetValue(name, out curVal)) {
-            isValueSet = curVal.fval != val;
+            if(curVal.type == Type.Float) {
+                isValueSet = curVal.fval != val;
 
-            if(isValueSet) {
-                curVal.fval = val;
+                if(isValueSet) {
+                    curVal.fval = val;
+                    mGlobalStates[name] = curVal;
+                }
+            }
+            else {
+                isValueSet = true;
                 mGlobalStates[name] = curVal;
             }
         }
         else {
             isValueSet = true;
-            curVal.fval = val;
             mGlobalStates.Add(name, curVal);
         }
 
@@ -372,6 +497,64 @@ public class SceneState : MonoBehaviour {
             if(persistent) {
                 string key = string.Format(GlobalDataFormat, name);
                 UserData.instance.SetFloat(key, val);
+            }
+
+            if(onValueChange != null) {
+                onValueChange(true, name, curVal);
+            }
+        }
+    }
+
+    public string GetGlobalValueString(string name, string defaultVal = "") {
+        if(mGlobalStates == null) {
+            mGlobalStates = new Dictionary<string, StateValue>();
+        }
+
+        StateValue v;
+        //try local
+        if(!mGlobalStates.TryGetValue(name, out v)) {
+            //try user data
+            string key = string.Format(GlobalDataFormat, name);
+            if(UserData.instance.HasKey(key)) {
+                v.Apply(UserData.instance, key);
+                if(v.type == Type.String) {
+                    mGlobalStates.Add(name, v);
+                    return v.sval;
+                }
+            }
+        }
+        else if(v.type == Type.String)
+            return v.sval;
+
+        return defaultVal;
+    }
+
+    public void SetGlobalValueString(string name, string val, bool persistent) {
+        bool isValueSet = false;
+        StateValue curVal = new StateValue(val);
+        if(mGlobalStates.TryGetValue(name, out curVal)) {
+            if(curVal.type == Type.String) {
+                isValueSet = curVal.sval != val;
+
+                if(isValueSet) {
+                    curVal.sval = val;
+                    mGlobalStates[name] = curVal;
+                }
+            }
+            else {
+                isValueSet = true;
+                mGlobalStates[name] = curVal;
+            }
+        }
+        else {
+            isValueSet = true;
+            mGlobalStates.Add(name, curVal);
+        }
+
+        if(isValueSet) {
+            if(persistent) {
+                string key = string.Format(GlobalDataFormat, name);
+                UserData.instance.SetString(key, val);
             }
 
             if(onValueChange != null) {
@@ -501,16 +684,17 @@ public class SceneState : MonoBehaviour {
                 //check if data exists in user first
                 string key = string.Format(GlobalDataFormat, dat.name);
 
-                StateValue s = new StateValue(dat.ival, dat.fval);
+                StateValue s = dat.stateValue;
                 s.Apply(UserData.instance, key);
+                if(s.type != Type.Invalid) {
+                    if(mGlobalStates.ContainsKey(dat.name))
+                        mGlobalStates[dat.name] = s;
+                    else
+                        mGlobalStates.Add(dat.name, s);
 
-                if(mGlobalStates.ContainsKey(dat.name))
-                    mGlobalStates[dat.name] = s;
-                else
-                    mGlobalStates.Add(dat.name, s);
-
-                if(onValueChange != null) {
-                    onValueChange(true, dat.name, s);
+                    if(onValueChange != null) {
+                        onValueChange(true, dat.name, s);
+                    }
                 }
             }
         }
@@ -524,16 +708,17 @@ public class SceneState : MonoBehaviour {
                     //check if data exists in user first
                     string key = string.Format(DataFormat, mScene, dat.name);
 
-                    StateValue s = new StateValue(dat.ival, dat.fval);
+                    StateValue s = dat.stateValue;
                     s.Apply(UserData.instance, key);
+                    if(s.type != Type.Invalid) {
+                        if(mStates.ContainsKey(dat.name))
+                            mStates[dat.name] = s;
+                        else
+                            mStates.Add(dat.name, s);
 
-                    if(mStates.ContainsKey(dat.name))
-                        mStates[dat.name] = s;
-                    else
-                        mStates.Add(dat.name, s);
-
-                    if(onValueChange != null) {
-                        onValueChange(false, dat.name, s);
+                        if(onValueChange != null) {
+                            onValueChange(false, dat.name, s);
+                        }
                     }
                 }
             }
