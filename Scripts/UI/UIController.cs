@@ -6,6 +6,8 @@ public abstract class UIController : MonoBehaviour {
     public delegate void ActiveCallback(bool active);
     public delegate void Callback();
 
+    public bool isActive { get { return mActive; } }
+
     public event ActiveCallback onActiveCallback;
 
     protected virtual void OnActive(bool active) { }

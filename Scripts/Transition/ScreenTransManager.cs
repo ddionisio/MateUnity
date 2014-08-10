@@ -162,7 +162,7 @@ public class ScreenTransManager : MonoBehaviour {
     }
 
     IEnumerator DoProgress() {
-        WaitForFixedUpdate wait = new WaitForFixedUpdate();
+        WaitForEndOfFrame wait = new WaitForEndOfFrame();
         while(mProgress.Count > 0) {
             mCurTrans = mProgress.Dequeue();
 
@@ -178,7 +178,7 @@ public class ScreenTransManager : MonoBehaviour {
             }
 
             //wait one frame to render before sending Begin request
-            yield return new WaitForEndOfFrame();
+            yield return wait;
 
             if(transitionCallback != null)
                 transitionCallback(mCurTrans, Action.Begin);

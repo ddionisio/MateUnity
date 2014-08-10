@@ -35,13 +35,14 @@ public abstract class ScreenTrans : MonoBehaviour {
 
     public float delay = 1.0f;
     public AnimationCurve curve = new AnimationCurve();
+    public bool curveNormalized; //if true, curve is based on 0-1 within delay
 
     public CameraType cameraType = CameraType.Main;
     public Camera cameraTarget;
 
     public ToType target = ToType.Camera;
     public Texture targetTexture; //for ToType.Texture
-        
+
     private float mCurTime;
     private bool mIsReady; //if true, this transition has been initialized and ready to play
     private Material mMat;
@@ -52,7 +53,7 @@ public abstract class ScreenTrans : MonoBehaviour {
     /// <summary>
     /// Returns current curve value based on current time
     /// </summary>
-    public float curCurveValue { get { return curve.Evaluate(mCurTime); } }
+    public float curCurveValue { get { return curve.Evaluate(curveNormalized ? curTimeNormalized : curTime); } }
 
     public bool isDone { get { return mCurTime >= delay; } }
 

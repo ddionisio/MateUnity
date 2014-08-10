@@ -9,6 +9,7 @@ public class STSlideFade : ScreenTrans {
     public Texture alphaMask;
 
     public AnimationCurve slideCurve;
+    public bool slideCurveNormalized;
 
     public Anchor anchor = Anchor.Left;
 
@@ -27,7 +28,7 @@ public class STSlideFade : ScreenTrans {
     protected override void OnUpdate() {
         material.SetFloat("_t", curCurveValue);
 
-        Vector2 scroll = GetUVScroll(anchor, slideCurve.Evaluate(curTime));
+        Vector2 scroll = GetUVScroll(anchor, slideCurve.Evaluate(slideCurveNormalized ? curTimeNormalized : curTime));
 
         material.SetVector("_Scroll", scroll);
     }

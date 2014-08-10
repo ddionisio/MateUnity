@@ -10,6 +10,7 @@ public class STScaleFade : ScreenTrans {
 
     public AnimationCurve scaleCurveX;
     public AnimationCurve scaleCurveY;
+    public bool scaleCurveNormalized;
 
     public Anchor anchor = Anchor.Center;
 
@@ -28,8 +29,9 @@ public class STScaleFade : ScreenTrans {
     protected override void OnUpdate() {
         material.SetFloat("_t", curCurveValue);
 
-        mParam.z = scaleCurveX.Evaluate(curTime);
-        mParam.w = scaleCurveY.Evaluate(curTime);
+        float t = scaleCurveNormalized ? curTimeNormalized : curTime;
+        mParam.z = scaleCurveX.Evaluate(t);
+        mParam.w = scaleCurveY.Evaluate(t);
 
         material.SetVector("_Params", mParam);
     }

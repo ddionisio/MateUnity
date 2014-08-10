@@ -8,6 +8,7 @@ public class STDissolve : ScreenTrans {
 
     public Texture dissolveTexture;
     public AnimationCurve dissolvePower;
+    public bool dissolvePowerNormalized;
 
     public Texture emissionTexture;
     public float emissionThickness = 0.03f; //[0, 0.1 max?]
@@ -20,14 +21,14 @@ public class STDissolve : ScreenTrans {
         material.SetTexture("_DissolveTex", dissolveTexture);
 
         material.SetTexture("_EmissionTex", emissionTexture);
-                
+
         mParam.y = emissionThickness;
     }
 
     protected override void OnUpdate() {
         material.SetFloat("_t", curCurveValue);
 
-        mParam.x = dissolvePower.Evaluate(curTime);
+        mParam.x = dissolvePower.Evaluate(dissolvePowerNormalized ? curTimeNormalized : curTime);
         material.SetVector("_Params", mParam);
     }
 }
