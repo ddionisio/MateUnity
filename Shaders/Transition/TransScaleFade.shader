@@ -11,11 +11,13 @@
 		struct v2f {
 			 half4 pos : POSITION;
 			 half2 uv : TEXCOORD0;
+			 half2 uv1 : TEXCOORD1;
 		 };
 		
 		sampler2D _MainTex;
         sampler2D _SourceTex;
 		sampler2D _AlphaMaskTex;
+		uniform float4 _MainTex_TexelSize;
 		uniform float4 _Params; //[xy: center, zw: scale]
 		fixed _t;
 
@@ -28,17 +30,25 @@
 		}
 				
 		half4 frag(v2f i) : COLOR {
-			half2 alphaUV = uvScale(i.uv);
+			half2 alphaUV = uvScale(i.uv1);
 			half4 alpha = tex2D(_AlphaMaskTex, alphaUV);
 			fixed alphaT = alpha.r * _t;
 			
-			return lerp(tex2D(_MainTex, i.uv), tex2D(_SourceTex, i.uv), alphaT);
+			return lerp(tex2D(_MainTex, i.uv), tex2D(_SourceTex, i.uv1), alphaT);
 		}
 
 		v2f vert(appdata_img v) {
 			v2f o;
 			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 			o.uv = v.texcoord.xy;
+			
+			o.uv1 = v.texcoord.xy;
+			 
+			#if SHADER_API_D3D9 || SHADER_API_XBOX360 || SHADER_API_D3D11
+			if (_MainTex_TexelSize.y < 0)
+				o.uv1.y = 1-o.uv1.y;
+			#endif
+			
 			return o;
 		}
 	ENDCG

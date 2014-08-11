@@ -27,22 +27,18 @@ public class ScreenTransPlayer : MonoBehaviour {
 
     void OnDestroy() {
         //if(mCurrentTrans)
-            //mCurrentTrans.End();
+        //mCurrentTrans.End();
     }
-
-    void Update() {
-        if(mCurrentTrans) {
-            if(mCurrentTrans.isDone) {
-                mCurrentTrans = null;
-                enabled = false;
-            }
-            else
-                mCurrentTrans.Run(Time.deltaTime);
-        }
-    }
-
+    
     void Awake() {
         enabled = false;
+    }
+
+    void LateUpdate() {
+        if(mCurrentTrans.isDone) {
+            mCurrentTrans = null;
+            enabled = false;
+        }
     }
 
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
@@ -51,7 +47,9 @@ public class ScreenTransPlayer : MonoBehaviour {
             mPrevTrans = null;
         }
 
-        if(mCurrentTrans)
+        if(mCurrentTrans) {
+            mCurrentTrans.Run(Time.smoothDeltaTime);
             mCurrentTrans.OnRenderImage(source, destination);
+        }
     }
 }

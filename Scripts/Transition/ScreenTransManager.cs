@@ -8,24 +8,24 @@ public class ScreenTransManager : MonoBehaviour {
         Begin, //transition is about to play, called after transition's Prepare
         End //transition has ended
     }
-
+        
     public delegate void Callback(ScreenTrans trans, Action act);
+
+    public struct ProgressData {
+        public ScreenTrans transition;
+        public Callback call;
+    }
 
     public ScreenTrans[] library;
     public bool libraryFromChildren;
 
     public bool persistent;
 
-    /// <summary>
-    /// Get a call each time when transition begins and ends
-    /// </summary>
-    public event Callback transitionCallback;
-
     private ScreenTrans mPrevTrans;
 
     private RenderTexture mRenderTexture;
     private Vector2 mRenderTextureScreenSize;
-    private Queue<ScreenTrans> mProgress = new Queue<ScreenTrans>(8);
+    private Queue<ProgressData> mProgress = new Queue<ProgressData>(8);
     private IEnumerator mProgressRoutine;
 
     private ScreenTransPlayer mCurPlayer;
@@ -99,40 +99,20 @@ public class ScreenTransManager : MonoBehaviour {
         return null;
     }
 
-    public void Play(ScreenTrans trans) {
+    public void Play(ScreenTrans trans, Callback callback) {
         if(trans) {
-            mProgress.Enqueue(trans);
+            mProgress.Enqueue(new ProgressData() { transition=trans, call=callback });
             if(mProgressRoutine == null)
                 StartCoroutine(mProgressRoutine = DoProgress());
         }
     }
 
-    public void Play(string transName) {
-        Play(GetTransition(transName));
-    }
-
-    public void Prepare(ScreenTrans trans) {
-        if(trans)
-            trans.Prepare();
-    }
-
-    public void Prepare(string transName) {
-        Play(GetTransition(transName));
+    public void Play(string transName, Callback callback) {
+        Play(GetTransition(transName), callback);
     }
 
     void OnLevelWasLoaded(int lvl) {
-        if(mCurTrans != null) {
-            if(mCurPlayer == null) {
-                Camera cam = mCurTrans.GetCameraTarget();
-                if(cam) {
-                    mCurPlayer = cam.GetComponent<ScreenTransPlayer>();
-                    if(!mCurPlayer)
-                        mCurPlayer = cam.gameObject.AddComponent<ScreenTransPlayer>();
-
-                    mCurPlayer.Play(mCurTrans);
-                }
-            }
-        }
+        RestorePlayer();
     }
 
     void OnDestroy() {
@@ -141,8 +121,6 @@ public class ScreenTransManager : MonoBehaviour {
 
             if(mRenderTexture)
                 DestroyImmediate(mRenderTexture);
-
-            transitionCallback = null;
         }
     }
 
@@ -164,39 +142,44 @@ public class ScreenTransManager : MonoBehaviour {
     IEnumerator DoProgress() {
         WaitForEndOfFrame wait = new WaitForEndOfFrame();
         while(mProgress.Count > 0) {
-            mCurTrans = mProgress.Dequeue();
+            ProgressData curProg = mProgress.Dequeue();
 
+            mCurTrans = curProg.transition;
             mCurTrans.Prepare();
 
-            Camera cam = mCurTrans.GetCameraTarget();
-            if(cam) {
-                mCurPlayer = cam.GetComponent<ScreenTransPlayer>();
-                if(!mCurPlayer)
-                    mCurPlayer = cam.gameObject.AddComponent<ScreenTransPlayer>();
-
-                mCurPlayer.Play(mCurTrans);
-            }
-
-            //wait one frame to render before sending Begin request
-            yield return wait;
-
-            if(transitionCallback != null)
-                transitionCallback(mCurTrans, Action.Begin);
+            if(curProg.call != null)
+                curProg.call(mCurTrans, Action.Begin);
 
             while(!mCurTrans.isDone) {
                 //Debug.Log("playing: "+trans);
-
+                RestorePlayer();
                 yield return wait;
             }
 
             mPrevTrans = mCurTrans;
 
-            if(transitionCallback != null)
-                transitionCallback(mCurTrans, Action.End);
+            if(curProg.call != null)
+                curProg.call(mCurTrans, Action.End);
 
             mCurTrans = null;
+            mCurPlayer = null;
         }
 
         mProgressRoutine = null;
+    }
+
+    void RestorePlayer() {
+        if(mCurTrans != null) {
+            if(mCurPlayer == null) {
+                Camera cam = mCurTrans.GetCameraTarget();
+                if(cam) {
+                    mCurPlayer = cam.GetComponent<ScreenTransPlayer>();
+                    if(!mCurPlayer)
+                        mCurPlayer = cam.gameObject.AddComponent<ScreenTransPlayer>();
+
+                    mCurPlayer.Play(mCurTrans);
+                }
+            }
+        }
     }
 }

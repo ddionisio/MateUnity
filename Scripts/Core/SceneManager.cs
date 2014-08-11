@@ -64,17 +64,25 @@ public class SceneManager : MonoBehaviour {
 
         mSceneToLoad = scene;
         mFirstTime = false;
-        if(mFirstTime || (string.IsNullOrEmpty(transOut) && string.IsNullOrEmpty(transIn))) {
-            DoLoad();
-        }
-        else {
-            mScreenTransOut = transOut;
-            mScreenTransIn = transIn;
+        mScreenTransOut = transOut;
+        mScreenTransIn = transIn;
 
-            if(!string.IsNullOrEmpty(mScreenTransOut))
-                ScreenTransManager.instance.Play(mScreenTransOut);
-            if(!string.IsNullOrEmpty(mScreenTransIn))
-                ScreenTransManager.instance.Play(mScreenTransIn);
+        if(mFirstTime)
+            DoLoad();
+        else {
+            if(!string.IsNullOrEmpty(mScreenTransOut)) {
+                if(string.IsNullOrEmpty(mScreenTransIn))
+                    ScreenTransManager.instance.Play(mScreenTransOut, OnScreenTransEndLoadScene);
+                else {
+                    //allow transition to call prepare before loading next scene
+                    ScreenTransManager.instance.Play(mScreenTransOut, null);
+                    ScreenTransManager.instance.Play(mScreenTransIn, OnScreenTransBeginLoadScene);
+                }
+            }
+            else if(!string.IsNullOrEmpty(mScreenTransIn))
+                ScreenTransManager.instance.Play(mScreenTransIn, OnScreenTransBeginLoadScene);
+            else
+                DoLoad();
         }
     }
 
@@ -189,9 +197,6 @@ public class SceneManager : MonoBehaviour {
 
             if(stackEnable)
                 mSceneStack = new Stack<string>(stackCapacity);
-
-            if(ScreenTransManager.instance)
-                ScreenTransManager.instance.transitionCallback += OnScreenTransition;
         }
     }
 
@@ -212,17 +217,14 @@ public class SceneManager : MonoBehaviour {
         Application.LoadLevel(mSceneToLoad);
     }
 
-    void OnScreenTransition(ScreenTrans trans, ScreenTransManager.Action act) {
-        switch(act) {
-            case ScreenTransManager.Action.Begin:
-                if(trans.name == mScreenTransIn)
-                    DoLoad();
-                break;
-            case ScreenTransManager.Action.End:
-                if(trans.name == mScreenTransOut && string.IsNullOrEmpty(mScreenTransIn)) //highly unlikely
-                    DoLoad();
-                break;
-        }
+    void OnScreenTransBeginLoadScene(ScreenTrans trans, ScreenTransManager.Action act) {
+        if(act == ScreenTransManager.Action.Begin)
+            DoLoad();
+    }
+
+    void OnScreenTransEndLoadScene(ScreenTrans trans, ScreenTransManager.Action act) {
+        if(act == ScreenTransManager.Action.End)
+            DoLoad();
     }
 
     private void SceneStackPush(string scene, string nextScene) {
