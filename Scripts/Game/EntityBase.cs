@@ -480,12 +480,4 @@ public class EntityBase : MonoBehaviour {
 
         yield break;
     }
-
-    IEnumerator DestroyDelay() {
-        yield return new WaitForFixedUpdate();
-
-        GameObject.Destroy(gameObject);
-
-        yield break;
-    }
 }

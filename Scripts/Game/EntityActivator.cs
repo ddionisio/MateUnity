@@ -71,20 +71,18 @@ public class EntityActivator : MonoBehaviour {
     /// Call this when you are about to be released or destroyed. If destroy = true, then destroy this object
     /// </summary>
     public virtual void Release(bool destroy) {
-        if(!mIsActive) {
-            //put ourself back in parent
-            if(destroy) {
-                Object.Destroy(gameObject);
-            }
-            else {
-                //put back to parent
-                SetParent(mDefaultParent);
-            }
-
-            //StopCoroutine("DoActive");
-            CancelInvoke(InActiveDelayInvoke);
-            mIsActive = true;
+        //put ourself back in parent
+        if(destroy) {
+            Object.Destroy(gameObject);
         }
+        else {
+            //put back to parent
+            SetParent(mDefaultParent);
+        }
+
+        //StopCoroutine("DoActive");
+        CancelInvoke(InActiveDelayInvoke);
+        mIsActive = true;
     }
 
     protected virtual void Awake() {

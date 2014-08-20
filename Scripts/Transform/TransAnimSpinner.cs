@@ -13,8 +13,10 @@ public class TransAnimSpinner : MonoBehaviour {
     public Vector3 rotatePerSecond;
     public bool local = true;
     public UpdateType updateType = UpdateType.Update;
+    public bool resetOnDisable;
 
     private Vector3 mEulerAnglesOrig;
+    private Vector3 mEulerAnglesDefault;
     private float mSpeedScale = 1.0f;
     private Rigidbody mBody;
     private float mLastTime;
@@ -32,12 +34,21 @@ public class TransAnimSpinner : MonoBehaviour {
 
     void OnDisable() {
         mSpeedScale = 1.0f;
+
+        if(resetOnDisable) {
+            if(local)
+                transform.localEulerAngles = mEulerAnglesDefault;
+            else
+                transform.eulerAngles = mEulerAnglesDefault;
+        }
     }
 
     // Use this for initialization
     void Awake() {
         mBody = rigidbody;
         mEulerAnglesOrig = transform.eulerAngles;
+
+        mEulerAnglesDefault = local ? transform.localEulerAngles : mEulerAnglesOrig;
     }
 
     void RefreshLastTime() {
