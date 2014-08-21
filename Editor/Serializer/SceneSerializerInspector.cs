@@ -7,6 +7,7 @@ using System.Collections.Generic;
 [CanEditMultipleObjects]
 public class SceneSerializerInspector : Editor {
     private static Dictionary<int, SceneSerializer> mRefs = null;
+    private static string mRefScene = "";
 
     public override void OnInspectorGUI() {
         SceneSerializer data = target as SceneSerializer;
@@ -51,7 +52,7 @@ public class SceneSerializerInspector : Editor {
         SceneSerializer data = obj as SceneSerializer;
 
         //check if we need to generate keys
-        if(mRefs == null)
+        if(mRefs == null || mRefScene != EditorApplication.currentScene)
             RegenerateIDs();
         else if(data.id == SceneSerializer.invalidID || mRefs[data.id] != data) {
             int nid = 1;
@@ -66,15 +67,17 @@ public class SceneSerializerInspector : Editor {
                     break;
             }
 
-            data.__EditorSetID(nid);
+            data.__SetID(nid);
             mRefs.Add(nid, data);
             EditorUtility.SetDirty(data);
         }
     }
 
     void RegenerateIDs() {
-        if(mRefs == null)
+        if(mRefs == null || mRefScene != EditorApplication.currentScene) {
             mRefs = new Dictionary<int, SceneSerializer>();
+            mRefScene = EditorApplication.currentScene;
+        }
 
         //get all objects in scene with serializedID
         Object[] objs = FindObjectsOfType(typeof(SceneSerializer));
@@ -99,7 +102,7 @@ public class SceneSerializerInspector : Editor {
 
             if(genNewKey) {
                 for(; mRefs.ContainsKey(nid); nid++);
-                sid.__EditorSetID(nid);
+                sid.__SetID(nid);
                 mRefs.Add(nid, sid);
                 EditorUtility.SetDirty(sid);
             }

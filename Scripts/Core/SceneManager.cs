@@ -8,7 +8,7 @@ public class SceneManager : MonoBehaviour {
     public const int stackCapacity = 8;
 
     public delegate void OnSceneBoolCallback(bool b);
-    public delegate void OnSceneStringCallback(string s);
+    public delegate void OnSceneStringCallback(string nextScene);
 
     public event OnSceneBoolCallback pauseCallback;
     public event OnSceneStringCallback sceneChangeCallback;

@@ -73,8 +73,8 @@ public class SceneState : MonoBehaviour {
         public void Apply(UserData ud, string key) {
             System.Type t = ud.GetType(key);
             if(t == typeof(int)) { type = Type.Integer; ival = ud.GetInt(key, ival); }
-            if(t == typeof(float)) { type = Type.Integer; fval = ud.GetFloat(key, fval); }
-            if(t == typeof(string)) { type = Type.Integer; sval = ud.GetString(key, sval); }
+            else if(t == typeof(float)) { type = Type.Float; fval = ud.GetFloat(key, fval); }
+            else if(t == typeof(string)) { type = Type.String; sval = ud.GetString(key, sval); }
         }
     }
 
@@ -135,6 +135,24 @@ public class SceneState : MonoBehaviour {
 
         if(persistent)
             UserData.instance.Delete(string.Format(DataFormat, mScene, name));
+    }
+
+    public Type GetValueType(string name) {
+        if(mStates != null) {
+            StateValue v;
+            if(!mStates.TryGetValue(name, out v)) {
+                System.Type t = UserData.instance.GetType(string.Format(DataFormat, mScene, name));
+                if(t == typeof(int))
+                    return Type.Integer;
+                else if(t == typeof(float))
+                    return Type.Float;
+                else if(t == typeof(string))
+                    return Type.String;
+            }
+            else
+                return v.type;
+        }
+        return Type.Invalid;
     }
 
     public int GetValue(string name, int defaultVal = 0) {
@@ -384,6 +402,24 @@ public class SceneState : MonoBehaviour {
 
         if(persistent)
             UserData.instance.Delete(string.Format(GlobalDataFormat, name));
+    }
+
+    public Type GetGlobalValueType(string name) {
+        if(mGlobalStates != null) {
+            StateValue v;
+            if(!mGlobalStates.TryGetValue(name, out v)) {
+                System.Type t = UserData.instance.GetType(string.Format(GlobalDataFormat, name));
+                if(t == typeof(int))
+                    return Type.Integer;
+                else if(t == typeof(float))
+                    return Type.Float;
+                else if(t == typeof(string))
+                    return Type.String;
+            }
+            else
+                return v.type;
+        }
+        return Type.Invalid;
     }
 
     public int GetGlobalValue(string name, int defaultVal = 0) {

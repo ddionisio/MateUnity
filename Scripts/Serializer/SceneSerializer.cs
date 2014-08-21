@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// Also includes a persistent id that can be guaranteed to be the same when scene is loaded.
 /// NOTE: This requires SceneState
 /// </summary>
-[AddComponentMenu("M8/Core/SceneSerializer")]
+[AddComponentMenu("M8/Serializer/Object")]
 public class SceneSerializer : MonoBehaviour {
     public const int invalidID = 0;
     public const string removeKey = "_del";
@@ -17,7 +17,6 @@ public class SceneSerializer : MonoBehaviour {
     private int _id = invalidID;
 
     private static Dictionary<int, SceneSerializer> mRefs = null;
-    private static int mGenIdStart = invalidID + 1;
 
     /// <summary>
     /// Get the serialized id
@@ -32,7 +31,7 @@ public class SceneSerializer : MonoBehaviour {
     /// This is only used by the editor!
     /// </summary>
     /// <param name="nid"></param>
-    public void __EditorSetID(int nid) {
+    public void __SetID(int nid) {
         if(Application.isPlaying) {
             if(mRefs == null)
                 mRefs = new Dictionary<int, SceneSerializer>();
@@ -52,24 +51,6 @@ public class SceneSerializer : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// Use with caution, most likely after spawning
-    /// </summary>
-    public void __GenNewID() {
-        //find an id we can use
-        int __id = mGenIdStart;
-
-        if(mRefs != null)
-            for(; mRefs.ContainsKey(__id); __id++);
-
-        _id = __id;
-
-        if(mRefs == null)
-            mRefs = new Dictionary<int, SceneSerializer>();
-
-        mRefs.Add(_id, this);
-    }
-
     public static SceneSerializer GetObject(int id) {
         SceneSerializer ret = null;
 
@@ -85,15 +66,11 @@ public class SceneSerializer : MonoBehaviour {
     }
 
     static string GetVarKey(int sid) {
-        return "obj" + sid.ToString();
-    }
-
-    string GetVarId() {
-        return GetVarKey(id);
+        return "o" + sid.ToString();
     }
 
     string GetVarKey(string name) {
-        return GetVarId() + name;
+        return GetVarKey(id) + name;
     }
 
     public bool HasValue(string name) {
@@ -103,6 +80,12 @@ public class SceneSerializer : MonoBehaviour {
     public void DeleteValue(string name, bool persistent) {
         if(_id != invalidID)
             SceneState.instance.DeleteValue(GetVarKey(name), persistent);
+    }
+
+    public SceneState.Type GetValueType(string name) {
+        if(_id == invalidID)
+            return SceneState.Type.Invalid;
+        return SceneState.instance.GetValueType(GetVarKey(name));
     }
 
     public int GetValue(string name, int defaultVal = 0) {
@@ -148,6 +131,18 @@ public class SceneSerializer : MonoBehaviour {
             SceneState.instance.SetValueFloat(GetVarKey(name), val, persistent);
     }
 
+    public string GetValueString(string name, string defaultVal = "") {
+        if(_id == invalidID)
+            return defaultVal;
+
+        return SceneState.instance.GetValueString(GetVarKey(name), defaultVal);
+    }
+
+    public void SetValueString(string name, string val, bool persistent) {
+        if(_id != invalidID)
+            SceneState.instance.SetValueString(GetVarKey(name), val, persistent);
+    }
+
     /// <summary>
     /// Call this if you no longer want variables for this object to be kept in user data and scene data
     /// </summary>
@@ -170,20 +165,7 @@ public class SceneSerializer : MonoBehaviour {
         }
     }
 
-    void OnDestroy() {
-        if(mRefs != null) {
-            if(_id != invalidID) {
-                mRefs.Remove(_id);
-            }
-
-            if(mRefs.Count == 0) {
-                mRefs = null;
-                mGenIdStart = invalidID + 1;
-            }
-        }
-    }
-
-    protected virtual void Awake() {
+    protected virtual void Init() {
         //check if this object has been marked as remove, then delete it right away
         if(GetValue(removeKey, 0) == 1) {
             DestroyImmediate(gameObject);
@@ -195,9 +177,36 @@ public class SceneSerializer : MonoBehaviour {
 
         if(_id != invalidID) {
             mRefs[_id] = this;
-
-            if(_id >= mGenIdStart)
-                mGenIdStart = _id + 1;
+            if(UserData.instance)
+                UserData.instance.actCallback += OnUserDataAction;
         }
     }
+
+    protected virtual void Deinit() {
+        if(_id != invalidID) {
+            if(mRefs != null)
+                mRefs.Remove(_id);
+            _id = invalidID;
+            if(UserData.instance)
+                UserData.instance.actCallback -= OnUserDataAction;
+        }
+    }
+
+    protected virtual void OnUserDataAction(UserData ud, UserData.Action act) {
+        if(act == UserData.Action.Load) {
+            //check to see if we are suppose to be removed
+            if(GetValue(removeKey) == 1)
+                DestroyImmediate(gameObject);
+        }
+    }
+
+    void OnDestroy() {
+        Deinit();
+    }
+
+    void Awake() {
+        Init();
+    }
+
+    
 }
