@@ -44,6 +44,8 @@ public class SceneManager : MonoBehaviour {
     //private bool mIsFullscreen = false;
     private bool mPaused = false;
 
+    private Transform mHolder; //for use with storing game objects to be transferred to other scenes
+
     public static SceneManager instance { get { return mInstance; } }
 
     public bool isPaused {
@@ -170,6 +172,27 @@ public class SceneManager : MonoBehaviour {
 
             if(pauseCallback != null) pauseCallback(mPaused);
         }
+    }
+
+    public void StoreAddObject(Transform t) {
+        if(mHolder == null) {
+            GameObject newGO = new GameObject("sceneHolder");
+            mHolder = newGO.transform;
+            mHolder.parent = transform;
+        }
+
+        t.parent = mHolder;
+        t.gameObject.SetActive(false);
+    }
+
+    public Transform StoreGetObject(string name) {
+        return mHolder ? mHolder.Find(name) : null;
+    }
+
+    public void StoreDestroyObject(string name) {
+        Transform t = StoreGetObject(name);
+        if(t)
+            Destroy(t.gameObject);
     }
 
     void OnLevelWasLoaded(int sceneInd) {

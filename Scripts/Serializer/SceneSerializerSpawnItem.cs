@@ -5,10 +5,14 @@ using System.Collections;
 /// Use this for items that you want to persist after they are spawned. So when you return to the scene, this item will be spawned.
 /// Make sure SceneSerializerSpawnManager exists. This object must be created via PoolController, when this object is despawned,
 /// its saved data will be removed and will no longer be spawned.
-/// Note: Id is generated during Start, so make sure to only set/get values on or after Start
+/// Note: Id is generated upon call to OnSpawned
 /// </summary>
 [AddComponentMenu("M8/Serializer/Object Spawn")]
 public class SceneSerializerSpawnItem : SceneSerializer {
+    void OnSpawned() {
+        SceneSerializerSpawnManager.instance.RegisterSpawn(this);
+    }
+
     void OnDespawned() {
         MarkRemove();
     }
@@ -25,11 +29,5 @@ public class SceneSerializerSpawnItem : SceneSerializer {
         }
     }
 
-    protected override void Init() {
-
-    }
-
-    void Start() {
-        SceneSerializerSpawnManager.instance.RegisterSpawn(this);
-    }
+    protected override void Init() { }
 }
