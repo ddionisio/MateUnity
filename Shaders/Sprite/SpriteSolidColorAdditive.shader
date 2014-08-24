@@ -1,6 +1,6 @@
 ﻿//Only use for sprites
 //Completely replace texture with given rgb
-Shader "M8/Sprite/SolidColor"
+Shader "M8/Sprite/SolidColorAdditive"
 {
 	Properties
 	{
@@ -25,7 +25,7 @@ Shader "M8/Sprite/SolidColor"
 		Lighting Off
 		ZWrite Off
 		Fog { Mode Off }
-		Blend One OneMinusSrcAlpha
+		Blend SrcAlpha One
 
 		Pass
 		{

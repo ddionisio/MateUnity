@@ -1,12 +1,11 @@
 ﻿//Only use for sprites
-//Completely replace texture with given rgb
-Shader "M8/Sprite/SolidColor"
+Shader "M8/Sprite/ColorOverlayAdditive"
 {
 	Properties
 	{
 		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
 		_Color ("Tint", Color) = (1,1,1,1)
-		_ColorSolid("Solid", Color) = (0,0,0,0)
+		_ColorOverlay("Overlay", Color) = (0,0,0,0)
 		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
 	}
 
@@ -25,7 +24,7 @@ Shader "M8/Sprite/SolidColor"
 		Lighting Off
 		ZWrite Off
 		Fog { Mode Off }
-		Blend One OneMinusSrcAlpha
+		Blend SrcAlpha One
 
 		Pass
 		{
@@ -50,7 +49,7 @@ Shader "M8/Sprite/SolidColor"
 			};
 			
 			fixed4 _Color;
-			fixed4 _ColorSolid;
+			fixed4 _ColorOverlay;
 
 			v2f vert(appdata_t IN)
 			{
@@ -69,8 +68,9 @@ Shader "M8/Sprite/SolidColor"
 
 			fixed4 frag(v2f IN) : SV_Target
 			{
-				fixed4 c = IN.color;
-				c.a *= tex2D(_MainTex, IN.texcoord).a;
+				fixed4 c = tex2D(_MainTex, IN.texcoord) * IN.color;
+
+				c.rgb = lerp(c.rgb, _ColorOverlay.rgb, _ColorOverlay.a);
 
 				c.rgb *= c.a;
 				return c;
