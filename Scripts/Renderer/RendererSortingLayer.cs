@@ -2,6 +2,7 @@
 using System.Collections;
 
 [AddComponentMenu("M8/Renderer/SortingLayer")]
+[RequireComponent(typeof(Renderer))]
 public class RendererSortingLayer : MonoBehaviour {
     [SerializeField]
     string _sortingLayerName;

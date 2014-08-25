@@ -1,11 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Sprite/ColorAndFrameRandom")]
-public class SpriteColorAndFrameRandom : MonoBehaviour {
-    public SpriteRenderer sprite;
+[AddComponentMenu("M8/Renderer/ColorAndTextureRandom")]
+[RequireComponent(typeof(Renderer))]
+public class RendererColorAndTextureRandom : MonoBehaviour {
+    public string colorVar = "_Color";
+    public string textureVar = "_MainTex";
 
-    public Sprite[] frames;
+    public Texture[] frames;
+
+    private int mColorId;
+    private int mTextureId;
 
     public float start; //pause at start in seconds
     public float pulse = 1.0f; //time it takes for a pulse to complete
@@ -16,12 +21,13 @@ public class SpriteColorAndFrameRandom : MonoBehaviour {
     public float pulseRandomOfs;
     public float pauseRandomOfs;
 
-    public Color startColor = Color.white;
+    public Color startColor = Color.clear;
     public Color[] endColors = { Color.white };
 
     public bool squared;
 
     private bool mStarted = false;
+    private Material mMat;
 
     void OnEnable() {
         if(mStarted) {
@@ -30,30 +36,25 @@ public class SpriteColorAndFrameRandom : MonoBehaviour {
     }
 
     void OnDisable() {
-        if(mStarted) {
+        if(mStarted)
             StopAllCoroutines();
-
-            sprite.color = startColor;
-        }
     }
 
     void Awake() {
-        if(sprite == null) {
-            sprite = GetComponent<SpriteRenderer>();
-        }
+        mMat = renderer.material;
+        mColorId = Shader.PropertyToID(colorVar);
+        mTextureId = Shader.PropertyToID(textureVar);
     }
 
-    // Use this for initialization
     void Start() {
         mStarted = true;
-
         StartCoroutine(DoPulseUpdate());
     }
 
     IEnumerator DoPulseUpdate() {
         WaitForFixedUpdate wait = new WaitForFixedUpdate();
 
-        sprite.color = startColor;
+        mMat.SetColor(mColorId, startColor);
 
         float sDelay = start + Random.value * startRandomOfs;
         if(sDelay > 0.0f)
@@ -70,10 +71,10 @@ public class SpriteColorAndFrameRandom : MonoBehaviour {
 
             if(t >= curDelay) {
                 if(frames.Length > 0) {
-                    sprite.sprite = frames[Random.Range(0, frames.Length)];
+                    mMat.SetTexture(mTextureId, frames[Random.Range(0, frames.Length)]);
                 }
 
-                sprite.color = startColor;
+                mMat.SetColor(mColorId, startColor);
 
                 t = 0.0f;
                 curDelay = pulse + Random.value * pulseRandomOfs;
@@ -89,7 +90,7 @@ public class SpriteColorAndFrameRandom : MonoBehaviour {
                 float s = Mathf.Sin(Mathf.PI * (t / pulse));
 
                 if(endColors.Length > 0)
-                    sprite.color = Color.Lerp(startColor, curEndColor, squared ? s * s : s);
+                    mMat.SetColor(mColorId, Color.Lerp(startColor, curEndColor, squared ? s * s : s));
             }
 
             yield return wait;

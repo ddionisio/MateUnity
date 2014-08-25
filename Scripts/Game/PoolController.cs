@@ -205,11 +205,11 @@ public class PoolController : MonoBehaviour {
             }
             else
                 entity.gameObject.SetActive(false);
-                //Object.Destroy(entity.gameObject);
+            //Object.Destroy(entity.gameObject);
         }
         else
             entity.gameObject.SetActive(false);
-            //Object.Destroy(entity.gameObject);
+        //Object.Destroy(entity.gameObject);
     }
 
     public static void ReleaseByGroup(string group, Transform entity) {
@@ -265,14 +265,14 @@ public class PoolController : MonoBehaviour {
 
     public Transform Spawn(string type, string name, Transform toParent, Vector3 position) {
         Transform entityRet = null;
-        
+
         FactoryData dat;
         if(mFactory.TryGetValue(type, out dat)) {
             entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
-            
+
             if(entityRet != null) {
                 entityRet.transform.position = position;
-                
+
                 entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
             }
             else {
@@ -282,7 +282,7 @@ public class PoolController : MonoBehaviour {
         else {
             Debug.LogWarning("No such type: " + type + " attempt to allocate: " + name);
         }
-        
+
         return entityRet;
     }
 
@@ -311,13 +311,13 @@ public class PoolController : MonoBehaviour {
     }
 
     public void Release(Transform entity) {
+        entity.SendMessage("OnDespawned", null, SendMessageOptions.DontRequireReceiver);
+
         PoolDataController pdc = entity.GetComponent<PoolDataController>();
         if(pdc != null) {
             FactoryData dat;
             if(mFactory.TryGetValue(pdc.factoryKey, out dat)) {
                 pdc.claimed = true;
-
-                entity.SendMessage("OnDespawned", null, SendMessageOptions.DontRequireReceiver);
 
                 dat.Release(entity);
             }
