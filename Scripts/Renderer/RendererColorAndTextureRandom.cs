@@ -28,6 +28,7 @@ public class RendererColorAndTextureRandom : MonoBehaviour {
 
     private bool mStarted = false;
     private Material mMat;
+    private int mCurInd;
 
     void OnEnable() {
         if(mStarted) {
@@ -56,6 +57,8 @@ public class RendererColorAndTextureRandom : MonoBehaviour {
 
         mMat.SetColor(mColorId, startColor);
 
+        mCurInd = 0;
+
         float sDelay = start + Random.value * startRandomOfs;
         if(sDelay > 0.0f)
             yield return new WaitForSeconds(sDelay);
@@ -71,7 +74,8 @@ public class RendererColorAndTextureRandom : MonoBehaviour {
 
             if(t >= curDelay) {
                 if(frames.Length > 0) {
-                    mMat.SetTexture(mTextureId, frames[Random.Range(0, frames.Length)]);
+                    mMat.SetTexture(mTextureId, frames[mCurInd]);
+                    mCurInd++; if(mCurInd == frames.Length) { mCurInd = 0; M8.ArrayUtil.Shuffle(frames); }
                 }
 
                 mMat.SetColor(mColorId, startColor);
