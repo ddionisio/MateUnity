@@ -5,9 +5,11 @@ using System.Collections;
 /// Use this with PoolController
 /// </summary>
 [AddComponentMenu("M8/Particle/Spawn")]
+[RequireComponent(typeof(ParticleSystem))]
 public class ParticleSpawn : MonoBehaviour {
     public float playDelay = 0.1f;
 
+    private ParticleSystem mParticles;
     private bool mActive = false;
 
     void OnSpawned() {
@@ -23,17 +25,21 @@ public class ParticleSpawn : MonoBehaviour {
         mActive = false;
 
         CancelInvoke();
-        particleSystem.Clear();
+        mParticles.Clear();
     }
 
     // Update is called once per frame
     void LateUpdate() {
-        if(mActive && !particleSystem.IsAlive())
+        if(mActive && !mParticles.IsAlive())
             PoolController.ReleaseAuto(transform);
     }
 
+    void Awake() {
+        mParticles = particleSystem;
+    }
+
     void DoPlay() {
-        particleSystem.Play();
+        mParticles.Play();
         mActive = true;
     }
 }
