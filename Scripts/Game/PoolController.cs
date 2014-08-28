@@ -137,10 +137,10 @@ public class PoolController : MonoBehaviour {
     /// <summary>
     /// type is based on the name of the prefab
     /// </summary>
-    public static Transform Spawn(string group, string type, string name, Transform toParent, string waypoint) {
+    public static Transform Spawn(string group, string type, string name, Transform toParent) {
         PoolController pc = GetPool(group);
         if(pc != null) {
-            return pc.Spawn(type, name, toParent, waypoint);
+            return pc.Spawn(type, name, toParent);
         }
         else {
             return null;
@@ -240,29 +240,6 @@ public class PoolController : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// type is based on the name of the prefab, if toParent is null, then set parent to us or factory's default
-    /// </summary>
-    public Transform Spawn(string type, string name, Transform toParent, string waypoint) {
-        Vector3 position = Vector3.zero;
-        Quaternion rot = Quaternion.identity;
-
-        if(!string.IsNullOrEmpty(waypoint)) {
-            if(WaypointManager.instance != null) {
-                Transform wp = WaypointManager.instance.GetWaypoint(waypoint);
-                if(wp != null) {
-                    position = wp.position;
-                    rot = wp.rotation;
-                }
-            }
-            else {
-                Debug.LogWarning("Waypoint Manager is not present, trying to hook-up with: " + waypoint);
-            }
-        }
-
-        return Spawn(type, name, toParent, position, rot);
-    }
-
     public Transform Spawn(string type, string name, Transform toParent, Vector3 position) {
         Transform entityRet = null;
 
@@ -297,6 +274,27 @@ public class PoolController : MonoBehaviour {
                 entityRet.transform.position = position;
                 entityRet.transform.rotation = rot;
 
+                entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
+            }
+            else {
+                Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
+            }
+        }
+        else {
+            Debug.LogWarning("No such type: " + type + " attempt to allocate: " + name);
+        }
+
+        return entityRet;
+    }
+
+    public Transform Spawn(string type, string name, Transform toParent) {
+        Transform entityRet = null;
+
+        FactoryData dat;
+        if(mFactory.TryGetValue(type, out dat)) {
+            entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
+
+            if(entityRet != null) {
                 entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
             }
             else {

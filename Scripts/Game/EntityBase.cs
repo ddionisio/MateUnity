@@ -80,7 +80,6 @@ public class EntityBase : MonoBehaviour {
     private SceneSerializer mSerializer = null;
 
     public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
-        //TODO: use ours if no 3rd party pool manager
 #if POOLMANAGER
         SpawnPool pool = PoolManager.Pools[spawnGroup];
 
@@ -95,12 +94,8 @@ public class EntityBase : MonoBehaviour {
 
         return ent;
 #else
-        Transform spawned = PoolController.Spawn(spawnGroup, typeName, typeName, null, null);
+        Transform spawned = PoolController.Spawn(spawnGroup, typeName, typeName, null, position);
         T ent = spawned != null ? spawned.GetComponent<T>() : null;
-
-        if(ent != null) {
-            ent.transform.position = position;
-        }
 
         return ent;
 #endif
