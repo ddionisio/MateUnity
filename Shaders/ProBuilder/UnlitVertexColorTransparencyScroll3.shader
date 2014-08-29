@@ -18,7 +18,7 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency Scroll 3" {
     //ZWrite Off // on might hide behind pixels, off might miss order
     //Blend SrcAlpha OneMinusSrcAlpha
 	//Blend SrcAlpha OneMinusSrcAlpha
-	Blend One One
+	Blend SrcAlpha One
     ColorMask RGB
 	Lighting Off Fog { Mode Off }
 
@@ -34,11 +34,7 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency Scroll 3" {
 		float speedX;
 		float speedY;
 		
-		float speed2X;
-		float speed2Y;
-		
 		fixed4 colorMod1;
-		fixed4 colorMod2;
 
 		struct vin_vct 
 		{
@@ -68,28 +64,24 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency Scroll 3" {
 
 		fixed4 frag_mult(v2f_vct i) : COLOR
 		{
-			return tex2D(_MainTex, i.texcoord) * i.color * colorMod1;
+            fixed4 clr = tex2D(_MainTex, i.texcoord) * colorMod1;
+			return clr*i.color;
 		}
 
 		ENDCG
 	}
-	
-	Pass {
+  Pass {
 		CGPROGRAM
 		#pragma vertex vert_vct
 		#pragma fragment frag_mult
 		#pragma fragmentoption ARB_precision_hint_fastest
 		#include "UnityCG.cginc"
 
-		sampler2D _MainTex2;
-		
-		float speedX;
-		float speedY;
+        sampler2D _MainTex2;
 		
 		float speed2X;
 		float speed2Y;
 		
-		fixed4 colorMod1;
 		fixed4 colorMod2;
 
 		struct vin_vct 
@@ -112,15 +104,16 @@ Shader "M8/ProBuilder/Unlit Vertex Color Transparency Scroll 3" {
 			o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
 			o.color = v.color;
 			
-			o.texcoord = v.texcoord;
-			o.texcoord.x += speed2X * _Time.y;
+            o.texcoord = v.texcoord;
+            o.texcoord.x += speed2X * _Time.y;
 			o.texcoord.y += speed2Y * _Time.y;
 			return o;
 		}
 
 		fixed4 frag_mult(v2f_vct i) : COLOR
 		{
-			return tex2D(_MainTex2, i.texcoord) * colorMod2;
+            fixed4 clr = tex2D(_MainTex2, i.texcoord) * colorMod2;
+			return clr*i.color;
 		}
 
 		ENDCG

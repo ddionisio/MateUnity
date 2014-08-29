@@ -621,7 +621,7 @@ public class RigidBodyController : MonoBehaviour {
         else {
             mCurMoveDir = Vector3.zero;
 
-            if(!mLockDrag)
+            if(!mLockDrag && !mBody.isKinematic)
                 mBody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : GetStandDrag() : airDrag;
         }
     }

@@ -32,6 +32,8 @@ public class TriggerForce : MonoBehaviour {
     public float force = 30.0f;
     public ForceMode mode = ForceMode.Impulse;
 
+    public float nudgeOfs;
+
     public float forceLingerDelay;
     public float forceLinger;
 
@@ -73,7 +75,7 @@ public class TriggerForce : MonoBehaviour {
         return false;
     }
 
-    void OnTriggerStay(Collider col) {
+    void OnTriggerEnter(Collider col) {
 
         if(!mColliders.Contains(col)) {
             Rigidbody body = col.rigidbody;
@@ -146,10 +148,7 @@ public class TriggerForce : MonoBehaviour {
                         dir = Vector3.zero;
                         break;
                 }
-
-                if(force != 0.0f)
-                    body.AddForce(dir * force, mode);
-
+                                
                 if(collider.enabled && forceLingerDelay > 0 && col.enabled && col.gameObject.activeSelf) {
                     StartCoroutine(DoForceLinger(col, dir));
                 }
@@ -164,6 +163,23 @@ public class TriggerForce : MonoBehaviour {
 
         float t = 0;
 
+        Rigidbody body = col.rigidbody;
+                
+        RigidBodyController ctrl = col.GetComponent<RigidBodyController>();
+        if(ctrl) { ctrl.enabled = false; }
+
+        if(nudgeOfs != 0.0f)
+            col.transform.position = col.transform.position + dir*nudgeOfs;
+
+        if(lingerDragOverride)
+            body.drag = lingerDrag;
+
+        yield return wait;
+
+        if(force != 0.0f)
+            body.AddForce(dir * force, mode);
+
+
         while(t < forceLingerDelay) {
             yield return wait;
 
@@ -171,7 +187,7 @@ public class TriggerForce : MonoBehaviour {
                 break;
 
             if(lingerDragOverride)
-                col.rigidbody.drag = lingerDrag;
+                body.drag = lingerDrag;
 
             if(lingerUpdateDir) {
                 Vector3 bodyPos = col.bounds.center;
@@ -182,15 +198,17 @@ public class TriggerForce : MonoBehaviour {
                         dir.Normalize();
                         
                         //if(resetVelocityByAxis)
-                            //col.rigidbody.velocity = Vector3.zero;
+                        //body.velocity = Vector3.zero;
                         break;
                 }
             }
 
-            col.rigidbody.AddForce(dir * forceLinger);
+            body.AddForce(dir * forceLinger);
 
             t += Time.fixedDeltaTime;
         }
+
+        if(ctrl) { ctrl.enabled = true; }
 
         mColliders.Remove(col);
         //Debug.Log("removed: " + col.gameObject.name);
