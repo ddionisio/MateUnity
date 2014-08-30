@@ -14,16 +14,20 @@ public class BlinkerSprite : Blinker {
     protected override void OnBlink(bool yes) {
         if(yes) {
             for(int i = 0; i < targets.Length; i++) {
-                Color c = targets[i].color;
-                c.a = 0.0f;
-                targets[i].color = c;
+                if(targets[i]) {
+                    Color c = targets[i].color;
+                    c.a = 0.0f;
+                    targets[i].color = c;
+                }
             }
         }
         else {
             for(int i = 0; i < targets.Length; i++) {
-                Color c = targets[i].color;
-                c.a = 1.0f;
-                targets[i].color = c;
+                if(targets[i]) {
+                    Color c = targets[i].color;
+                    c.a = 1.0f;
+                    targets[i].color = c;
+                }
             }
         }
     }

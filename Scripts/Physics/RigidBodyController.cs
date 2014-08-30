@@ -271,6 +271,20 @@ public class RigidBodyController : MonoBehaviour {
         }
     }
 
+    public RaycastHit[] CheckAllCasts(Vector3 posOfs, float reduceOfs, Vector3 dir, float dist, int mask) {
+        if(mCapsuleColl) {
+            Vector3 p1, p2;
+            float r;
+
+            GetCapsuleInfo(out p1, out p2, out r, reduceOfs);
+
+            return Physics.CapsuleCastAll(p1 + posOfs, p2 + posOfs, r, dir, dist, mask);
+        }
+        else {
+            return Physics.SphereCastAll(transform.position + posOfs, mRadius - reduceOfs, dir, dist, mask);
+        }
+    }
+
     public void SetSpeedCap(float cap) {
         speedCap = cap;
     }

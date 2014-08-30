@@ -13,13 +13,14 @@ SubShader {
 	Tags {"Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent"}
 	LOD 100
 	
-	ZWrite Off
+	//ZWrite Off
 	Blend SrcAlpha One 
 	
 	Pass {  
 		CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+            #pragma fragmentoption ARB_precision_hint_fastest
 			
 			#include "UnityCG.cginc"
 
