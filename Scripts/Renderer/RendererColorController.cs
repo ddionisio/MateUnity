@@ -7,6 +7,7 @@ public class RendererColorController : MonoBehaviour {
     public string colorProperty = "_Color";
 
     public Color startColor = Color.white;
+    public bool startColorApply;
 
     public bool recursive;
 
@@ -30,31 +31,35 @@ public class RendererColorController : MonoBehaviour {
                     if(recursive) {
                         Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
                         for(int i = 0; i < renderers.Length; i++) {
-                            for(int j = 0; j < renderers[i].sharedMaterials.Length; j++) {
-                                Material sm = renderers[i].sharedMaterials[j];
+                            Material[] sms = renderers[i].sharedMaterials;
+                            for(int j = 0; j < sms.Length; j++) {
+                                Material sm = sms[j];
                                 if(sm.HasProperty(mColorId)) {
                                     Material mat = matList.Find(m => m.name.CompareTo(sm.name) == 0);
                                     if(mat == null) {
                                         mat = new Material(sm);
                                         matList.Add(mat);
                                     }
-                                    renderers[i].sharedMaterials[j] = mat;
+                                    sms[j] = mat;
                                 }
                             }
+                            renderers[i].sharedMaterials = sms;
                         }
                     }
                     else {
-                        for(int j = 0; j < renderer.sharedMaterials.Length; j++) {
-                            Material sm = renderer.sharedMaterials[j];
+                        Material[] sms = renderer.sharedMaterials;
+                        for(int j = 0; j < sms.Length; j++) {
+                            Material sm = sms[j];
                             if(sm.HasProperty(mColorId)) {
                                 Material mat = matList.Find(m => m.name.CompareTo(sm.name) == 0);
                                 if(mat == null) {
                                     mat = new Material(sm);
                                     matList.Add(mat);
                                 }
-                                renderer.sharedMaterials[j] = mat;
+                                sms[j] = mat;
                             }
                         }
+                        renderer.sharedMaterials = sms;
                     }
 
                     mMats = matList.ToArray();
@@ -66,8 +71,18 @@ public class RendererColorController : MonoBehaviour {
         }
     }
 
+    void OnDestroy() {
+        if(mMats != null) {
+            for(int i = 0; i < mMats.Length; i++) {
+                if(mMats[i])
+                    DestroyImmediate(mMats[i]);
+            }
+        }
+    }
+
     // Use this for initialization
     void Start() {
-        color = startColor;
+        if(startColorApply)
+            color = startColor;
     }
 }
