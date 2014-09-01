@@ -25,33 +25,40 @@ public class SpriteColorOverrideInspector : Editor {
         mRecursive = serializedObject.FindProperty("_recursive");
         mIncludeInactive = serializedObject.FindProperty("_includeInactive");
         mColor = serializedObject.FindProperty("_color");
+
+        ApplyColor();
     }
     public override void OnInspectorGUI() {
         base.OnInspectorGUI();
 
         if(GUI.changed) {
-            Color clr = mColor.colorValue;
+            ApplyColor();
+        }
+    }
 
-            if(mTargets.arraySize > 0) {
-                for(int i = 0; i < mTargets.arraySize; i++) {
-                    SpriteRenderer render = mTargets.GetArrayElementAtIndex(i).objectReferenceValue as SpriteRenderer;
+    void ApplyColor() {
+        Color clr = mColor.colorValue;
+
+        if(mTargets.arraySize > 0) {
+            for(int i = 0; i < mTargets.arraySize; i++) {
+                SpriteRenderer render = mTargets.GetArrayElementAtIndex(i).objectReferenceValue as SpriteRenderer;
+                if(render)
                     render.color = clr;
+            }
+        }
+        else {
+            bool recursive = mRecursive.boolValue;
+            bool includeInactive = mIncludeInactive.boolValue;
+
+            if(recursive) {
+                SpriteRenderer[] renders = (target as MonoBehaviour).GetComponentsInChildren<SpriteRenderer>(includeInactive);
+                for(int i = 0; i < renders.Length; i++) {
+                    if(renders[i]) renders[i].color = clr;
                 }
             }
             else {
-                bool recursive = mRecursive.boolValue;
-                bool includeInactive = mIncludeInactive.boolValue;
-
-                if(recursive) {
-                    SpriteRenderer[] renders = (target as MonoBehaviour).GetComponentsInChildren<SpriteRenderer>(includeInactive);
-                    for(int i = 0; i < renders.Length; i++) {
-                        if(renders[i]) renders[i].color = clr;
-                    }
-                }
-                else {
-                    SpriteRenderer render = (target as MonoBehaviour).GetComponent<SpriteRenderer>();
-                    if(render) render.color = clr;
-                }
+                SpriteRenderer render = (target as MonoBehaviour).GetComponent<SpriteRenderer>();
+                if(render) render.color = clr;
             }
         }
     }

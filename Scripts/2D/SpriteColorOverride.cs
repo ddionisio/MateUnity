@@ -13,7 +13,7 @@ public class SpriteColorOverride : MonoBehaviour {
     bool _includeInactive = false;
 
     [SerializeField]
-    Color _color;
+    Color _color = Color.white;
 
     private SpriteRenderer[] mSpriteRenders;
 
