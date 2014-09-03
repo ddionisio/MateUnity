@@ -22,9 +22,7 @@ public class SpriteColorOverride : MonoBehaviour {
         set {
             if(_color != value) {
                 _color = value;
-                for(int i = 0; i < mSpriteRenders.Length; i++) {
-                    if(mSpriteRenders[i]) mSpriteRenders[i].color = _color;
-                }
+                ApplyColor();
             }
         }
     }
@@ -42,6 +40,12 @@ public class SpriteColorOverride : MonoBehaviour {
         else
             mSpriteRenders = _targets;
 
-        color = _color;
+        ApplyColor();
+    }
+
+    void ApplyColor() {
+        for(int i = 0; i < mSpriteRenders.Length; i++) {
+            if(mSpriteRenders[i]) mSpriteRenders[i].color = _color;
+        }
     }
 }
