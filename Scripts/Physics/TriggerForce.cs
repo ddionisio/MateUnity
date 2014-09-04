@@ -18,6 +18,9 @@ public class TriggerForce : MonoBehaviour {
     }
 
     [SerializeField]
+    Transform _dirRef;
+
+    [SerializeField]
     Mode _dirMode = Mode.Dir;
 
     [SerializeField]
@@ -63,7 +66,7 @@ public class TriggerForce : MonoBehaviour {
                 break;
         }
 
-        return transform.rotation * (inverse ? -dir : dir);
+        return (_dirRef ? _dirRef : transform).rotation * (inverse ? -dir : dir);
     }
 
     bool CheckTag(string aTag) {
@@ -126,7 +129,7 @@ public class TriggerForce : MonoBehaviour {
                                 break;
                         }
 
-                        dir = transform.rotation * (inverse ? -dir : dir);
+                        dir = (_dirRef ? _dirRef : transform).rotation * (inverse ? -dir : dir);
                         break;
 
                     case Mode.Velocity:
@@ -149,7 +152,7 @@ public class TriggerForce : MonoBehaviour {
                         break;
                 }
                                 
-                if(collider.enabled && forceLingerDelay > 0 && col.enabled && col.gameObject.activeSelf) {
+                if(collider.enabled && col.enabled && col.gameObject.activeSelf) {
                     StartCoroutine(DoForceLinger(col, dir));
                 }
             }
