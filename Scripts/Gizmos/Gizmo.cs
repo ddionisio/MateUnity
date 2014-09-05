@@ -36,5 +36,45 @@ namespace M8 {
             Gizmos.DrawRay(pos + direction, right * arrowHeadLength);
             Gizmos.DrawRay(pos + direction, left * arrowHeadLength);
         }
+
+        public static void DrawWireCube(Vector3 position, Vector3 size) {
+            var half = size / 2;
+            // draw front
+            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, half.z), position + new Vector3(half.x, -half.y, half.z));
+            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, half.z), position + new Vector3(-half.x, half.y, half.z));
+            Gizmos.DrawLine(position + new Vector3(half.x, half.y, half.z), position + new Vector3(half.x, -half.y, half.z));
+            Gizmos.DrawLine(position + new Vector3(half.x, half.y, half.z), position + new Vector3(-half.x, half.y, half.z));
+            // draw back
+            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, -half.z), position + new Vector3(half.x, -half.y, -half.z));
+            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, -half.z), position + new Vector3(-half.x, half.y, -half.z));
+            Gizmos.DrawLine(position + new Vector3(half.x, half.y, -half.z), position + new Vector3(half.x, -half.y, -half.z));
+            Gizmos.DrawLine(position + new Vector3(half.x, half.y, -half.z), position + new Vector3(-half.x, half.y, -half.z));
+            // draw corners
+            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, -half.z), position + new Vector3(-half.x, -half.y, half.z));
+            Gizmos.DrawLine(position + new Vector3(half.x, -half.y, -half.z), position + new Vector3(half.x, -half.y, half.z));
+            Gizmos.DrawLine(position + new Vector3(-half.x, half.y, -half.z), position + new Vector3(-half.x, half.y, half.z));
+            Gizmos.DrawLine(position + new Vector3(half.x, half.y, -half.z), position + new Vector3(half.x, half.y, half.z));
+        }
+
+        public static void DrawWireCube(Transform t, Vector3 center, Vector3 size) {
+            Matrix4x4 mtx = t.localToWorldMatrix;
+
+            var half = size / 2;
+            // draw front
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, half.z)));
+            // draw back
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, -half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, -half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, -half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, -half.z)));
+            // draw corners
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, half.z)));
+        }
     }
 }
