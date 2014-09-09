@@ -68,6 +68,18 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         mValuesSnapshot = null;
     }
 
+    public void SnapshotPreserve(string key) {
+        if(mValuesSnapshot != null) {
+            object val;
+            if(mValues.TryGetValue(key, out val)) {
+                if(mValuesSnapshot.ContainsKey(key))
+                    mValuesSnapshot[key] = val;
+                else
+                    mValuesSnapshot.Add(key, val);
+            }
+        }
+    }
+
     public virtual void Load() {
         Data[] dat;
 
