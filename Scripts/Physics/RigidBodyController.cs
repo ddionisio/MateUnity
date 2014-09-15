@@ -52,6 +52,7 @@ public class RigidBodyController : MonoBehaviour {
     public float slopLimit = 50.0f; //if we are standing still and slope is high, just use groundDrag, also determines collideflag below
     public float aboveLimit = 145.0f; //determines collideflag above, should be > 90, around 140'ish
     public float slideLimit = 80.0f;
+    public bool slideDisable;
 
     public event CallbackEvent waterEnterCallback;
     public event CallbackEvent waterExitCallback;
@@ -754,10 +755,10 @@ public class RigidBodyController : MonoBehaviour {
             CollisionFlags flag = inf.flag;
 
             mCollFlags |= inf.flag;
-
-            //sliding
+                        
             if(flag == CollisionFlags.Below || flag == CollisionFlags.Sides) {
-                if(!groundNoSlope) {
+                //sliding
+                if(!(slideDisable || groundNoSlope)) {
                     float a = Vector3.Angle(up, n);
                     mIsSlopSlide = a > slopLimit && a <= slideLimit;
                     if(mIsSlopSlide) {
