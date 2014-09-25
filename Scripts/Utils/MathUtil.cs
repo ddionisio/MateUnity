@@ -10,6 +10,17 @@ namespace M8 {
 
         public const float TwoPI = 2.0f * Mathf.PI;
 
+        //------------- Interpolates ---------------
+
+        /// <summary>
+        /// Cosine interpolation
+        /// </summary>
+        public static float Clerp(float start, float end, float t) {
+            float ft = t * Mathf.PI;
+            float f = (1.0f - Mathf.Cos(ft))*0.5f;
+            return start*(1.0f-f) + end*f;
+        }
+
         //-------------- 2D --------------
 
         public static void Limit(ref Vector2 v, float limit) {

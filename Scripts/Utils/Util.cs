@@ -15,6 +15,10 @@ namespace M8 {
             col = index % numCols;
         }
 
+        public static int CellToIndex(int dep, int row, int col, int numCols, int numRows) {
+            return dep*numRows*numCols + row*numCols + col;
+        }
+
         public static int FlagSet(int data, int mask, bool set) {
             return set ? data | mask : data & (~mask);
         }
