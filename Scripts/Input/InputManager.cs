@@ -5,6 +5,7 @@ using System.Collections.Generic;
 //generalized input handling, useful for porting to non-unity conventions (e.g. Ouya)
 [AddComponentMenu("M8/Core/InputManager")]
 public class InputManager : MonoBehaviour {
+    public const int PlayerDefault = 0;
     public const int MaxPlayers = 8;
     public const int ActionInvalid = -1;
 
@@ -491,16 +492,6 @@ public class InputManager : MonoBehaviour {
         mButtonCallSetQueueCount = 0;
     }
 
-    /// <summary>
-    ///	Call this during game initialization to allow proper display of input in text
-    /// </summary>
-    /// <param name="count">Count.</param>
-    public void RegisterInputActionLocalize(int count) {
-        for(int i = 0; i < count; i++) {
-            GameLocalize.instance.RegisterParam("input_"+i, OnTextParam);
-        }
-    }
-
     //implements
 
     protected virtual float ProcessAxis(Key key, float deadZone, bool forceRaw) {
@@ -562,10 +553,15 @@ public class InputManager : MonoBehaviour {
                 }
             }
 
+            //set bindings
             mBinds = new BindData[highestActionInd + 1];
             foreach(KeyValuePair<int, BindData> pair in binds) {
                 mBinds[pair.Key] = pair.Value;
             }
+
+            //register input actions to localizer
+            for(int i = 0; i <= highestActionInd; i++)
+                GameLocalize.instance.RegisterParam("input_"+i, OnTextParam);
 
             //load user config binds
             LoadBinds();
