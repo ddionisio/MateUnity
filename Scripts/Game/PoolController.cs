@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 [AddComponentMenu("M8/Game/PoolController")]
 public class PoolController : MonoBehaviour {
+    public const string OnSpawnMessage = "OnSpawned";
+    public const string OnDespawnMessage = "OnDespawned";
+
     [System.Serializable]
     public class FactoryData {
         public Transform template = null;
@@ -13,39 +16,41 @@ public class PoolController : MonoBehaviour {
 
         public Transform defaultParent = null;
 
-        private List<Transform> available;
+        private List<PoolDataController> mActives;
+        private List<PoolDataController> mAvailable;
 
-        private int allocateCounter = 0;
+        private Transform mInactiveHolder;
 
-        private Transform poolHolder;
+        private int mNameHolder = 0;
+        private int mCapacity = 0;
 
-        private int nameCounter = 0;
-        private int capacity = 0;
+        public int availableCount { get { return mAvailable.Count; } }
 
-        public int availableCount { get { return available.Count; } }
+        public int capacityCount { get { return mCapacity; } }
 
-        public int capacityCount { get { return capacity; } }
+        public List<PoolDataController> actives { get { return mActives; } }
 
-        public void Init(string group, Transform poolHolder) {
-            this.poolHolder = poolHolder;
+        public void Init(string group, Transform inactiveHolder) {
+            this.mInactiveHolder = inactiveHolder;
 
-            nameCounter = 0;
+            mNameHolder = 0;
 
-            available = new List<Transform>(maxCapacity);
+            mActives = new List<PoolDataController>(maxCapacity);
+            mAvailable = new List<PoolDataController>(maxCapacity);
             Expand(group, startCapacity);
         }
 
         public void Expand(string group, int num) {
-            capacity += num;
+            mCapacity += num;
 
-            if(capacity > maxCapacity)
-                maxCapacity = capacity;
+            if(mCapacity > maxCapacity)
+                maxCapacity = mCapacity;
 
             for(int i = 0; i < num; i++) {
                 //PoolDataController
                 Transform t = (Transform)Object.Instantiate(template);
 
-                t.parent = poolHolder;
+                t.parent = mInactiveHolder;
                 t.localPosition = Vector3.zero;
 
                 PoolDataController pdc = t.GetComponent<PoolDataController>();
@@ -56,21 +61,29 @@ public class PoolController : MonoBehaviour {
                 pdc.group = group;
                 pdc.factoryKey = template.name;
 
-                available.Add(t);
+                mAvailable.Add(pdc);
             }
         }
 
-        public void Release(Transform t) {
-            t.parent = poolHolder;
+        /// <summary>
+        /// Only ReleaseAll and ReleaseAllByType should set removeFromActive to false
+        /// </summary>
+        public void Release(PoolDataController pdc, bool removeFromActive = true) {
+            pdc.claimed = true;
+
+            Transform t = pdc.transform;
+            t.parent = mInactiveHolder;
             t.localPosition = Vector3.zero;
 
-            available.Add(t);
-            allocateCounter--;
+            if(removeFromActive)
+                mActives.Remove(pdc);
+
+            mAvailable.Add(pdc);
         }
 
         public Transform Allocate(string group, string name, Transform parent) {
-            if(available.Count == 0) {
-                if(allocateCounter + 1 > maxCapacity) {
+            if(mAvailable.Count == 0) {
+                if(mActives.Count + 1 > maxCapacity) {
                     Debug.LogWarning(template.name + " is expanding beyond max capacity: " + maxCapacity);
 
                     Expand(group, maxCapacity);
@@ -80,29 +93,29 @@ public class PoolController : MonoBehaviour {
                 }
             }
 
-            Transform t = available[available.Count - 1];
+            PoolDataController pdc = mAvailable[mAvailable.Count - 1];
 
-            available.RemoveAt(available.Count - 1);
+            mAvailable.RemoveAt(mAvailable.Count - 1);
 
-            t.GetComponent<PoolDataController>().claimed = false;
+            pdc.claimed = false;
 
-            t.name = string.IsNullOrEmpty(name) ? template.name + (nameCounter++) : name;
+            Transform t = pdc.transform;
+            t.name = string.IsNullOrEmpty(name) ? template.name + (mNameHolder++) : name;
             t.parent = parent == null ? defaultParent : parent;
             t.localScale = Vector3.one;
 
             t.gameObject.SetActive(true);
 
-            allocateCounter++;
+            mActives.Add(pdc);
 
             return t;
         }
 
         public void DeInit() {
-            available.Clear();
+            mActives.Clear();
+            mAvailable.Clear();
 
-            poolHolder = null;
-
-            allocateCounter = 0;
+            mInactiveHolder = null;
         }
     }
 
@@ -121,6 +134,20 @@ public class PoolController : MonoBehaviour {
 
     private Dictionary<string, FactoryData> mFactory;
 
+    /// <summary>
+    /// Create a new pool. If given group already exists, then it will return null.
+    /// Remember to add new types into this pool.
+    /// </summary>
+    public static PoolController CreatePool(string group) {
+        if(mControllers.ContainsKey(group)) {
+            Debug.LogWarning("Pool already exists: "+group);
+            return null;
+        }
+
+        GameObject go = new GameObject(group);
+        return go.AddComponent<PoolController>();
+    }
+    
     /// <summary>
     /// Group name is based on the name of the game object with the PoolController component
     /// </summary>
@@ -226,8 +253,40 @@ public class PoolController : MonoBehaviour {
         }
     }
 
-    public FactoryData[] types {
-        get { return factory; }
+
+    //////////////////////////////////////////////////////////
+    // Methods
+
+
+    /// <summary>
+    /// Add a new type into this pool.  The type name is based on template's name.  If template
+    /// already exists (via name), then type will not be added.  Returns true if successfully added.
+    /// </summary>
+    public bool AddType(Transform template, int startCapacity, int maxCapacity, Transform defaultParent = null) {
+        if(mFactory.ContainsKey(template.name)) {
+            Debug.LogWarning("Template already exists: "+template.name);
+            return false;
+        }
+
+        FactoryData newData = new FactoryData();
+        newData.template = template;
+        newData.startCapacity = startCapacity;
+        newData.maxCapacity = maxCapacity;
+        newData.defaultParent = defaultParent;
+
+        newData.Init(group, poolHolder);
+
+        mFactory.Add(template.name, newData);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Get the factory type of given GameObject.  If not found, returns empty string.
+    /// </summary>
+    public string GetFactoryType(GameObject go) {
+        PoolDataController pdc = go.GetComponent<PoolDataController>();
+        return pdc && pdc.group == group && mFactory.ContainsKey(pdc.factoryKey) ? pdc.factoryKey : "";
     }
 
     public Transform GetDefaultParent(string type) {
@@ -250,7 +309,7 @@ public class PoolController : MonoBehaviour {
             if(entityRet != null) {
                 entityRet.transform.position = position;
 
-                entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
+                entityRet.SendMessage(OnSpawnMessage, null, SendMessageOptions.DontRequireReceiver);
             }
             else {
                 Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
@@ -274,7 +333,7 @@ public class PoolController : MonoBehaviour {
                 entityRet.transform.position = position;
                 entityRet.transform.rotation = rot;
 
-                entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
+                entityRet.SendMessage(OnSpawnMessage, null, SendMessageOptions.DontRequireReceiver);
             }
             else {
                 Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
@@ -295,7 +354,7 @@ public class PoolController : MonoBehaviour {
             entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
 
             if(entityRet != null) {
-                entityRet.SendMessage("OnSpawned", null, SendMessageOptions.DontRequireReceiver);
+                entityRet.SendMessage(OnSpawnMessage, null, SendMessageOptions.DontRequireReceiver);
             }
             else {
                 Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
@@ -309,21 +368,57 @@ public class PoolController : MonoBehaviour {
     }
 
     public void Release(Transform entity) {
-        entity.SendMessage("OnDespawned", null, SendMessageOptions.DontRequireReceiver);
+        entity.SendMessage(OnDespawnMessage, null, SendMessageOptions.DontRequireReceiver);
 
         PoolDataController pdc = entity.GetComponent<PoolDataController>();
-        if(pdc != null) {
+        if(pdc) {
             FactoryData dat;
-            if(mFactory.TryGetValue(pdc.factoryKey, out dat)) {
-                pdc.claimed = true;
-
-                dat.Release(entity);
-            }
+            if(mFactory.TryGetValue(pdc.factoryKey, out dat))
+                dat.Release(pdc);
+            else
+                Debug.LogWarning("Unable to find type: "+pdc.factoryKey+" in "+group+", failed to release.");
         }
-        else { //not in the pool, just kill it
+        else //not in the pool, just kill it
             Object.Destroy(entity.gameObject);
-            //StartCoroutine(DestroyEntityDelay(entity.gameObject));
+    }
+
+    /// <summary>
+    /// Releases all currently spawned objects of all types.
+    /// </summary>
+    public void ReleaseAll() {
+        foreach(KeyValuePair<string, FactoryData> itm in mFactory) {
+            FactoryData factory = itm.Value;
+
+            for(int i = 0; i < factory.actives.Count; i++) {
+                PoolDataController pdc = factory.actives[i];
+
+                pdc.SendMessage(OnDespawnMessage, null, SendMessageOptions.DontRequireReceiver);
+
+                factory.Release(pdc, false);
+            }
+
+            factory.actives.Clear();
         }
+    }
+
+    /// <summary>
+    /// Release all currently spawned objects based on given type.
+    /// </summary>
+    public void ReleaseAllByType(string type) {
+        FactoryData factory;
+        if(mFactory.TryGetValue(type, out factory)) {
+            for(int i = 0; i < factory.actives.Count; i++) {
+                PoolDataController pdc = factory.actives[i];
+
+                pdc.SendMessage(OnDespawnMessage, null, SendMessageOptions.DontRequireReceiver);
+
+                factory.Release(pdc, false);
+            }
+
+            factory.actives.Clear();
+        }
+        else
+            Debug.LogWarning("Unable to find type: "+type);
     }
 
     public int CapacityCount(string type) {
@@ -350,14 +445,6 @@ public class PoolController : MonoBehaviour {
             dat.Expand(group, amount);
         }
     }
-
-    /*IEnumerator DestroyEntityDelay(GameObject go) {
-        yield return new WaitForFixedUpdate();
-
-        Object.Destroy(go);
-
-        yield break;
-    }*/
 
     void OnDestroy() {
         if(mControllers != null) {
@@ -386,14 +473,22 @@ public class PoolController : MonoBehaviour {
             if(_persistent)
                 DontDestroyOnLoad(gameObject);
 
+            if(poolHolder == null) {
+                GameObject holderGO = new GameObject("holder");
+                poolHolder = holderGO.transform;
+                poolHolder.parent = transform;
+            }
+
             poolHolder.gameObject.SetActive(false);
 
             //generate cache and such
-            mFactory = new Dictionary<string, FactoryData>(factory.Length);
-            foreach(FactoryData factoryData in factory) {
-                factoryData.Init(group, poolHolder);
+            if(factory != null) {
+                mFactory = new Dictionary<string, FactoryData>(factory.Length);
+                foreach(FactoryData factoryData in factory) {
+                    factoryData.Init(group, poolHolder);
 
-                mFactory.Add(factoryData.template.name, factoryData);
+                    mFactory.Add(factoryData.template.name, factoryData);
+                }
             }
         }
         else {
