@@ -22,12 +22,8 @@ Basic Framework would be something like this:
         base.OnDestroy();
     }
 
-    public override void SpawnFinish() {
-        //start ai, player control, etc
-    }
-
     protected override void SpawnStart() {
-        //initialize some things
+         //start ai, player control, etc
     }
 
     protected override void Awake() {
@@ -51,7 +47,7 @@ public class EntityBase : MonoBehaviour {
     public delegate void OnGenericCall(EntityBase ent);
     public delegate void OnSetBool(EntityBase ent, bool b);
 
-    public float spawnDelay = 0.1f;
+    public float spawnDelay = 0.0f;
 
     /// <summary>
     /// if we want FSM/other stuff to activate on start (when placing entities on scene).
@@ -73,7 +69,6 @@ public class EntityBase : MonoBehaviour {
 #endif
 
     private bool mDoSpawnOnWake = false;
-    private bool mAutoSpawnFinish = true;
 
     private byte mStartedCounter = 0;
 
@@ -134,14 +129,6 @@ public class EntityBase : MonoBehaviour {
         get { return mFSM; }
     }
 #endif
-
-    /// <summary>
-    /// if true, SpawnFinish is called after SpawnStart based on spawnDelay, this is not used if there is an FSM
-    /// </summary>
-    public bool autoSpawnFinish {
-        get { return mAutoSpawnFinish; }
-        set { mAutoSpawnFinish = value; }
-    }
 
     public int state {
         get { return mState; }
@@ -220,12 +207,6 @@ public class EntityBase : MonoBehaviour {
                 Destroy(gameObject);
             }*/
         }
-    }
-
-    /// <summary>
-    /// This is to tell the entity that spawning has finished. Use this to start any motion, etc.
-    /// </summary>
-    public virtual void SpawnFinish() {
     }
 
     protected virtual void OnDespawned() {
@@ -367,7 +348,10 @@ public class EntityBase : MonoBehaviour {
         if(mFSM != null) {
             mFSM.enabled = true;
 
-            yield return new WaitForFixedUpdate();
+            if(spawnDelay > 0.0f)
+                yield return new WaitForSeconds(spawnDelay);
+            else
+                yield return null;
 
             SpawnStart();
 
@@ -378,43 +362,31 @@ public class EntityBase : MonoBehaviour {
             mFSM.SendEvent(EntityEvent.Start);
         }
         else {
-            yield return new WaitForFixedUpdate();
+            if(spawnDelay > 0.0f)
+                yield return new WaitForSeconds(spawnDelay);
+            else
+                yield return null;
 
             SpawnStart();
 
             if(spawnCallback != null) {
                 spawnCallback(this);
             }
-
-            if(autoSpawnFinish) {
-                if(spawnDelay > 0.0f) {
-                    yield return new WaitForSeconds(spawnDelay);
-                }
-
-                SpawnFinish();
-            }
         }
 #else
-        yield return new WaitForFixedUpdate();
+        if(spawnDelay > 0.0f)
+            yield return new WaitForSeconds(spawnDelay);
+        else
+            yield return null;
 
         SpawnStart();
 
         if(spawnCallback != null) {
             spawnCallback(this);
         }
-
-        if(autoSpawnFinish) {
-            if(spawnDelay > 0.0f) {
-                yield return new WaitForSeconds(spawnDelay);
-            }
-
-            SpawnFinish();
-        }
 #endif
 
         mStartedCounter = 2;
-
-        yield break;
     }
 
     IEnumerator DoSpawn() {
@@ -426,7 +398,10 @@ public class EntityBase : MonoBehaviour {
             mFSM.enabled = true;
 
             //allow fsm to boot up, then tell it to spawn
-            yield return new WaitForFixedUpdate();
+            if(spawnDelay > 0.0f)
+                yield return new WaitForSeconds(spawnDelay);
+            else
+                yield return null;
 
             SpawnStart();
 
@@ -437,42 +412,30 @@ public class EntityBase : MonoBehaviour {
             mFSM.SendEvent(EntityEvent.Spawn);
         }
         else {
-            yield return new WaitForFixedUpdate();
+            if(spawnDelay > 0.0f)
+                yield return new WaitForSeconds(spawnDelay);
+            else
+                yield return null;
 
             SpawnStart();
 
             if(spawnCallback != null) {
                 spawnCallback(this);
             }
-
-            if(autoSpawnFinish) {
-                if(spawnDelay > 0.0f) {
-                    yield return new WaitForSeconds(spawnDelay);
-                }
-
-                SpawnFinish();
-            }
         }
 #else
-         yield return new WaitForFixedUpdate();
+        if(spawnDelay > 0.0f)
+            yield return new WaitForSeconds(spawnDelay);
+        else
+            yield return null;
 
         SpawnStart();
 
         if(spawnCallback != null) {
             spawnCallback(this);
         }
-
-        if(autoSpawnFinish) {
-            if(spawnDelay > 0.0f) {
-                yield return new WaitForSeconds(spawnDelay);
-            }
-
-            SpawnFinish();
-        }
 #endif
 
         mStartedCounter = 2;
-
-        yield break;
     }
 }
