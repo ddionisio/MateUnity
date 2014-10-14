@@ -111,8 +111,8 @@ public class GameLocalize : MonoBehaviour {
         TableData dat = tables[langInd];
 
         if(dat.file) {
-            fastJSON.JSON.Instance.Parameters.UseExtensions = false;
-            List<Entry> tableEntries = fastJSON.JSON.Instance.ToObject<List<Entry>>(dat.file.text);
+            fastJSON.JSON.Parameters.UseExtensions = false;
+            List<Entry> tableEntries = fastJSON.JSON.ToObject<List<Entry>>(dat.file.text);
 
             mTable = new Dictionary<string, string>(tableEntries.Count);
             mTableParams = new Dictionary<string, string[]>(tableEntries.Count);
@@ -134,7 +134,7 @@ public class GameLocalize : MonoBehaviour {
             }
 
             if(platform != null) {
-                List<Entry> platformEntries = fastJSON.JSON.Instance.ToObject<List<Entry>>(platform.file.text);
+                List<Entry> platformEntries = fastJSON.JSON.ToObject<List<Entry>>(platform.file.text);
 
                 foreach(Entry platformEntry in platformEntries) {
                     if(mTable.ContainsKey(platformEntry.key)) {

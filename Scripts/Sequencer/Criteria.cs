@@ -65,9 +65,9 @@ public abstract class Criteria {
 	private Eval mEval = Eval.True;
 	
 	public static Criteria[] LoadCriterias(string data) {
-		JSON.Instance.Parameters.UseExtensions = true;
+		JSON.Parameters.UseExtensions = true;
 		
-		List<Criteria> criterias = JSON.Instance.ToObject<List<Criteria>>(data);
+		List<Criteria> criterias = JSON.ToObject<List<Criteria>>(data);
 		
 		return criterias.ToArray();
 	}

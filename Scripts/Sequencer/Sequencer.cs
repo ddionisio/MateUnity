@@ -55,14 +55,14 @@ public class Sequencer {
 	
 	
 	public static Dictionary<string, Sequencer> Load(StateData[] sequences) {
-		JSON.Instance.Parameters.UseExtensions = true;
+		JSON.Parameters.UseExtensions = true;
 		
 		Dictionary<string, Sequencer> ret = new Dictionary<string, Sequencer>(sequences.Length);
 		
 		foreach(StateData dat in sequences) {
 			if(dat.source != null) {
 				//load file data
-				SequencerFile sequenceFile = JSON.Instance.ToObject<SequencerFile>(dat.source.text);
+				SequencerFile sequenceFile = JSON.ToObject<SequencerFile>(dat.source.text);
 				
 				//construct sequencer
 				ret[dat.name] = new Sequencer(sequenceFile);

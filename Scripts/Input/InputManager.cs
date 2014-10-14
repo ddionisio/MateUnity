@@ -248,8 +248,8 @@ public class InputManager : MonoBehaviour {
     /// If deletePrefs = true, then remove custom binds from prefs.
     /// </summary>
     public void RevertBinds(bool deletePrefs) {
-        fastJSON.JSON.Instance.Parameters.UseExtensions = false;
-        List<Bind> keys = fastJSON.JSON.Instance.ToObject<List<Bind>>(config.text);
+        fastJSON.JSON.Parameters.UseExtensions = false;
+        List<Bind> keys = fastJSON.JSON.ToObject<List<Bind>>(config.text);
 
         foreach(Bind key in keys) {
             if(key != null && key.keys != null) {
@@ -539,8 +539,8 @@ public class InputManager : MonoBehaviour {
         if(config != null) {
             Dictionary<int, BindData> binds = new Dictionary<int, BindData>();
 
-            fastJSON.JSON.Instance.Parameters.UseExtensions = false;
-            List<Bind> keys = fastJSON.JSON.Instance.ToObject<List<Bind>>(config.text);
+            fastJSON.JSON.Parameters.UseExtensions = false;
+            List<Bind> keys = fastJSON.JSON.ToObject<List<Bind>>(config.text);
 
             int highestActionInd = 0;
 

@@ -210,8 +210,8 @@ namespace M8.Editor {
                 //load from file
                 if(refreshBinds && mTextFile.text.Length > 0) {
                     //load data
-                    fastJSON.JSON.Instance.Parameters.UseExtensions = false;
-                    List<InputManager.Bind> loadBinds = fastJSON.JSON.Instance.ToObject<List<InputManager.Bind>>(mTextFile.text);
+                    fastJSON.JSON.Parameters.UseExtensions = false;
+                    List<InputManager.Bind> loadBinds = fastJSON.JSON.ToObject<List<InputManager.Bind>>(mTextFile.text);
                     foreach(InputManager.Bind bind in loadBinds) {
                         if(bind.action < mBinds.Length) {
                             mBinds[bind.action].bind = bind;
@@ -317,7 +317,7 @@ namespace M8.Editor {
                 GUILayout.EndScrollView();
 
                 if(GUILayout.Button("Save")) {
-                    fastJSON.JSON.Instance.Parameters.UseExtensions = false;
+                    fastJSON.JSON.Parameters.UseExtensions = false;
 
                     List<InputManager.Bind> saveBinds = new List<InputManager.Bind>(mBinds.Length);
 
@@ -327,7 +327,7 @@ namespace M8.Editor {
                         saveBinds.Add(mBinds[i].bind);
                     }
 
-                    string output = fastJSON.JSON.Instance.ToJSON(saveBinds);
+                    string output = fastJSON.JSON.ToJSON(saveBinds);
 
                     File.WriteAllText(mTextFilePath, output);
 
