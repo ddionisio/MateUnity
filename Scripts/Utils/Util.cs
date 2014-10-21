@@ -40,6 +40,18 @@ namespace M8 {
         }
 
 
+        public static T GetOrAddComponent<T>(Component c) where T : Component {
+            return GetOrAddComponent<T>(c.gameObject);
+        }
+
+        public static T GetOrAddComponent<T>(GameObject go) where T : Component {
+            T ret = go.GetComponent<T>();
+            if(ret == null)
+                ret = go.AddComponent<T>();
+
+            return ret;
+        }
+
         static int CameraCompareDepth(Camera c1, Camera c2) {
             return Mathf.RoundToInt(c1.depth - c2.depth);
         }
