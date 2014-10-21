@@ -313,7 +313,7 @@ namespace M8 {
         }
 
         IEnumerator DoLoading() {
-            while(mLoadPackageQueue.Count > 0 && mRequestQueue.Count > 0) {
+            while(mLoadPackageQueue.Count > 0 || mRequestQueue.Count > 0) {
                 //load all packages
                 if(mLoadPackageQueue.Count > 0) {
                     Package pkg = mLoadPackageQueue.Dequeue();
@@ -340,6 +340,7 @@ namespace M8 {
                 else if(mRequestQueue.Count > 0) { 
                     RequestProcess requestProc = mRequestQueue.Dequeue();
                     ResourceLoader.Request request = requestProc.request;
+                    bool processed = false;
 
                     //grab appropriate package
                     if(string.IsNullOrEmpty(requestProc.group)) {
@@ -351,6 +352,7 @@ namespace M8 {
                             if(pkg.loader.status == ResourceLoader.Status.Loaded) {
                                 if(pkg.loader.ProcessRequest(request)) {
                                     pkg.processedRequests.Add(request.path, request); //done
+                                    processed = true;
                                     break;
                                 }
                                 else
@@ -361,10 +363,12 @@ namespace M8 {
                         }
 
                         //not yet processed, try again later once everything is loaded
-                        if(errorCount < mPackages.Count)
-                            mRequestQueue.Enqueue(requestProc);
+                        if(errorCount < mPackages.Count) {
+                            if(!processed)
+                                mRequestQueue.Enqueue(requestProc);
+                        }
                         else
-                            request.LogError();
+                            Debug.LogError(request.error);
                     }
                     else {
                         List<Package> packageRefs;
@@ -377,6 +381,7 @@ namespace M8 {
                                 if(pkg.loader.status == ResourceLoader.Status.Loaded) {
                                     if(pkg.loader.ProcessRequest(request)) {
                                         pkg.processedRequests.Add(request.path, request); //done
+                                        processed = true;
                                         break;
                                     }
                                     else
@@ -387,15 +392,17 @@ namespace M8 {
                             }
 
                             //not yet processed, try again later once everything is loaded
-                            if(errorCount < packageRefs.Count)
-                                mRequestQueue.Enqueue(requestProc);
+                            if(errorCount < packageRefs.Count) {
+                                if(!processed)
+                                    mRequestQueue.Enqueue(requestProc);
+                            }
                             else
-                                request.LogError();
+                                Debug.LogError(request.error);
                         }
                         else { //no longer exists??
                             Debug.LogError("Group not found: "+requestProc.group);
                             ResourceLoader.RequestError(request, ResourceLoader.ErrorCode.InvalidPackage);
-                            request.LogError();
+                            Debug.LogError(request.error);
                         }
                     }
                 }

@@ -19,7 +19,7 @@ namespace M8 {
             Error
         }
 
-        public abstract class Request : IEnumerator {
+        public abstract class Request {
             public System.Type type { get; private set; }
 
             /// <summary>
@@ -32,22 +32,19 @@ namespace M8 {
             
             public Request(string aPath, System.Type aType) { path = aPath; type = aType; errorCode = ErrorCode.None; }
 
-            public void LogError() {
-                switch(errorCode) {
-                    case ErrorCode.FileNotExist:
-                        Debug.LogError("File does not exist: "+path+" type: "+type);
-                        break;
-                    case ErrorCode.InvalidPackage:
-                        Debug.LogError("Invalid package for: "+path+" type: "+type);
-                        break;
+            public string error {
+                get {
+                    switch(errorCode) {
+                        case ErrorCode.FileNotExist:
+                            return "File does not exist: "+path+" type: "+type;
+
+                        case ErrorCode.InvalidPackage:
+                            return "Invalid package for: "+path+" type: "+type;
+                    }
+
+                    return "";
                 }
             }
-            
-            object IEnumerator.Current { get { return data; } }
-
-            bool IEnumerator.MoveNext() { return isDone; }
-
-            void IEnumerator.Reset() { }
         }
 
         protected interface IRequestProcess {
