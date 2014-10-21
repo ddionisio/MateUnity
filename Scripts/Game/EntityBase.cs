@@ -1,12 +1,7 @@
-//#define PLAYMAKER
 //#define POOLMANAGER
 
 using UnityEngine;
 using System.Collections;
-
-#if PLAYMAKER
-using HutongGames.PlayMaker;
-#endif
 
 /*
 Basic Framework would be something like this:
@@ -58,15 +53,11 @@ public class EntityBase : MonoBehaviour {
     public EntityActivator activator;
 
     public event OnGenericCall setStateCallback;
-    public event OnGenericCall spawnCallback;
+    public event OnGenericCall spawnCallback; //called after a slight delay during OnSpawned (at least after one fixed-update)
     public event OnGenericCall releaseCallback;
 
     private int mState = StateInvalid;
     private int mPrevState = StateInvalid;
-
-#if PLAYMAKER
-    private PlayMakerFSM mFSM;
-#endif
 
     private bool mDoSpawnOnWake = false;
 
@@ -124,12 +115,6 @@ public class EntityBase : MonoBehaviour {
         get { return mDoSpawnOnWake; }
     }
 
-#if PLAYMAKER
-    public PlayMakerFSM FSM {
-        get { return mFSM; }
-    }
-#endif
-
     public int state {
         get { return mState; }
 
@@ -145,10 +130,6 @@ public class EntityBase : MonoBehaviour {
                 }
 
                 StateChanged();
-#if PLAYMAKER
-                if(mFSM != null)
-                    mFSM.SendEvent(EntityEvent.StateChanged);
-#endif
             }
         }
     }
@@ -210,12 +191,6 @@ public class EntityBase : MonoBehaviour {
     }
 
     protected virtual void OnDespawned() {
-#if PLAYMAKER
-        if(mFSM != null) {
-            mFSM.enabled = false;
-        }
-#endif
-
         if(activator != null && activator.defaultParent == transform) {
             activator.Release(false);
         }
@@ -240,22 +215,9 @@ public class EntityBase : MonoBehaviour {
             mDoSpawnOnWake = false;
             StartCoroutine(DoSpawn());
         }
-        else {
-#if PLAYMAKER
-            if(mFSM != null && mStartedCounter > 0) {
-                //resume FSM
-                mFSM.Fsm.Event(EntityEvent.Wake);
-            }
-#endif
-        }
     }
 
     protected virtual void ActivatorSleep() {
-#if PLAYMAKER
-        if(mFSM != null) {
-            mFSM.Fsm.Event(EntityEvent.Sleep);
-        }
-#endif
     }
 
     protected virtual void OnDestroy() {
@@ -287,15 +249,6 @@ public class EntityBase : MonoBehaviour {
             activator.awakeCallback += ActivatorWakeUp;
             activator.sleepCallback += ActivatorSleep;
         }
-
-#if PLAYMAKER
-        //only start once we spawn
-        mFSM = GetComponent<PlayMakerFSM>();
-        if(mFSM != null) {
-            mFSM.Fsm.RestartOnEnable = false; //not when we want to sleep/wake
-            mFSM.enabled = false;
-        }
-#endif
     }
 
     // Use this for initialization
@@ -344,36 +297,6 @@ public class EntityBase : MonoBehaviour {
     }
 
     IEnumerator DoStart() {
-#if PLAYMAKER
-        if(mFSM != null) {
-            mFSM.enabled = true;
-
-            if(spawnDelay > 0.0f)
-                yield return new WaitForSeconds(spawnDelay);
-            else
-                yield return null;
-
-            SpawnStart();
-
-            if(spawnCallback != null) {
-                spawnCallback(this);
-            }
-
-            mFSM.SendEvent(EntityEvent.Start);
-        }
-        else {
-            if(spawnDelay > 0.0f)
-                yield return new WaitForSeconds(spawnDelay);
-            else
-                yield return null;
-
-            SpawnStart();
-
-            if(spawnCallback != null) {
-                spawnCallback(this);
-            }
-        }
-#else
         if(spawnDelay > 0.0f)
             yield return new WaitForSeconds(spawnDelay);
         else
@@ -384,46 +307,11 @@ public class EntityBase : MonoBehaviour {
         if(spawnCallback != null) {
             spawnCallback(this);
         }
-#endif
 
         mStartedCounter = 2;
     }
 
     IEnumerator DoSpawn() {
-#if PLAYMAKER
-        //start up
-        if(mFSM != null) {
-            //restart
-            mFSM.Fsm.Reinitialize();
-            mFSM.enabled = true;
-
-            //allow fsm to boot up, then tell it to spawn
-            if(spawnDelay > 0.0f)
-                yield return new WaitForSeconds(spawnDelay);
-            else
-                yield return null;
-
-            SpawnStart();
-
-            if(spawnCallback != null) {
-                spawnCallback(this);
-            }
-
-            mFSM.SendEvent(EntityEvent.Spawn);
-        }
-        else {
-            if(spawnDelay > 0.0f)
-                yield return new WaitForSeconds(spawnDelay);
-            else
-                yield return null;
-
-            SpawnStart();
-
-            if(spawnCallback != null) {
-                spawnCallback(this);
-            }
-        }
-#else
         if(spawnDelay > 0.0f)
             yield return new WaitForSeconds(spawnDelay);
         else
@@ -434,7 +322,6 @@ public class EntityBase : MonoBehaviour {
         if(spawnCallback != null) {
             spawnCallback(this);
         }
-#endif
 
         mStartedCounter = 2;
     }
