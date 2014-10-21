@@ -342,6 +342,8 @@ namespace M8 {
 
                 yield return null;
             }
+			
+			mPackageLoadAct = null;
         }
     }
 }
