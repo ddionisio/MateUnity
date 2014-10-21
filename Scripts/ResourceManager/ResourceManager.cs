@@ -65,8 +65,6 @@ namespace M8 {
         private struct RequestProcess {
             public string group; //if empty, find appropriate group
             public ResourceLoader.Request request;
-            public RequestCallback callback;
-            public object param;
         }
                 
         private static ResourceManager mInstance;
@@ -237,7 +235,7 @@ namespace M8 {
 
                 //add to process queue
                 ResourceLoader.Request request = ResourceLoader.CreateRequest(path, type);
-                mRequestQueue.Enqueue(new RequestProcess() { group=group, request=request, callback=null, param=null });
+                mRequestQueue.Enqueue(new RequestProcess() { group=group, request=request });
 
                 if(mLoadAct == null)
                     StartCoroutine(mLoadAct = DoLoading());
@@ -261,7 +259,7 @@ namespace M8 {
 
             //add to process queue
             ResourceLoader.Request request = ResourceLoader.CreateRequest(path, type);
-            mRequestQueue.Enqueue(new RequestProcess() { group="", request=request, callback=null, param=null });
+            mRequestQueue.Enqueue(new RequestProcess() { group="", request=request });
 
             if(mLoadAct == null)
                 StartCoroutine(mLoadAct = DoLoading());
@@ -342,7 +340,6 @@ namespace M8 {
                 else if(mRequestQueue.Count > 0) { 
                     RequestProcess requestProc = mRequestQueue.Dequeue();
                     ResourceLoader.Request request = requestProc.request;
-                    bool isProcessed = false;
 
                     //grab appropriate package
                     if(string.IsNullOrEmpty(requestProc.group)) {
@@ -354,7 +351,6 @@ namespace M8 {
                             if(pkg.loader.status == ResourceLoader.Status.Loaded) {
                                 if(pkg.loader.ProcessRequest(request)) {
                                     pkg.processedRequests.Add(request.path, request); //done
-                                    isProcessed = true;
                                     break;
                                 }
                                 else
@@ -367,10 +363,8 @@ namespace M8 {
                         //not yet processed, try again later once everything is loaded
                         if(errorCount < mPackages.Count)
                             mRequestQueue.Enqueue(requestProc);
-                        else {
+                        else
                             request.LogError();
-                            isProcessed = true; //report error to callback
-                        }
                     }
                     else {
                         List<Package> packageRefs;
@@ -383,7 +377,6 @@ namespace M8 {
                                 if(pkg.loader.status == ResourceLoader.Status.Loaded) {
                                     if(pkg.loader.ProcessRequest(request)) {
                                         pkg.processedRequests.Add(request.path, request); //done
-                                        isProcessed = true;
                                         break;
                                     }
                                     else
@@ -396,25 +389,13 @@ namespace M8 {
                             //not yet processed, try again later once everything is loaded
                             if(errorCount < packageRefs.Count)
                                 mRequestQueue.Enqueue(requestProc);
-                            else {
+                            else
                                 request.LogError();
-                                isProcessed = true; //report error to callback
-                            }
                         }
                         else { //no longer exists??
                             Debug.LogError("Group not found: "+requestProc.group);
                             ResourceLoader.RequestError(request, ResourceLoader.ErrorCode.InvalidPackage);
                             request.LogError();
-                            isProcessed = true; //report error to callback
-                        }
-                    }
-
-                    if(isProcessed) {
-                        //check if we want to wait for loading to complete
-                        if(requestProc.callback != null) {
-                            yield return request; //wait for completion
-
-                            requestProc.callback(request, requestProc.param);
                         }
                     }
                 }
