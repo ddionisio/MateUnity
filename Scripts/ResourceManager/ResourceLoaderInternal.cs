@@ -4,22 +4,7 @@ using System.Collections;
 
 namespace M8 {
     public class ResourceLoaderInternal : ResourceLoader {
-        private class RequestInternal : Request {
-            private ResourceRequest mReq;
-
-            public RequestInternal(string path, System.Type type) : base(path) {
-                mReq = Resources.LoadAsync(path, type);
-            }
-            public override bool isDone { get { return mReq.isDone; } }
-            public override object data { get { return mReq.asset; } }
-            public override string error { get { return ""; } }
-        }
-
         public ResourceLoaderInternal(string aRootPath) : base(aRootPath) {
-        }
-
-        public override bool ResourceExists(string path) {
-            return true; //why the fuck is there no Resources.Exists???
         }
 
         public override IEnumerator Load() {
@@ -31,15 +16,23 @@ namespace M8 {
             status = Status.Unloaded;
         }
 
-        public override Request RequestResource(string path, System.Type type) {
-            if(status == Status.Unloaded) return null;
-
-            return new RequestInternal(GetUnityPath(path, true), type);
+        public override void UnloadResource(object obj) {
+            Resources.UnloadAsset(obj as Object);
         }
 
-        public override void UnloadResource(object obj) {
-            if(status == Status.Loaded)
-                Resources.UnloadAsset(obj as Object);
+        public override bool ProcessRequest(Request req) {
+            RequestInternal ireq = (RequestInternal)req;
+
+            string path = GetUnityPath(req.path, true);
+
+            ResourceRequest resReq = Resources.LoadAsync(path, req.type);
+            if(resReq.isDone && resReq.asset == null) {
+                ireq.Error(ErrorCode.FileNotExist);
+                return false;
+            }
+
+            ireq.processor = new RequestProcessResource(resReq);
+            return true;
         }
     }
 }

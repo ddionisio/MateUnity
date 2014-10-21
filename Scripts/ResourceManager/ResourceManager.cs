@@ -17,6 +17,8 @@ namespace M8 {
             public string path;
         }
 
+        public delegate void RequestCallback(ResourceLoader.Request request, object param);
+
         //Used for loading up root packages at start
         public RootPackage[] rootPackages;
         public bool loadAtStart = true;
@@ -25,17 +27,17 @@ namespace M8 {
             public ResourceLoader loader { get; private set; }
             public int counter; //inc by groups using this package, once 0, it will be deleted
             public bool loadQueue; //set to true when in queue
-            public Dictionary<string, ResourceLoader.Request> requests { get; private set; } //files requested
+            public Dictionary<string, ResourceLoader.Request> processedRequests { get; private set; } //files requested and being processed or done
 
             public void Unload() {
                 //unload requested resources
-                foreach(KeyValuePair<string, ResourceLoader.Request> pair in requests) {
+                foreach(KeyValuePair<string, ResourceLoader.Request> pair in processedRequests) {
                     ResourceLoader.Request req = pair.Value;
                     if(req.isDone && req.data != null)
                         loader.UnloadResource(req.data);
                 }
 
-                requests.Clear();
+                processedRequests.Clear();
             }
 
             public Package(string path, LoaderType type) {
@@ -56,8 +58,15 @@ namespace M8 {
 
                 counter = 1;
                 loadQueue = false;
-                requests = new Dictionary<string, ResourceLoader.Request>();
+                processedRequests = new Dictionary<string, ResourceLoader.Request>();
             }
+        }
+
+        private struct RequestProcess {
+            public string group; //if empty, find appropriate group
+            public ResourceLoader.Request request;
+            public RequestCallback callback;
+            public object param;
         }
                 
         private static ResourceManager mInstance;
@@ -69,8 +78,9 @@ namespace M8 {
         private List<Package> mRoot = new List<Package>(); //list of reference to packages
 
         private Queue<Package> mLoadPackageQueue = new Queue<Package>();
+        private Queue<RequestProcess> mRequestQueue = new Queue<RequestProcess>();
 
-        private IEnumerator mPackageLoadAct;
+        private IEnumerator mLoadAct;
 
         public static ResourceManager instance { get { return mInstance; } }
 
@@ -131,16 +141,27 @@ namespace M8 {
                 mLoadPackageQueue.Enqueue(pkg);
             }
 
-            if(mPackageLoadAct == null)
-                StartCoroutine(mPackageLoadAct = DoPackageLoading());
+            if(mLoadAct == null)
+                StartCoroutine(mLoadAct = DoLoading());
         }
 
-        public void LoadAllGroups() {
-            string[] groups = new string[mGroups.Count];
-            mGroups.Keys.CopyTo(groups, 0);
+        /// <summary>
+        /// Load all packages that are not loaded, including root
+        /// </summary>
+        public void LoadAll() {
+            for(int i = 0; i < mPackages.Count; i++) {
+                Package pkg = mPackages[i];
 
-            for(int i = 0; i < groups.Length; i++)
-                LoadGroup(groups[i]);
+                //already loading or loaded?
+                if(pkg.loadQueue || pkg.loader.status == ResourceLoader.Status.Loaded || pkg.loader.status == ResourceLoader.Status.Loading)
+                    continue;
+
+                pkg.loadQueue = true;
+                mLoadPackageQueue.Enqueue(pkg);
+            }
+
+            if(mLoadAct == null)
+                StartCoroutine(mLoadAct = DoLoading());
         }
 
         /// <summary>
@@ -206,25 +227,22 @@ namespace M8 {
         public ResourceLoader.Request RequestResourceFrom(string group, string path, System.Type type) {
             List<Package> packageRefs;
             if(mGroups.TryGetValue(group, out packageRefs)) {
-                //check each package to see if this path exists
+                //check each package to see if this path is already processed
                 for(int i = packageRefs.Count-1; i >= 0; i--) {
                     Package pkg = packageRefs[i];
 
-                    //check if file is already requested
-                    if(pkg.requests.ContainsKey(path))
-                        return pkg.requests[path];
-
-                    //make sure it actually exists for this package
-                    if(pkg.loader.ResourceExists(path)) {
-                        ResourceLoader.Request request = pkg.loader.RequestResource(path, type);
-                        if(request != null) {
-                            pkg.requests.Add(path, request);
-                            return request;
-                        }
-                    }
+                    if(pkg.processedRequests.ContainsKey(path))
+                        return pkg.processedRequests[path];
                 }
 
-                Debug.LogError("Path not found: "+path+" in group: "+group);
+                //add to process queue
+                ResourceLoader.Request request = ResourceLoader.CreateRequest(path, type);
+                mRequestQueue.Enqueue(new RequestProcess() { group=group, request=request, callback=null, param=null });
+
+                if(mLoadAct == null)
+                    StartCoroutine(mLoadAct = DoLoading());
+
+                return request;
             }
             else
                 Debug.LogError("Group not found: "+group);
@@ -233,26 +251,22 @@ namespace M8 {
         }
 
         public ResourceLoader.Request RequestResource(string path, System.Type type) {
-            //check each package to see if this path exists
+            //check each package to see if this path is already processed
             for(int i = mPackages.Count-1; i >= 0; i--) {
                 Package pkg = mPackages[i];
 
-                //check if file is already requested
-                if(pkg.requests.ContainsKey(path))
-                    return pkg.requests[path];
-
-                //make sure it actually exists for this package
-                if(pkg.loader.ResourceExists(path)) {
-                    ResourceLoader.Request request = pkg.loader.RequestResource(path, type);
-                    if(request != null) {
-                        pkg.requests.Add(path, request);
-                        return request;
-                    }
-                }
+                if(pkg.processedRequests.ContainsKey(path))
+                    return pkg.processedRequests[path];
             }
 
-            Debug.LogError("Path not found: "+path);
-            return null;
+            //add to process queue
+            ResourceLoader.Request request = ResourceLoader.CreateRequest(path, type);
+            mRequestQueue.Enqueue(new RequestProcess() { group="", request=request, callback=null, param=null });
+
+            if(mLoadAct == null)
+                StartCoroutine(mLoadAct = DoLoading());
+
+            return request;
         }
 
         void OnDestroy() {
@@ -264,11 +278,11 @@ namespace M8 {
 
         void OnEnable() {
             if(mLoadPackageQueue.Count > 0)
-                StartCoroutine(mPackageLoadAct = DoPackageLoading());
+                StartCoroutine(mLoadAct = DoLoading());
         }
 
         void OnDisable() {
-            mPackageLoadAct = null;
+            mLoadAct = null;
         }
 
         void Awake() {
@@ -296,54 +310,119 @@ namespace M8 {
         }
 
         void Start() {
-            if(loadAtStart) {
-                //load root
-                for(int i = 0; i < mRoot.Count; i++) {
-                    Package pkg = mRoot[i];
-
-                    //already loading or loaded?
-                    if(pkg.loadQueue || pkg.loader.status == ResourceLoader.Status.Loaded || pkg.loader.status == ResourceLoader.Status.Loading)
-                        continue;
-
-                    pkg.loadQueue = true;
-                    mLoadPackageQueue.Enqueue(pkg);
-                }
-
-                if(mPackageLoadAct == null)
-                    StartCoroutine(mPackageLoadAct = DoPackageLoading());
-
-                //load groups
-                LoadAllGroups();
-            }
+            if(loadAtStart)
+                LoadAll();
         }
 
-        IEnumerator DoPackageLoading() {
-            while(mLoadPackageQueue.Count > 0) {
-                Package pkg = mLoadPackageQueue.Peek();
+        IEnumerator DoLoading() {
+            while(mLoadPackageQueue.Count > 0 && mRequestQueue.Count > 0) {
+                //load all packages
+                if(mLoadPackageQueue.Count > 0) {
+                    Package pkg = mLoadPackageQueue.Dequeue();
 
-                if(pkg.loadQueue) {
-                    pkg.loadQueue = false;
+                    if(pkg.loadQueue) {
+                        pkg.loadQueue = false;
 
-                    yield return StartCoroutine(pkg.loader.Load());
+                        //wait loading
+                        yield return StartCoroutine(mLoadAct = pkg.loader.Load());
 
-                    //done loading
-                    if(pkg.loader.status == ResourceLoader.Status.Error) {
-                        Debug.LogError("Error loading: "+pkg.loader.rootPath+" msg: "+pkg.loader.error);
-                        mPackages.Remove(pkg);
-                    }
-                    else if(pkg.counter <= 0) {
-                        //must have been requested to be removed
-                        pkg.Unload();
-                        mPackages.Remove(pkg);
+                        //done loading
+                        if(pkg.loader.status == ResourceLoader.Status.Error) {
+                            Debug.LogError("Error loading: "+pkg.loader.rootPath+" msg: "+pkg.loader.error);
+                            mPackages.Remove(pkg);
+                        }
+                        else if(pkg.counter <= 0) {
+                            //must have been requested to be removed
+                            pkg.Unload();
+                            mPackages.Remove(pkg);
+                        }
                     }
                 }
+                //load requests
+                else if(mRequestQueue.Count > 0) { 
+                    RequestProcess requestProc = mRequestQueue.Dequeue();
+                    ResourceLoader.Request request = requestProc.request;
+                    bool isProcessed = false;
 
-                mLoadPackageQueue.Dequeue();
+                    //grab appropriate package
+                    if(string.IsNullOrEmpty(requestProc.group)) {
+                        int errorCount = 0;
+                        for(int i = mPackages.Count-1; i >= 0; i--) {
+                            Package pkg = mPackages[i];
+
+                            //make sure package is loaded
+                            if(pkg.loader.status == ResourceLoader.Status.Loaded) {
+                                if(pkg.loader.ProcessRequest(request)) {
+                                    pkg.processedRequests.Add(request.path, request); //done
+                                    isProcessed = true;
+                                    break;
+                                }
+                                else
+                                    errorCount++;
+                            }
+                            else if(pkg.loader.status != ResourceLoader.Status.Loading)
+                                errorCount++; //package is unloaded or is somewhat invalid
+                        }
+
+                        //not yet processed, try again later once everything is loaded
+                        if(errorCount < mPackages.Count)
+                            mRequestQueue.Enqueue(requestProc);
+                        else {
+                            request.LogError();
+                            isProcessed = true; //report error to callback
+                        }
+                    }
+                    else {
+                        List<Package> packageRefs;
+                        if(mGroups.TryGetValue(requestProc.group, out packageRefs)) {
+                            int errorCount = 0;
+                            for(int i = packageRefs.Count-1; i >= 0; i--) {
+                                Package pkg = packageRefs[i];
+
+                                //make sure package is loaded
+                                if(pkg.loader.status == ResourceLoader.Status.Loaded) {
+                                    if(pkg.loader.ProcessRequest(request)) {
+                                        pkg.processedRequests.Add(request.path, request); //done
+                                        isProcessed = true;
+                                        break;
+                                    }
+                                    else
+                                        errorCount++;
+                                }
+                                else if(pkg.loader.status != ResourceLoader.Status.Loading)
+                                    errorCount++; //package is unloaded or is somewhat invalid
+                            }
+
+                            //not yet processed, try again later once everything is loaded
+                            if(errorCount < packageRefs.Count)
+                                mRequestQueue.Enqueue(requestProc);
+                            else {
+                                request.LogError();
+                                isProcessed = true; //report error to callback
+                            }
+                        }
+                        else { //no longer exists??
+                            Debug.LogError("Group not found: "+requestProc.group);
+                            ResourceLoader.RequestError(request, ResourceLoader.ErrorCode.InvalidPackage);
+                            request.LogError();
+                            isProcessed = true; //report error to callback
+                        }
+                    }
+
+                    if(isProcessed) {
+                        //check if we want to wait for loading to complete
+                        if(requestProc.callback != null) {
+                            yield return request; //wait for completion
+
+                            requestProc.callback(request, requestProc.param);
+                        }
+                    }
+                }
 
                 yield return null;
             }
 			
-			mPackageLoadAct = null;
+			mLoadAct = null;
         }
     }
 }

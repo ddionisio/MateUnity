@@ -14,15 +14,11 @@ namespace M8 {
             throw new System.NotImplementedException("Coming Soon!");
         }
 
-        public override bool ResourceExists(string path) {
-            throw new System.NotImplementedException("Coming Soon!");
-        }
-
-        public override Request RequestResource(string path, System.Type type) {
-            throw new System.NotImplementedException("Coming Soon!");
-        }
-
         public override void UnloadResource(object obj) {
+            throw new System.NotImplementedException("Coming Soon!");
+        }
+
+        public override bool ProcessRequest(Request req) {
             throw new System.NotImplementedException("Coming Soon!");
         }
     }
