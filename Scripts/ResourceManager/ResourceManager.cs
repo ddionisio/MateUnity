@@ -6,7 +6,6 @@ namespace M8 {
     public class ResourceManager : MonoBehaviour {
         public enum LoaderType {
             Internal, //load from Resources
-            LocalStream, //load from file
             LocalBundle, //load from asset bundle locally
             OnlineBundle //load from asset bundle url
         }
@@ -44,9 +43,6 @@ namespace M8 {
                 switch(type) {
                     case LoaderType.Internal:
                         loader = new ResourceLoaderInternal(path);
-                        break;
-                    case LoaderType.LocalStream:
-                        loader = new ResourceLoaderLocalStream(path);
                         break;
                     case LoaderType.LocalBundle:
                         loader = new ResourceLoaderLocalBundle(path);
