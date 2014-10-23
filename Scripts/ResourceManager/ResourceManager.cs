@@ -229,6 +229,12 @@ namespace M8 {
                         return pkg.processedRequests[path];
                 }
 
+                //check if already queued
+                foreach(RequestProcess rp in mRequestQueue) {
+                    if(rp.request.path == path && rp.group == group)
+                        return rp.request;
+                }
+
                 //add to process queue
                 ResourceLoader.Request request = ResourceLoader.CreateRequest(path, type);
                 mRequestQueue.Enqueue(new RequestProcess() { group=group, request=request });
@@ -251,6 +257,12 @@ namespace M8 {
 
                 if(pkg.processedRequests.ContainsKey(path))
                     return pkg.processedRequests[path];
+            }
+
+            //check if already queued
+            foreach(RequestProcess rp in mRequestQueue) {
+                if(rp.request.path == path)
+                    return rp.request;
             }
 
             //add to process queue

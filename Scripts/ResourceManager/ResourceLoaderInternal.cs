@@ -17,7 +17,10 @@ namespace M8 {
         }
 
         public override void UnloadResource(object obj) {
-            Resources.UnloadAsset(obj as Object);
+            if(obj is GameObject || obj is Component || obj is ScriptableObject || obj is AssetBundle)
+                return;
+            else
+                Resources.UnloadAsset(obj as Object);
         }
 
         public override bool ProcessRequest(Request req) {
