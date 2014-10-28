@@ -22,10 +22,10 @@ Shader "M8/Sprite/Diffuse"
 		Lighting Off
 		ZWrite Off
 		Fog { Mode Off }
-		Blend SrcAlpha OneMinusSrcAlpha
+		Blend One OneMinusSrcAlpha
 
 		CGPROGRAM
-		#pragma surface surf Lambert alpha vertex:vert
+		#pragma surface surf Lambert vertex:vert
 		#pragma multi_compile DUMMY PIXELSNAP_ON
 
 		sampler2D _MainTex;
@@ -51,7 +51,7 @@ Shader "M8/Sprite/Diffuse"
 		void surf (Input IN, inout SurfaceOutput o)
 		{
 			fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * IN.color;
-			o.Albedo = c.rgb;
+			o.Albedo = c.rgb*c.a;
 			o.Alpha = c.a;
 		}
 		ENDCG
