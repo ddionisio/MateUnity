@@ -19,10 +19,6 @@ public class UserSlotData : UserData {
         get { 
             if(instance) {
                 UserSlotData usd = (UserSlotData)instance;
-                if(usd.mSlot == -1 && !usd.mStarted) {
-                    usd.Start();
-                }
-
                 return usd.mSlot;
             }
             else
@@ -122,29 +118,33 @@ public class UserSlotData : UserData {
         }
     }
 
-    public override void Load() {
+    protected override void LoadOnStart() {
+        if(loadSlotOnStart != -1)
+            SetSlot(loadSlotOnStart, false);
+    }
+
+    protected override byte[] LoadRawData() {
         if(mSlot != -1) {
             //name
             mName = PlayerPrefs.GetString(PrefixKey + mSlot + "name", "");
-
-            base.Load();
+            return base.LoadRawData();
         }
+        return null;
     }
 
-    public override void Save() {
+    protected override void SaveRawData(byte[] dat) {
         if(mSlot != -1) {
             PlayerPrefs.SetString(PrefixKey + mSlot + "name", mName);
-
-            base.Save();
+            base.SaveRawData(dat);
         }
     }
 
     /// <summary>
     /// Make sure to set a new slot after this.
     /// </summary>
-    public override void Delete() {
+    protected override void DeleteRawData() {
         if(mSlot != -1) {
-            base.Delete();
+            base.DeleteRawData();
 
             PlayerPrefs.DeleteKey(PrefixKey + slot + "name");
 
@@ -156,14 +156,6 @@ public class UserSlotData : UserData {
         base.Awake();
 
         GameLocalize.instance.RegisterParam(LocalizeParamUserName, OnGameLocalizeParamName);
-    }
-
-    protected override void Start() {
-        if(loadOnStart && loadSlotOnStart != -1) {
-            SetSlot(loadSlotOnStart, false);
-        }
-        
-        mStarted = true;
     }
 
     string OnGameLocalizeParamName(string key) {

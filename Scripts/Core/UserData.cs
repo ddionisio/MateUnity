@@ -30,12 +30,12 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
     private Dictionary<string, object> mValues = null;
 
     private Dictionary<string, object> mValuesSnapshot = null;
-
-    protected bool mStarted = false;
-
+        
     private static UserData mInstance = null;
 
     public static UserData instance { get { return mInstance; } }
+
+    public bool started { get; private set; }
 
     public string[] GetKeys(System.Predicate<KeyValuePair<string, object>> predicate) {
         List<string> items = new List<string>(mValues.Count);
@@ -80,25 +80,28 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         }
     }
 
-    public virtual void Load() {
+    public void Load() {
         Data[] dat;
 
-        dat = LoadData();
+        byte[] raw = LoadRawData();
+        if(raw != null && raw.Length > 0) {
+            dat = LoadData(raw);
 
-        mValues = new Dictionary<string, object>();
-        foreach(Data datum in dat) {
-            mValues.Add(datum.name, datum.obj);
+            mValues = new Dictionary<string, object>();
+            foreach(Data datum in dat) {
+                mValues.Add(datum.name, datum.obj);
+            }
+
+            if(actCallback != null)
+                actCallback(this, Action.Load);
         }
-
-        if(actCallback != null)
-            actCallback(this, Action.Load);
     }
 
-    public virtual void Save() {
-        if(actCallback != null)
-            actCallback(this, Action.Save);
-
+    public void Save() {
         if(mValues != null) {
+            if(actCallback != null)
+                actCallback(this, Action.Save);
+
             List<Data> dat = new List<Data>(mValues.Count);
             foreach(KeyValuePair<string, object> pair in mValues)
                 dat.Add(new Data() { name = pair.Key, obj = pair.Value });
@@ -106,11 +109,10 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         }
     }
 
-    public virtual void Delete() {
+    public void Delete() {
         if(mValues != null)
             mValues.Clear();
-
-        PlayerPrefs.DeleteKey(mKey);
+        DeleteRawData();
     }
 
     public virtual bool HasKey(string name) {
@@ -197,24 +199,38 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
             mValues.Remove(name);
     }
 
-    protected virtual Data[] LoadData() {
+    protected virtual void LoadOnStart() {
+        Load();
+    }
+
+    protected virtual byte[] LoadRawData() {
+        return System.Convert.FromBase64String(PlayerPrefs.GetString(mKey, ""));
+    }
+
+    protected virtual void SaveRawData(byte[] dat) {
+        PlayerPrefs.SetString(mKey, System.Convert.ToBase64String(dat));
+    }
+
+    protected virtual void DeleteRawData() {
+        PlayerPrefs.DeleteKey(mKey);
+    }
+
+    private Data[] LoadData(byte[] dat) {
         Data[] ret = null;
 
-        string dat = PlayerPrefs.GetString(mKey, "");
-        if(!string.IsNullOrEmpty(dat)) {
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream(System.Convert.FromBase64String(dat));
+        BinaryFormatter bf = new BinaryFormatter();
+        using(MemoryStream ms = new MemoryStream(dat)) {
             ret = (Data[])bf.Deserialize(ms);
         }
 
         return ret == null ? new Data[0] : ret;
     }
 
-    protected virtual void SaveData(Data[] dat) {
+    private void SaveData(Data[] dat) {
         BinaryFormatter bf = new BinaryFormatter();
         MemoryStream ms = new MemoryStream();
         bf.Serialize(ms, dat);
-        PlayerPrefs.SetString(mKey, System.Convert.ToBase64String(ms.GetBuffer()));
+        SaveRawData(ms.GetBuffer());
     }
 
     void OnApplicationQuit() {
@@ -248,11 +264,11 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
             SceneManager.instance.sceneChangeCallback += SceneChange;
 
             if(loadOnStart)
-                Load();
+                LoadOnStart();
         }
     }
 
     protected virtual void Start() {
-        mStarted = true;
+        started = true;
     }
 }
