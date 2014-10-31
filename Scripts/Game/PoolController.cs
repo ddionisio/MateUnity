@@ -139,7 +139,7 @@ public class PoolController : MonoBehaviour {
     /// Remember to add new types into this pool.
     /// </summary>
     public static PoolController CreatePool(string group) {
-        if(mControllers.ContainsKey(group)) {
+        if(mControllers != null && mControllers.ContainsKey(group)) {
             Debug.LogWarning("Pool already exists: "+group);
             return null;
         }
@@ -490,6 +490,8 @@ public class PoolController : MonoBehaviour {
                     mFactory.Add(factoryData.template.name, factoryData);
                 }
             }
+            else
+                mFactory = new Dictionary<string, FactoryData>();
         }
         else {
             Debug.LogWarning("PoolController for: " + group + " already exists!");
