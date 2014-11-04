@@ -11,7 +11,7 @@ public class UIModalInputStackPopInspector : Editor {
 
         obj.player = EditorGUILayout.IntField("Player", obj.player);
 
-        obj.escape = M8.Editor.InputMapper.GUISelectInputAction("Escape", obj.escape);
+        obj.escape = M8.Editor.InputBinder.GUISelectInputAction("Escape", obj.escape);
 
         if(GUI.changed)
             EditorUtility.SetDirty(target);

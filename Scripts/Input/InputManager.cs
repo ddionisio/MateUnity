@@ -156,6 +156,7 @@ public class InputManager : MonoBehaviour {
         public List<Key> keys = null;
     }
 
+    public TextAsset actionConfig;
     public TextAsset config;
 
     protected class PlayerData {
@@ -221,7 +222,7 @@ public class InputManager : MonoBehaviour {
             }
         }
     }
-
+        
     protected BindData[] mBinds;
 
     private const int buttonCallMax = 32;
@@ -236,9 +237,9 @@ public class InputManager : MonoBehaviour {
 
     private static InputManager mInstance;
 
+    private string[] mActionNames;
     private ButtonCallSetData[] mButtonCallSetQueue = new ButtonCallSetData[buttonCallMax]; //prevent breaking enumeration during update when adding/removing
     private int mButtonCallSetQueueCount;
-    private int mActionCount;
 
     //interfaces (available after awake)
 
@@ -247,7 +248,15 @@ public class InputManager : MonoBehaviour {
     /// <summary>
     /// Number of input actions after loading
     /// </summary>
-    public int actionCount { get { return mActionCount; } }
+    public int actionCount { get { return mActionNames.Length; } }
+
+    public int GetActionIndex(string actionName) {
+        return System.Array.IndexOf(mActionNames, actionName);
+    }
+
+    public string GetActionName(int action) {
+        return action >= 0 && action < mActionNames.Length ? mActionNames[action] : "";
+    }
 
     /// <summary>
     /// Call this to reload binds from config and prefs.  This is to cancel editing key binds.
@@ -398,20 +407,49 @@ public class InputManager : MonoBehaviour {
         mBinds[action].players[player].keys[index].ResetKeys();
     }
 
+    public void UnBindKey(int player, string action, int index) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) UnBindKey(player, actionInd, index);
+    }
+
     public bool CheckBindKey(int player, int action, int index) {
         return mBinds[action] != null && mBinds[action].players[player] != null && mBinds[action].players[player].keys[index].isValid;
+    }
+
+    public bool CheckBindKey(int player, string action, int index) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return CheckBindKey(player, actionInd, index);
+        return false;
     }
 
     public Key GetBindKey(int player, int action, int index) {
         return mBinds[action].players[player].keys[index];
     }
 
+    public Key GetBindKey(int player, string action, int index) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return GetBindKey(player, actionInd, index);
+        return null;
+    }
+
     public bool CheckBind(int action) {
         return mBinds[action] != null;
     }
 
+    public bool CheckBind(string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return CheckBind(actionInd);
+        return false;
+    }
+
     public Control GetControlType(int action) {
         return mBinds[action].control;
+    }
+
+    public Control GetControlType(string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return GetControlType(actionInd);
+        return Control.Button;
     }
 
     public float GetAxis(int player, int action) {
@@ -434,8 +472,20 @@ public class InputManager : MonoBehaviour {
         return pd.info.axis;
     }
 
+    public float GetAxis(int player, string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return GetAxis(player, actionInd);
+        return 0f;
+    }
+
     public State GetState(int player, int action) {
         return mBinds[action].players[player].info.state;
+    }
+
+    public State GetState(int player, string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return GetState(player, actionInd);
+        return State.None;
     }
 
     public bool IsDown(int player, int action) {
@@ -453,8 +503,20 @@ public class InputManager : MonoBehaviour {
         return false;
     }
 
+    public bool IsDown(int player, string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return IsDown(player, actionInd);
+        return false;
+    }
+
     public int GetIndex(int player, int action) {
         return mBinds[action].players[player].info.index;
+    }
+
+    public int GetIndex(int player, string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return GetIndex(player, actionInd);
+        return -1;
     }
 
     public void AddButtonCall(int player, int action, OnButton callback) {
@@ -466,6 +528,11 @@ public class InputManager : MonoBehaviour {
         }
     }
 
+    public void AddButtonCall(int player, string action, OnButton callback) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) AddButtonCall(player, actionInd, callback);
+    }
+
     public void RemoveButtonCall(int player, int action, OnButton callback) {
         if(action < mBinds.Length && player < mBinds[action].players.Length) {
             PlayerData pd = mBinds[action].players[player];
@@ -475,6 +542,11 @@ public class InputManager : MonoBehaviour {
         }
     }
 
+    public void RemoveButtonCall(int player, string action, OnButton callback) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) RemoveButtonCall(player, actionInd, callback);
+    }
+
     public void ClearButtonCall(int action) {
         foreach(PlayerData pd in mBinds[action].players) {
             pd.callback = null;
@@ -482,6 +554,11 @@ public class InputManager : MonoBehaviour {
             mButtonCallSetQueue[mButtonCallSetQueueCount] = new ButtonCallSetData() { pd = pd, cb = null, add = false };
             mButtonCallSetQueueCount++;
         }
+    }
+
+    public void ClearButtonCall(string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) ClearButtonCall(actionInd);
     }
 
     public void ClearAllButtonCalls() {
@@ -542,33 +619,31 @@ public class InputManager : MonoBehaviour {
         else
             mInstance = this;
 
+        fastJSON.JSON.Parameters.UseExtensions = false;
+
+        if(actionConfig != null) {
+            List<string> actionLoad = fastJSON.JSON.ToObject<List<string>>(actionConfig.text);
+            mActionNames = actionLoad != null ? actionLoad.ToArray() : new string[0];
+        }
+
         if(config != null) {
             Dictionary<int, BindData> binds = new Dictionary<int, BindData>();
 
-            fastJSON.JSON.Parameters.UseExtensions = false;
-            List<Bind> keys = fastJSON.JSON.ToObject<List<Bind>>(config.text);
+            List<Bind> bindCfg = fastJSON.JSON.ToObject<List<Bind>>(config.text);
 
-            int highestActionInd = 0;
-
-            foreach(Bind key in keys) {
-                if(key != null && key.keys != null) {
+            foreach(Bind key in bindCfg) {
+                if(key != null && key.keys != null)
                     binds.Add(key.action, new BindData(key));
-
-                    if(key.action > highestActionInd)
-                        highestActionInd = key.action;
-                }
             }
-
-            mActionCount = highestActionInd+1;
-
+            
             //set bindings
-            mBinds = new BindData[mActionCount];
+            mBinds = new BindData[actionCount];
             foreach(KeyValuePair<int, BindData> pair in binds) {
                 mBinds[pair.Key] = pair.Value;
             }
 
             //register input actions to localizer
-            for(int i = 0; i <= highestActionInd; i++)
+            for(int i = 0; i < actionCount; i++)
                 GameLocalize.instance.RegisterParam("input_"+i, OnTextParam);
                         
             //load user config binds
@@ -580,21 +655,21 @@ public class InputManager : MonoBehaviour {
     }
 
     string OnTextParam(string key) {
-        //NOTE: assumes player 0
-        int delimitInd = key.LastIndexOf('_');
-        int action = int.Parse(key.Substring(delimitInd+1));
-
-        PlayerData pd = mBinds[action].players[0];
-
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
-        for(int i = 0; i < pd.keys.Length; i++) {
-            string keyString = pd.keys[i].GetKeyString();
-            if(!string.IsNullOrEmpty(keyString)) {
-                sb.Append(keyString);
+        int action = GetActionIndex(key);
+        if(action != -1) {
+            //NOTE: assumes player 0
+            PlayerData pd = mBinds[action].players[0];
+                        
+            for(int i = 0; i < pd.keys.Length; i++) {
+                string keyString = pd.keys[i].GetKeyString();
+                if(!string.IsNullOrEmpty(keyString)) {
+                    sb.Append(keyString);
 
-                if(pd.keys.Length > 1 && i < pd.keys.Length - 1) {
-                    sb.Append(", ");
+                    if(pd.keys.Length > 1 && i < pd.keys.Length - 1) {
+                        sb.Append(", ");
+                    }
                 }
             }
         }

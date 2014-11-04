@@ -5,15 +5,99 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace M8.Editor {
     public class InputBinder : EditorWindow {
-        public const string PrefKlass = "InputBinder";
-        public const string PrefText = "Text";
+        public const string PrefKlassMapper = "InputMapper";
+        public const string PrefFileMapper = "File";
 
-        private TextAsset mTextFile;
-        private string mTextName = "";
-        private string mTextFilePath = "";
+        private static List<string> mActions = null;
+
+        private static bool mActionFoldout;
+
+        private static string[] mActionEditNames;
+        private static int[] mActionEditVals;
+
+        private TextAsset mTextFileMapper;
+        private string mTextNameMapper = "";
+        private string mTextFilePathMapper = "";
+
+        private GUIStyle mTitleFoldoutStyle;
+        private Vector2 mScroll;
+
+        private uint mUnknownCount = 0;
+
+        public static List<string> actions {
+            get {
+                if(mActions == null) {
+                    //try to load it
+                    string path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlassMapper, PrefFileMapper), "");
+                    if(!string.IsNullOrEmpty(path))
+                        GetInputActions(AssetDatabase.LoadAssetAtPath(path, typeof(TextAsset)) as TextAsset);
+                }
+
+                return mActions;
+            }
+        }
+                
+        public static int GUISelectInputAction(string label, int selectedValue) {
+            if(actions != null && actions.Count > 0) {
+                return EditorGUILayout.IntPopup(label, selectedValue, mActionEditNames, mActionEditVals);
+            }
+            else {
+                GUILayout.BeginHorizontal();
+
+                GUILayout.Label(label);
+
+                //let user know they need to configure input actions
+                if(GUILayout.Button("[Edit Input Actions]", GUILayout.Width(200))) {
+                    mActionFoldout = true;
+                    EditorWindow.GetWindow(typeof(InputBinder));
+                }
+
+                GUILayout.EndHorizontal();
+            }
+
+            return selectedValue;
+        }
+
+        private static void GetInputActions(TextAsset cfg) {
+            if(cfg != null) {
+                fastJSON.JSON.Parameters.UseExtensions = false;
+                try {
+                    mActions = fastJSON.JSON.ToObject<List<string>>(cfg.text);
+                }
+                catch {
+                    mActions = new List<string>();
+                }
+                RefreshInputActionEdits();
+            }
+        }
+        
+        private static void RefreshInputActionEdits() {
+            if(mActions != null) {
+                mActionEditNames = new string[mActions.Count + 1];
+                mActionEditVals = new int[mActions.Count + 1];
+
+                mActionEditNames[0] = "Invalid";
+                mActionEditVals[0] = InputManager.ActionInvalid;
+
+                for(int i = 0; i < mActions.Count; i++) {
+                    mActionEditNames[i + 1] = mActions[i];
+                    mActionEditVals[i + 1] = i;
+                }
+            }
+        }
+
+        public const string PrefKlassBinder = "InputBinder";
+        public const string PrefTextBinder = "Text";
+
+        private static bool mBindingFoldout;
+
+        private TextAsset mTextFileBinder;
+        private string mTextNameBinder = "";
+        private string mTextFilePathBinder = "";
 
         private enum InputType {
             Unity,
@@ -109,10 +193,10 @@ namespace M8.Editor {
 
         private BindData[] mBinds;
 
-        private Vector2 mBindsScroll;
-
-        [MenuItem("M8/Input Binder")]
+        [MenuItem("M8/Input")]
         static void DoIt() {
+            mActionFoldout = true;
+            mBindingFoldout = true;
             EditorWindow.GetWindow(typeof(InputBinder));
         }
 
@@ -121,80 +205,232 @@ namespace M8.Editor {
         }
 
         void OnEnable() {
-            string path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlass, PrefText), "");
+            mTitleFoldoutStyle = new GUIStyle(EditorStyles.foldout);
+            mTitleFoldoutStyle.richText = true;
+
+            //mapper
+            string path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlassMapper, PrefFileMapper), "");
             if(!string.IsNullOrEmpty(path)) {
                 Object obj = AssetDatabase.LoadAssetAtPath(path, typeof(TextAsset));
                 if(obj != null)
-                    mTextFile = (TextAsset)obj;
+                    mTextFileMapper = (TextAsset)obj;
+            }
+
+            //binder
+            path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlassBinder, PrefTextBinder), "");
+            if(!string.IsNullOrEmpty(path)) {
+                Object obj = AssetDatabase.LoadAssetAtPath(path, typeof(TextAsset));
+                if(obj != null)
+                    mTextFileBinder = (TextAsset)obj;
             }
         }
 
         void OnDisable() {
-            if(mTextFile != null)
-                EditorPrefs.SetString(Utility.PreferenceKey(PrefKlass, PrefText), AssetDatabase.GetAssetPath(mTextFile));
+            if(mTextFileMapper != null)
+                EditorPrefs.SetString(Utility.PreferenceKey(PrefKlassMapper, PrefFileMapper), AssetDatabase.GetAssetPath(mTextFileMapper));
+
+            if(mTextFileBinder != null)
+                EditorPrefs.SetString(Utility.PreferenceKey(PrefKlassBinder, PrefTextBinder), AssetDatabase.GetAssetPath(mTextFileBinder));
         }
 
         void OnGUI() {
-            TextAsset prevTextFile = mTextFile;
+            mScroll = GUILayout.BeginScrollView(mScroll);//, GUILayout.MinHeight(100));
+
+            mActionFoldout = EditorGUILayout.Foldout(mActionFoldout, "<b><color=orange>ACTIONS</color></b>", mTitleFoldoutStyle);
+            if(mActionFoldout)
+                OnGUIMapper();
+
+            Utility.DrawSeparator();
+
+            mBindingFoldout = EditorGUILayout.Foldout(mBindingFoldout, "<b><color=orange>BINDINGS</color></b>", mTitleFoldoutStyle);
+            if(mBindingFoldout)
+                OnGUIBinder();
+
+            GUILayout.EndScrollView();
+
+            Utility.DrawSeparator();
+
+            GUI.backgroundColor = Color.green;
+
+            if(GUILayout.Button("Save")) {
+                if(mActions != null) {
+                    fastJSON.JSON.Parameters.UseExtensions = false;
+
+                    //save mapping
+                    string actionString = fastJSON.JSON.ToJSON(mActions);
+                    File.WriteAllText(mTextFilePathMapper, actionString);
+
+                    RefreshInputActionEdits();
+                }
+                //
+
+                //save binding
+                if(mBinds != null) {
+                    List<InputManager.Bind> saveBinds = new List<InputManager.Bind>(mBinds.Length);
+
+                    for(int i = 0; i < mBinds.Length; i++) {
+                        mBinds[i].ApplyKeyTypes();
+
+                        saveBinds.Add(mBinds[i].bind);
+                    }
+
+                    string bindString = fastJSON.JSON.ToJSON(saveBinds);
+                    File.WriteAllText(mTextFilePathBinder, bindString);
+                }
+                //
+
+                AssetDatabase.Refresh();
+            }
+
+            GUI.backgroundColor = Color.white;
+        }
+
+        void OnGUIMapper() {
+            TextAsset prevTextFile = mTextFileMapper;
 
             EditorGUIUtility.labelWidth = 80.0f;
 
-            GUILayout.Space(6f);
             GUILayout.BeginHorizontal();
 
             bool doCreate = false;
 
-            if(mTextFile == null) {
+            if(mTextFileMapper == null) {
                 GUI.backgroundColor = Color.green;
                 doCreate = GUILayout.Button("Create", GUILayout.Width(76f));
 
                 GUI.backgroundColor = Color.white;
-                mTextName = GUILayout.TextField(mTextName);
+                mTextNameMapper = GUILayout.TextField(mTextNameMapper);
             }
 
             GUILayout.EndHorizontal();
 
-            if(mTextFile != null) {
-                mTextName = mTextFile.name;
-                mTextFilePath = AssetDatabase.GetAssetPath(mTextFile);
+            if(mTextFileMapper != null) {
+                mTextNameMapper = mTextFileMapper.name;
+                mTextFilePathMapper = AssetDatabase.GetAssetPath(mTextFileMapper);
             }
-            else if(!string.IsNullOrEmpty(mTextName)) {
-                mTextFilePath = Utility.GetSelectionFolder() + mTextName + ".txt";
+            else if(!string.IsNullOrEmpty(mTextNameMapper)) {
+                mTextFilePathMapper = Utility.GetSelectionFolder() + mTextNameMapper + ".txt";
             }
 
-            if(doCreate && !string.IsNullOrEmpty(mTextName)) {
-                File.WriteAllText(mTextFilePath, "");
+            if(doCreate && !string.IsNullOrEmpty(mTextNameMapper)) {
+                File.WriteAllText(mTextFilePathMapper, "");
 
                 AssetDatabase.Refresh();
 
-                mTextFile = (TextAsset)AssetDatabase.LoadAssetAtPath(mTextFilePath, typeof(TextAsset));
+                mTextFileMapper = (TextAsset)AssetDatabase.LoadAssetAtPath(mTextFilePathMapper, typeof(TextAsset));
             }
 
             GUILayout.BeginHorizontal();
 
             GUILayout.Label("Select: ");
 
-            mTextFile = (TextAsset)EditorGUILayout.ObjectField(mTextFile, typeof(TextAsset), false);
+            mTextFileMapper = (TextAsset)EditorGUILayout.ObjectField(mTextFileMapper, typeof(TextAsset), false);
 
             GUILayout.EndHorizontal();
 
-            if(!string.IsNullOrEmpty(mTextFilePath))
-                GUILayout.Label("Path: " + mTextFilePath);
+            if(!string.IsNullOrEmpty(mTextFilePathMapper))
+                GUILayout.Label("Path: " + mTextFilePathMapper);
             else {
-                GUILayout.Label("Path: <none>" + mTextFilePath);
+                GUILayout.Label("Path: <none>" + mTextFilePathMapper);
             }
 
-            if(GUILayout.Button("Edit Input Actions")) {
-                EditorWindow.GetWindow(typeof(InputMapper));
+            GUILayout.Space(6f);
+
+            GUILayout.BeginVertical(GUI.skin.box);
+
+            if(mTextFileMapper != null) {
+                if(prevTextFile != mTextFileMapper || mActions == null)
+                    GetInputActions(mTextFileMapper);
+
+                //list actions
+                int removeInd = -1;
+
+                Regex r = new Regex("^[a-zA-Z0-9]*$");
+
+                for(int i = 0; i < mActions.Count; i++) {
+                    GUILayout.BeginHorizontal();
+
+                    GUILayout.Label(i.ToString(), GUILayout.MaxWidth(20));
+
+                    string text = GUILayout.TextField(mActions[i], 255);
+
+                    if(text.Length > 0 && (r.IsMatch(text) && !char.IsDigit(text[0])))
+                        mActions[i] = text;
+
+                    if(GUILayout.Button("DEL", GUILayout.MaxWidth(40))) {
+                        removeInd = i;
+                    }
+
+                    GUILayout.EndHorizontal();
+                }
+
+                if(removeInd != -1)
+                    mActions.RemoveAt(removeInd);
+
+                if(GUILayout.Button("Add")) {
+                    mActions.Add("Unknown" + (mUnknownCount++));
+                }
             }
 
-            Utility.DrawSeparator();
+            GUILayout.EndVertical();
 
-            bool refreshBinds = mTextFile != prevTextFile;
+            EditorGUIUtility.labelWidth = 0.0f;
+        }
 
-            if(mTextFile != null) {
-                List<string> actions = InputMapper.actions;
+        void OnGUIBinder() {
+            TextAsset prevTextFile = mTextFileBinder;
 
+            EditorGUIUtility.labelWidth = 80.0f;
+
+            GUILayout.BeginHorizontal();
+
+            bool doCreate = false;
+
+            if(mTextFileBinder == null) {
+                GUI.backgroundColor = Color.green;
+                doCreate = GUILayout.Button("Create", GUILayout.Width(76f));
+
+                GUI.backgroundColor = Color.white;
+                mTextNameBinder = GUILayout.TextField(mTextNameBinder);
+            }
+
+            GUILayout.EndHorizontal();
+
+            if(mTextFileBinder != null) {
+                mTextNameBinder = mTextFileBinder.name;
+                mTextFilePathBinder = AssetDatabase.GetAssetPath(mTextFileBinder);
+            }
+            else if(!string.IsNullOrEmpty(mTextNameBinder)) {
+                mTextFilePathBinder = Utility.GetSelectionFolder() + mTextNameBinder + ".txt";
+            }
+
+            if(doCreate && !string.IsNullOrEmpty(mTextNameBinder)) {
+                File.WriteAllText(mTextFilePathBinder, "");
+
+                AssetDatabase.Refresh();
+
+                mTextFileBinder = (TextAsset)AssetDatabase.LoadAssetAtPath(mTextFilePathBinder, typeof(TextAsset));
+            }
+
+            GUILayout.BeginHorizontal();
+
+            GUILayout.Label("Select: ");
+
+            mTextFileBinder = (TextAsset)EditorGUILayout.ObjectField(mTextFileBinder, typeof(TextAsset), false);
+
+            GUILayout.EndHorizontal();
+
+            if(!string.IsNullOrEmpty(mTextFilePathBinder))
+                GUILayout.Label("Path: " + mTextFilePathBinder);
+            else {
+                GUILayout.Label("Path: <none>" + mTextFilePathBinder);
+            }
+
+            GUILayout.Space(6f);
+
+            bool refreshBinds = mTextFileBinder != prevTextFile;
+
+            if(mTextFileBinder != null && actions != null) {
                 //initialize bind data
                 if(mBinds == null || mBinds.Length != actions.Count) {
                     if(mBinds == null) {
@@ -208,10 +444,10 @@ namespace M8.Editor {
                 }
 
                 //load from file
-                if(refreshBinds && mTextFile.text.Length > 0) {
+                if(refreshBinds && mTextFileBinder.text.Length > 0) {
                     //load data
                     fastJSON.JSON.Parameters.UseExtensions = false;
-                    List<InputManager.Bind> loadBinds = fastJSON.JSON.ToObject<List<InputManager.Bind>>(mTextFile.text);
+                    List<InputManager.Bind> loadBinds = fastJSON.JSON.ToObject<List<InputManager.Bind>>(mTextFileBinder.text);
                     foreach(InputManager.Bind bind in loadBinds) {
                         if(bind.action < mBinds.Length) {
                             mBinds[bind.action].bind = bind;
@@ -220,9 +456,7 @@ namespace M8.Editor {
                     }
                 }
 
-                //display
-                mBindsScroll = GUILayout.BeginScrollView(mBindsScroll);
-
+                //display binds
                 for(int i = 0; i < mBinds.Length; i++) {
                     if(mBinds[i].bind == null) {
                         mBinds[i].bind = new InputManager.Bind();
@@ -312,26 +546,6 @@ namespace M8.Editor {
                     }
 
                     GUILayout.EndVertical();
-                }
-
-                GUILayout.EndScrollView();
-
-                if(GUILayout.Button("Save")) {
-                    fastJSON.JSON.Parameters.UseExtensions = false;
-
-                    List<InputManager.Bind> saveBinds = new List<InputManager.Bind>(mBinds.Length);
-
-                    for(int i = 0; i < mBinds.Length; i++) {
-                        mBinds[i].ApplyKeyTypes();
-
-                        saveBinds.Add(mBinds[i].bind);
-                    }
-
-                    string output = fastJSON.JSON.ToJSON(saveBinds);
-
-                    File.WriteAllText(mTextFilePath, output);
-
-                    AssetDatabase.Refresh();
                 }
             }
 
