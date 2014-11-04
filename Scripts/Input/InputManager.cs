@@ -248,7 +248,7 @@ public class InputManager : MonoBehaviour {
     /// <summary>
     /// Number of input actions after loading
     /// </summary>
-    public int actionCount { get { return mActionNames.Length; } }
+    public int actionCount { get { return mActionNames != null ? mActionNames.Length : 0; } }
 
     public int GetActionIndex(string actionName) {
         return System.Array.IndexOf(mActionNames, actionName);
@@ -625,8 +625,10 @@ public class InputManager : MonoBehaviour {
             List<string> actionLoad = fastJSON.JSON.ToObject<List<string>>(actionConfig.text);
             mActionNames = actionLoad != null ? actionLoad.ToArray() : new string[0];
         }
+        else
+            Debug.LogWarning("No action config loaded.  There will be no bindings!");
 
-        if(config != null) {
+        if(config != null && mActionNames != null) {
             Dictionary<int, BindData> binds = new Dictionary<int, BindData>();
 
             List<Bind> bindCfg = fastJSON.JSON.ToObject<List<Bind>>(config.text);
