@@ -547,6 +547,18 @@ public class InputManager : MonoBehaviour {
         if(actionInd != -1) RemoveButtonCall(player, actionInd, callback);
     }
 
+    public void RemoveButtonCall(OnButton callback) {
+        for(int i = 0; i < mBinds.Length; i++) {
+            for(int j = 0; j < mBinds[i].players.Length; j++) {
+                PlayerData pd = mBinds[i].players[j];
+                if(pd.callback == callback) {
+                    mButtonCallSetQueue[mButtonCallSetQueueCount] = new ButtonCallSetData() { pd = pd, cb = callback, add = false };
+                    mButtonCallSetQueueCount++;
+                }
+            }
+        }
+    }
+
     public void ClearButtonCall(int action) {
         foreach(PlayerData pd in mBinds[action].players) {
             pd.callback = null;
