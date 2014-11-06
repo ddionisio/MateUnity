@@ -67,9 +67,7 @@ public class MusicManager : MonoBehaviour {
         }
     }
 
-    public bool IsPlaying() {
-        return mState == State.Playing;
-    }
+    public bool isPlaying { get { return mState == State.Playing; } }
 
     public bool Exists(string name) {
         return mMusic.ContainsKey(name);
