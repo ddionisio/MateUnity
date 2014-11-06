@@ -137,6 +137,16 @@ public class SceneState : MonoBehaviour {
             UserData.instance.Delete(string.Format(DataFormat, mScene, name));
     }
 
+    public StateValue GetValueRaw(string name) {
+        if(mStates != null) {
+            StateValue v;
+            if(mStates.TryGetValue(name, out v))
+                return v;
+        }
+
+        return new StateValue() { type=Type.Invalid };
+    }
+
     public Type GetValueType(string name) {
         if(mStates != null) {
             StateValue v;
@@ -214,6 +224,33 @@ public class SceneState : MonoBehaviour {
             if(onValueChange != null) {
                 onValueChange(false, name, curVal);
             }
+        }
+    }
+
+    public void SetPersist(string name, bool persist) {
+        if(persist) {
+            if(mStates == null)
+                return;
+
+            StateValue curVal;
+            if(mStates.TryGetValue(name, out curVal)) {
+                string key = string.Format(DataFormat, mScene, name);
+                switch(curVal.type) {
+                    case Type.Integer:
+                        UserData.instance.SetInt(key, curVal.ival);
+                        break;
+                    case Type.Float:
+                        UserData.instance.SetFloat(key, curVal.fval);
+                        break;
+                    case Type.String:
+                        UserData.instance.SetString(key, curVal.sval);
+                        break;
+                }
+            }
+        }
+        else {
+            string key = string.Format(DataFormat, mScene, name);
+            UserData.instance.Delete(key);
         }
     }
 
@@ -404,6 +441,16 @@ public class SceneState : MonoBehaviour {
             UserData.instance.Delete(string.Format(GlobalDataFormat, name));
     }
 
+    public StateValue GetGlobalValueRaw(string name) {
+        if(mGlobalStates != null) {
+            StateValue v;
+            if(mGlobalStates.TryGetValue(name, out v))
+                return v;
+        }
+
+        return new StateValue() { type=Type.Invalid };
+    }
+
     public Type GetGlobalValueType(string name) {
         if(mGlobalStates != null) {
             StateValue v;
@@ -423,9 +470,7 @@ public class SceneState : MonoBehaviour {
     }
 
     public int GetGlobalValue(string name, int defaultVal = 0) {
-        if(mGlobalStates == null) {
-            mGlobalStates = new Dictionary<string, StateValue>();
-        }
+        if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
 
         StateValue v;
         //try local
@@ -447,6 +492,8 @@ public class SceneState : MonoBehaviour {
     }
 
     public void SetGlobalValue(string name, int val, bool persistent) {
+        if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
+
         bool isValueSet = false;
         StateValue curVal;
         if(mGlobalStates.TryGetValue(name, out curVal)) {
@@ -480,6 +527,33 @@ public class SceneState : MonoBehaviour {
         }
     }
 
+    public void SetGlobalPersist(string name, bool persist) {
+        if(persist) {
+            if(mGlobalStates == null)
+                return;
+
+            StateValue curVal;
+            if(mGlobalStates.TryGetValue(name, out curVal)) {
+                string key = string.Format(DataFormat, mScene, name);
+                switch(curVal.type) {
+                    case Type.Integer:
+                        UserData.instance.SetInt(key, curVal.ival);
+                        break;
+                    case Type.Float:
+                        UserData.instance.SetFloat(key, curVal.fval);
+                        break;
+                    case Type.String:
+                        UserData.instance.SetString(key, curVal.sval);
+                        break;
+                }
+            }
+        }
+        else {
+            string key = string.Format(DataFormat, mScene, name);
+            UserData.instance.Delete(key);
+        }
+    }
+
     public bool CheckGlobalFlag(string name, int bit) {
         return CheckGlobalFlagMask(name, 1 << bit);
     }
@@ -502,9 +576,7 @@ public class SceneState : MonoBehaviour {
     }
 
     public float GetGlobalValueFloat(string name, float defaultVal = 0.0f) {
-        if(mGlobalStates == null) {
-            mGlobalStates = new Dictionary<string, StateValue>();
-        }
+        if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
 
         StateValue v;
         //try local
@@ -526,6 +598,8 @@ public class SceneState : MonoBehaviour {
     }
 
     public void SetGlobalValueFloat(string name, float val, bool persistent) {
+        if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
+
         bool isValueSet = false;
         StateValue curVal;
         if(mGlobalStates.TryGetValue(name, out curVal)) {
@@ -560,9 +634,7 @@ public class SceneState : MonoBehaviour {
     }
 
     public string GetGlobalValueString(string name, string defaultVal = "") {
-        if(mGlobalStates == null) {
-            mGlobalStates = new Dictionary<string, StateValue>();
-        }
+        if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
 
         StateValue v;
         //try local
@@ -584,6 +656,8 @@ public class SceneState : MonoBehaviour {
     }
 
     public void SetGlobalValueString(string name, string val, bool persistent) {
+        if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
+
         bool isValueSet = false;
         StateValue curVal;
         if(mGlobalStates.TryGetValue(name, out curVal)) {

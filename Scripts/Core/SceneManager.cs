@@ -60,6 +60,12 @@ public class SceneManager : MonoBehaviour {
         }
     }
 
+    public string curLevelName {
+        get {
+            return mCurSceneStr;
+        }
+    }
+
     void _LoadScene(string scene, string transOut, string transIn) {
         //make sure the scene is not paused
         Resume();
