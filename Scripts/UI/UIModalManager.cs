@@ -140,6 +140,21 @@ public class UIModalManager : MonoBehaviour {
             StartCoroutine(mTask = DoTask());
     }
 
+    public void ModalCloseUpTo(string modal, bool inclusive) {
+        foreach(UIData dat in mModalStack) {
+            if(dat.name == modal) {
+                if(inclusive)
+                    mModalCloseCount++;
+                break;
+            }
+            else
+                mModalCloseCount++;
+        }
+
+        if(mTask == null)
+            StartCoroutine(mTask = DoTask());
+    }
+
     void OnDestroy() {
         if(mInstance == this) {
             mInstance = null;
