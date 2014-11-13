@@ -28,6 +28,8 @@ public class PoolController : MonoBehaviour {
 
         public int capacityCount { get { return mCapacity; } }
 
+        public int activeCount { get { return mActives.Count; } }
+
         public List<PoolDataController> actives { get { return mActives; } }
 
         public void Init(string group, Transform inactiveHolder) {
@@ -102,6 +104,8 @@ public class PoolController : MonoBehaviour {
             Transform t = pdc.transform;
             t.name = string.IsNullOrEmpty(name) ? template.name + (mNameHolder++) : name;
             t.parent = parent == null ? defaultParent : parent;
+            t.localPosition = Vector3.zero;
+            t.localRotation = Quaternion.identity;
             t.localScale = Vector3.one;
 
             t.gameObject.SetActive(true);
@@ -112,8 +116,10 @@ public class PoolController : MonoBehaviour {
         }
 
         public void DeInit() {
-            mActives.Clear();
-            mAvailable.Clear();
+            foreach(PoolDataController pdc in mActives)
+                Destroy(pdc.gameObject);
+            foreach(PoolDataController pdc in mAvailable)
+                Destroy(pdc.gameObject);
 
             mInactiveHolder = null;
         }
@@ -135,17 +141,17 @@ public class PoolController : MonoBehaviour {
     private Dictionary<string, FactoryData> mFactory;
 
     /// <summary>
-    /// Create a new pool. If given group already exists, then it will return null.
+    /// Create a new pool. If given group already exists, then it will return that.
     /// Remember to add new types into this pool.
     /// </summary>
     public static PoolController CreatePool(string group) {
-        if(mControllers != null && mControllers.ContainsKey(group)) {
-            Debug.LogWarning("Pool already exists: "+group);
-            return null;
+        PoolController pc;
+        if(mControllers == null || !mControllers.TryGetValue(group, out pc)) {
+            GameObject go = new GameObject(group);
+            pc = go.AddComponent<PoolController>();
         }
 
-        GameObject go = new GameObject(group);
-        return go.AddComponent<PoolController>();
+        return pc;
     }
     
     /// <summary>
@@ -263,10 +269,8 @@ public class PoolController : MonoBehaviour {
     /// already exists (via name), then type will not be added.  Returns true if successfully added.
     /// </summary>
     public bool AddType(Transform template, int startCapacity, int maxCapacity, Transform defaultParent = null) {
-        if(mFactory.ContainsKey(template.name)) {
-            Debug.LogWarning("Template already exists: "+template.name);
+        if(mFactory.ContainsKey(template.name))
             return false;
-        }
 
         FactoryData newData = new FactoryData();
         newData.template = template;
@@ -279,6 +283,14 @@ public class PoolController : MonoBehaviour {
         mFactory.Add(template.name, newData);
 
         return true;
+    }
+
+    public void RemoveType(string type) {
+        FactoryData factory;
+        if(mFactory.TryGetValue(type, out factory)) {
+            factory.DeInit();
+            mFactory.Remove(type);
+        }
     }
 
     /// <summary>
@@ -421,6 +433,15 @@ public class PoolController : MonoBehaviour {
             Debug.LogWarning("Unable to find type: "+type);
     }
 
+    public int GetActiveCount(string type) {
+        FactoryData factory;
+        if(mFactory.TryGetValue(type, out factory)) {
+            return factory.activeCount;
+        }
+
+        return 0;
+    }
+
     public int CapacityCount(string type) {
         FactoryData dat;
         if(mFactory.TryGetValue(type, out dat)) {
@@ -448,10 +469,6 @@ public class PoolController : MonoBehaviour {
 
     void OnDestroy() {
         if(mControllers != null) {
-            foreach(FactoryData dat in mFactory.Values) {
-                dat.DeInit();
-            }
-
             mControllers.Remove(group);
 
             if(mControllers.Count == 0)
