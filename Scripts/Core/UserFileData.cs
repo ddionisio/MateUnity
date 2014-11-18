@@ -71,7 +71,7 @@ public class UserFileData : UserData {
 
             using(BinaryWriter bw = new BinaryWriter(File.Open(path, FileMode.Create), System.Text.Encoding.UTF8)) {
                 bw.Write(fileHeader);
-                bw.Write(version);
+                bw.Write((short)version);
                 bw.Write(dat.Length);
                 bw.Write(dat);
             }
