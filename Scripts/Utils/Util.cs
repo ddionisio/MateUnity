@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace M8 {
     public struct Util {
         public static int CellToIndex(int row, int col, int numCols) {
-            if(row < 0 || col < 0) return -1;
+            if(row < 0 || col < 0 || col >= numCols) return -1;
             return (row * numCols) + col;
         }
 
