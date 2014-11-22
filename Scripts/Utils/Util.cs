@@ -7,6 +7,7 @@ using System.Collections.Generic;
 namespace M8 {
     public struct Util {
         public static int CellToIndex(int row, int col, int numCols) {
+            if(row < 0 || col < 0) return -1;
             return (row * numCols) + col;
         }
 
@@ -144,6 +145,19 @@ namespace M8 {
             foreach(Transform child in t) {
                 SetPhysicsLayerRecursive(child, layer);
             }
+        }
+
+        public static Bounds GetRenderBoundsRecursive(GameObject go) {
+            Renderer[] renders = go.GetComponentsInChildren<Renderer>(true);
+            if(renders.Length > 0) {
+                Bounds b = renders[0].bounds;
+                for(int i = 1; i < renders.Length; i++) {
+                    b.Encapsulate(renders[i].bounds);
+                }
+                return b;
+            }
+            else
+                return new Bounds(Vector3.zero, Vector3.zero);
         }
 
         /// <summary>
