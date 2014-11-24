@@ -263,7 +263,11 @@ namespace M8 {
             float d20 = Vector3.Dot(v2, v0);
             float d21 = Vector3.Dot(v2, v1);
             float denom = d00*d11 - d01*d01;
-            return new Vector3((d11 * d20 - d01 * d21) / denom, (d00 * d21 - d01 * d20) / denom, 1.0f - v - w);
+            Vector3 ret;
+            ret.y = (d11 * d20 - d01 * d21) / denom;
+            ret.z = (d00 * d21 - d01 * d20) / denom;
+            ret.x = 1.0f - ret.y - ret.z;
+            return ret;
         }
     }
 
