@@ -251,6 +251,20 @@ namespace M8 {
         public static bool VectorEqualApproximately(Vector3 lhs, Vector3 rhs) {
             return Mathf.Approximately(lhs.x, rhs.x) && Mathf.Approximately(lhs.y, rhs.y) && Mathf.Approximately(lhs.z, rhs.z);
         }
+
+        /// <summary>
+        /// Compute the Barycentric (a,b,c) based on given p in relation to triangle (p0, p1, p2)
+        /// </summary>
+        public static Vector3 Barycentric(Vector3 p, Vector3 p0, Vector3 p1, Vector3 p2) {
+            Vector3 v0 = p1 - p0, v1 = p2 - p0, v2 = p - p0;
+            float d00 = Vector3.Dot(v0, v0);
+            float d01 = Vector3.Dot(v0, v1);
+            float d11 = Vector3.Dot(v1, v1);
+            float d20 = Vector3.Dot(v2, v0);
+            float d21 = Vector3.Dot(v2, v1);
+            float denom = d00*d11 - d01*d01;
+            return new Vector3((d11 * d20 - d01 * d21) / denom, (d00 * d21 - d01 * d20) / denom, 1.0f - v - w);
+        }
     }
 
 
