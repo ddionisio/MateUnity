@@ -91,16 +91,16 @@ public class SceneSerializerSpawnManager : MonoBehaviour {
             BinaryFormatter bf = new BinaryFormatter();
             MemoryStream ms = new MemoryStream();
             bf.Serialize(ms, new List<SpawnInfo>(mSpawns.Values));
-            UserData.instance.SetString("sssm_" + Application.loadedLevelName, System.Convert.ToBase64String(ms.GetBuffer()));
+            UserData.main.SetString("sssm_" + Application.loadedLevelName, System.Convert.ToBase64String(ms.GetBuffer()));
         }
         else {
-            UserData.instance.Delete("sssm_" + Application.loadedLevelName);
+            UserData.main.Delete("sssm_" + Application.loadedLevelName);
         }
     }
 
     void DoSpawns() {
         //load
-        string dat = UserData.instance.GetString("sssm_" + Application.loadedLevelName);
+        string dat = UserData.main.GetString("sssm_" + Application.loadedLevelName);
 
         if(!string.IsNullOrEmpty(dat)) {
             BinaryFormatter bf = new BinaryFormatter();

@@ -23,7 +23,7 @@ public class SoundPlayer : MonoBehaviour {
     public float defaultVolume { get { return mDefaultVolume; } set { mDefaultVolume = value; } }
 
     public virtual void Play() {
-        audio.volume = mDefaultVolume * Main.userSettings.soundVolume;
+        audio.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
 
         if(playDelay > 0.0f)
             audio.PlayDelayed(playDelay);
@@ -41,8 +41,8 @@ public class SoundPlayer : MonoBehaviour {
     }
 
     protected virtual void OnDestroy() {
-        if(Main.userSettings != null)
-            Main.userSettings.changeCallback -= UserSettingsChanged;
+        if(UserSettingAudio.instance != null)
+            UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
     }
 
     protected virtual void Awake() {
@@ -50,7 +50,7 @@ public class SoundPlayer : MonoBehaviour {
 
         mDefaultVolume = audio.volume;
 
-        Main.userSettings.changeCallback += UserSettingsChanged;
+        UserSettingAudio.instance.changeCallback += UserSettingsChanged;
     }
 
     // Use this for initialization
@@ -61,8 +61,8 @@ public class SoundPlayer : MonoBehaviour {
             Play();
     }
 
-    void UserSettingsChanged(UserSettings us) {
+    void UserSettingsChanged(UserSetting us) {
         //if(audio.isPlaying)
-        audio.volume = mDefaultVolume * us.soundVolume;    
+        audio.volume = mDefaultVolume * ((UserSettingAudio)us).soundVolume;
     }
 }

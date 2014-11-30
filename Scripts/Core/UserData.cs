@@ -20,6 +20,11 @@ public abstract class UserData : MonoBehaviour, System.Collections.IEnumerable {
 
     public delegate void OnAction(UserData ud, Action act);
 
+    public string id; //set if you want to grab this via Get
+
+    [SerializeField]
+    bool _main = false; //set to true if you want this userdata to be UserData.main
+
     public bool loadOnStart = true;
     public bool autoSave = true;
 
@@ -29,13 +34,23 @@ public abstract class UserData : MonoBehaviour, System.Collections.IEnumerable {
 
     private Dictionary<string, object> mValuesSnapshot = null;
         
-    private static UserData mInstance = null;
+    private static UserData mMain = null;
+    private static Dictionary<string, UserData> mInstances;
 
-    public static UserData instance { get { return mInstance; } }
+    /// <summary>
+    /// This is the UserData used by SceneState, Serializers, etc.  Make sure one of the UserData is set as 'main'=true
+    /// </summary>
+    public static UserData main { get { return mMain; } }
 
     public bool started { get; private set; }
 
     public int valueCount { get { return mValues != null ? mValues.Count : 0; } }
+
+    public static UserData GetInstance(string aId) {
+        UserData ret;
+        mInstances.TryGetValue(aId, out ret);
+        return ret;
+    }
 
     public string[] GetKeys(System.Predicate<KeyValuePair<string, object>> predicate) {
         List<string> items = new List<string>(mValues.Count);
@@ -233,38 +248,42 @@ public abstract class UserData : MonoBehaviour, System.Collections.IEnumerable {
     }
 
     void OnApplicationQuit() {
-        if(autoSave) {
+        if(autoSave)
             Save();
-            PlayerPrefs.Save();
-        }
     }
 
     void SceneChange(string toScene) {
-        if(autoSave) {
+        if(autoSave)
             Save();
-            PlayerPrefs.Save();
-            //Debug.Log("save");
-        }
     }
 
     void OnDestroy() {
-        if(mInstance == this) {
-            mInstance = null;
+        if(mMain == this)
+            mMain = null;
 
-            if(SceneManager.instance)
-                SceneManager.instance.sceneChangeCallback -= SceneChange;
-        }
+        if(mInstances != null && !string.IsNullOrEmpty(id))
+            mInstances.Remove(id);
+
+        if(SceneManager.instance)
+            SceneManager.instance.sceneChangeCallback -= SceneChange;
     }
 
     void Awake() {
-        if(mInstance == null) {
-            mInstance = this;
+        if(_main)
+            mMain = this;
 
-            SceneManager.instance.sceneChangeCallback += SceneChange;
-
-            if(loadOnStart)
-                LoadOnStart();
+        if(!string.IsNullOrEmpty(id)) {
+            if(mInstances == null) mInstances = new Dictionary<string, UserData>();
+            if(mInstances.ContainsKey(id))
+                Debug.LogWarning("UserData with id already exists: "+id);
+            else
+                mInstances.Add(id, this);
         }
+        
+        SceneManager.instance.sceneChangeCallback += SceneChange;
+
+        if(loadOnStart)
+            LoadOnStart();
     }
 
     void Start() {

@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 [AddComponentMenu("M8/Core/GameLocalize")]
-public class GameLocalize : MonoBehaviour {
+public class GameLocalize : UserSetting {
+    public const string languageKey = "lang";
+
     public delegate string ParameterCallback(string paramKey);
     public delegate void LocalizeCallback();
 
@@ -35,6 +37,8 @@ public class GameLocalize : MonoBehaviour {
     private Dictionary<string, string> mTable;
     private Dictionary<string, string[]> mTableParams;
     private bool mLoaded = false;
+
+    private GameLanguage mCurLanguage = GameLanguage.English;
 
     private Dictionary<string, ParameterCallback> mParams = null;
 
@@ -102,11 +106,9 @@ public class GameLocalize : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// Make sure to call this during Main's initialization based on user settings for language.
-    /// </summary>
-    public void Load(GameLanguage language, GamePlatform platformType) {
-        int langInd = (int)language;
+    void Load() {
+        int langInd = (int)mCurLanguage;
+        GamePlatform platformType = Main.platform;
 
         TableData dat = tables[langInd];
 
@@ -153,7 +155,7 @@ public class GameLocalize : MonoBehaviour {
             }
         }
         else
-            Debug.LogWarning("File not found for language: " + language);
+            Debug.LogWarning("File not found for language: " + mCurLanguage);
     }
 
     void OnDestroy() {
@@ -164,11 +166,13 @@ public class GameLocalize : MonoBehaviour {
         }
     }
 
-    void Awake() {
-        if(mInstance == null) {
+    protected override void Awake() {
+        if(mInstance == null)
             mInstance = this;
 
-            Load(Main.userSettings.language, Main.platform);
-        }
+        base.Awake();
+
+        mCurLanguage = (GameLanguage)userData.GetInt(languageKey, (int)GameLanguage.English);
+        Load();
     }
 }

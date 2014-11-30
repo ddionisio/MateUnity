@@ -108,7 +108,7 @@ public class SceneState : MonoBehaviour {
     public bool HasValue(string name) {
         if(!mStates.ContainsKey(name)) {
             //try user data
-            return UserData.instance.HasKey(string.Format(DataFormat, mScene, name));
+            return UserData.main.HasKey(string.Format(DataFormat, mScene, name));
         }
 
         return true;
@@ -127,14 +127,14 @@ public class SceneState : MonoBehaviour {
             }
         }
 
-        UserData.instance.DeleteAllByNameContain(nameContains);//string.Format(DataFormat, mScene, nameContains));
+        UserData.main.DeleteAllByNameContain(nameContains);//string.Format(DataFormat, mScene, nameContains));
     }
 
     public void DeleteValue(string name, bool persistent) {
         mStates.Remove(name);
 
         if(persistent)
-            UserData.instance.Delete(string.Format(DataFormat, mScene, name));
+            UserData.main.Delete(string.Format(DataFormat, mScene, name));
     }
 
     public StateValue GetValueRaw(string name) {
@@ -151,7 +151,7 @@ public class SceneState : MonoBehaviour {
         if(mStates != null) {
             StateValue v;
             if(!mStates.TryGetValue(name, out v)) {
-                System.Type t = UserData.instance.GetType(string.Format(DataFormat, mScene, name));
+                System.Type t = UserData.main.GetType(string.Format(DataFormat, mScene, name));
                 if(t == typeof(int))
                     return Type.Integer;
                 else if(t == typeof(float))
@@ -175,8 +175,8 @@ public class SceneState : MonoBehaviour {
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
             string key = string.Format(DataFormat, mScene, name);
-            if(UserData.instance.HasKey(key)) {
-                v.Apply(UserData.instance, key);
+            if(UserData.main.HasKey(key)) {
+                v.Apply(UserData.main, key);
                 if(v.type == Type.Integer) {
                     mStates.Add(name, v);
                     return v.ival;
@@ -218,7 +218,7 @@ public class SceneState : MonoBehaviour {
         if(isValueSet) {
             if(persistent) {
                 string key = string.Format(DataFormat, mScene, name);
-                UserData.instance.SetInt(key, val);
+                UserData.main.SetInt(key, val);
             }
 
             if(onValueChange != null) {
@@ -237,20 +237,20 @@ public class SceneState : MonoBehaviour {
                 string key = string.Format(DataFormat, mScene, name);
                 switch(curVal.type) {
                     case Type.Integer:
-                        UserData.instance.SetInt(key, curVal.ival);
+                        UserData.main.SetInt(key, curVal.ival);
                         break;
                     case Type.Float:
-                        UserData.instance.SetFloat(key, curVal.fval);
+                        UserData.main.SetFloat(key, curVal.fval);
                         break;
                     case Type.String:
-                        UserData.instance.SetString(key, curVal.sval);
+                        UserData.main.SetString(key, curVal.sval);
                         break;
                 }
             }
         }
         else {
             string key = string.Format(DataFormat, mScene, name);
-            UserData.instance.Delete(key);
+            UserData.main.Delete(key);
         }
     }
 
@@ -285,8 +285,8 @@ public class SceneState : MonoBehaviour {
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
             string key = string.Format(DataFormat, mScene, name);
-            if(UserData.instance.HasKey(key)) {
-                v.Apply(UserData.instance, key);
+            if(UserData.main.HasKey(key)) {
+                v.Apply(UserData.main, key);
                 if(v.type == Type.Float) {
                     mStates.Add(name, v);
                     return v.fval;
@@ -328,7 +328,7 @@ public class SceneState : MonoBehaviour {
         if(isValueSet) {
             if(persistent) {
                 string key = string.Format(DataFormat, mScene, name);
-                UserData.instance.SetFloat(key, val);
+                UserData.main.SetFloat(key, val);
             }
 
             if(onValueChange != null) {
@@ -347,8 +347,8 @@ public class SceneState : MonoBehaviour {
         if(!mStates.TryGetValue(name, out v)) {
             //try user data
             string key = string.Format(DataFormat, mScene, name);
-            if(UserData.instance.HasKey(key)) {
-                v.Apply(UserData.instance, key);
+            if(UserData.main.HasKey(key)) {
+                v.Apply(UserData.main, key);
                 if(v.type == Type.String) {
                     mStates.Add(name, v);
                     return v.sval;
@@ -390,7 +390,7 @@ public class SceneState : MonoBehaviour {
         if(isValueSet) {
             if(persistent) {
                 string key = string.Format(DataFormat, mScene, name);
-                UserData.instance.SetString(key, val);
+                UserData.main.SetString(key, val);
             }
 
             if(onValueChange != null) {
@@ -428,7 +428,7 @@ public class SceneState : MonoBehaviour {
     public bool HasGlobalValue(string name) {
         if(!mGlobalStates.ContainsKey(name)) {
             //try user data
-            return UserData.instance.HasKey(string.Format(GlobalDataFormat, name));
+            return UserData.main.HasKey(string.Format(GlobalDataFormat, name));
         }
 
         return true;
@@ -438,7 +438,7 @@ public class SceneState : MonoBehaviour {
         mGlobalStates.Remove(name);
 
         if(persistent)
-            UserData.instance.Delete(string.Format(GlobalDataFormat, name));
+            UserData.main.Delete(string.Format(GlobalDataFormat, name));
     }
 
     public StateValue GetGlobalValueRaw(string name) {
@@ -455,7 +455,7 @@ public class SceneState : MonoBehaviour {
         if(mGlobalStates != null) {
             StateValue v;
             if(!mGlobalStates.TryGetValue(name, out v)) {
-                System.Type t = UserData.instance.GetType(string.Format(GlobalDataFormat, name));
+                System.Type t = UserData.main.GetType(string.Format(GlobalDataFormat, name));
                 if(t == typeof(int))
                     return Type.Integer;
                 else if(t == typeof(float))
@@ -477,8 +477,8 @@ public class SceneState : MonoBehaviour {
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
             string key = string.Format(GlobalDataFormat, name);
-            if(UserData.instance.HasKey(key)) {
-                v.Apply(UserData.instance, key);
+            if(UserData.main.HasKey(key)) {
+                v.Apply(UserData.main, key);
                 if(v.type == Type.Integer) {
                     mGlobalStates.Add(name, v);
                     return v.ival;
@@ -518,7 +518,7 @@ public class SceneState : MonoBehaviour {
         if(isValueSet) {
             if(persistent) {
                 string key = string.Format(GlobalDataFormat, name);
-                UserData.instance.SetInt(key, val);
+                UserData.main.SetInt(key, val);
             }
 
             if(onValueChange != null) {
@@ -537,20 +537,20 @@ public class SceneState : MonoBehaviour {
                 string key = string.Format(DataFormat, mScene, name);
                 switch(curVal.type) {
                     case Type.Integer:
-                        UserData.instance.SetInt(key, curVal.ival);
+                        UserData.main.SetInt(key, curVal.ival);
                         break;
                     case Type.Float:
-                        UserData.instance.SetFloat(key, curVal.fval);
+                        UserData.main.SetFloat(key, curVal.fval);
                         break;
                     case Type.String:
-                        UserData.instance.SetString(key, curVal.sval);
+                        UserData.main.SetString(key, curVal.sval);
                         break;
                 }
             }
         }
         else {
             string key = string.Format(DataFormat, mScene, name);
-            UserData.instance.Delete(key);
+            UserData.main.Delete(key);
         }
     }
 
@@ -583,8 +583,8 @@ public class SceneState : MonoBehaviour {
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
             string key = string.Format(GlobalDataFormat, name);
-            if(UserData.instance.HasKey(key)) {
-                v.Apply(UserData.instance, key);
+            if(UserData.main.HasKey(key)) {
+                v.Apply(UserData.main, key);
                 if(v.type == Type.Float) {
                     mGlobalStates.Add(name, v);
                     return v.fval;
@@ -624,7 +624,7 @@ public class SceneState : MonoBehaviour {
         if(isValueSet) {
             if(persistent) {
                 string key = string.Format(GlobalDataFormat, name);
-                UserData.instance.SetFloat(key, val);
+                UserData.main.SetFloat(key, val);
             }
 
             if(onValueChange != null) {
@@ -641,8 +641,8 @@ public class SceneState : MonoBehaviour {
         if(!mGlobalStates.TryGetValue(name, out v)) {
             //try user data
             string key = string.Format(GlobalDataFormat, name);
-            if(UserData.instance.HasKey(key)) {
-                v.Apply(UserData.instance, key);
+            if(UserData.main.HasKey(key)) {
+                v.Apply(UserData.main, key);
                 if(v.type == Type.String) {
                     mGlobalStates.Add(name, v);
                     return v.sval;
@@ -682,7 +682,7 @@ public class SceneState : MonoBehaviour {
         if(isValueSet) {
             if(persistent) {
                 string key = string.Format(GlobalDataFormat, name);
-                UserData.instance.SetString(key, val);
+                UserData.main.SetString(key, val);
             }
 
             if(onValueChange != null) {
@@ -707,14 +707,14 @@ public class SceneState : MonoBehaviour {
 
     public void ClearAllSavedData(bool resetValues = true) {
         if(mGlobalStates != null) {
-            UserData.instance.DeleteAllByNameContain(GlobalDataPrefix);
+            UserData.main.DeleteAllByNameContain(GlobalDataPrefix);
 
             if(resetValues)
                 ResetGlobalValues();
         }
 
         if(mStates != null && !string.IsNullOrEmpty(mScene)) {
-            UserData.instance.DeleteAllByNameContain(mScene + ":");
+            UserData.main.DeleteAllByNameContain(mScene + ":");
 
             if(resetValues)
                 ResetValues();
@@ -734,7 +734,7 @@ public class SceneState : MonoBehaviour {
         if(mInstance == null) {
             mInstance = this;
 
-            UserData.instance.actCallback += OnUserDataAction;
+            UserData.main.actCallback += OnUserDataAction;
 
             mStartData = new Dictionary<string, InitData[]>(startData.Length);
             foreach(InitSceneData sdat in startData) {
@@ -813,7 +813,7 @@ public class SceneState : MonoBehaviour {
                 string key = string.Format(GlobalDataFormat, dat.name);
 
                 StateValue s = dat.stateValue;
-                s.Apply(UserData.instance, key);
+                s.Apply(UserData.main, key);
                 if(s.type != Type.Invalid) {
                     if(mGlobalStates.ContainsKey(dat.name))
                         mGlobalStates[dat.name] = s;
@@ -837,7 +837,7 @@ public class SceneState : MonoBehaviour {
                     string key = string.Format(DataFormat, mScene, dat.name);
 
                     StateValue s = dat.stateValue;
-                    s.Apply(UserData.instance, key);
+                    s.Apply(UserData.main, key);
                     if(s.type != Type.Invalid) {
                         if(mStates.ContainsKey(dat.name))
                             mStates[dat.name] = s;

@@ -23,9 +23,11 @@ public class UserPrefsData : UserData {
 
     protected override void SaveRawData(byte[] dat) {
         PlayerPrefs.SetString(_prefKey, System.Convert.ToBase64String(dat));
+        PlayerPrefs.Save();
     }
 
     protected override void DeleteRawData() {
         PlayerPrefs.DeleteKey(_prefKey);
+        PlayerPrefs.Save();
     }
 }

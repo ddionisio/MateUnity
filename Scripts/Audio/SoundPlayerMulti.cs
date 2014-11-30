@@ -65,7 +65,7 @@ public class SoundPlayerMulti : MonoBehaviour {
 			plyr.startTime = dat.realtime ? Time.realtimeSinceStartup : Time.time;
 			plyr.onEndCallback = onEndCallback;
 			plyr.onEndParam = onEndParam;
-            plyr.src.volume = dat.volume * Main.userSettings.soundVolume;
+            plyr.src.volume = dat.volume * UserSettingAudio.instance.soundVolume;
             plyr.src.loop = dat.loop;
 
             if(dat.delay > 0.0f)
@@ -137,8 +137,8 @@ public class SoundPlayerMulti : MonoBehaviour {
     }
 
     void OnDestroy() {
-        if(Main.userSettings != null)
-            Main.userSettings.changeCallback -= UserSettingsChanged;
+        if(UserSettingAudio.instance != null)
+            UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
     }
         
     void Awake() {
@@ -167,7 +167,7 @@ public class SoundPlayerMulti : MonoBehaviour {
             go.SetActive(false);
         }
 
-        Main.userSettings.changeCallback += UserSettingsChanged;
+        UserSettingAudio.instance.changeCallback += UserSettingsChanged;
     }
 
     IEnumerator DoSounds() {
@@ -218,11 +218,12 @@ public class SoundPlayerMulti : MonoBehaviour {
         mSoundActive = false;
     }
 
-    void UserSettingsChanged(UserSettings us) {
+    void UserSettingsChanged(UserSetting us) {
+        UserSettingAudio usa = UserSettingAudio.instance;
         //if(audio.isPlaying)
         for(int i = 0; i < mSfxPlayingCount; i++) {
             SoundPlaying player = mSfxPlaying[i];
-            player.src.volume = player.data.volume * us.soundVolume;
+            player.src.volume = player.data.volume * usa.soundVolume;
         }
     }
 }

@@ -83,7 +83,7 @@ public class MusicManager : MonoBehaviour {
         if(mCurMusic == null || (immediate && mCurMusic != nextMusic)) {
             Stop(false);
             mCurMusic = nextMusic;
-            mCurMusic.source.volume = mCurMusic.defaultVolume * Main.userSettings.musicVolume;
+            mCurMusic.source.volume = mCurMusic.defaultVolume * UserSettingAudio.instance.musicVolume;
             mCurMusic.source.Play();
             SetState(State.Playing);
         }
@@ -124,7 +124,7 @@ public class MusicManager : MonoBehaviour {
             mCurAutoplayInd = 0;
 
         mCurMusic = music[mCurAutoplayInd];
-        mCurMusic.source.volume = mCurMusic.defaultVolume * Main.userSettings.musicVolume;
+        mCurMusic.source.volume = mCurMusic.defaultVolume * UserSettingAudio.instance.musicVolume;
         mCurMusic.source.Play();
         SetState(State.Playing);
     }
@@ -133,8 +133,8 @@ public class MusicManager : MonoBehaviour {
         if(mInstance == this) {
             mInstance = null;
 
-            if(Main.userSettings != null)
-                Main.userSettings.changeCallback += UserSettingsChanged;
+            if(UserSettingAudio.instance != null)
+                UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
 
             musicFinishCallback = null;
         }
@@ -149,7 +149,7 @@ public class MusicManager : MonoBehaviour {
         if(mInstance == null) {
             mInstance = this;
 
-            Main.userSettings.changeCallback += UserSettingsChanged;
+            UserSettingAudio.instance.changeCallback += UserSettingsChanged;
 
             mMusic = new Dictionary<string, MusicData>(music.Length);
             foreach(MusicData dat in music) {
@@ -178,11 +178,11 @@ public class MusicManager : MonoBehaviour {
         }
     }
 
-    void UserSettingsChanged(UserSettings us) {
+    void UserSettingsChanged(UserSetting us) {
         if(mCurMusic != null) {
             switch(mState) {
                 case State.Playing:
-                    mCurMusic.source.volume = mCurMusic.defaultVolume * us.musicVolume;
+                    mCurMusic.source.volume = mCurMusic.defaultVolume * ((UserSettingAudio)us).musicVolume;
                     break;
             }
         }
@@ -208,7 +208,7 @@ public class MusicManager : MonoBehaviour {
                     if(autoPlay != AutoPlayType.None)
                         AutoPlaylistNext();
                     else if(mCurMusic.loop) {//loop
-                        mCurMusic.source.volume = mCurMusic.defaultVolume * Main.userSettings.musicVolume;
+                        mCurMusic.source.volume = mCurMusic.defaultVolume * UserSettingAudio.instance.musicVolume;
                         if(mCurMusic.loopDelay > 0)
                             mCurMusic.source.Play((ulong)System.Math.Round(rate * ((double)mCurMusic.loopDelay)));
                         else
@@ -239,7 +239,7 @@ public class MusicManager : MonoBehaviour {
                     }
                 }
                 else {
-                    mCurMusic.source.volume = mCurMusic.defaultVolume * (1.0f - mCurTime / changeFadeOutDelay) * Main.userSettings.musicVolume;
+                    mCurMusic.source.volume = mCurMusic.defaultVolume * (1.0f - mCurTime / changeFadeOutDelay) * UserSettingAudio.instance.musicVolume;
                 }
                 break;
         }

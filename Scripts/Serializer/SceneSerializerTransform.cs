@@ -22,15 +22,15 @@ public class SceneSerializerTransform : MonoBehaviour {
     void OnDestroy() {
         if(SceneManager.instance)
             SceneManager.instance.sceneChangeCallback -= OnSceneLoad;
-        if(persistent && UserData.instance)
-            UserData.instance.actCallback -= OnUserDataAction;
+        if(persistent && UserData.main)
+            UserData.main.actCallback -= OnUserDataAction;
     }
 
     void Awake() {
         if(SceneManager.instance)
             SceneManager.instance.sceneChangeCallback += OnSceneLoad;
-        if(persistent && UserData.instance)
-            UserData.instance.actCallback += OnUserDataAction;
+        if(persistent && UserData.main)
+            UserData.main.actCallback += OnUserDataAction;
 
         mSerializer = GetComponent<SceneSerializer>();
     }

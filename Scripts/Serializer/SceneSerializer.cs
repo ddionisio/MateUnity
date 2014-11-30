@@ -177,8 +177,8 @@ public class SceneSerializer : MonoBehaviour {
 
         if(_id != invalidID) {
             mRefs[_id] = this;
-            if(UserData.instance)
-                UserData.instance.actCallback += OnUserDataAction;
+            if(UserData.main)
+                UserData.main.actCallback += OnUserDataAction;
         }
     }
 
@@ -187,8 +187,8 @@ public class SceneSerializer : MonoBehaviour {
             if(mRefs != null)
                 mRefs.Remove(_id);
             _id = invalidID;
-            if(UserData.instance)
-                UserData.instance.actCallback -= OnUserDataAction;
+            if(UserData.main)
+                UserData.main.actCallback -= OnUserDataAction;
         }
     }
 

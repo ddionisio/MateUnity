@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 //generalized input handling, useful for porting to non-unity conventions (e.g. Ouya)
 [AddComponentMenu("M8/Core/InputManager")]
-public class InputManager : MonoBehaviour {
+public class InputManager : UserSetting {
     public const int PlayerDefault = 0;
     public const int MaxPlayers = 8;
     public const int ActionInvalid = -1;
@@ -306,25 +306,25 @@ public class InputManager : MonoBehaviour {
                         for(int index = 0; index < pd.keys.Length; index++) {
                             string usdKey = _BaseKey(act, player, index);
 
-                            if(PlayerPrefs.HasKey(usdKey + "_i")) {
+                            if(userData.HasKey(usdKey + "_i")) {
                                 if(pd.keys[index] == null)
                                     pd.keys[index] = new Key();
 
-                                pd.keys[index].SetAsInput(PlayerPrefs.GetString(usdKey + "_i"));
+                                pd.keys[index].SetAsInput(userData.GetString(usdKey + "_i"));
                             }
-                            else if(PlayerPrefs.HasKey(usdKey + "_k")) {
+                            else if(userData.HasKey(usdKey + "_k")) {
                                 if(pd.keys[index] == null)
                                     pd.keys[index] = new Key();
 
-                                pd.keys[index]._SetAsKey((uint)PlayerPrefs.GetInt(usdKey + "_k"));
+                                pd.keys[index]._SetAsKey((uint)userData.GetInt(usdKey + "_k"));
                             }
-                            else if(PlayerPrefs.HasKey(usdKey + "_m")) {
+                            else if(userData.HasKey(usdKey + "_m")) {
                                 if(pd.keys[index] == null)
                                     pd.keys[index] = new Key();
 
-                                pd.keys[index]._SetAsMap((uint)PlayerPrefs.GetInt(usdKey + "_m"));
+                                pd.keys[index]._SetAsMap((uint)userData.GetInt(usdKey + "_m"));
                             }
-                            else if(PlayerPrefs.HasKey(usdKey + "_d"))
+                            else if(userData.HasKey(usdKey + "_d"))
                                 pd.keys[index].ResetKeys();
                         }
                     }
@@ -338,10 +338,10 @@ public class InputManager : MonoBehaviour {
     }
 
     void _DeletePlayerPrefs(string baseKey) {
-        PlayerPrefs.DeleteKey(baseKey + "_i");
-        PlayerPrefs.DeleteKey(baseKey + "_k");
-        PlayerPrefs.DeleteKey(baseKey + "_m");
-        PlayerPrefs.DeleteKey(baseKey + "_d");
+        userData.Delete(baseKey + "_i");
+        userData.Delete(baseKey + "_k");
+        userData.Delete(baseKey + "_m");
+        userData.Delete(baseKey + "_d");
     }
 
     /// <summary>
@@ -364,7 +364,7 @@ public class InputManager : MonoBehaviour {
                                     _DeletePlayerPrefs(usdKey);
 
                                     if(!string.IsNullOrEmpty(key.input)) {
-                                        PlayerPrefs.SetString(usdKey + "_k", key.input);
+                                        userData.SetString(usdKey + "_k", key.input);
                                     }
                                     else {
                                         //pack data
@@ -385,7 +385,7 @@ public class InputManager : MonoBehaviour {
                                         if(postfix != null) {
                                             int val = (int)M8.Util.MakeLong(M8.Util.MakeWord((byte)key.axis, (byte)key.index), code);
 
-                                            PlayerPrefs.SetInt(usdKey + postfix, val);
+                                            userData.SetInt(usdKey + postfix, val);
                                         }
                                     }
 
@@ -394,7 +394,7 @@ public class InputManager : MonoBehaviour {
                             }
                             else {
                                 _DeletePlayerPrefs(usdKey);
-                                PlayerPrefs.SetString(usdKey + "_d", "-");
+                                userData.SetString(usdKey + "_d", "-");
                             }
                         }
                     }
@@ -625,7 +625,9 @@ public class InputManager : MonoBehaviour {
         }
     }
 
-    protected virtual void Awake() {
+    protected override void Awake() {
+        base.Awake();
+
         if(mInstance != null)
             return;
         else
