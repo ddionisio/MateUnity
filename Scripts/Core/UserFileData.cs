@@ -13,12 +13,14 @@ public class UserFileData : UserData {
 
     public string loadOnStartName;
 
+    private string mFilename;
+
     public void LoadFile(string name) {
-        if(mKey != name) {
-            if(!string.IsNullOrEmpty(mKey))
+        if(mFilename != name) {
+            if(!string.IsNullOrEmpty(mFilename))
                 Delete();
 
-            mKey = name;
+            mFilename = name;
 
             Load();
         }
@@ -30,11 +32,11 @@ public class UserFileData : UserData {
     }
 
     protected override byte[] LoadRawData() {
-        if(!string.IsNullOrEmpty(mKey)) {
+        if(!string.IsNullOrEmpty(mFilename)) {
             string folderPath = string.Format("{0}/{1}", Application.persistentDataPath, folder);
 
             if(Directory.Exists(folderPath)) {
-                string path = string.Format("{0}/{1}.{2}", folderPath, mKey, ext);
+                string path = string.Format("{0}/{1}.{2}", folderPath, mFilename, ext);
                 if(File.Exists(path)) {
                     using(BinaryReader bs = new BinaryReader(File.Open(path, FileMode.Open), System.Text.Encoding.UTF8)) {
                         string saveHeader = bs.ReadString();
@@ -61,13 +63,13 @@ public class UserFileData : UserData {
     }
 
     protected override void SaveRawData(byte[] dat) {
-        if(!string.IsNullOrEmpty(mKey)) {
+        if(!string.IsNullOrEmpty(mFilename)) {
             string folderPath = string.Format("{0}/{1}", Application.persistentDataPath, folder);
 
             if(!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
 
-            string path = string.Format("{0}/{1}.{2}", folderPath, mKey, ext);
+            string path = string.Format("{0}/{1}.{2}", folderPath, mFilename, ext);
 
             using(BinaryWriter bw = new BinaryWriter(File.Open(path, FileMode.Create), System.Text.Encoding.UTF8)) {
                 bw.Write(fileHeader);
@@ -79,19 +81,14 @@ public class UserFileData : UserData {
     }
 
     protected override void DeleteRawData() {
-        if(!string.IsNullOrEmpty(mKey)) {
+        if(!string.IsNullOrEmpty(mFilename)) {
             string folderPath = string.Format("{0}/{1}", Application.persistentDataPath, folder);
 
             if(Directory.Exists(folderPath)) {
-                string path = string.Format("{0}/{1}.{2}", folderPath, mKey, ext);
+                string path = string.Format("{0}/{1}.{2}", folderPath, mFilename, ext);
                 File.Delete(path);
             }
         }
-        mKey = "";
-    }
-
-    protected override void Awake() {
-        mKey = "";
-        base.Awake();
+        mFilename = "";
     }
 }

@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-[CustomEditor(typeof(UserData))]
+[CustomEditor(typeof(UserData), true)]
 public class UserDataInspector : Editor {
     private bool mDetailFold;
 
@@ -15,14 +15,15 @@ public class UserDataInspector : Editor {
 
             if(mDetailFold = EditorGUILayout.Foldout(mDetailFold, "Items")) {
                 UserData dat = target as UserData;
+                if(dat.valueCount > 0) {
+                    GUILayout.BeginVertical();
 
-                GUILayout.BeginVertical();
+                    foreach(KeyValuePair<string, object> itm in dat) {
+                        EditorGUILayout.LabelField(itm.Key, itm.Value.ToString());
+                    }
 
-                foreach(KeyValuePair<string, object> itm in dat) {
-                    EditorGUILayout.LabelField(itm.Key, itm.Value.ToString());
+                    GUILayout.EndVertical();
                 }
-
-                GUILayout.EndVertical();
             }
         }
     }

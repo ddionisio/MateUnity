@@ -5,8 +5,8 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
-[AddComponentMenu("M8/Core/UserData")]
-public class UserData : MonoBehaviour, System.Collections.IEnumerable {
+[AddComponentMenu("")]
+public abstract class UserData : MonoBehaviour, System.Collections.IEnumerable {
     public enum Action {
         Load,
         Save
@@ -24,9 +24,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
     public bool autoSave = true;
 
     public event OnAction actCallback;
-
-    protected string mKey = "ud";
-
+        
     private Dictionary<string, object> mValues = null;
 
     private Dictionary<string, object> mValuesSnapshot = null;
@@ -36,6 +34,8 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
     public static UserData instance { get { return mInstance; } }
 
     public bool started { get; private set; }
+
+    public int valueCount { get { return mValues != null ? mValues.Count : 0; } }
 
     public string[] GetKeys(System.Predicate<KeyValuePair<string, object>> predicate) {
         List<string> items = new List<string>(mValues.Count);
@@ -48,6 +48,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
     }
 
     public System.Collections.IEnumerator GetEnumerator() {
+        if(mValues == null) return null;
         return mValues.GetEnumerator();
     }
 
@@ -115,11 +116,11 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         DeleteRawData();
     }
 
-    public virtual bool HasKey(string name) {
+    public bool HasKey(string name) {
         return mValues != null && mValues.ContainsKey(name);
     }
 
-    public virtual System.Type GetType(string name) {
+    public System.Type GetType(string name) {
         object ret;
         if(mValues != null && mValues.TryGetValue(name, out ret)) {
             if(ret != null) return ret.GetType();
@@ -127,7 +128,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         return null;
     }
 
-    public virtual int GetInt(string name, int defaultValue = 0) {
+    public int GetInt(string name, int defaultValue = 0) {
         object ret;
         if(mValues != null && mValues.TryGetValue(name, out ret)) {
             if(ret is int)
@@ -137,7 +138,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         return defaultValue;
     }
 
-    public virtual void SetInt(string name, int value) {
+    public void SetInt(string name, int value) {
         if(mValues == null) mValues = new Dictionary<string, object>();
 
         if(!mValues.ContainsKey(name))
@@ -146,7 +147,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
             mValues[name] = value;
     }
 
-    public virtual float GetFloat(string name, float defaultValue = 0) {
+    public float GetFloat(string name, float defaultValue = 0) {
         object ret;
         if(mValues != null && mValues.TryGetValue(name, out ret)) {
             if(ret is float)
@@ -156,7 +157,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         return defaultValue;
     }
 
-    public virtual void SetFloat(string name, float value) {
+    public void SetFloat(string name, float value) {
         if(mValues == null) mValues = new Dictionary<string, object>();
 
         if(!mValues.ContainsKey(name))
@@ -165,7 +166,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
             mValues[name] = value;
     }
 
-    public virtual string GetString(string name, string defaultValue = "") {
+    public string GetString(string name, string defaultValue = "") {
         object ret;
         if(mValues != null && mValues.TryGetValue(name, out ret)) {
             if(ret is string)
@@ -175,7 +176,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         return defaultValue;
     }
 
-    public virtual void SetString(string name, string value) {
+    public void SetString(string name, string value) {
         if(mValues == null) mValues = new Dictionary<string, object>();
 
         if(!mValues.ContainsKey(name))
@@ -194,26 +195,24 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         }
     }
 
-    public virtual void Delete(string name) {
+    public void Delete(string name) {
         if(mValues != null)
             mValues.Remove(name);
     }
+
+    ////////////////////////////////////////////
+    // Implements
+    ////////////////////////////////////////////
 
     protected virtual void LoadOnStart() {
         Load();
     }
 
-    protected virtual byte[] LoadRawData() {
-        return System.Convert.FromBase64String(PlayerPrefs.GetString(mKey, ""));
-    }
+    protected abstract byte[] LoadRawData();
 
-    protected virtual void SaveRawData(byte[] dat) {
-        PlayerPrefs.SetString(mKey, System.Convert.ToBase64String(dat));
-    }
+    protected abstract void SaveRawData(byte[] dat);
 
-    protected virtual void DeleteRawData() {
-        PlayerPrefs.DeleteKey(mKey);
-    }
+    protected abstract void DeleteRawData();
 
     private Data[] LoadData(byte[] dat) {
         Data[] ret = null;
@@ -257,7 +256,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         }
     }
 
-    protected virtual void Awake() {
+    void Awake() {
         if(mInstance == null) {
             mInstance = this;
 
@@ -268,7 +267,7 @@ public class UserData : MonoBehaviour, System.Collections.IEnumerable {
         }
     }
 
-    protected virtual void Start() {
+    void Start() {
         started = true;
     }
 }
