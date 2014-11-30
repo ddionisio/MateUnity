@@ -112,6 +112,24 @@ namespace M8 {
             return Hermite(v2, t1, v3, t2, s);
         }
 
+        /// <summary>
+        /// Compute the Barycentric (a,b,c) based on given p in relation to triangle (p0, p1, p2)
+        /// </summary>
+        public static Vector3 Barycentric(Vector2 p, Vector2 p0, Vector2 p1, Vector2 p2) {
+            Vector2 v0 = p1 - p0, v1 = p2 - p0, v2 = p - p0;
+            float d00 = Vector2.Dot(v0, v0);
+            float d01 = Vector2.Dot(v0, v1);
+            float d11 = Vector2.Dot(v1, v1);
+            float d20 = Vector2.Dot(v2, v0);
+            float d21 = Vector2.Dot(v2, v1);
+            float denom = d00*d11 - d01*d01;
+            Vector3 ret;
+            ret.y = (d11 * d20 - d01 * d21) / denom;
+            ret.z = (d00 * d21 - d01 * d20) / denom;
+            ret.x = 1.0f - ret.y - ret.z;
+            return ret;
+        }
+
         //-------------- 3D --------------
 
         public static bool CompareApprox(Vector3 v1, Vector3 v2, float approx = Mathf.Epsilon) {
