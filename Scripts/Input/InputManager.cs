@@ -30,6 +30,7 @@ public class InputManager : UserSetting {
     }
 
     public struct Info {
+        public int action;
         public State state;
         public float axis;
         public int index;
@@ -168,7 +169,8 @@ public class InputManager : UserSetting {
 
         public OnButton callback;
 
-        public PlayerData(List<Key> aKeys) {
+        public PlayerData(int action, List<Key> aKeys) {
+            info.action = action;
             down = false;
             ApplyKeyList(aKeys);
         }
@@ -215,7 +217,7 @@ public class InputManager : UserSetting {
             for(int i = 0; i < numPlayers; i++) {
                 if(playerKeys[i] != null) {
                     if(players[i] == null)
-                        players[i] = new PlayerData(playerKeys[i]);
+                        players[i] = new PlayerData(bind.action, playerKeys[i]);
                     else
                         players[i].ApplyKeyList(playerKeys[i]);
                 }
@@ -478,14 +480,46 @@ public class InputManager : UserSetting {
         return 0f;
     }
 
-    public State GetState(int player, int action) {
-        return mBinds[action].players[player].info.state;
+    public bool IsPressed(int player, string action) {
+        int actionInd = GetActionIndex(action);
+        if(actionInd != -1) return IsPressed(player, actionInd);
+        return false;
     }
 
-    public State GetState(int player, string action) {
+    public bool IsPressed(int player, int action) {
+        if(action == ActionInvalid)
+            return false;
+
+        Key[] keys = mBinds[action].players[player].keys;
+
+        foreach(Key key in keys) {
+            if(key != null && ProcessButtonPressed(key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsReleased(int player, string action) {
         int actionInd = GetActionIndex(action);
-        if(actionInd != -1) return GetState(player, actionInd);
-        return State.None;
+        if(actionInd != -1) return IsReleased(player, actionInd);
+        return false;
+    }
+
+    public bool IsReleased(int player, int action) {
+        if(action == ActionInvalid)
+            return false;
+
+        Key[] keys = mBinds[action].players[player].keys;
+
+        foreach(Key key in keys) {
+            if(key != null && ProcessButtonReleased(key)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public bool IsDown(int player, int action) {
@@ -612,6 +646,26 @@ public class InputManager : UserSetting {
         return
             key.input.Length > 0 ? Input.GetButton(key.input) :
             key.code != KeyCode.None ? Input.GetKey(key.code) :
+            false;
+    }
+
+    /// <summary>
+    /// Used by IsPressed
+    /// </summary>
+    protected virtual bool ProcessButtonPressed(Key key) {
+        return
+            key.input.Length > 0 ? Input.GetButtonDown(key.input) :
+            key.code != KeyCode.None ? Input.GetKeyDown(key.code) :
+            false;
+    }
+
+    /// <summary>
+    /// Used by IsReleased
+    /// </summary>
+    protected virtual bool ProcessButtonReleased(Key key) {
+        return
+            key.input.Length > 0 ? Input.GetButtonUp(key.input) :
+            key.code != KeyCode.None ? Input.GetKeyUp(key.code) :
             false;
     }
 
