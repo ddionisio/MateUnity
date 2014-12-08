@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 //generalized input handling, useful for porting to non-unity conventions (e.g. Ouya)
 [AddComponentMenu("M8/Core/InputManager")]
-public class InputManager : UserSetting {
+public class InputManager : MonoBehaviour {
     public const int PlayerDefault = 0;
     public const int MaxPlayers = 8;
     public const int ActionInvalid = -1;
@@ -105,6 +105,18 @@ public class InputManager : UserSetting {
             index = M8.Util.GetLoByte(s1);
         }
 
+        public int _CreateKeyCodeDataPak() {
+            if(code != KeyCode.None)
+                return (int)M8.Util.MakeLong(M8.Util.MakeWord((byte)axis, (byte)index), (ushort)code);
+            return 0;
+        }
+
+        public int _CreateMapDataPak() {
+            if(map != InputKeyMap.None)
+                return (int)M8.Util.MakeLong(M8.Util.MakeWord((byte)axis, (byte)index), (ushort)map);
+            return 0;
+        }
+
         public void _SetAsKey(uint dataPak) {
             ResetKeys();
 
@@ -157,10 +169,7 @@ public class InputManager : UserSetting {
         public List<Key> keys = null;
     }
 
-    public TextAsset actionConfig;
-    public TextAsset config;
-
-    protected class PlayerData {
+    public class PlayerData {
         public Info info;
 
         public bool down;
@@ -180,7 +189,7 @@ public class InputManager : UserSetting {
         }
     }
 
-    protected class BindData {
+    public class BindData {
         public Control control;
         public float deadZone;
         public bool forceRaw;
@@ -224,7 +233,10 @@ public class InputManager : UserSetting {
             }
         }
     }
-        
+
+    public TextAsset actionConfig;
+    public TextAsset config;   
+
     protected BindData[] mBinds;
 
     private const int buttonCallMax = 32;
@@ -260,11 +272,14 @@ public class InputManager : UserSetting {
         return action >= 0 && action < mActionNames.Length ? mActionNames[action] : "";
     }
 
+    public BindData GetBindData(int action) {
+        return mBinds[action];
+    }
+
     /// <summary>
-    /// Call this to reload binds from config and prefs.  This is to cancel editing key binds.
-    /// If deletePrefs = true, then remove custom binds from prefs.
+    /// Reverts bind settings to loaded configuration
     /// </summary>
-    public void RevertBinds(bool deletePrefs) {
+    public void RevertBinds() {
         fastJSON.JSON.Parameters.UseExtensions = false;
         List<Bind> keys = fastJSON.JSON.ToObject<List<Bind>>(config.text);
 
@@ -273,133 +288,6 @@ public class InputManager : UserSetting {
                 if(mBinds[key.action] != null) {
                     BindData bindDat = mBinds[key.action];
                     bindDat.ApplyKeys(key);
-                }
-            }
-        }
-
-        if(deletePrefs) {
-            for(int act = 0; act < mBinds.Length; act++) {
-                BindData bindDat = mBinds[act];
-                if(bindDat != null) {
-                    for(int player = 0; player < bindDat.players.Length; player++) {
-                        PlayerData pd = bindDat.players[player];
-                        if(pd != null) {
-                            for(int index = 0; index < pd.keys.Length; index++) {
-                                string usdKey = _BaseKey(act, player, index);
-                                _DeletePlayerPrefs(usdKey);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            LoadBinds();
-        }
-    }
-
-    private void LoadBinds() {
-        for(int act = 0; act < mBinds.Length; act++) {
-            BindData bindDat = mBinds[act];
-            if(bindDat != null) {
-                for(int player = 0; player < bindDat.players.Length; player++) {
-                    PlayerData pd = bindDat.players[player];
-                    if(pd != null) {
-                        for(int index = 0; index < pd.keys.Length; index++) {
-                            string usdKey = _BaseKey(act, player, index);
-
-                            if(userData.HasKey(usdKey + "_i")) {
-                                if(pd.keys[index] == null)
-                                    pd.keys[index] = new Key();
-
-                                pd.keys[index].SetAsInput(userData.GetString(usdKey + "_i"));
-                            }
-                            else if(userData.HasKey(usdKey + "_k")) {
-                                if(pd.keys[index] == null)
-                                    pd.keys[index] = new Key();
-
-                                pd.keys[index]._SetAsKey((uint)userData.GetInt(usdKey + "_k"));
-                            }
-                            else if(userData.HasKey(usdKey + "_m")) {
-                                if(pd.keys[index] == null)
-                                    pd.keys[index] = new Key();
-
-                                pd.keys[index]._SetAsMap((uint)userData.GetInt(usdKey + "_m"));
-                            }
-                            else if(userData.HasKey(usdKey + "_d"))
-                                pd.keys[index].ResetKeys();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    string _BaseKey(int action, int player, int key) {
-        return string.Format("bind_{0}_{1}_{2}", action, player, key);
-    }
-
-    void _DeletePlayerPrefs(string baseKey) {
-        userData.Delete(baseKey + "_i");
-        userData.Delete(baseKey + "_k");
-        userData.Delete(baseKey + "_m");
-        userData.Delete(baseKey + "_d");
-    }
-
-    /// <summary>
-    /// Call this once you are done modifying key binds
-    /// </summary>
-    public void SaveBinds() {
-        for(int act = 0; act < mBinds.Length; act++) {
-            BindData bindDat = mBinds[act];
-            if(bindDat != null) {
-                for(int player = 0; player < bindDat.players.Length; player++) {
-                    PlayerData pd = bindDat.players[player];
-                    if(pd != null) {
-                        for(int index = 0; index < pd.keys.Length; index++) {
-                            string usdKey = _BaseKey(act, player, index);
-
-                            Key key = pd.keys[index];
-                            if(key.isValid) {
-                                if(key.IsDirty()) {
-                                    //for previous bind if type is changed
-                                    _DeletePlayerPrefs(usdKey);
-
-                                    if(!string.IsNullOrEmpty(key.input)) {
-                                        userData.SetString(usdKey + "_k", key.input);
-                                    }
-                                    else {
-                                        //pack data
-                                        ushort code = 0;
-                                        string postfix;
-
-                                        if(key.code != KeyCode.None) {
-                                            code = (ushort)key.code;
-                                            postfix = "_k";
-                                        }
-                                        else if(key.map != InputKeyMap.None) {
-                                            code = (ushort)key.map;
-                                            postfix = "_m";
-                                        }
-                                        else
-                                            postfix = null;
-
-                                        if(postfix != null) {
-                                            int val = (int)M8.Util.MakeLong(M8.Util.MakeWord((byte)key.axis, (byte)key.index), code);
-
-                                            userData.SetInt(usdKey + postfix, val);
-                                        }
-                                    }
-
-                                    key.SetDirty(false);
-                                }
-                            }
-                            else {
-                                _DeletePlayerPrefs(usdKey);
-                                userData.SetString(usdKey + "_d", "-");
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -679,9 +567,7 @@ public class InputManager : UserSetting {
         }
     }
 
-    protected override void Awake() {
-        base.Awake();
-
+    protected virtual void Awake() {
         if(mInstance != null)
             return;
         else
@@ -715,9 +601,6 @@ public class InputManager : UserSetting {
             //register input actions to localizer
             for(int i = 0; i < actionCount; i++)
                 GameLocalize.instance.RegisterParam("input_"+i, OnTextParam);
-                        
-            //load user config binds
-            LoadBinds();
         }
         else {
             mBinds = new BindData[0];

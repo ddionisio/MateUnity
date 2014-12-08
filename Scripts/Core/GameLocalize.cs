@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 [AddComponentMenu("M8/Core/GameLocalize")]
-public class GameLocalize : UserSetting {
-    public const string languageKey = "lang";
+public class GameLocalize : MonoBehaviour {
+    public GameLanguage defaultLanguage = GameLanguage.English;
 
     public delegate string ParameterCallback(string paramKey);
     public delegate void LocalizeCallback();
@@ -43,6 +43,16 @@ public class GameLocalize : UserSetting {
     private Dictionary<string, ParameterCallback> mParams = null;
 
     public static GameLocalize instance { get { return mInstance; } }
+
+    public GameLanguage language {
+        get { return mCurLanguage; }
+        set {
+            if(mCurLanguage != value) {
+                mCurLanguage = value;
+                Load();
+            }
+        }
+    }
 
     /// <summary>
     /// Register during Awake such that GetText will be able to fill params correctly
@@ -166,13 +176,11 @@ public class GameLocalize : UserSetting {
         }
     }
 
-    protected override void Awake() {
+    void Awake() {
         if(mInstance == null)
             mInstance = this;
 
-        base.Awake();
-
-        mCurLanguage = (GameLanguage)userData.GetInt(languageKey, (int)GameLanguage.English);
+        mCurLanguage = defaultLanguage;
         Load();
     }
 }
