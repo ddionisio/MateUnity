@@ -25,13 +25,14 @@ public class UIModalManagerInspector : Editor {
 
         for(int i = 0; i < input.uis.Length; i++) {
             UIModalManager.UIData dat = input.uis[i];
+            string goName = dat.e_ui.name;
 
             GUILayout.BeginVertical(GUI.skin.box);
 
             GUILayout.BeginHorizontal();
 
             if(dat.e_ui != null) {
-                GUILayout.Label(dat.e_ui.name);
+                GUILayout.Label(goName);
             }
             else {
                 GUILayout.Label("(Need target!)");
@@ -40,8 +41,8 @@ public class UIModalManagerInspector : Editor {
             GUILayout.FlexibleSpace();
 
             if(dat.e_ui != null) {
-                if(M8.Editor.Utility.DrawCopyButton()) {
-                    mTE.content = new GUIContent(dat.e_ui.name);
+                if(M8.Editor.Utility.DrawCopyButton("Click to copy name.")) {
+                    mTE.content = new GUIContent(goName);
                     mTE.SelectAll();
                     mTE.Copy();
                 }
@@ -57,7 +58,7 @@ public class UIModalManagerInspector : Editor {
 
             dat.e_ui = EditorGUILayout.ObjectField("target", dat.e_ui, typeof(UIController), true) as UIController;
             if(dat.e_ui) {
-                dat.name = dat.e_ui.name;
+                dat.name = goName;
 
                 dat.isPrefab = PrefabUtility.GetPrefabType(dat.e_ui) == PrefabType.Prefab;
                 if(dat.isPrefab) {
@@ -65,7 +66,12 @@ public class UIModalManagerInspector : Editor {
                 }
             }
 
-            dat.exclusive = EditorGUILayout.Toggle("exclusive", dat.exclusive);
+            bool openOnStart = dat.name == input.openOnStart;
+            bool newOpenOnStart = EditorGUILayout.Toggle("Open On Start", openOnStart);
+            if(openOnStart != newOpenOnStart) {
+                input.openOnStart = newOpenOnStart ? dat.name : "";
+                GUI.changed = true;
+            }
 
             GUILayout.EndVertical();
         }
@@ -87,7 +93,6 @@ public class UIModalManagerInspector : Editor {
             System.Array.Resize(ref input.uis, input.uis.Length + 1);
             UIModalManager.UIData newDat = new UIModalManager.UIData();
             newDat.e_ui = mNewUI;
-            newDat.exclusive = true;
             input.uis[input.uis.Length - 1] = newDat;
             mNewUI = null;
 
@@ -95,12 +100,6 @@ public class UIModalManagerInspector : Editor {
         }
 
         GUI.enabled = lastEnabled;
-
-        GUILayout.EndVertical();
-
-        GUILayout.BeginVertical(GUI.skin.box);
-
-        input.openOnStart = EditorGUILayout.TextField("Start", input.openOnStart);
 
         GUILayout.EndVertical();
 

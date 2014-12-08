@@ -89,16 +89,16 @@ namespace M8.Editor {
             }
         }
 
-        public static bool DrawAddButton() {
-            return GUILayout.Button(new GUIContent("+", "Click to add"), EditorStyles.toolbarButton);
+        public static bool DrawAddButton(string toolTip = "Click to add") {
+            return GUILayout.Button(new GUIContent("+", toolTip), EditorStyles.toolbarButton);
         }
 
-        public static bool DrawRemoveButton() {
-            return GUILayout.Button(new GUIContent("-", "Click to remove"), EditorStyles.toolbarButton);
+        public static bool DrawRemoveButton(string toolTip = "Click to remove") {
+            return GUILayout.Button(new GUIContent("-", toolTip), EditorStyles.toolbarButton);
         }
 
-        public static bool DrawCopyButton() {
-            return GUILayout.Button(new GUIContent("C", "Click to copy"), EditorStyles.toolbarButton);
+        public static bool DrawCopyButton(string toolTip = "Click to copy") {
+            return GUILayout.Button(new GUIContent("C", toolTip), EditorStyles.toolbarButton);
         }
 
         /// <summary>

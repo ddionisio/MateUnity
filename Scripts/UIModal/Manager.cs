@@ -14,7 +14,8 @@ namespace M8.UIModal {
             [SerializeField]
             Controller _ui;
 
-            public bool exclusive = true; //hide modals behind
+            public bool exclusive { get { return _ui ? _ui.exclusive : false; } }
+
             public bool isPrefab;
             public Transform instantiateTo; //target to instantiate ui if it's a prefab
 

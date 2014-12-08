@@ -4,6 +4,8 @@ using System.Collections;
 namespace M8.UIModal {
     [AddComponentMenu("M8/UI Modal/Controller")]
     public class Controller : MonoBehaviour {
+        public bool exclusive = true; //hide modals behind
+
         public delegate void ActiveCallback(bool active);
         public delegate void Callback();
 
