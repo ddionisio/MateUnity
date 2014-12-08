@@ -2,6 +2,9 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
+using UIModalManager = M8.UIModal.Manager;
+using UIController = M8.UIModal.Controller;
+
 [CustomEditor(typeof(UIModalManager))]
 public class UIModalManagerInspector : Editor {
     private UIController mNewUI = null;

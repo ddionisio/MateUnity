@@ -2,12 +2,12 @@
 using UnityEngine.EventSystems;
 using System.Collections;
 
-namespace M8 {
+namespace M8.UI {
     /// <summary>
     /// Use this for controlling the UI with InputManager
     /// </summary>
     [AddComponentMenu("M8/UI/InputModule")]
-    public class UIInputModule : PointerInputModule {
+    public class InputModule : PointerInputModule {
         private float m_NextAction;
 
         private InputMode m_CurrentInputMode = InputMode.Mouse;
@@ -15,7 +15,7 @@ namespace M8 {
         private Vector2 m_LastMousePosition;
         private Vector2 m_MousePosition;
 
-        protected UIInputModule() { }
+        protected InputModule() { }
 
         public enum InputMode {
             Mouse,
@@ -25,7 +25,7 @@ namespace M8 {
         public InputMode inputMode {
             get { return m_CurrentInputMode; }
         }
-
+                
         [SerializeField]
         private int m_playerIndex = 0;
 
@@ -55,6 +55,17 @@ namespace M8 {
 
         [SerializeField]
         private bool m_AllowActivationOnMobileDevice;
+
+        /// <summary>
+        /// The starting input mode while active
+        /// </summary>
+        [SerializeField]
+        private InputMode m_primaryInputMode = InputMode.Mouse;
+
+        public InputMode primaryInputMode {
+            get { return m_primaryInputMode; }
+            set { m_primaryInputMode = value; }
+        }
 
         public bool allowActivationOnMobileDevice {
             get { return m_AllowActivationOnMobileDevice; }
@@ -126,6 +137,9 @@ namespace M8 {
 
         public override void ActivateModule() {
             base.ActivateModule();
+
+            m_CurrentInputMode = m_primaryInputMode;
+
             m_MousePosition = Input.mousePosition;
             m_LastMousePosition = Input.mousePosition;
 

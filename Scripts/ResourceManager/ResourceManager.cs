@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace M8 {
+    [AddComponentMenu("M8/Resource Manager")]
     public class ResourceManager : MonoBehaviour {
         public enum LoaderType {
             Internal, //load from Resources

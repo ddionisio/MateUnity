@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
+using UIModalInputStackPop = M8.UIModal.Input.CloseTop;
+
 [CustomEditor(typeof(UIModalInputStackPop))]
 public class UIModalInputStackPopInspector : Editor {
     public override void OnInspectorGUI() {

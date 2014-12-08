@@ -2,13 +2,15 @@
 using UnityEditor;
 using System.Collections;
 
-namespace M8 {
-    [CustomEditor(typeof(UIInputModule))]
+namespace M8.UI {
+    [CustomEditor(typeof(InputModule))]
     public class UIInputModuleInspector : UnityEditor.Editor {
         public override void OnInspectorGUI() {
             GUI.changed = false;
 
-            UIInputModule obj = target as UIInputModule;
+            InputModule obj = target as InputModule;
+
+            obj.primaryInputMode = (InputModule.InputMode)EditorGUILayout.EnumPopup("Primary Input", obj.primaryInputMode);
 
             obj.playerIndex = EditorGUILayout.IntField("Player Index", obj.playerIndex);
 
