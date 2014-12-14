@@ -3,8 +3,9 @@ using System.Collections;
 
 namespace M8.UIModal {
     [AddComponentMenu("M8/UI Modal/Controller")]
+    [DisallowMultipleComponent]
     public class Controller : MonoBehaviour {
-        public bool exclusive = true; //hide modals behind
+        public bool exclusive = true; //hide modals behind if this is the top
 
         public delegate void ActiveCallback(bool active);
         public delegate void Callback();
@@ -13,27 +14,20 @@ namespace M8.UIModal {
 
         public event ActiveCallback onActiveCallback;
 
+        /// <summary>
+        /// Called whenever this controller becomes the top modal (active) or a new modal is pushed (inactive), once everything has opened/closed.
+        /// </summary>
         protected virtual void OnActive(bool active) { }
 
         /// <summary>
-        /// Called when modal needs to show up
+        /// Called when modal needs to show up, use this to refresh ui stuff.
         /// </summary>
         public virtual void Open() { }
 
         /// <summary>
-        /// After Open, this is continually called until it returns false.  Optional override for when opening (e.g. animation)
-        /// </summary>
-        public virtual bool Opening() { return false; }
-
-        /// <summary>
-        /// Called when modal needs to hide
+        /// Called when modal needs to hide.
         /// </summary>
         public virtual void Close() { }
-
-        /// <summary>
-        /// After Close, this is continually called until it returns false.  Optional override for when closing (e.g. animation)
-        /// </summary>
-        public virtual bool Closing() { return false; }
 
         private bool mActive;
 

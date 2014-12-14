@@ -20,28 +20,41 @@ namespace M8.UIModal {
             public Transform instantiateTo; //target to instantiate ui if it's a prefab
 
             private Controller mUI;
+            private TransitionBase mTransition;
 
             public Controller ui {
                 get {
-                    if(!mUI) {
-                        if(isPrefab) {
-                            Vector3 p = _ui.transform.localPosition;
-                            mUI = (Controller)Object.Instantiate(_ui);
-                            mUI.transform.parent = instantiateTo;
-                            mUI.transform.localPosition = p;
-                            mUI.transform.localScale = Vector3.one;
-                        }
-                        else
-                            mUI = _ui;
-                    }
-
+                    if(!mUI)
+                        GrabUI();
                     return mUI;
+                }
+            }
+
+            public TransitionBase transition {
+                get {
+                    if(!mUI) 
+                        GrabUI(); //this will also grab transition
+                    return mTransition;
                 }
             }
 
 #if UNITY_EDITOR
             public Controller e_ui { get { return _ui; } set { _ui = value; } }
 #endif
+
+            private void GrabUI() {
+                if(isPrefab) {
+                    Vector3 p = _ui.transform.localPosition;
+                    mUI = (Controller)Object.Instantiate(_ui);
+                    mUI.transform.parent = instantiateTo;
+                    mUI.transform.localPosition = p;
+                    mUI.transform.localScale = Vector3.one;
+                }
+                else
+                    mUI = _ui;
+
+                mTransition = ui.GetComponent<TransitionBase>();
+            }
         }
 
         public UIData[] uis;
@@ -56,9 +69,13 @@ namespace M8.UIModal {
         private Dictionary<string, UIData> mModals;
         private Stack<UIData> mModalStack;
         private Queue<UIData> mModalToOpen;
+        
         private int mModalCloseCount;
 
-        private IEnumerator mTask;
+        private TransitionBase[] mTransitions;
+        private int mTransitionCount;
+
+        private bool mTaskActive;
 
         public event CallbackBool activeCallback;
 
@@ -122,24 +139,24 @@ namespace M8.UIModal {
             //wait for an update, this is to allow the ui game object to initialize properly
             mModalToOpen.Enqueue(uid);
 
-            if(mTask == null)
-                StartCoroutine(mTask = DoTask());
+            if(!mTaskActive)
+                StartCoroutine(DoTask());
         }
 
         public void ModalCloseTop() {
             if(mModalCloseCount < mModalStack.Count) {
                 mModalCloseCount++;
 
-                if(mTask == null)
-                    StartCoroutine(mTask = DoTask());
+                if(!mTaskActive)
+                    StartCoroutine(DoTask());
             }
         }
 
         public void ModalCloseAll() {
             mModalCloseCount = mModalStack.Count;
 
-            if(mTask == null)
-                StartCoroutine(mTask = DoTask());
+            if(!mTaskActive)
+                StartCoroutine(DoTask());
         }
 
         public void ModalCloseUpTo(string modal, bool inclusive) {
@@ -153,8 +170,13 @@ namespace M8.UIModal {
                     mModalCloseCount++;
             }
 
-            if(mTask == null)
-                StartCoroutine(mTask = DoTask());
+            if(!mTaskActive)
+                StartCoroutine(DoTask());
+        }
+
+        void OnDisable() {
+            mTaskActive = false;
+            mTransitionCount = 0;
         }
 
         void OnDestroy() {
@@ -172,6 +194,7 @@ namespace M8.UIModal {
                 mModals = new Dictionary<string, UIData>(uis.Length);
                 mModalStack = new Stack<UIData>(uis.Length);
                 mModalToOpen = new Queue<UIData>(uis.Length);
+                mTransitions = new TransitionBase[uis.Length];
 
                 //setup data and deactivate object
                 for(int i = 0; i < uis.Length; i++) {
@@ -196,6 +219,8 @@ namespace M8.UIModal {
         }
 
         IEnumerator DoTask() {
+            mTaskActive = true;
+
             WaitForEndOfFrame wait = new WaitForEndOfFrame();
 
             int lastCount = mModalStack.Count;
@@ -210,8 +235,8 @@ namespace M8.UIModal {
                     if(ui.gameObject.activeSelf) {
                         ui.Close();
                         //wait for closing? (animation, etc)
-                        while(ui.Closing())
-                            yield return wait;
+                        if(uid.transition)
+                            yield return StartCoroutine(uid.transition.Close());
 
                         ui.gameObject.SetActive(false);
                     }
@@ -222,31 +247,8 @@ namespace M8.UIModal {
                         Controller prevUI = prevUID.ui;
 
                         if(uid.exclusive) {
-                            //re-show modals behind
-                            int openCount = 0;
-                            foreach(UIData prevUId in mModalStack) {
-                                prevUId.ui.gameObject.SetActive(true);
-                                prevUId.ui.Open();
-                                openCount++;
-                                if(prevUId.exclusive)
-                                    break;
-                            }
-
-                            //wait till everything is done
-                            while(true) {
-                                int openComplete = 0;
-                                foreach(UIData prevUId in mModalStack) {
-                                    if(!prevUId.ui.Opening())
-                                        openComplete++;
-                                    if(prevUId.exclusive)
-                                        break;
-                                }
-
-                                if(openComplete == openCount)
-                                    break;
-
-                                yield return wait;
-                            }
+                            //open previous UIs
+                            yield return StartCoroutine(DoOpenPrevs());
                         }
 
                         prevUI._active(true);
@@ -272,30 +274,7 @@ namespace M8.UIModal {
 
                     //hide below
                     if(uid.exclusive) {
-                        int closeCount = 0;
-                        foreach(UIData prevUId in mModalStack) {
-                            prevUId.ui.Close();
-                            closeCount++;
-                            if(prevUId.exclusive)
-                                break;
-                        }
-
-                        while(true) {
-                            int closeComplete = 0;
-                            foreach(UIData prevUId in mModalStack) {
-                                if(!prevUId.ui.Closing()) {
-                                    prevUId.ui.gameObject.SetActive(false);
-                                    closeComplete++;
-                                }
-                                if(prevUId.exclusive)
-                                    break;
-                            }
-
-                            if(closeComplete == closeCount)
-                                break;
-
-                            yield return wait;
-                        }
+                        yield return StartCoroutine(DoClosePrevs());
                     }
                 }
 
@@ -306,8 +285,8 @@ namespace M8.UIModal {
                 uiLastOpen.gameObject.SetActive(true);
                 uiLastOpen.Open();
 
-                while(uiLastOpen.Opening())
-                    yield return wait;
+                if(uid.transition)
+                    yield return StartCoroutine(uid.transition.Open());
             }
 
             if(uiLastOpen)
@@ -325,7 +304,66 @@ namespace M8.UIModal {
                 }
             }
 
-            mTask = null;
+            mTaskActive = false;
+        }
+
+        IEnumerator DoOpenPrevs() {
+            mTransitionCount = 0;
+
+            //re-show modals behind
+            foreach(UIData prevUId in mModalStack) {
+                prevUId.ui.gameObject.SetActive(true);
+                prevUId.ui.Open();
+
+                TransitionBase trans = prevUId.transition;
+                if(trans) {
+                    mTransitions[mTransitionCount] = trans;
+                    mTransitionCount++;
+                    StartCoroutine(trans.Open());
+                }
+
+                if(prevUId.exclusive)
+                    break;
+            }
+
+            //wait till everything is done
+            for(int i = 0; i < mTransitionCount; i++) {
+                while(mTransitions[i].state == TransitionBase.State.Open)
+                    yield return null;
+            }
+
+            mTransitionCount = 0;
+        }
+
+        IEnumerator DoClosePrevs() {
+            mTransitionCount = 0;
+
+            //re-show modals behind
+            foreach(UIData prevUId in mModalStack) {
+                prevUId.ui.Close();
+
+                TransitionBase trans = prevUId.transition;
+                if(trans) {
+                    mTransitions[mTransitionCount] = trans;
+                    mTransitionCount++;
+                    StartCoroutine(trans.Close());
+                }
+                else
+                    prevUId.ui.gameObject.SetActive(false);
+
+                if(prevUId.exclusive)
+                    break;
+            }
+
+            //wait till everything is done
+            for(int i = 0; i < mTransitionCount; i++) {
+                while(mTransitions[i].state == TransitionBase.State.Close)
+                    yield return null;
+
+                mTransitions[i].gameObject.SetActive(false);
+            }
+
+            mTransitionCount = 0;
         }
     }
 }
