@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace M8.UIModal.ControllerUtil {
+namespace M8.UIModal.Helpers {
     /// <summary>
     /// Add this along UIController to enable/disable colliders during activate
     /// </summary>

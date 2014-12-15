@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-namespace M8.UIModal.ControllerUtil {
+namespace M8.UIModal.Helpers {
     /// <summary>
     /// Add this along UIController to set given 'select' as selected in Unity's EventSystem
     /// </summary>

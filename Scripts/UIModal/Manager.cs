@@ -221,8 +221,6 @@ namespace M8.UIModal {
         IEnumerator DoTask() {
             mTaskActive = true;
 
-            WaitForEndOfFrame wait = new WaitForEndOfFrame();
-
             int lastCount = mModalStack.Count;
 
             //close modals
