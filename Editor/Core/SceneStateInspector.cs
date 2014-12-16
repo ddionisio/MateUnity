@@ -3,310 +3,312 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-[CustomEditor(typeof(SceneState))]
-public class SceneStateInspector : Editor {
+namespace M8 {
+    [CustomEditor(typeof(SceneState))]
+    public class SceneStateInspector : Editor {
 
-    private bool initFoldout = true;
-    private bool initGlobalFoldout = true;
-    private bool runtimeFoldout = true;
-    private bool runtimeGlobalFoldout = true;
+        private bool initFoldout = true;
+        private bool initGlobalFoldout = true;
+        private bool runtimeFoldout = true;
+        private bool runtimeGlobalFoldout = true;
 
-    private string[] mMasks;
+        private string[] mMasks;
 
-    private string mApplyName = "";
-    private SceneState.Type mApplyType;
-    private int mApplyValue = 0;
-    private float mApplyFValue = 0.0f;
-    private string mApplySValue = "";
-    private bool mApplyToGlobal = false;
-    private bool mApplyPersistent = false;
+        private string mApplyName = "";
+        private SceneState.Type mApplyType;
+        private int mApplyValue = 0;
+        private float mApplyFValue = 0.0f;
+        private string mApplySValue = "";
+        private bool mApplyToGlobal = false;
+        private bool mApplyPersistent = false;
 
-    public override void OnInspectorGUI() {
-        if(mMasks == null) {
-            mMasks = M8.Editor.Utility.GenerateGenericMaskString();
-        }
+        public override void OnInspectorGUI() {
+            if(mMasks == null) {
+                mMasks = M8.EditorExt.Utility.GenerateGenericMaskString();
+            }
 
-        SceneState data = target as SceneState;
+            SceneState data = target as SceneState;
 
-        if(!Application.isPlaying) {
-            GUI.changed = false;
+            if(!Application.isPlaying) {
+                GUI.changed = false;
 
-            //Globals 
-            initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
+                //Globals 
+                initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
 
-            if(initGlobalFoldout) {
-                if(data.globalStartData == null)
-                    data.globalStartData = new SceneState.InitData[0];
-
-                GUILayout.BeginVertical(GUI.skin.box);
-
-                int delSubKey = -1;
-                for(int j = 0; j < data.globalStartData.Length; j++) {
-                    SceneState.InitData initDat = data.globalStartData[j];
+                if(initGlobalFoldout) {
+                    if(data.globalStartData == null)
+                        data.globalStartData = new SceneState.InitData[0];
 
                     GUILayout.BeginVertical(GUI.skin.box);
 
-                    GUILayout.BeginHorizontal();
+                    int delSubKey = -1;
+                    for(int j = 0; j < data.globalStartData.Length; j++) {
+                        SceneState.InitData initDat = data.globalStartData[j];
 
-                    initDat.name = GUILayout.TextField(initDat.name, GUILayout.MinWidth(200));
+                        GUILayout.BeginVertical(GUI.skin.box);
 
-                    GUILayout.Space(32);
+                        GUILayout.BeginHorizontal();
 
-                    if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
-                        delSubKey = j;
+                        initDat.name = GUILayout.TextField(initDat.name, GUILayout.MinWidth(200));
 
-                    GUILayout.EndHorizontal();
+                        GUILayout.Space(32);
 
-                    initDat.type = (SceneState.Type)EditorGUILayout.EnumPopup("Type", initDat.type);
-                    switch(initDat.type) {
-                        case SceneState.Type.Integer:
-                            initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
-                            initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
-                            break;
-                        case SceneState.Type.Float:
-                            initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
-                            break;
-                        case SceneState.Type.String:
-                            initDat.sval = EditorGUILayout.TextField("String", initDat.sval);
-                            break;
+                        if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
+                            delSubKey = j;
+
+                        GUILayout.EndHorizontal();
+
+                        initDat.type = (SceneState.Type)EditorGUILayout.EnumPopup("Type", initDat.type);
+                        switch(initDat.type) {
+                            case SceneState.Type.Integer:
+                                initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
+                                initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
+                                break;
+                            case SceneState.Type.Float:
+                                initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
+                                break;
+                            case SceneState.Type.String:
+                                initDat.sval = EditorGUILayout.TextField("String", initDat.sval);
+                                break;
+                        }
+
+                        GUILayout.EndVertical();
+                    }
+
+                    if(delSubKey != -1)
+                        M8.ArrayUtil.RemoveAt(ref data.globalStartData, delSubKey);
+
+                    if(GUILayout.Button("New Global Value")) {
+                        System.Array.Resize(ref data.globalStartData, data.globalStartData.Length + 1);
+
+                        data.globalStartData[data.globalStartData.Length - 1] = new SceneState.InitData();
                     }
 
                     GUILayout.EndVertical();
                 }
 
-                if(delSubKey != -1)
-                    M8.ArrayUtil.RemoveAt(ref data.globalStartData, delSubKey);
+                M8.EditorExt.Utility.DrawSeparator();
 
-                if(GUILayout.Button("New Global Value")) {
-                    System.Array.Resize(ref data.globalStartData, data.globalStartData.Length + 1);
+                //Scene Specifics
+                initFoldout = EditorGUILayout.Foldout(initFoldout, "Scene Data");
 
-                    data.globalStartData[data.globalStartData.Length - 1] = new SceneState.InitData();
+                if(initFoldout) {
+                    if(data.startData == null)
+                        data.startData = new SceneState.InitSceneData[0];
+
+                    int delKey = -1;
+
+                    for(int i = 0; i < data.startData.Length; i++) {
+                        SceneState.InitSceneData sceneDat = data.startData[i];
+
+                        GUILayout.BeginVertical(GUI.skin.box);
+
+                        GUILayout.BeginHorizontal();
+
+                        sceneDat.editFoldout = EditorGUILayout.Foldout(sceneDat.editFoldout, "Scene:");
+
+                        GUILayout.Space(4);
+
+                        sceneDat.scene = GUILayout.TextField(sceneDat.scene, GUILayout.MinWidth(200));
+
+                        GUILayout.Space(32);
+
+                        if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
+                            delKey = i;
+
+                        GUILayout.EndHorizontal();
+
+                        if(sceneDat.editFoldout) {
+                            GUILayout.Label("Values:");
+
+                            if(sceneDat.data != null) {
+                                int delSubKey = -1;
+                                for(int j = 0; j < sceneDat.data.Length; j++) {
+                                    SceneState.InitData initDat = sceneDat.data[j];
+
+                                    GUILayout.BeginVertical(GUI.skin.box);
+
+                                    GUILayout.BeginHorizontal();
+
+                                    initDat.name = GUILayout.TextField(initDat.name, GUILayout.MinWidth(200));
+
+                                    GUILayout.Space(32);
+
+                                    if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
+                                        delSubKey = j;
+
+                                    GUILayout.EndHorizontal();
+
+                                    initDat.type = (SceneState.Type)EditorGUILayout.EnumPopup("Type", initDat.type);
+                                    switch(initDat.type) {
+                                        case SceneState.Type.Integer:
+                                            initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
+                                            initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
+                                            break;
+                                        case SceneState.Type.Float:
+                                            initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
+                                            break;
+                                        case SceneState.Type.String:
+                                            initDat.sval = EditorGUILayout.TextField("String", initDat.sval);
+                                            break;
+                                    }
+
+                                    GUILayout.EndVertical();
+                                }
+
+                                if(delSubKey != -1)
+                                    M8.ArrayUtil.RemoveAt(ref sceneDat.data, delSubKey);
+                            }
+
+                            if(GUILayout.Button("New Value")) {
+                                if(sceneDat.data == null)
+                                    sceneDat.data = new SceneState.InitData[1];
+                                else
+                                    System.Array.Resize(ref sceneDat.data, sceneDat.data.Length + 1);
+
+                                sceneDat.data[sceneDat.data.Length - 1] = new SceneState.InitData();
+                            }
+                        }
+
+                        GUILayout.EndVertical();
+                    }
+
+                    if(delKey != -1)
+                        M8.ArrayUtil.RemoveAt(ref data.startData, delKey);
+
+                    if(GUILayout.Button("New Scene Data")) {
+                        System.Array.Resize(ref data.startData, data.startData.Length + 1);
+                        data.startData[data.startData.Length - 1] = new SceneState.InitSceneData();
+                    }
+                }
+
+                if(GUI.changed)
+                    EditorUtility.SetDirty(target);
+            }
+            else {
+                M8.EditorExt.Utility.DrawSeparator();
+
+                //global scene data
+                runtimeGlobalFoldout = EditorGUILayout.Foldout(runtimeGlobalFoldout, "Global Scene Data");
+
+                if(runtimeGlobalFoldout) {
+                    if(data.globalStates != null) {
+                        foreach(KeyValuePair<string, SceneState.StateValue> dat in data.globalStates) {
+                            GUILayout.BeginVertical(GUI.skin.box);
+
+                            GUILayout.Label(dat.Key);
+
+                            switch(dat.Value.type) {
+                                case SceneState.Type.Integer:
+                                    EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
+                                    EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
+                                    break;
+                                case SceneState.Type.Float:
+                                    EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
+                                    break;
+                                case SceneState.Type.String:
+                                    EditorGUILayout.LabelField("String", dat.Value.sval);
+                                    break;
+                                case SceneState.Type.Invalid:
+                                    EditorGUILayout.LabelField("Invalid!");
+                                    break;
+                            }
+
+                            GUILayout.EndVertical();
+                        }
+                    }
+                }
+
+                M8.EditorExt.Utility.DrawSeparator();
+
+                //Scene data
+                runtimeFoldout = EditorGUILayout.Foldout(runtimeFoldout, "Scene Data");
+
+                if(runtimeFoldout) {
+                    if(data.states != null) {
+                        foreach(KeyValuePair<string, SceneState.StateValue> dat in data.states) {
+                            GUILayout.BeginVertical(GUI.skin.box);
+
+                            GUILayout.Label(dat.Key);
+
+                            switch(dat.Value.type) {
+                                case SceneState.Type.Integer:
+                                    EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
+                                    EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
+                                    break;
+                                case SceneState.Type.Float:
+                                    EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
+                                    break;
+                                case SceneState.Type.String:
+                                    EditorGUILayout.LabelField("String", dat.Value.sval);
+                                    break;
+                                case SceneState.Type.Invalid:
+                                    EditorGUILayout.LabelField("Invalid!");
+                                    break;
+                            }
+
+                            GUILayout.EndVertical();
+                        }
+                    }
+                }
+
+                M8.EditorExt.Utility.DrawSeparator();
+
+                //value change
+                GUILayout.BeginVertical(GUI.skin.box);
+
+                GUILayout.Label("Override");
+
+                mApplyName = GUILayout.TextField(mApplyName);
+                mApplyType = (SceneState.Type)EditorGUILayout.EnumPopup("Type", mApplyType);
+                switch(mApplyType) {
+                    case SceneState.Type.Integer:
+                        mApplyValue = EditorGUILayout.IntField("Value", mApplyValue);
+                        mApplyValue = EditorGUILayout.MaskField("Flags", mApplyValue, mMasks);
+                        break;
+                    case SceneState.Type.Float:
+                        mApplyFValue = EditorGUILayout.FloatField("Float", mApplyFValue);
+                        break;
+                    case SceneState.Type.String:
+                        mApplySValue = EditorGUILayout.TextField("String", mApplySValue);
+                        break;
+                }
+
+
+                mApplyToGlobal = GUILayout.Toggle(mApplyToGlobal, "Global");
+                mApplyPersistent = GUILayout.Toggle(mApplyPersistent, "Persistent");
+
+                if(GUILayout.Button("Apply") && !string.IsNullOrEmpty(mApplyName)) {
+                    switch(mApplyType) {
+                        case SceneState.Type.Integer:
+                            if(mApplyToGlobal) data.SetGlobalValue(mApplyName, mApplyValue, mApplyPersistent);
+                            else data.SetValue(mApplyName, mApplyValue, mApplyPersistent);
+                            break;
+                        case SceneState.Type.Float:
+                            if(mApplyToGlobal) data.SetGlobalValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                            else data.SetValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                            break;
+                        case SceneState.Type.String:
+                            if(mApplyToGlobal) data.SetGlobalValueString(mApplyName, mApplySValue, mApplyPersistent);
+                            else data.SetValueString(mApplyName, mApplySValue, mApplyPersistent);
+                            break;
+                    }
+
+                    Repaint();
                 }
 
                 GUILayout.EndVertical();
-            }
 
-            M8.Editor.Utility.DrawSeparator();
+                M8.EditorExt.Utility.DrawSeparator();
 
-            //Scene Specifics
-            initFoldout = EditorGUILayout.Foldout(initFoldout, "Scene Data");
-
-            if(initFoldout) {
-                if(data.startData == null)
-                    data.startData = new SceneState.InitSceneData[0];
-
-                int delKey = -1;
-
-                for(int i = 0; i < data.startData.Length; i++) {
-                    SceneState.InitSceneData sceneDat = data.startData[i];
-
-                    GUILayout.BeginVertical(GUI.skin.box);
-
-                    GUILayout.BeginHorizontal();
-
-                    sceneDat.editFoldout = EditorGUILayout.Foldout(sceneDat.editFoldout, "Scene:");
-
-                    GUILayout.Space(4);
-
-                    sceneDat.scene = GUILayout.TextField(sceneDat.scene, GUILayout.MinWidth(200));
-
-                    GUILayout.Space(32);
-
-                    if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
-                        delKey = i;
-
-                    GUILayout.EndHorizontal();
-
-                    if(sceneDat.editFoldout) {
-                        GUILayout.Label("Values:");
-
-                        if(sceneDat.data != null) {
-                            int delSubKey = -1;
-                            for(int j = 0; j < sceneDat.data.Length; j++) {
-                                SceneState.InitData initDat = sceneDat.data[j];
-
-                                GUILayout.BeginVertical(GUI.skin.box);
-
-                                GUILayout.BeginHorizontal();
-
-                                initDat.name = GUILayout.TextField(initDat.name, GUILayout.MinWidth(200));
-
-                                GUILayout.Space(32);
-
-                                if(GUILayout.Button("DEL", GUILayout.MaxWidth(40)))
-                                    delSubKey = j;
-
-                                GUILayout.EndHorizontal();
-
-                                initDat.type = (SceneState.Type)EditorGUILayout.EnumPopup("Type", initDat.type);
-                                switch(initDat.type) {
-                                    case SceneState.Type.Integer:
-                                        initDat.ival = EditorGUILayout.IntField("Value", initDat.ival);
-                                        initDat.ival = EditorGUILayout.MaskField("Flags", initDat.ival, mMasks);
-                                        break;
-                                    case SceneState.Type.Float:
-                                        initDat.fval = EditorGUILayout.FloatField("Float", initDat.fval);
-                                        break;
-                                    case SceneState.Type.String:
-                                        initDat.sval = EditorGUILayout.TextField("String", initDat.sval);
-                                        break;
-                                }
-
-                                GUILayout.EndVertical();
-                            }
-
-                            if(delSubKey != -1)
-                                M8.ArrayUtil.RemoveAt(ref sceneDat.data, delSubKey);
-                        }
-
-                        if(GUILayout.Button("New Value")) {
-                            if(sceneDat.data == null)
-                                sceneDat.data = new SceneState.InitData[1];
-                            else
-                                System.Array.Resize(ref sceneDat.data, sceneDat.data.Length + 1);
-
-                            sceneDat.data[sceneDat.data.Length - 1] = new SceneState.InitData();
-                        }
+                //refresh
+                if(GUILayout.Button("Refresh")) {
+                    if(!string.IsNullOrEmpty(mApplyName)) {
+                        mApplyValue = data.GetValue(mApplyName);
+                        mApplyFValue = data.GetValueFloat(mApplyName);
                     }
-
-                    GUILayout.EndVertical();
+                    Repaint();
                 }
-
-                if(delKey != -1)
-                    M8.ArrayUtil.RemoveAt(ref data.startData, delKey);
-
-                if(GUILayout.Button("New Scene Data")) {
-                    System.Array.Resize(ref data.startData, data.startData.Length + 1);
-                    data.startData[data.startData.Length - 1] = new SceneState.InitSceneData();
-                }
-            }
-
-            if(GUI.changed)
-                EditorUtility.SetDirty(target);
-        }
-        else {
-            M8.Editor.Utility.DrawSeparator();
-
-            //global scene data
-            runtimeGlobalFoldout = EditorGUILayout.Foldout(runtimeGlobalFoldout, "Global Scene Data");
-
-            if(runtimeGlobalFoldout) {
-                if(data.globalStates != null) {
-                    foreach(KeyValuePair<string, SceneState.StateValue> dat in data.globalStates) {
-                        GUILayout.BeginVertical(GUI.skin.box);
-
-                        GUILayout.Label(dat.Key);
-
-                        switch(dat.Value.type) {
-                            case SceneState.Type.Integer:
-                                EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
-                                EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
-                                break;
-                            case SceneState.Type.Float:
-                                EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
-                                break;
-                            case SceneState.Type.String:
-                                EditorGUILayout.LabelField("String", dat.Value.sval);
-                                break;
-                            case SceneState.Type.Invalid:
-                                EditorGUILayout.LabelField("Invalid!");
-                                break;
-                        }
-
-                        GUILayout.EndVertical();
-                    }
-                }
-            }
-
-            M8.Editor.Utility.DrawSeparator();
-
-            //Scene data
-            runtimeFoldout = EditorGUILayout.Foldout(runtimeFoldout, "Scene Data");
-
-            if(runtimeFoldout) {
-                if(data.states != null) {
-                    foreach(KeyValuePair<string, SceneState.StateValue> dat in data.states) {
-                        GUILayout.BeginVertical(GUI.skin.box);
-
-                        GUILayout.Label(dat.Key);
-
-                        switch(dat.Value.type) {
-                            case SceneState.Type.Integer:
-                                EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
-                                EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
-                                break;
-                            case SceneState.Type.Float:
-                                EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
-                                break;
-                            case SceneState.Type.String:
-                                EditorGUILayout.LabelField("String", dat.Value.sval);
-                                break;
-                            case SceneState.Type.Invalid:
-                                EditorGUILayout.LabelField("Invalid!");
-                                break;
-                        }
-
-                        GUILayout.EndVertical();
-                    }
-                }
-            }
-
-            M8.Editor.Utility.DrawSeparator();
-
-            //value change
-            GUILayout.BeginVertical(GUI.skin.box);
-
-            GUILayout.Label("Override");
-
-            mApplyName = GUILayout.TextField(mApplyName);
-            mApplyType = (SceneState.Type)EditorGUILayout.EnumPopup("Type", mApplyType);
-            switch(mApplyType) {
-                case SceneState.Type.Integer:
-                    mApplyValue = EditorGUILayout.IntField("Value", mApplyValue);
-                    mApplyValue = EditorGUILayout.MaskField("Flags", mApplyValue, mMasks);
-                    break;
-                case SceneState.Type.Float:
-                    mApplyFValue = EditorGUILayout.FloatField("Float", mApplyFValue);
-                    break;
-                case SceneState.Type.String:
-                    mApplySValue = EditorGUILayout.TextField("String", mApplySValue);
-                    break;
-            }
-
-
-            mApplyToGlobal = GUILayout.Toggle(mApplyToGlobal, "Global");
-            mApplyPersistent = GUILayout.Toggle(mApplyPersistent, "Persistent");
-
-            if(GUILayout.Button("Apply") && !string.IsNullOrEmpty(mApplyName)) {
-                switch(mApplyType) {
-                    case SceneState.Type.Integer:
-                        if(mApplyToGlobal) data.SetGlobalValue(mApplyName, mApplyValue, mApplyPersistent);
-                        else data.SetValue(mApplyName, mApplyValue, mApplyPersistent);
-                        break;
-                    case SceneState.Type.Float:
-                        if(mApplyToGlobal) data.SetGlobalValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
-                        else data.SetValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
-                        break;
-                    case SceneState.Type.String:
-                        if(mApplyToGlobal) data.SetGlobalValueString(mApplyName, mApplySValue, mApplyPersistent);
-                        else data.SetValueString(mApplyName, mApplySValue, mApplyPersistent);
-                        break;
-                }
-
-                Repaint();
-            }
-
-            GUILayout.EndVertical();
-
-            M8.Editor.Utility.DrawSeparator();
-
-            //refresh
-            if(GUILayout.Button("Refresh")) {
-                if(!string.IsNullOrEmpty(mApplyName)) {
-                    mApplyValue = data.GetValue(mApplyName);
-                    mApplyFValue = data.GetValueFloat(mApplyName);
-                }
-                Repaint();
             }
         }
     }

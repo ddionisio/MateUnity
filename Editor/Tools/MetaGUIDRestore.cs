@@ -6,7 +6,7 @@ using System.Reflection;
 using System.IO;
 using System.Text;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public class MetaGUIDRestore : EditorWindow {
         public const string PrefKlass = "MetaGUIDRestore";
         public const string PrefText = "Text";

@@ -2,7 +2,7 @@
 using UnityEditor;
 using System.Collections;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public class Projectinator : EditorWindow {
         private int mAxisInd = 0;
         private string[] mAxisNames = { "X", "Y", "Z" };
@@ -21,19 +21,19 @@ namespace M8.Editor {
         }
 
         void OnEnable() {
-            mAxisInd = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey("projectinator", "axis"), mAxisInd);
-            mInv = EditorPrefs.GetBool(M8.Editor.Utility.PreferenceKey("projectinator", "inv"), mInv);
-            mOfs = EditorPrefs.GetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "ofs"), mOfs);
-            mDist = EditorPrefs.GetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "dist"), mDist);
-            mLayer = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey("projectinator", "layer"), mLayer);
+            mAxisInd = EditorPrefs.GetInt(M8.EditorExt.Utility.PreferenceKey("projectinator", "axis"), mAxisInd);
+            mInv = EditorPrefs.GetBool(M8.EditorExt.Utility.PreferenceKey("projectinator", "inv"), mInv);
+            mOfs = EditorPrefs.GetFloat(M8.EditorExt.Utility.PreferenceKey("projectinator", "ofs"), mOfs);
+            mDist = EditorPrefs.GetFloat(M8.EditorExt.Utility.PreferenceKey("projectinator", "dist"), mDist);
+            mLayer = EditorPrefs.GetInt(M8.EditorExt.Utility.PreferenceKey("projectinator", "layer"), mLayer);
         }
 
         void OnDisable() {
-            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey("projectinator", "axis"), mAxisInd);
-            EditorPrefs.SetBool(M8.Editor.Utility.PreferenceKey("projectinator", "inv"), mInv);
-            EditorPrefs.SetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "ofs"), mOfs);
-            EditorPrefs.SetFloat(M8.Editor.Utility.PreferenceKey("projectinator", "dist"), mDist);
-            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey("projectinator", "layer"), mLayer);
+            EditorPrefs.SetInt(M8.EditorExt.Utility.PreferenceKey("projectinator", "axis"), mAxisInd);
+            EditorPrefs.SetBool(M8.EditorExt.Utility.PreferenceKey("projectinator", "inv"), mInv);
+            EditorPrefs.SetFloat(M8.EditorExt.Utility.PreferenceKey("projectinator", "ofs"), mOfs);
+            EditorPrefs.SetFloat(M8.EditorExt.Utility.PreferenceKey("projectinator", "dist"), mDist);
+            EditorPrefs.SetInt(M8.EditorExt.Utility.PreferenceKey("projectinator", "layer"), mLayer);
         }
 
         void OnGUI() {

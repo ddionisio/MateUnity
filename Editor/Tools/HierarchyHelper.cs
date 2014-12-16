@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public class HierarchyHelper {
         [MenuItem("M8/Selection/Move Up &UP")]
         public static void MoveUp() {

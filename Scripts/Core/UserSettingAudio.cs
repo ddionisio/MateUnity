@@ -1,82 +1,75 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Core/UserSettingAudio")]
-public class UserSettingAudio : UserSetting {
-    public const string volumeKey = "volumeMaster";
-    public const string soundKey = "volumeSfx";
-    public const string musicKey = "volumeMusic";
+namespace M8 {
+    [PrefabCore]
+    [AddComponentMenu("M8/Core/UserSettingAudio")]
+    public class UserSettingAudio : UserSetting<UserSettingAudio> {
+        public const string volumeKey = "volumeMaster";
+        public const string soundKey = "volumeSfx";
+        public const string musicKey = "volumeMusic";
 
-    //need to debug while listening to music
+        //need to debug while listening to music
 #if UNITY_EDITOR
-    private const float volumeDefault = 1.0f;
+        private const float volumeDefault = 1.0f;
 #else
 	private const float volumeDefault = 1.0f;
 #endif
 
-    private static UserSettingAudio mInstance;
-        
-    private float mVolume;
-    private float mSoundVolume;
-    private float mMusicVolume;
+        private float mVolume;
+        private float mSoundVolume;
+        private float mMusicVolume;
 
-    public static UserSettingAudio instance { get { return mInstance; } }
+        public float soundVolume {
+            get { return mSoundVolume; }
 
-    public float soundVolume {
-        get { return mSoundVolume; }
+            set {
+                if(mSoundVolume != value) {
+                    mSoundVolume = value;
+                    userData.SetFloat(soundKey, mSoundVolume);
 
-        set {
-            if(mSoundVolume != value) {
-                mSoundVolume = value;
-                userData.SetFloat(soundKey, mSoundVolume);
-
-                RelaySettingsChanged();
+                    RelaySettingsChanged();
+                }
             }
         }
-    }
 
-    public float musicVolume {
-        get { return mMusicVolume; }
+        public float musicVolume {
+            get { return mMusicVolume; }
 
-        set {
-            if(mMusicVolume != value) {
-                mMusicVolume = value;
-                userData.SetFloat(musicKey, mMusicVolume);
+            set {
+                if(mMusicVolume != value) {
+                    mMusicVolume = value;
+                    userData.SetFloat(musicKey, mMusicVolume);
 
-                RelaySettingsChanged();
+                    RelaySettingsChanged();
+                }
             }
         }
-    }
 
-    public float volume {
-        get { return mVolume; }
+        public float volume {
+            get { return mVolume; }
 
-        set {
-            if(mVolume != value) {
-                mVolume = value;
-                userData.SetFloat(volumeKey, mVolume);
+            set {
+                if(mVolume != value) {
+                    mVolume = value;
+                    userData.SetFloat(volumeKey, mVolume);
 
-                AudioListener.volume = mVolume;
+                    AudioListener.volume = mVolume;
+                }
             }
         }
-    }
 
-    void OnDestroy() {
-        mInstance = null;
-    }
+        protected override void Awake() {
+            base.Awake();
 
-    protected override void Awake() {
-        mInstance = this;
+            //load settings
+            mVolume = userData.GetFloat(volumeKey, 1.0f);
 
-        base.Awake();
-                
-        //load settings
-        mVolume = userData.GetFloat(volumeKey, 1.0f);
+            mSoundVolume = userData.GetFloat(soundKey, volumeDefault);
 
-        mSoundVolume = userData.GetFloat(soundKey, volumeDefault);
+            mMusicVolume = userData.GetFloat(musicKey, volumeDefault);
 
-        mMusicVolume = userData.GetFloat(musicKey, volumeDefault);
-
-        AudioListener.volume = mVolume;
+            AudioListener.volume = mVolume;
+        }
     }
 }

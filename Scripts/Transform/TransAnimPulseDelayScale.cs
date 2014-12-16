@@ -1,117 +1,119 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Transform/AnimPulseDelayScale")]
-public class TransAnimPulseDelayScale : MonoBehaviour {
-    public enum UpdateType {
-        Update,
-        FixedUpdate,
-        Realtime
-    }
-
-    public UpdateType updateType = UpdateType.Update;
-
-    public float pauseDelay;
-    public float pulseDelay;
-
-    public Vector3 ofs;
-
-    public bool startPause;
-    public bool roundOutput = true; //only works for pixel-coordinate
-    public bool squared = false;
-
-    public Transform target; //optional
-
-    private enum State {
-        Pause,
-        Pulse
-    }
-
-    private float mCurPulseTime = 0;
-    private float mLastTime = 0;
-
-    private Vector3 mStart;
-    private Vector3 mEnd;
-
-    private State mState;
-    private bool mStarted = false;
-
-    void OnEnable() {
-        if(mStarted) {
-            target.localScale = mStart;
-            mState = startPause ? State.Pause : State.Pulse;
-            mCurPulseTime = 0;
-            mLastTime = GetTime();
+namespace M8 {
+    [AddComponentMenu("M8/Transform/AnimPulseDelayScale")]
+    public class TransAnimPulseDelayScale : MonoBehaviour {
+        public enum UpdateType {
+            Update,
+            FixedUpdate,
+            Realtime
         }
-    }
 
-    void OnDisable() {
-        if(mStarted && target != null) {
-            target.localScale = mStart;
+        public UpdateType updateType = UpdateType.Update;
+
+        public float pauseDelay;
+        public float pulseDelay;
+
+        public Vector3 ofs;
+
+        public bool startPause;
+        public bool roundOutput = true; //only works for pixel-coordinate
+        public bool squared = false;
+
+        public Transform target; //optional
+
+        private enum State {
+            Pause,
+            Pulse
         }
-    }
 
-    void Awake() {
-        if(target == null)
-            target = transform;
+        private float mCurPulseTime = 0;
+        private float mLastTime = 0;
 
-        mStart = target.localScale;
-        mEnd = mStart + ofs;
-    }
+        private Vector3 mStart;
+        private Vector3 mEnd;
 
-    // Use this for initialization
-    void Start() {
-        mStarted = true;
-        OnEnable();
-    }
+        private State mState;
+        private bool mStarted = false;
 
-    float GetTime() {
-        switch(updateType) {
-            case UpdateType.Update:
-                return Time.time;
-            case UpdateType.FixedUpdate:
-                return Time.fixedTime;
-            case UpdateType.Realtime:
-                return Time.realtimeSinceStartup;
+        void OnEnable() {
+            if(mStarted) {
+                target.localScale = mStart;
+                mState = startPause ? State.Pause : State.Pulse;
+                mCurPulseTime = 0;
+                mLastTime = GetTime();
+            }
         }
-        return 0.0f;
-    }
 
-    void Update() {
-        float time = GetTime();
-        mCurPulseTime += time - mLastTime;
-        mLastTime = time;
+        void OnDisable() {
+            if(mStarted && target != null) {
+                target.localScale = mStart;
+            }
+        }
 
-        switch(mState) {
-            case State.Pause:
-                if(mCurPulseTime >= pauseDelay) {
-                    mState = State.Pulse;
-                    mCurPulseTime = 0.0f;
-                }
-                break;
+        void Awake() {
+            if(target == null)
+                target = transform;
 
-            case State.Pulse:
-                if(mCurPulseTime < pulseDelay) {
-                    float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / pulseDelay));
+            mStart = target.localScale;
+            mEnd = mStart + ofs;
+        }
 
-                    Vector3 newPos = Vector3.Lerp(mStart, mEnd, squared ? t * t : t);
+        // Use this for initialization
+        void Start() {
+            mStarted = true;
+            OnEnable();
+        }
 
-                    target.localScale = roundOutput ?
-                        new Vector3(Mathf.Round(newPos.x), Mathf.Round(newPos.y), Mathf.Round(newPos.z))
-                        : newPos;
-                }
-                else {
-                    target.localScale = mStart;
+        float GetTime() {
+            switch(updateType) {
+                case UpdateType.Update:
+                    return Time.time;
+                case UpdateType.FixedUpdate:
+                    return Time.fixedTime;
+                case UpdateType.Realtime:
+                    return Time.realtimeSinceStartup;
+            }
+            return 0.0f;
+        }
 
-                    if(pauseDelay > 0.0f) {
-                        mState = State.Pause;
+        void Update() {
+            float time = GetTime();
+            mCurPulseTime += time - mLastTime;
+            mLastTime = time;
+
+            switch(mState) {
+                case State.Pause:
+                    if(mCurPulseTime >= pauseDelay) {
+                        mState = State.Pulse;
                         mCurPulseTime = 0.0f;
                     }
-                    else {
-                        mCurPulseTime -= pulseDelay;
+                    break;
+
+                case State.Pulse:
+                    if(mCurPulseTime < pulseDelay) {
+                        float t = Mathf.Sin(Mathf.PI * (mCurPulseTime / pulseDelay));
+
+                        Vector3 newPos = Vector3.Lerp(mStart, mEnd, squared ? t * t : t);
+
+                        target.localScale = roundOutput ?
+                        new Vector3(Mathf.Round(newPos.x), Mathf.Round(newPos.y), Mathf.Round(newPos.z))
+                        : newPos;
                     }
-                }
-                break;
+                    else {
+                        target.localScale = mStart;
+
+                        if(pauseDelay > 0.0f) {
+                            mState = State.Pause;
+                            mCurPulseTime = 0.0f;
+                        }
+                        else {
+                            mCurPulseTime -= pulseDelay;
+                        }
+                    }
+                    break;
+            }
         }
     }
 }

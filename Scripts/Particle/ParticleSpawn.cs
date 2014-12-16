@@ -1,45 +1,47 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-/// <summary>
-/// Use this with PoolController
-/// </summary>
-[AddComponentMenu("M8/Particle/Spawn")]
-[RequireComponent(typeof(ParticleSystem))]
-public class ParticleSpawn : MonoBehaviour {
-    public float playDelay = 0.1f;
+namespace M8 {
+    /// <summary>
+    /// Use this with PoolController
+    /// </summary>
+    [AddComponentMenu("M8/Particle/Spawn")]
+    [RequireComponent(typeof(ParticleSystem))]
+    public class ParticleSpawn : MonoBehaviour {
+        public float playDelay = 0.1f;
 
-    private ParticleSystem mParticles;
-    private bool mActive = false;
+        private ParticleSystem mParticles;
+        private bool mActive = false;
 
-    void OnSpawned() {
-        mActive = false;
+        void OnSpawned() {
+            mActive = false;
 
-        if(playDelay > 0)
-            Invoke("DoPlay", playDelay);
-        else
-            DoPlay();
-    }
+            if(playDelay > 0)
+                Invoke("DoPlay", playDelay);
+            else
+                DoPlay();
+        }
 
-    void OnDespawned() {
-        mActive = false;
+        void OnDespawned() {
+            mActive = false;
 
-        CancelInvoke();
-        mParticles.Clear();
-    }
+            CancelInvoke();
+            mParticles.Clear();
+        }
 
-    // Update is called once per frame
-    void LateUpdate() {
-        if(mActive && !mParticles.IsAlive())
-            PoolController.ReleaseAuto(transform);
-    }
+        // Update is called once per frame
+        void LateUpdate() {
+            if(mActive && !mParticles.IsAlive())
+                M8.PoolController.ReleaseAuto(transform);
+        }
 
-    void Awake() {
-        mParticles = particleSystem;
-    }
+        void Awake() {
+            mParticles = particleSystem;
+        }
 
-    void DoPlay() {
-        mParticles.Play();
-        mActive = true;
+        void DoPlay() {
+            mParticles.Play();
+            mActive = true;
+        }
     }
 }

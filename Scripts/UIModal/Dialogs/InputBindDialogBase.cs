@@ -54,13 +54,13 @@ namespace M8.UIModal.Dialogs {
             UserSettingInput.instance.Apply();
             UserSettingInput.instance.Save();
             mIsDirty = false;
-            GameLocalize.instance.Refresh(); //for labels using input stuff
+            Localize.instance.Refresh(); //for labels using input stuff
         }
 
         public void Revert(bool toDefault) {
             UserSettingInput.instance.Revert(toDefault);
             mIsDirty = false;
-            GameLocalize.instance.Refresh(); //for labels using input stuff
+            Localize.instance.Refresh(); //for labels using input stuff
         }
 
         protected virtual void OnDestroy() {
@@ -144,7 +144,7 @@ namespace M8.UIModal.Dialogs {
 
                         mLastTime = Time.realtimeSinceStartup;
 
-                        GameLocalize.instance.Refresh(); //for labels using input stuff
+                        Localize.instance.Refresh(); //for labels using input stuff
                     }
                 }
                 else if(Time.realtimeSinceStartup - mLastTime >= 0.2f) {

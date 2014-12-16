@@ -2,36 +2,53 @@
 using System.Collections;
 using System.Collections.Generic;
 
-[AddComponentMenu("M8/Renderer/Color Controller")]
-public class RendererColorController : MonoBehaviour {
-    public string colorProperty = "_Color";
+namespace M8 {
+    [AddComponentMenu("M8/Renderer/Color Controller")]
+    public class RendererColorController : MonoBehaviour {
+        public string colorProperty = "_Color";
 
-    public Color startColor = Color.white;
-    public bool startColorApply;
+        public Color startColor = Color.white;
+        public bool startColorApply;
 
-    public bool recursive;
+        public bool recursive;
 
-    private int mColorId;
-    private Color mColor;
-    private Material[] mMats;
+        private int mColorId;
+        private Color mColor;
+        private Material[] mMats;
 
-    public Color color {
-        get { return mColor; }
-        set {
-            if(mColor != value) {
-                mColor = value;
+        public Color color {
+            get { return mColor; }
+            set {
+                if(mColor != value) {
+                    mColor = value;
 #if UNITY_EDITOR
-                if(!Application.isPlaying)
-                    return;
+                    if(!Application.isPlaying)
+                        return;
 #endif
-                if(mMats == null) {
-                    mColorId = Shader.PropertyToID(colorProperty);
+                    if(mMats == null) {
+                        mColorId = Shader.PropertyToID(colorProperty);
 
-                    List<Material> matList = new List<Material>();
-                    if(recursive) {
-                        Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
-                        for(int i = 0; i < renderers.Length; i++) {
-                            Material[] sms = renderers[i].sharedMaterials;
+                        List<Material> matList = new List<Material>();
+                        if(recursive) {
+                            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+                            for(int i = 0; i < renderers.Length; i++) {
+                                Material[] sms = renderers[i].sharedMaterials;
+                                for(int j = 0; j < sms.Length; j++) {
+                                    Material sm = sms[j];
+                                    if(sm.HasProperty(mColorId)) {
+                                        Material mat = matList.Find(m => m.name.CompareTo(sm.name) == 0);
+                                        if(mat == null) {
+                                            mat = new Material(sm);
+                                            matList.Add(mat);
+                                        }
+                                        sms[j] = mat;
+                                    }
+                                }
+                                renderers[i].sharedMaterials = sms;
+                            }
+                        }
+                        else {
+                            Material[] sms = renderer.sharedMaterials;
                             for(int j = 0; j < sms.Length; j++) {
                                 Material sm = sms[j];
                                 if(sm.HasProperty(mColorId)) {
@@ -43,46 +60,31 @@ public class RendererColorController : MonoBehaviour {
                                     sms[j] = mat;
                                 }
                             }
-                            renderers[i].sharedMaterials = sms;
+                            renderer.sharedMaterials = sms;
                         }
-                    }
-                    else {
-                        Material[] sms = renderer.sharedMaterials;
-                        for(int j = 0; j < sms.Length; j++) {
-                            Material sm = sms[j];
-                            if(sm.HasProperty(mColorId)) {
-                                Material mat = matList.Find(m => m.name.CompareTo(sm.name) == 0);
-                                if(mat == null) {
-                                    mat = new Material(sm);
-                                    matList.Add(mat);
-                                }
-                                sms[j] = mat;
-                            }
-                        }
-                        renderer.sharedMaterials = sms;
+
+                        mMats = matList.ToArray();
                     }
 
-                    mMats = matList.ToArray();
+                    for(int i = 0; i < mMats.Length; i++)
+                        mMats[i].SetColor(mColorId, mColor);
                 }
-
-                for(int i = 0; i < mMats.Length; i++)
-                    mMats[i].SetColor(mColorId, mColor);
             }
         }
-    }
 
-    void OnDestroy() {
-        if(mMats != null) {
-            for(int i = 0; i < mMats.Length; i++) {
-                if(mMats[i])
-                    DestroyImmediate(mMats[i]);
+        void OnDestroy() {
+            if(mMats != null) {
+                for(int i = 0; i < mMats.Length; i++) {
+                    if(mMats[i])
+                        DestroyImmediate(mMats[i]);
+                }
             }
         }
-    }
 
-    // Use this for initialization
-    void Start() {
-        if(startColorApply)
-            color = startColor;
+        // Use this for initialization
+        void Start() {
+            if(startColorApply)
+                color = startColor;
+        }
     }
 }

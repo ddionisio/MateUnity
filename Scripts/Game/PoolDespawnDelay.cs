@@ -1,26 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Game/PoolDespawnDelay")]
-public class PoolDespawnDelay : MonoBehaviour {
-    public delegate void DespawnCall(GameObject go);
+namespace M8 {
+    [AddComponentMenu("M8/Game/PoolDespawnDelay")]
+    public class PoolDespawnDelay : MonoBehaviour {
+        public delegate void DespawnCall(GameObject go);
 
-    public float delay = 1.0f;
+        public float delay = 1.0f;
 
-    public event DespawnCall despawnCallback;
+        public event DespawnCall despawnCallback;
 
-    void OnDestroy() {
-        despawnCallback = null;
-    }
+        void OnDestroy() {
+            despawnCallback = null;
+        }
 
-    void OnSpawned() {
-        Invoke("DoDespawn", delay);
-    }
+        void OnSpawned() {
+            Invoke("DoDespawn", delay);
+        }
 
-    void DoDespawn() {
-        if(despawnCallback != null)
-            despawnCallback(gameObject);
+        void DoDespawn() {
+            if(despawnCallback != null)
+                despawnCallback(gameObject);
 
-        PoolController.ReleaseAuto(transform);
+            PoolController.ReleaseAuto(transform);
+        }
     }
 }

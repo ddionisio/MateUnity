@@ -9,7 +9,7 @@ namespace M8 {
         }
 
         public const float TwoPI = 2.0f * Mathf.PI;
-
+                
         //------------- Interpolates ---------------
 
         /// <summary>

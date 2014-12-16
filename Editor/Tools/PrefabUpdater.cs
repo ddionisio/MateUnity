@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.IO;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public class PrefabUpdater : EditorWindow {
 
         [MenuItem("M8/Prefab Updater")]

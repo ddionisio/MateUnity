@@ -35,37 +35,38 @@ Basic Framework would be something like this:
     }
 */
 
-[AddComponentMenu("M8/Entity/EntityBase")]
-public class EntityBase : MonoBehaviour {
-    public const int StateInvalid = -1;
+namespace M8 {
+    [AddComponentMenu("M8/Entity/EntityBase")]
+    public class EntityBase : MonoBehaviour {
+        public const int StateInvalid = -1;
 
-    public delegate void OnGenericCall(EntityBase ent);
-    public delegate void OnSetBool(EntityBase ent, bool b);
+        public delegate void OnGenericCall(EntityBase ent);
+        public delegate void OnSetBool(EntityBase ent, bool b);
 
-    public float spawnDelay = 0.0f;
+        public float spawnDelay = 0.0f;
 
-    /// <summary>
-    /// if we want FSM/other stuff to activate on start (when placing entities on scene).
-    /// Set this to true if the entity is not gonna be spawned via Pool
-    /// </summary>
-    public bool activateOnStart = false;
+        /// <summary>
+        /// if we want FSM/other stuff to activate on start (when placing entities on scene).
+        /// Set this to true if the entity is not gonna be spawned via Pool
+        /// </summary>
+        public bool activateOnStart = false;
 
-    public EntityActivator activator;
+        public EntityActivator activator;
 
-    public event OnGenericCall setStateCallback;
-    public event OnGenericCall spawnCallback; //called after a slight delay during OnSpawned (at least after one fixed-update)
-    public event OnGenericCall releaseCallback;
+        public event OnGenericCall setStateCallback;
+        public event OnGenericCall spawnCallback; //called after a slight delay during OnSpawned (at least after one fixed-update)
+        public event OnGenericCall releaseCallback;
 
-    private int mState = StateInvalid;
-    private int mPrevState = StateInvalid;
+        private int mState = StateInvalid;
+        private int mPrevState = StateInvalid;
 
-    private bool mDoSpawnOnWake = false;
+        private bool mDoSpawnOnWake = false;
 
-    private byte mStartedCounter = 0;
+        private byte mStartedCounter = 0;
 
-    private SceneSerializer mSerializer = null;
+        private SceneSerializer mSerializer = null;
 
-    public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
+        public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
 #if POOLMANAGER
         SpawnPool pool = PoolManager.Pools[spawnGroup];
 
@@ -80,249 +81,250 @@ public class EntityBase : MonoBehaviour {
 
         return ent;
 #else
-        Transform spawned = PoolController.Spawn(spawnGroup, typeName, typeName, null, position);
-        T ent = spawned != null ? spawned.GetComponent<T>() : null;
+            Transform spawned = PoolController.Spawn(spawnGroup, typeName, typeName, null, position);
+            T ent = spawned != null ? spawned.GetComponent<T>() : null;
 
-        return ent;
+            return ent;
 #endif
-    }
-
-    private PoolDataController mPoolData;
-    protected PoolDataController poolData {
-        get {
-            if(mPoolData == null) mPoolData = GetComponent<PoolDataController>();
-            return mPoolData;
         }
-    }
 
-    public string spawnType {
-        get {
-            if(poolData == null) {
-                return name;
+        private PoolDataController mPoolData;
+        protected PoolDataController poolData {
+            get {
+                if(mPoolData == null) mPoolData = GetComponent<PoolDataController>();
+                return mPoolData;
             }
-
-            return poolData.factoryKey;
         }
-    }
 
-    /// <summary>
-    /// Set by call from Spawn, so use that instead of directly spawning via pool manager.
-    /// </summary>
-    public string spawnGroup { get { return poolData == null ? "" : poolData.group; } }
-
-    ///<summary>entity is instantiated with activator set to disable on start, call spawn after activator sends a wakeup call.</summary>
-    public bool doSpawnOnWake {
-        get { return mDoSpawnOnWake; }
-    }
-
-    public int state {
-        get { return mState; }
-
-        set {
-            if(mState != value) {
-                if(mState != StateInvalid)
-                    mPrevState = mState;
-
-                mState = value;
-
-                if(setStateCallback != null) {
-                    setStateCallback(this);
+        public string spawnType {
+            get {
+                if(poolData == null) {
+                    return name;
                 }
 
-                StateChanged();
+                return poolData.factoryKey;
             }
         }
-    }
 
-    public int prevState {
-        get { return mPrevState; }
-    }
+        /// <summary>
+        /// Set by call from Spawn, so use that instead of directly spawning via pool manager.
+        /// </summary>
+        public string spawnGroup { get { return poolData == null ? "" : poolData.group; } }
 
-    public bool isReleased {
-        get {
+        ///<summary>entity is instantiated with activator set to disable on start, call spawn after activator sends a wakeup call.</summary>
+        public bool doSpawnOnWake {
+            get { return mDoSpawnOnWake; }
+        }
+
+        public int state {
+            get { return mState; }
+
+            set {
+                if(mState != value) {
+                    if(mState != StateInvalid)
+                        mPrevState = mState;
+
+                    mState = value;
+
+                    if(setStateCallback != null) {
+                        setStateCallback(this);
+                    }
+
+                    StateChanged();
+                }
+            }
+        }
+
+        public int prevState {
+            get { return mPrevState; }
+        }
+
+        public bool isReleased {
+            get {
 #if POOLMANAGER
             return !PoolManager.Pools[mPoolData.group].IsSpawned(transform);
 #else
-            if(poolData == null)
-                return false;
+                if(poolData == null)
+                    return false;
 
-            return poolData.claimed;
+                return poolData.claimed;
 #endif
+            }
         }
-    }
 
-    public SceneSerializer serializer {
-        get { return mSerializer; }
-    }
-
-    /// <summary>
-    /// Manually perform start if it hasn't fully started yet.
-    /// </summary>
-    public virtual void Activate() {
-        if(mStartedCounter < 2) {
-            StopAllCoroutines();
-            StartCoroutine(DoStart());
+        public SceneSerializer serializer {
+            get { return mSerializer; }
         }
-    }
 
-    /// <summary>
-    /// Explicit call to remove entity.
-    /// </summary>
-    public virtual void Release() {
-        if(poolData != null) {
+        /// <summary>
+        /// Manually perform start if it hasn't fully started yet.
+        /// </summary>
+        public virtual void Activate() {
+            if(mStartedCounter < 2) {
+                StopAllCoroutines();
+                StartCoroutine(DoStart());
+            }
+        }
+
+        /// <summary>
+        /// Explicit call to remove entity.
+        /// </summary>
+        public virtual void Release() {
+            if(poolData != null) {
 #if POOLMANAGER
             transform.parent = PoolManager.Pools[poolData.group].group;
             PoolManager.Pools[poolData.group].Despawn(transform);
 #else
-            PoolController.ReleaseByGroup(poolData.group, transform);
+                PoolController.ReleaseByGroup(poolData.group, transform);
 #endif
-        }
-        else {
-            //just disable the object, really no need to destroy
-            OnDespawned();
-            gameObject.SetActive(false);
-            /*
-            if(gameObject.activeInHierarchy)
-                StartCoroutine(DestroyDelay());
+            }
             else {
-                Destroy(gameObject);
-            }*/
-        }
-    }
-
-    protected virtual void OnDespawned() {
-        if(activator != null && activator.defaultParent == transform) {
-            activator.Release(false);
-        }
-
-        if(releaseCallback != null) {
-            releaseCallback(this);
+                //just disable the object, really no need to destroy
+                OnDespawned();
+                gameObject.SetActive(false);
+                /*
+                if(gameObject.activeInHierarchy)
+                    StartCoroutine(DestroyDelay());
+                else {
+                    Destroy(gameObject);
+                }*/
+            }
         }
 
-        mDoSpawnOnWake = false;
+        protected virtual void OnDespawned() {
+            if(activator != null && activator.defaultParent == transform) {
+                activator.Release(false);
+            }
 
-        StopAllCoroutines();
-    }
+            if(releaseCallback != null) {
+                releaseCallback(this);
+            }
 
-    protected virtual void ActivatorWakeUp() {
-        if(!gameObject.activeInHierarchy)
-            return;
-
-        if(activateOnStart && mStartedCounter == 1) { //we didn't get a chance to start properly before being inactivated
-            StartCoroutine(DoStart());
-        }
-        else if(mDoSpawnOnWake) { //if we haven't properly spawned yet, do so now
             mDoSpawnOnWake = false;
-            StartCoroutine(DoSpawn());
-        }
-    }
 
-    protected virtual void ActivatorSleep() {
-    }
-
-    protected virtual void OnDestroy() {
-        if(activator != null && activator.defaultParent == transform) {
-            activator.Release(true);
+            StopAllCoroutines();
         }
 
-        setStateCallback = null;
-        spawnCallback = null;
-        releaseCallback = null;
-    }
+        protected virtual void ActivatorWakeUp() {
+            if(!gameObject.activeInHierarchy)
+                return;
 
-    protected virtual void OnEnable() {
-        //we didn't get a chance to start properly before being inactivated
-        if((activator == null || activator.isActive) && activateOnStart && mStartedCounter == 1) {
-            StartCoroutine(DoStart());
+            if(activateOnStart && mStartedCounter == 1) { //we didn't get a chance to start properly before being inactivated
+                StartCoroutine(DoStart());
+            }
+            else if(mDoSpawnOnWake) { //if we haven't properly spawned yet, do so now
+                mDoSpawnOnWake = false;
+                StartCoroutine(DoSpawn());
+            }
         }
-    }
 
-    protected virtual void Awake() {
-        mPoolData = GetComponent<PoolDataController>();
-
-        mSerializer = GetComponent<SceneSerializer>();
-
-        if(activator == null)
-            activator = GetComponentInChildren<EntityActivator>();
-
-        if(activator != null) {
-            activator.awakeCallback += ActivatorWakeUp;
-            activator.sleepCallback += ActivatorSleep;
+        protected virtual void ActivatorSleep() {
         }
-    }
 
-    // Use this for initialization
-    protected virtual void Start() {
-        mStartedCounter = 1;
+        protected virtual void OnDestroy() {
+            if(activator != null && activator.defaultParent == transform) {
+                activator.Release(true);
+            }
 
-        //for when putting entities on scene, skip the spawning state
-        if(activateOnStart) {
-            StartCoroutine(DoStart());
+            setStateCallback = null;
+            spawnCallback = null;
+            releaseCallback = null;
         }
-    }
 
-    protected virtual void StateChanged() {
-    }
+        protected virtual void OnEnable() {
+            //we didn't get a chance to start properly before being inactivated
+            if((activator == null || activator.isActive) && activateOnStart && mStartedCounter == 1) {
+                StartCoroutine(DoStart());
+            }
+        }
 
-    protected virtual void SpawnStart() {
-    }
-
-    //////////internal
-
-    /// <summary>
-    /// Spawn this entity, resets stats, set action to spawning, then later calls OnEntitySpawnFinish.
-    /// NOTE: calls after an update to ensure Awake and Start is called.
-    /// </summary>
-    protected virtual void OnSpawned() {
-        if(mPoolData == null)
+        protected virtual void Awake() {
             mPoolData = GetComponent<PoolDataController>();
 
-        mState = mPrevState = StateInvalid; //avoid invalid updates
+            mSerializer = GetComponent<SceneSerializer>();
 
-        //allow activator to start and check if we need to spawn now or later
-        //ensure start is called before spawning if we are freshly allocated from entity manager
-        if(activator != null) {
-            activator.Start();
+            if(activator == null)
+                activator = GetComponentInChildren<EntityActivator>();
 
-            if(activator.deactivateOnStart) {
-                mDoSpawnOnWake = true; //do it later when we wake up
+            if(activator != null) {
+                activator.awakeCallback += ActivatorWakeUp;
+                activator.sleepCallback += ActivatorSleep;
+            }
+        }
+
+        // Use this for initialization
+        protected virtual void Start() {
+            mStartedCounter = 1;
+
+            //for when putting entities on scene, skip the spawning state
+            if(activateOnStart) {
+                StartCoroutine(DoStart());
+            }
+        }
+
+        protected virtual void StateChanged() {
+        }
+
+        protected virtual void SpawnStart() {
+        }
+
+        //////////internal
+
+        /// <summary>
+        /// Spawn this entity, resets stats, set action to spawning, then later calls OnEntitySpawnFinish.
+        /// NOTE: calls after an update to ensure Awake and Start is called.
+        /// </summary>
+        protected virtual void OnSpawned() {
+            if(mPoolData == null)
+                mPoolData = GetComponent<PoolDataController>();
+
+            mState = mPrevState = StateInvalid; //avoid invalid updates
+
+            //allow activator to start and check if we need to spawn now or later
+            //ensure start is called before spawning if we are freshly allocated from entity manager
+            if(activator != null) {
+                activator.Start();
+
+                if(activator.deactivateOnStart) {
+                    mDoSpawnOnWake = true; //do it later when we wake up
+                }
+                else {
+                    StartCoroutine(DoSpawn());
+                }
             }
             else {
                 StartCoroutine(DoSpawn());
             }
         }
-        else {
-            StartCoroutine(DoSpawn());
-        }
-    }
 
-    IEnumerator DoStart() {
-        if(spawnDelay > 0.0f)
-            yield return new WaitForSeconds(spawnDelay);
-        else
-            yield return null;
+        IEnumerator DoStart() {
+            if(spawnDelay > 0.0f)
+                yield return new WaitForSeconds(spawnDelay);
+            else
+                yield return null;
 
-        SpawnStart();
+            SpawnStart();
 
-        if(spawnCallback != null) {
-            spawnCallback(this);
-        }
+            if(spawnCallback != null) {
+                spawnCallback(this);
+            }
 
-        mStartedCounter = 2;
-    }
-
-    IEnumerator DoSpawn() {
-        if(spawnDelay > 0.0f)
-            yield return new WaitForSeconds(spawnDelay);
-        else
-            yield return null;
-
-        SpawnStart();
-
-        if(spawnCallback != null) {
-            spawnCallback(this);
+            mStartedCounter = 2;
         }
 
-        mStartedCounter = 2;
+        IEnumerator DoSpawn() {
+            if(spawnDelay > 0.0f)
+                yield return new WaitForSeconds(spawnDelay);
+            else
+                yield return null;
+
+            SpawnStart();
+
+            if(spawnCallback != null) {
+                spawnCallback(this);
+            }
+
+            mStartedCounter = 2;
+        }
     }
 }

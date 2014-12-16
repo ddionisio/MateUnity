@@ -1,34 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Screen Transition/Type - Dissolve")]
-public class STDissolve : ScreenTrans {
-    public SourceType source = SourceType.CameraSnapShot;
-    public Texture sourceTexture; //if source = SourceType.Texture
+namespace M8 {
+    [AddComponentMenu("M8/Screen Transition/Type - Dissolve")]
+    public class STDissolve : ScreenTrans {
+        public SourceType source = SourceType.CameraSnapShot;
+        public Texture sourceTexture; //if source = SourceType.Texture
 
-    public Texture dissolveTexture;
-    public AnimationCurve dissolvePower;
-    public bool dissolvePowerNormalized;
+        public Texture dissolveTexture;
+        public AnimationCurve dissolvePower;
+        public bool dissolvePowerNormalized;
 
-    public Texture emissionTexture;
-    public float emissionThickness = 0.03f; //[0, 0.1 max?]
+        public Texture emissionTexture;
+        public float emissionThickness = 0.03f; //[0, 0.1 max?]
 
-    private Vector4 mParam;
+        private Vector4 mParam;
 
-    protected override void OnPrepare() {
-        SetSourceTexture(source, sourceTexture);
+        protected override void OnPrepare() {
+            SetSourceTexture(source, sourceTexture);
 
-        material.SetTexture("_DissolveTex", dissolveTexture);
+            material.SetTexture("_DissolveTex", dissolveTexture);
 
-        material.SetTexture("_EmissionTex", emissionTexture);
+            material.SetTexture("_EmissionTex", emissionTexture);
 
-        mParam.y = emissionThickness;
-    }
+            mParam.y = emissionThickness;
+        }
 
-    protected override void OnUpdate() {
-        material.SetFloat("_t", curCurveValue);
+        protected override void OnUpdate() {
+            material.SetFloat("_t", curCurveValue);
 
-        mParam.x = dissolvePower.Evaluate(dissolvePowerNormalized ? curTimeNormalized : curTime);
-        material.SetVector("_Params", mParam);
+            mParam.x = dissolvePower.Evaluate(dissolvePowerNormalized ? curTimeNormalized : curTime);
+            material.SetVector("_Params", mParam);
+        }
     }
 }

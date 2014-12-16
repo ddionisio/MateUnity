@@ -3,92 +3,94 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-[CustomEditor(typeof(PoolController))]
-public class PoolControllerInspector : Editor {
-    private SerializedProperty mGroupName;
-    private SerializedProperty mPersistent;
-    private SerializedProperty mPoolHolder;
-    
-    //private SerializedProperty mFactory;
-    private UnityEditorInternal.ReorderableList mFactory;
-    
-    private bool mGroupNameOverride;
+namespace M8 {
+    [CustomEditor(typeof(PoolController))]
+    public class PoolControllerInspector : Editor {
+        private SerializedProperty mGroupName;
+        private SerializedProperty mPersistent;
+        private SerializedProperty mPoolHolder;
 
-    void OnEnable() {
-        mGroupName = serializedObject.FindProperty("group");
-        mPersistent = serializedObject.FindProperty("_persistent");
-        mPoolHolder = serializedObject.FindProperty("poolHolder");
+        //private SerializedProperty mFactory;
+        private UnityEditorInternal.ReorderableList mFactory;
 
-        //mFactory = serializedObject.FindProperty("factory");
-        mFactory = new UnityEditorInternal.ReorderableList(serializedObject, serializedObject.FindProperty("factory"), true, false, true, true);
-        mFactory.drawElementCallback = OnFactoryItemRender;
-        mFactory.elementHeight = 140f;
+        private bool mGroupNameOverride;
 
-        mGroupNameOverride = !string.IsNullOrEmpty(mGroupName.stringValue);
-    }
+        void OnEnable() {
+            mGroupName = serializedObject.FindProperty("group");
+            mPersistent = serializedObject.FindProperty("_persistent");
+            mPoolHolder = serializedObject.FindProperty("poolHolder");
 
-    public override void OnInspectorGUI() {
-        EditorGUILayout.BeginVertical(GUI.skin.box);
+            //mFactory = serializedObject.FindProperty("factory");
+            mFactory = new UnityEditorInternal.ReorderableList(serializedObject, serializedObject.FindProperty("factory"), true, false, true, true);
+            mFactory.drawElementCallback = OnFactoryItemRender;
+            mFactory.elementHeight = 140f;
 
-        if(mGroupNameOverride) {
-            EditorGUILayout.PropertyField(mGroupName);
-        }
-        else {
-            EditorGUILayout.LabelField("group", (target as MonoBehaviour).name);
+            mGroupNameOverride = !string.IsNullOrEmpty(mGroupName.stringValue);
         }
 
-        mGroupNameOverride = EditorGUILayout.Toggle("override", mGroupNameOverride);
-        if(!mGroupNameOverride)
-            mGroupName.stringValue = "";
+        public override void OnInspectorGUI() {
+            EditorGUILayout.BeginVertical(GUI.skin.box);
 
-        EditorGUILayout.EndVertical();
+            if(mGroupNameOverride) {
+                EditorGUILayout.PropertyField(mGroupName);
+            }
+            else {
+                EditorGUILayout.LabelField("group", (target as MonoBehaviour).name);
+            }
 
-        EditorGUILayout.PropertyField(mPersistent);
+            mGroupNameOverride = EditorGUILayout.Toggle("override", mGroupNameOverride);
+            if(!mGroupNameOverride)
+                mGroupName.stringValue = "";
 
-        EditorGUILayout.PropertyField(mPoolHolder);
+            EditorGUILayout.EndVertical();
 
-        M8.Editor.Utility.DrawSeparator();
+            EditorGUILayout.PropertyField(mPersistent);
 
-        mFactory.DoLayoutList();
+            EditorGUILayout.PropertyField(mPoolHolder);
 
-        serializedObject.ApplyModifiedProperties();
-    }
+            M8.EditorExt.Utility.DrawSeparator();
 
-    void OnFactoryItemRender(Rect rect, int index, bool isActive, bool isFocused) {
-        SerializedProperty item = mFactory.serializedProperty.GetArrayElementAtIndex(index);
+            mFactory.DoLayoutList();
 
-        Rect itemPos = rect;
-        itemPos.y += 4.0f;
-        itemPos.height = 16.0f;
-
-        const float padding = 4.0f;
-
-        EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("template"));
-        itemPos.y += itemPos.height + padding;
-
-        EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("startCapacity"));
-        itemPos.y += itemPos.height + padding;
-
-        EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("maxCapacity"));
-        itemPos.y += itemPos.height + padding;
-
-        EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("defaultParent"));
-        itemPos.y += itemPos.height + padding;
-
-        itemPos.y += padding;
-
-        Rect copyPos = itemPos; copyPos.height = 20.0f; copyPos.width = rect.width*0.3f; copyPos.x = rect.x + rect.width*0.5f - rect.width*0.3f - 4.0f;
-        if(GUI.Button(copyPos, "Copy Name")) {
-            Transform t = item.FindPropertyRelative("template").objectReferenceValue as Transform;
-            if(t)
-                EditorGUIUtility.systemCopyBuffer = t.name;
+            serializedObject.ApplyModifiedProperties();
         }
 
-        Rect dupPos = itemPos; dupPos.height = 20.0f; dupPos.width = rect.width*0.3f; dupPos.x = rect.x + rect.width*0.5f + 4.0f;
-        if(GUI.Button(dupPos, "Duplicate")) {
-            mFactory.serializedProperty.InsertArrayElementAtIndex(index);
-            SerializedProperty newItem = mFactory.serializedProperty.GetArrayElementAtIndex(index);
-            newItem.serializedObject.CopyFromSerializedProperty(item);
+        void OnFactoryItemRender(Rect rect, int index, bool isActive, bool isFocused) {
+            SerializedProperty item = mFactory.serializedProperty.GetArrayElementAtIndex(index);
+
+            Rect itemPos = rect;
+            itemPos.y += 4.0f;
+            itemPos.height = 16.0f;
+
+            const float padding = 4.0f;
+
+            EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("template"));
+            itemPos.y += itemPos.height + padding;
+
+            EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("startCapacity"));
+            itemPos.y += itemPos.height + padding;
+
+            EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("maxCapacity"));
+            itemPos.y += itemPos.height + padding;
+
+            EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("defaultParent"));
+            itemPos.y += itemPos.height + padding;
+
+            itemPos.y += padding;
+
+            Rect copyPos = itemPos; copyPos.height = 20.0f; copyPos.width = rect.width*0.3f; copyPos.x = rect.x + rect.width*0.5f - rect.width*0.3f - 4.0f;
+            if(GUI.Button(copyPos, "Copy Name")) {
+                Transform t = item.FindPropertyRelative("template").objectReferenceValue as Transform;
+                if(t)
+                    EditorGUIUtility.systemCopyBuffer = t.name;
+            }
+
+            Rect dupPos = itemPos; dupPos.height = 20.0f; dupPos.width = rect.width*0.3f; dupPos.x = rect.x + rect.width*0.5f + 4.0f;
+            if(GUI.Button(dupPos, "Duplicate")) {
+                mFactory.serializedProperty.InsertArrayElementAtIndex(index);
+                SerializedProperty newItem = mFactory.serializedProperty.GetArrayElementAtIndex(index);
+                newItem.serializedObject.CopyFromSerializedProperty(item);
+            }
         }
     }
 }

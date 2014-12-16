@@ -41,7 +41,7 @@ public class UIModalManagerInspector : Editor {
             GUILayout.FlexibleSpace();
 
             if(dat.e_ui != null) {
-                if(M8.Editor.Utility.DrawCopyButton("Click to copy name.")) {
+                if(M8.EditorExt.Utility.DrawCopyButton("Click to copy name.")) {
                     mTE.content = new GUIContent(goName);
                     mTE.SelectAll();
                     mTE.Copy();
@@ -50,7 +50,7 @@ public class UIModalManagerInspector : Editor {
                 GUILayout.Space(4);
             }
 
-            if(M8.Editor.Utility.DrawRemoveButton()) {
+            if(M8.EditorExt.Utility.DrawRemoveButton()) {
                 delInd = i;
             }
 

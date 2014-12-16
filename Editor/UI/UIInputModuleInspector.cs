@@ -4,7 +4,7 @@ using System.Collections;
 
 namespace M8.UI {
     [CustomEditor(typeof(InputModule))]
-    public class UIInputModuleInspector : UnityEditor.Editor {
+    public class UIInputModuleInspector : Editor {
         public override void OnInspectorGUI() {
             GUI.changed = false;
 
@@ -14,10 +14,10 @@ namespace M8.UI {
 
             obj.playerIndex = EditorGUILayout.IntField("Player Index", obj.playerIndex);
 
-            obj.horizontalAxis = Editor.InputBinder.GUISelectInputAction("Horizontal Axis", obj.horizontalAxis);
-            obj.verticalAxis = Editor.InputBinder.GUISelectInputAction("Vertical Axis", obj.verticalAxis);
-            obj.submitButton = Editor.InputBinder.GUISelectInputAction("Submit Button", obj.submitButton);
-            obj.cancelButton = Editor.InputBinder.GUISelectInputAction("Cancel Button", obj.cancelButton);
+            obj.horizontalAxis = EditorExt.InputBinder.GUISelectInputAction("Horizontal Axis", obj.horizontalAxis);
+            obj.verticalAxis = EditorExt.InputBinder.GUISelectInputAction("Vertical Axis", obj.verticalAxis);
+            obj.submitButton = EditorExt.InputBinder.GUISelectInputAction("Submit Button", obj.submitButton);
+            obj.cancelButton = EditorExt.InputBinder.GUISelectInputAction("Cancel Button", obj.cancelButton);
 
             obj.inputActionsPerSecond = EditorGUILayout.FloatField("Input Actions Per Second", obj.inputActionsPerSecond);
 

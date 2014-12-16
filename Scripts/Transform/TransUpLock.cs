@@ -1,23 +1,25 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Transform/UpLock")]
-[ExecuteInEditMode]
-public class TransUpLock : MonoBehaviour {
-    public Vector3 up = Vector3.up;
+namespace M8 {
+    [AddComponentMenu("M8/Transform/UpLock")]
+    [ExecuteInEditMode]
+    public class TransUpLock : MonoBehaviour {
+        public Vector3 up = Vector3.up;
 
-    public Transform target;
+        public Transform target;
 
-    void Awake() {
-        if(target == null)
-            target = transform;
-    }
+        void Awake() {
+            if(target == null)
+                target = transform;
+        }
 
-    void Update() {
+        void Update() {
 #if UNITY_EDITOR
-        if(target == null)
-            target = transform;
+            if(target == null)
+                target = transform;
 #endif
-        target.up = up;
+            target.up = up;
+        }
     }
 }

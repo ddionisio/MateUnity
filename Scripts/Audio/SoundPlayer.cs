@@ -1,68 +1,73 @@
 using UnityEngine;
 using System.Collections;
 
-/// <summary>
-/// Base class for playing sounds, need to inherit from this in order to allow global sound settings to affect.
-/// Put this alongside an audio source
-/// </summary>
-[AddComponentMenu("M8/Audio/SoundPlayer")]
-public class SoundPlayer : MonoBehaviour {
-    public const float refRate = 44100.0f;
-
+namespace M8 {
     /// <summary>
-    /// Play the sound whenever it is enabled
+    /// Base class for playing sounds, need to inherit from this in order to allow global sound settings to affect.
+    /// Put this alongside an audio source
     /// </summary>
-    public bool playOnActive = false;
+    [RequireComponent(typeof(AudioSource))]
+    [AddComponentMenu("M8/Audio/SoundPlayer")]
+    public class SoundPlayer : MonoBehaviour {
+        public const float refRate = 44100.0f;
 
-    public float playDelay = 0.0f;
+        /// <summary>
+        /// Play the sound whenever it is enabled
+        /// </summary>
+        public bool playOnActive = false;
 
-    private bool mStarted = false;
-    private float mDefaultVolume = 1.0f;
+        public float playDelay = 0.0f;
 
-    public bool isPlaying { get { return audio.isPlaying; } }
-    public float defaultVolume { get { return mDefaultVolume; } set { mDefaultVolume = value; } }
+        private bool mStarted = false;
+        private float mDefaultVolume = 1.0f;
 
-    public virtual void Play() {
-        audio.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
+        public bool isPlaying { get { return audio.isPlaying; } }
+        public float defaultVolume { get { return mDefaultVolume; } set { mDefaultVolume = value; } }
 
-        if(playDelay > 0.0f)
-            audio.PlayDelayed(playDelay);
-        else
-            audio.Play();
-    }
+        public virtual void Play() {
+            audio.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
 
-    public virtual void Stop() {
-        audio.Stop();
-    }
+            if(playDelay > 0.0f)
+                audio.PlayDelayed(playDelay);
+            else
+                audio.Play();
+        }
 
-    protected virtual void OnEnable() {
-        if(mStarted && playOnActive)
-            Play();
-    }
+        public virtual void Stop() {
+            audio.Stop();
+        }
 
-    protected virtual void OnDestroy() {
-        if(UserSettingAudio.instance != null)
-            UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
-    }
+        protected virtual void OnEnable() {
+            if(mStarted && playOnActive)
+                Play();
+        }
 
-    protected virtual void Awake() {
-        audio.playOnAwake = false;
+        protected virtual void OnDestroy() {
+            if(UserSettingAudio.instantiated)
+                UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
+        }
 
-        mDefaultVolume = audio.volume;
+        protected virtual void Awake() {
+            audio.playOnAwake = false;
 
-        UserSettingAudio.instance.changeCallback += UserSettingsChanged;
-    }
+            mDefaultVolume = audio.volume;
 
-    // Use this for initialization
-    protected virtual void Start() {
-        mStarted = true;
+            audio.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
 
-        if(playOnActive)
-            Play();
-    }
+            UserSettingAudio.instance.changeCallback += UserSettingsChanged;
+        }
 
-    void UserSettingsChanged(UserSetting us) {
-        //if(audio.isPlaying)
-        audio.volume = mDefaultVolume * ((UserSettingAudio)us).soundVolume;
+        // Use this for initialization
+        protected virtual void Start() {
+            mStarted = true;
+
+            if(playOnActive)
+                Play();
+        }
+
+        void UserSettingsChanged(UserSettingAudio us) {
+            //if(audio.isPlaying)
+            audio.volume = mDefaultVolume * us.soundVolume;
+        }
     }
 }

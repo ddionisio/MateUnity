@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Core/OUYAController")]
+namespace M8 {
+    [AddComponentMenu("M8/Core/OUYAController")]
 #if OUYA
 public class OUYAController : MonoBehaviour, OuyaSDK.IPauseListener, OuyaSDK.IResumeListener {
 
@@ -37,6 +38,7 @@ public class OUYAController : MonoBehaviour, OuyaSDK.IPauseListener, OuyaSDK.IRe
     }
 }
 #else
-public class OUYAController : MonoBehaviour {
-}
+    public class OUYAController : MonoBehaviour {
+    }
 #endif
+}

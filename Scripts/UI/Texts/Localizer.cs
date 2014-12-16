@@ -26,8 +26,8 @@ namespace M8.UI.Texts {
         /// Localize the widget on enable, but only if it has been started already.
         /// </summary>
 
-        void OnEnable() { GameLocalize.instance.localizeCallback += Localize; if(mStarted) Localize(); }
-        void OnDisable() { if(GameLocalize.instance) GameLocalize.instance.localizeCallback -= Localize; }
+        void OnEnable() { Localize.instance.localizeCallback += Apply; if(mStarted) Apply(); }
+        void OnDisable() { if(Localize.instantiated) Localize.instance.localizeCallback -= Apply; }
 
         void Awake() {
             mUIText = GetComponent<Text>();
@@ -39,18 +39,18 @@ namespace M8.UI.Texts {
 
         void Start() {
             mStarted = true;
-            Localize();
+            Apply();
         }
 
         /// <summary>
         /// Force-localize the widget.
         /// </summary>
-        public void Localize() {
+        public void Apply() {
             // If no localization key has been specified, use the label's text as the key
             if(string.IsNullOrEmpty(key)) key = mUIText.text;
 
             // If we still don't have a key, use the widget's name
-            string val = string.IsNullOrEmpty(key) ? GameLocalize.instance.GetText(name) : GameLocalize.instance.GetText(key);
+            string val = string.IsNullOrEmpty(key) ? Localize.instance.GetText(name) : Localize.instance.GetText(key);
 
             if(mParams != null)
                 val = string.Format(val, mParams);

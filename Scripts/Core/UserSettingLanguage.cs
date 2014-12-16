@@ -1,33 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("M8/Core/UserSettingLanguage")]
-public class UserSettingLanguage : UserSetting {
-    public const string languageKey = "lang";
+namespace M8 {
+    [PrefabCore]
+    [AddComponentMenu("M8/Core/UserSettingLanguage")]
+    public class UserSettingLanguage : UserSetting<UserSettingLanguage> {
+        public const string languageKey = "lang";
 
-    private static UserSettingLanguage mInstance;
+        public Language language {
+            get { return Localize.instance.language; }
+            set {
+                userData.SetInt(languageKey, (int)value);
 
-    public static UserSettingLanguage instance { get { return mInstance; } }
-
-    public GameLanguage language {
-        get { return GameLocalize.instance.language; }
-        set {
-            userData.SetInt(languageKey, (int)value);
-
-            GameLocalize.instance.language = value;
+                Localize.instance.language = value;
+            }
         }
-    }
 
-    void OnDestroy() {
-        mInstance = null;
-    }
+        protected override void Awake() {
+            base.Awake();
 
-    protected override void Awake() {
-        mInstance = this;
-
-        base.Awake();
-
-        //load settings
-        GameLocalize.instance.language = (GameLanguage)userData.GetInt(languageKey, (int)GameLanguage.English);
+            //load settings
+            Localize.instance.language = (Language)userData.GetInt(languageKey, (int)Language.English);
+        }
     }
 }

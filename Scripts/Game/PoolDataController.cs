@@ -1,16 +1,18 @@
 using UnityEngine;
 using System.Collections;
 
-public class PoolDataController : MonoBehaviour {
-    [System.NonSerialized]
-    public string group;
+namespace M8 {
+    public class PoolDataController : MonoBehaviour {
+        [System.NonSerialized]
+        public string group;
 
-    [System.NonSerialized]
-    public string factoryKey;
+        [System.NonSerialized]
+        public string factoryKey;
 
-    /// <summary>
-    /// only entity manager ought to set this.
-    /// </summary>
-    [System.NonSerialized]
-    public bool claimed;
+        /// <summary>
+        /// only entity manager ought to set this.
+        /// </summary>
+        [System.NonSerialized]
+        public bool claimed;
+    }
 }

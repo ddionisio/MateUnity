@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public class CreatePlane : ScriptableWizard {
 
         public enum Orientation {
@@ -112,7 +112,7 @@ namespace M8.Editor {
             MeshFilter meshFilter = (MeshFilter)plane.AddComponent(typeof(MeshFilter));
             plane.AddComponent(typeof(MeshRenderer));
 
-            string dir = M8.Editor.Utility.GetSelectionFolder();
+            string dir = M8.EditorExt.Utility.GetSelectionFolder();
 
             string planeAssetName = plane.name + widthSegments + "x" + lengthSegments + "W" + width + "L" + length + (orientation == Orientation.Horizontal ? "H" : "V") + anchorId + ".asset";
             Mesh m = (Mesh)AssetDatabase.LoadAssetAtPath(dir + planeAssetName, typeof(Mesh));

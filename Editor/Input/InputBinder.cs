@@ -7,7 +7,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public class InputBinder : EditorWindow {
         public const string PrefKlass = "InputBinder";
         public const string PrefFileMapper = "File";

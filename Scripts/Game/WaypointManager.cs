@@ -7,139 +7,141 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-[AddComponentMenu("M8/Game/WaypointManager")]
-public class WaypointManager : MonoBehaviour {
+namespace M8 {
+    [AddComponentMenu("M8/Game/WaypointManager")]
+    public class WaypointManager : MonoBehaviour {
 
-    private static WaypointManager mInstance = null;
-    private Dictionary<string, List<Transform>> mWaypoints;
+        private static WaypointManager mInstance = null;
+        private Dictionary<string, List<Transform>> mWaypoints;
 
 #if UNITY_EDITOR
-    public float arrowSize = 2.0f;
-    public float arrowAngle = 30.0f;
-    public float pointSize = 0.5f;
-    public float pointSizeSelected = 1.0f;
+        public float arrowSize = 2.0f;
+        public float arrowAngle = 30.0f;
+        public float pointSize = 0.5f;
+        public float pointSizeSelected = 1.0f;
 
-    [HideInInspector]
-    public Transform __inspectorSelected;
+        [HideInInspector]
+        public Transform __inspectorSelected;
 #endif
 
-    public static WaypointManager instance {
-        get {
-            return mInstance;
+        public static WaypointManager instance {
+            get {
+                return mInstance;
+            }
         }
-    }
 
-    public List<Transform> GetWaypoints(string name) {
-        List<Transform> ret = null;
-        mWaypoints.TryGetValue(name, out ret);
-        return ret;
-    }
-
-    //get the first one if > 1
-    public Transform GetWaypoint(string name) {
-        Transform ret = null;
-        List<Transform> wps;
-        if(mWaypoints.TryGetValue(name, out wps) && wps.Count > 0) {
-            ret = wps[0];
+        public List<Transform> GetWaypoints(string name) {
+            List<Transform> ret = null;
+            mWaypoints.TryGetValue(name, out ret);
+            return ret;
         }
-        return ret;
-    }
 
-    void OnDestroy() {
-        mInstance = null;
-        mWaypoints.Clear();
-    }
+        //get the first one if > 1
+        public Transform GetWaypoint(string name) {
+            Transform ret = null;
+            List<Transform> wps;
+            if(mWaypoints.TryGetValue(name, out wps) && wps.Count > 0) {
+                ret = wps[0];
+            }
+            return ret;
+        }
 
-    void Awake() {
-        mInstance = this;
+        void OnDestroy() {
+            mInstance = null;
+            mWaypoints.Clear();
+        }
 
-        mWaypoints = new Dictionary<string, List<Transform>>(transform.childCount);
+        void Awake() {
+            mInstance = this;
 
-        //generate waypoints based on their names
-        foreach(Transform child in transform) {
-            List<Transform> points;
+            mWaypoints = new Dictionary<string, List<Transform>>(transform.childCount);
 
-            if(child.childCount > 0) {
-                points = new List<Transform>(child.childCount);
-                foreach(Transform t in child) {
-                    points.Add(t);
+            //generate waypoints based on their names
+            foreach(Transform child in transform) {
+                List<Transform> points;
+
+                if(child.childCount > 0) {
+                    points = new List<Transform>(child.childCount);
+                    foreach(Transform t in child) {
+                        points.Add(t);
+                    }
+                    points.Sort(delegate(Transform t1, Transform t2) {
+                        int i1 = int.Parse(t1.name);
+                        int i2 = int.Parse(t2.name);
+                        return i1.CompareTo(i2);
+                    });
                 }
-                points.Sort(delegate(Transform t1, Transform t2) {
-                    int i1 = int.Parse(t1.name);
-                    int i2 = int.Parse(t2.name);
-                    return i1.CompareTo(i2);
-                });
-            }
-            else {
-                points = new List<Transform>(1);
-                points.Add(child);
-            }
+                else {
+                    points = new List<Transform>(1);
+                    points.Add(child);
+                }
 
-            mWaypoints.Add(child.name, points);
+                mWaypoints.Add(child.name, points);
+            }
         }
-    }
 
 #if UNITY_EDITOR
-    void OnDrawGizmos() {
-        Transform selection = Selection.activeTransform;
+        void OnDrawGizmos() {
+            Transform selection = Selection.activeTransform;
 
-        foreach(Transform t in transform) {
-            bool wpActive = selection != null 
+            foreach(Transform t in transform) {
+                bool wpActive = selection != null 
                 && (t == selection || selection.parent == t || (__inspectorSelected != null && (__inspectorSelected == t || __inspectorSelected.parent == t)));
-            Gizmos.color = wpActive ? Color.green : Color.green * 0.5f;
+                Gizmos.color = wpActive ? Color.green : Color.green * 0.5f;
 
-            if(t.childCount > 0) {
-                //first child
-                Transform child = t.GetChild(0);
+                if(t.childCount > 0) {
+                    //first child
+                    Transform child = t.GetChild(0);
 
-                Vector3 p = child.position;
+                    Vector3 p = child.position;
 
-                if(pointSize > 0.0f)
-                    Gizmos.DrawSphere(p, pointSize);
+                    if(pointSize > 0.0f)
+                        Gizmos.DrawSphere(p, pointSize);
 
-                if(child == selection || child == __inspectorSelected) {
-                    if(pointSizeSelected > 0.0f) {
-                        Gizmos.DrawWireSphere(p, pointSizeSelected);
+                    if(child == selection || child == __inspectorSelected) {
+                        if(pointSizeSelected > 0.0f) {
+                            Gizmos.DrawWireSphere(p, pointSizeSelected);
+                        }
+                    }
+                    //
+
+                    //render others
+                    for(int i = 1; i < t.childCount; i++) {
+                        child = t.GetChild(i);
+                        Vector3 np = child.position;
+                        Vector3 dir = np - p;
+                        float len = dir.magnitude;
+                        if(len > 0) {
+                            dir /= len;
+                            M8.Gizmo.ArrowFourLine(p, dir, len, arrowSize, arrowAngle);
+                        }
+
+                        if(pointSize > 0.0f)
+                            Gizmos.DrawSphere(np, pointSize);
+
+                        if(child == selection || child == __inspectorSelected) {
+                            if(pointSizeSelected > 0.0f) {
+                                Gizmos.DrawWireSphere(np, pointSizeSelected);
+                            }
+                        }
+
+                        p = np;
                     }
                 }
-                //
-
-                //render others
-                for(int i = 1; i < t.childCount; i++) {
-                    child = t.GetChild(i);
-                    Vector3 np = child.position;
-                    Vector3 dir = np - p;
-                    float len = dir.magnitude;
-                    if(len > 0) {
-                        dir /= len;
-                        M8.Gizmo.ArrowFourLine(p, dir, len, arrowSize, arrowAngle);
-                    }
+                else {
+                    Vector3 np = t.position;
 
                     if(pointSize > 0.0f)
                         Gizmos.DrawSphere(np, pointSize);
 
-                    if(child == selection || child == __inspectorSelected) {
+                    if(t == selection || t == __inspectorSelected) {
                         if(pointSizeSelected > 0.0f) {
                             Gizmos.DrawWireSphere(np, pointSizeSelected);
                         }
                     }
-
-                    p = np;
-                }
-            }
-            else {
-                Vector3 np = t.position;
-
-                if(pointSize > 0.0f)
-                    Gizmos.DrawSphere(np, pointSize);
-
-                if(t == selection || t == __inspectorSelected) {
-                    if(pointSizeSelected > 0.0f) {
-                        Gizmos.DrawWireSphere(np, pointSizeSelected);
-                    }
                 }
             }
         }
-    }
 #endif
+    }
 }

@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public struct Utility {
         public const char ArrowUpChar = '\u25B2';
         public const char ArrowDownChar = '\u25BC';
@@ -205,7 +205,7 @@ namespace M8.Editor {
 
                     GUILayout.FlexibleSpace();
 
-                    if(act == Editor.Utility.ListButtonResult.None) {
+                    if(act == EditorExt.Utility.ListButtonResult.None) {
                         act = DrawListButtons();
                         if(act != ListButtonResult.None)
                             actInd = i;

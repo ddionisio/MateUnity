@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace M8.UIModal {
     [AddComponentMenu("M8/UI Modal/Manager")]
-    public class Manager : MonoBehaviour {
+    public class Manager : SingletonBehaviour<Manager> {
         public delegate void CallbackBool(bool b);
 
         [System.Serializable]
@@ -61,11 +61,6 @@ namespace M8.UIModal {
 
         public string openOnStart = "";
 
-        [SerializeField]
-        bool persistent = false;
-
-        private static Manager mInstance;
-
         private Dictionary<string, UIData> mModals;
         private Stack<UIData> mModalStack;
         private Queue<UIData> mModalToOpen;
@@ -78,12 +73,6 @@ namespace M8.UIModal {
         private bool mTaskActive;
 
         public event CallbackBool activeCallback;
-
-        public static Manager instance {
-            get {
-                return mInstance;
-            }
-        }
 
         public int activeCount {
             get {
@@ -179,36 +168,21 @@ namespace M8.UIModal {
             mTransitionCount = 0;
         }
 
-        void OnDestroy() {
-            if(mInstance == this) {
-                mInstance = null;
-
-                activeCallback = null;
-            }
-        }
-
         void Awake() {
-            if(mInstance == null) {
-                mInstance = this;
+            mModals = new Dictionary<string, UIData>(uis.Length);
+            mModalStack = new Stack<UIData>(uis.Length);
+            mModalToOpen = new Queue<UIData>(uis.Length);
+            mTransitions = new TransitionBase[uis.Length];
 
-                mModals = new Dictionary<string, UIData>(uis.Length);
-                mModalStack = new Stack<UIData>(uis.Length);
-                mModalToOpen = new Queue<UIData>(uis.Length);
-                mTransitions = new TransitionBase[uis.Length];
-
-                //setup data and deactivate object
-                for(int i = 0; i < uis.Length; i++) {
-                    UIData uid = uis[i];
-                    Controller ui = uid.ui;
-                    if(ui != null) {
-                        ui.gameObject.SetActive(false);
-                    }
-
-                    mModals.Add(uid.name, uid);
+            //setup data and deactivate object
+            for(int i = 0; i < uis.Length; i++) {
+                UIData uid = uis[i];
+                Controller ui = uid.ui;
+                if(ui != null) {
+                    ui.gameObject.SetActive(false);
                 }
 
-                if(persistent)
-                    Object.DontDestroyOnLoad(gameObject);
+                mModals.Add(uid.name, uid);
             }
         }
 

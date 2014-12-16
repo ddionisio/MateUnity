@@ -2,23 +2,25 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-[CustomEditor(typeof(WaypointData))]
-public class WaypointDataInspector : Editor {
+namespace M8 {
+    [CustomEditor(typeof(WaypointData))]
+    public class WaypointDataInspector : Editor {
 
-    public override void OnInspectorGUI() {
-        GUI.changed = false;
+        public override void OnInspectorGUI() {
+            GUI.changed = false;
 
-        base.OnInspectorGUI();
+            base.OnInspectorGUI();
 
-        if(Application.isPlaying) {
-            M8.Editor.Utility.DrawSeparator();
+            if(Application.isPlaying) {
+                M8.EditorExt.Utility.DrawSeparator();
 
-            WaypointData input = target as WaypointData;
+                WaypointData input = target as WaypointData;
 
-            EditorGUILayout.LabelField("Current Index", input.currentIndex.ToString());
+                EditorGUILayout.LabelField("Current Index", input.currentIndex.ToString());
+            }
+
+            if(GUI.changed)
+                EditorUtility.SetDirty(target);
         }
-
-        if(GUI.changed)
-            EditorUtility.SetDirty(target);
     }
 }

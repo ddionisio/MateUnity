@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace M8 {
+    [PrefabCore]
     [AddComponentMenu("M8/Resource Manager")]
-    public class ResourceManager : MonoBehaviour {
+    public class ResourceManager : SingletonBehaviour<ResourceManager> {
         public enum LoaderType {
             Internal, //load from Resources
             LocalBundle, //load from asset bundle locally
@@ -63,8 +64,6 @@ namespace M8 {
             public string group; //if empty, find appropriate group
             public ResourceLoader.Request request;
         }
-                
-        private static ResourceManager mInstance;
 
         private List<Package> mPackages = new List<Package>(); //all unique packages loaded
 
@@ -76,8 +75,6 @@ namespace M8 {
         private Queue<RequestProcess> mRequestQueue = new Queue<RequestProcess>();
 
         private IEnumerator mLoadAct;
-
-        public static ResourceManager instance { get { return mInstance; } }
 
         /// <summary>
         /// Add a package/path for group, group is created if it doesn't exist.  For Internal or LocalStream, this is a directory.
@@ -276,11 +273,9 @@ namespace M8 {
             return request;
         }
 
-        void OnDestroy() {
+        protected override void OnDestroy() {
             RemoveAllGroups();
-
-            if(mInstance == this)
-                mInstance = null;
+            base.OnDestroy();
         }
 
         void OnEnable() {
@@ -293,27 +288,21 @@ namespace M8 {
         }
 
         void Awake() {
-            if(mInstance == null) {
-                mInstance = this;
+            //add roots
+            if(rootPackages != null) {
+                for(int i = 0; i < rootPackages.Length; i++) {
+                    //add new package
+                    Package newPack = new Package(rootPackages[i].path, rootPackages[i].type);
 
-                //add roots
-                if(rootPackages != null) {
-                    for(int i = 0; i < rootPackages.Length; i++) {
-                        //add new package
-                        Package newPack = new Package(rootPackages[i].path, rootPackages[i].type);
+                    //add to global packages
+                    mPackages.Add(newPack);
 
-                        //add to global packages
-                        mPackages.Add(newPack);
-
-                        //add to root
-                        mRoot.Add(newPack);
-                    }
+                    //add to root
+                    mRoot.Add(newPack);
                 }
-
-                //other groups
             }
-            else
-                DestroyImmediate(gameObject);
+
+            //other groups
         }
 
         void Start() {

@@ -1,64 +1,66 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-/// <summary>
-/// Make sure this is on an object with a rigidbody!
-/// </summary>
-[ExecuteInEditMode]
-[AddComponentMenu("M8/Physics/RigidBodyMoveToTarget")]
-public class RigidBodyMoveToTarget : MonoBehaviour {
-    public Transform target;
-    public Collider thisCollider;
-    public Vector3 offset;
+namespace M8 {
+    /// <summary>
+    /// Make sure this is on an object with a rigidbody!
+    /// </summary>
+    [ExecuteInEditMode]
+    [AddComponentMenu("M8/Physics/RigidBodyMoveToTarget")]
+    public class RigidBodyMoveToTarget : MonoBehaviour {
+        public Transform target;
+        public Collider thisCollider;
+        public Vector3 offset;
 
-    public bool ignoreRotation = false;
-    public Vector3 rotOfs;
+        public bool ignoreRotation = false;
+        public Vector3 rotOfs;
 
-    private Quaternion mRotQ;
+        private Quaternion mRotQ;
 
 #if UNITY_EDITOR
-    // Update is called once per frame
-    void Update() {
-        if(!Application.isPlaying && target != null) {
-            Collider col = thisCollider != null ? thisCollider : collider;
-            if(col != null) {
-                Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(col.bounds.center);
+        // Update is called once per frame
+        void Update() {
+            if(!Application.isPlaying && target != null) {
+                Collider col = thisCollider != null ? thisCollider : collider;
+                if(col != null) {
+                    Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(col.bounds.center);
 
-                transform.position = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
-            }
-            else {
-                transform.position = target.position + target.rotation*offset;
-            }
+                    transform.position = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
+                }
+                else {
+                    transform.position = target.position + target.rotation*offset;
+                }
 
-            if(!ignoreRotation)
-                transform.rotation = Quaternion.Euler(rotOfs) * target.rotation;
+                if(!ignoreRotation)
+                    transform.rotation = Quaternion.Euler(rotOfs) * target.rotation;
+            }
         }
-    }
 #endif
 
-    void FixedUpdate() {
-        if(target) {
-            Vector3 newPos;
+        void FixedUpdate() {
+            if(target) {
+                Vector3 newPos;
 
-            if(thisCollider != null) {
-                Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(thisCollider.bounds.center);
-                newPos = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
+                if(thisCollider != null) {
+                    Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(thisCollider.bounds.center);
+                    newPos = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
+                }
+                else
+                    newPos = target.position + target.rotation * offset;
+
+                if(transform.position != newPos)
+                    rigidbody.MovePosition(newPos);
+
+                if(!ignoreRotation)
+                    rigidbody.MoveRotation(mRotQ * target.rotation);
             }
-            else
-                newPos = target.position + target.rotation * offset;
-
-            if(transform.position != newPos)
-                rigidbody.MovePosition(newPos);
-
-            if(!ignoreRotation)
-                rigidbody.MoveRotation(mRotQ * target.rotation);
         }
-    }
 
-    void Awake() {
-        if(thisCollider == null)
-            thisCollider = collider;
+        void Awake() {
+            if(thisCollider == null)
+                thisCollider = collider;
 
-        mRotQ = Quaternion.Euler(rotOfs);
+            mRotQ = Quaternion.Euler(rotOfs);
+        }
     }
 }

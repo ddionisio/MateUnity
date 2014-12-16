@@ -2,7 +2,7 @@
 using UnityEditor;
 using System.Collections;
 
-namespace M8.Editor {
+namespace M8.EditorExt {
     public class ProjectObjectPlacer : EditorWindow {
         const string prefKey = "projectobjplace";
 
@@ -37,22 +37,22 @@ namespace M8.Editor {
         }
 
         void OnEnable() {
-            mAxisInd = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey(prefKey, "axis"), mAxisInd);
-            mInv = EditorPrefs.GetBool(M8.Editor.Utility.PreferenceKey(prefKey, "inv"), mInv);
-            mOfs = EditorPrefs.GetFloat(M8.Editor.Utility.PreferenceKey(prefKey, "ofs"), mOfs);
-            mLayerMask = EditorPrefs.GetInt(M8.Editor.Utility.PreferenceKey(prefKey, "layer"), mLayerMask);
+            mAxisInd = EditorPrefs.GetInt(M8.EditorExt.Utility.PreferenceKey(prefKey, "axis"), mAxisInd);
+            mInv = EditorPrefs.GetBool(M8.EditorExt.Utility.PreferenceKey(prefKey, "inv"), mInv);
+            mOfs = EditorPrefs.GetFloat(M8.EditorExt.Utility.PreferenceKey(prefKey, "ofs"), mOfs);
+            mLayerMask = EditorPrefs.GetInt(M8.EditorExt.Utility.PreferenceKey(prefKey, "layer"), mLayerMask);
 
             if(SceneView.onSceneGUIDelegate != OnSceneGUI)
                 SceneView.onSceneGUIDelegate += OnSceneGUI;
 
-            mLayerMasks = M8.Editor.Utility.GenerateLayerMaskString();
+            mLayerMasks = M8.EditorExt.Utility.GenerateLayerMaskString();
         }
 
         void OnDisable() {
-            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey(prefKey, "axis"), mAxisInd);
-            EditorPrefs.SetBool(M8.Editor.Utility.PreferenceKey(prefKey, "inv"), mInv);
-            EditorPrefs.SetFloat(M8.Editor.Utility.PreferenceKey(prefKey, "ofs"), mOfs);
-            EditorPrefs.SetInt(M8.Editor.Utility.PreferenceKey(prefKey, "layer"), mLayerMask);
+            EditorPrefs.SetInt(M8.EditorExt.Utility.PreferenceKey(prefKey, "axis"), mAxisInd);
+            EditorPrefs.SetBool(M8.EditorExt.Utility.PreferenceKey(prefKey, "inv"), mInv);
+            EditorPrefs.SetFloat(M8.EditorExt.Utility.PreferenceKey(prefKey, "ofs"), mOfs);
+            EditorPrefs.SetInt(M8.EditorExt.Utility.PreferenceKey(prefKey, "layer"), mLayerMask);
 
             if(mPrefabPreviewer != null) {
                 DestroyImmediate(mPrefabPreviewer.gameObject);
@@ -63,7 +63,7 @@ namespace M8.Editor {
         }
 
         void OnFocus() {
-            mLayerMasks = M8.Editor.Utility.GenerateLayerMaskString();
+            mLayerMasks = M8.EditorExt.Utility.GenerateLayerMaskString();
         }
 
         void OnSelectionChange() {

@@ -2,8 +2,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-[AddComponentMenu("M8/Core/InputManagerOuya")]
-public class InputManagerOuya : InputManager {
+namespace M8 {
+    [AddComponentMenu("M8/Core/InputManagerOuya")]
+    public class InputManagerOuya : InputManager {
 #if OUYA
     OuyaSDK.OuyaPlayer GetPlayer(Key key) {
         return (OuyaSDK.OuyaPlayer)(key.player+1);
@@ -51,4 +52,5 @@ public class InputManagerOuya : InputManager {
         base.Awake();
     }
 #endif
+    }
 }
