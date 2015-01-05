@@ -341,6 +341,8 @@ namespace M8 {
         }
 
         public float GetAxis(int player, int action) {
+            if(action == ActionInvalid) return 0f;
+
             BindData bindData = mBinds[action];
             PlayerData pd = bindData.players[player];
             Key[] keys = pd.keys;
@@ -362,8 +364,7 @@ namespace M8 {
 
         public float GetAxis(int player, string action) {
             int actionInd = GetActionIndex(action);
-            if(actionInd != -1) return GetAxis(player, actionInd);
-            return 0f;
+            return GetAxis(player, actionInd);
         }
 
         public bool IsPressed(int player, string action) {

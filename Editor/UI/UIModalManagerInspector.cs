@@ -25,14 +25,13 @@ public class UIModalManagerInspector : Editor {
 
         for(int i = 0; i < input.uis.Length; i++) {
             UIModalManager.UIData dat = input.uis[i];
-            string goName = dat.e_ui.name;
 
             GUILayout.BeginVertical(GUI.skin.box);
 
             GUILayout.BeginHorizontal();
-
+                        
             if(dat.e_ui != null) {
-                GUILayout.Label(goName);
+                GUILayout.Label(dat.e_ui.name);
             }
             else {
                 GUILayout.Label("(Need target!)");
@@ -42,7 +41,7 @@ public class UIModalManagerInspector : Editor {
 
             if(dat.e_ui != null) {
                 if(M8.EditorExt.Utility.DrawCopyButton("Click to copy name.")) {
-                    mTE.content = new GUIContent(goName);
+                    mTE.content = new GUIContent(dat.e_ui.name);
                     mTE.SelectAll();
                     mTE.Copy();
                 }
@@ -58,7 +57,7 @@ public class UIModalManagerInspector : Editor {
 
             dat.e_ui = EditorGUILayout.ObjectField("target", dat.e_ui, typeof(UIController), true) as UIController;
             if(dat.e_ui) {
-                dat.name = goName;
+                dat.name = dat.e_ui.name;
 
                 dat.isPrefab = PrefabUtility.GetPrefabType(dat.e_ui) == PrefabType.Prefab;
                 if(dat.isPrefab) {
