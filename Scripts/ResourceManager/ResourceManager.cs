@@ -273,9 +273,8 @@ namespace M8 {
             return request;
         }
 
-        protected override void OnDestroy() {
+        protected override void OnInstanceDeinit() {
             RemoveAllGroups();
-            base.OnDestroy();
         }
 
         void OnEnable() {
@@ -287,9 +286,7 @@ namespace M8 {
             mLoadAct = null;
         }
 
-        protected override void Awake() {
-            base.Awake();
-
+        protected override void OnInstanceInit() {
             //add roots
             if(rootPackages != null) {
                 for(int i = 0; i < rootPackages.Length; i++) {

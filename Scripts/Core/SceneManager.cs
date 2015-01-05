@@ -204,9 +204,7 @@ namespace M8 {
             mFirstTime = false;
         }
 
-        protected override void Awake() {
-            base.Awake();
-
+        protected override void OnInstanceInit() {
             mCurSceneStr = Application.loadedLevelName;
             //mIsFullscreen = Screen.fullScreen;
 

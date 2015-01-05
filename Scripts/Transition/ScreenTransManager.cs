@@ -111,16 +111,12 @@ namespace M8 {
             RestorePlayer();
         }
 
-        protected override void OnDestroy() {
+        protected override void OnInstanceDeinit() {
             if(mRenderTexture)
                 DestroyImmediate(mRenderTexture);
-
-            base.OnDestroy();
         }
 
-        protected override void Awake() {
-            base.Awake();
-
+        protected override void OnInstanceInit() {
             if(libraryFromChildren)
                 library = GetComponentsInChildren<ScreenTrans>();
         }

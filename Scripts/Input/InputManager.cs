@@ -557,15 +557,11 @@ namespace M8 {
 
         //internal
 
-        protected override void OnDestroy() {
+        protected override void OnInstanceDeinit() {
             ClearAllButtonCalls();
-
-            base.OnDestroy();
         }
 
-        protected override void Awake() {
-            base.Awake();
-
+        protected override void OnInstanceInit() {
             fastJSON.JSON.Parameters.UseExtensions = false;
 
             if(actionConfig != null) {

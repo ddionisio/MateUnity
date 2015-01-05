@@ -139,8 +139,8 @@ namespace M8 {
             userData.Delete(baseKey + "_d");
         }
 
-        protected override void Awake() {
-            base.Awake();
+        protected override void OnInstanceInit() {
+            base.OnInstanceInit();
 
             //load user config binds
             LoadBinds();

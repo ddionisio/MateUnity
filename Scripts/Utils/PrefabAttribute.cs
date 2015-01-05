@@ -38,6 +38,10 @@ namespace M8 {
                 else
                     Debug.LogError("Could not find Prefab \"" + path + "\" on Resources.");
             }
+
+            if(persistent)
+                UnityEngine.Object.DontDestroyOnLoad(go);
+
             return go;
         }
 
@@ -51,9 +55,6 @@ namespace M8 {
                 Debug.LogWarning("There wasn't a component of type \"" + typeof(T) + "\" inside prefab \"" + path + "\". Creating one.");
                 ret = gameObject.AddComponent<T>();
             }
-
-            if(persistent)
-                UnityEngine.Object.DontDestroyOnLoad(gameObject);
 
             return ret;
         }

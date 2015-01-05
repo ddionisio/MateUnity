@@ -16,8 +16,8 @@ namespace M8 {
             }
         }
 
-        protected override void Awake() {
-            base.Awake();
+        protected override void OnInstanceInit() {
+            base.OnInstanceInit();
 
             //load settings
             Localize.instance.language = (Language)userData.GetInt(languageKey, (int)Language.English);

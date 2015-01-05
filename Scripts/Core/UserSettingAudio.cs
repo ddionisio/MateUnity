@@ -59,8 +59,8 @@ namespace M8 {
             }
         }
 
-        protected override void Awake() {
-            base.Awake();
+        protected override void OnInstanceInit() {
+            base.OnInstanceInit();
 
             //load settings
             mVolume = userData.GetFloat(volumeKey, 1.0f);

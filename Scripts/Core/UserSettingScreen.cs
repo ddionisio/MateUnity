@@ -68,8 +68,8 @@ namespace M8 {
             Screen.SetResolution(mScreenWidth, mScreenHeight, mFullscreen, mScreenRefreshRate);
         }
 
-        protected override void Awake() {
-            base.Awake();
+        protected override void OnInstanceInit() {
+            base.OnInstanceInit();
 
             mScreenWidth = userData.GetInt(screenWidthKey, defaultWidth);
             mScreenHeight = userData.GetInt(screenHeightKey, defaultHeight);

@@ -15,8 +15,11 @@ namespace M8 {
                 if(!mInstantiated) {
                     var type = typeof(T);
                     var attribute = Attribute.GetCustomAttribute(type, typeof(PrefabFromResourceAttribute)) as PrefabFromResourceAttribute;
-                    if(attribute != null)
-                        mInstance = attribute.Instantiate<T>();
+                    if(attribute != null) {
+                        GameObject go = attribute.InstantiateGameObject();
+                        if(!mInstantiated)
+                            mInstance = go.GetComponentInChildren<T>();
+                    }
                     else {
                         //manually grab
                         var objects = FindObjectsOfType<T>();
@@ -35,7 +38,10 @@ namespace M8 {
                         }
                     }
 
-                    mInstantiated = mInstance != null;
+                    if(!mInstantiated) { //not instantiated via awake?
+                        mInstantiated = true;
+                        (mInstance as SingletonBehaviour<T>).OnInstanceInit();
+                    }
                 }
 
                 return mInstance;
@@ -47,18 +53,22 @@ namespace M8 {
         /// </summary>
         public static bool instantiated { get { return mInstantiated; } }
 
-        protected virtual void OnDestroy() {
+        protected virtual void OnInstanceInit() { }
+        protected virtual void OnInstanceDeinit() { }
+
+        void OnDestroy() {
+            OnInstanceDeinit();
+
             mInstance = null;
             mInstantiated = false;
         }
 
-        protected virtual void Awake() {
+        void Awake() {
             if(!mInstantiated) {
-                mInstance = this as T;
                 mInstantiated = true;
+                mInstance = this as T;
+                OnInstanceInit();
             }
-            else
-                DestroyImmediate(gameObject);
         }
     }
 }
