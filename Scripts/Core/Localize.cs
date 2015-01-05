@@ -166,7 +166,9 @@ namespace M8 {
                 Debug.LogWarning("File not found for language: " + mCurLanguage);
         }
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             mCurLanguage = defaultLanguage;
             Load();
         }

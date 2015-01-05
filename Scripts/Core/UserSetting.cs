@@ -13,7 +13,9 @@ namespace M8 {
             userData.Save();
         }
 
-        protected virtual void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             if(userData == null)
                 userData = GetComponent<UserData>();
         }

@@ -168,7 +168,9 @@ namespace M8.UIModal {
             mTransitionCount = 0;
         }
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             mModals = new Dictionary<string, UIData>(uis.Length);
             mModalStack = new Stack<UIData>(uis.Length);
             mModalToOpen = new Queue<UIData>(uis.Length);

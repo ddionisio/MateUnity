@@ -118,7 +118,9 @@ namespace M8 {
             base.OnDestroy();
         }
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             if(libraryFromChildren)
                 library = GetComponentsInChildren<ScreenTrans>();
         }

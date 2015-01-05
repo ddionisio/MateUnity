@@ -124,7 +124,9 @@ namespace M8 {
                 endCallback(endParam);
         }
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             if(max <= 0)
                 max = sfx.Length;
 

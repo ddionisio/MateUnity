@@ -287,7 +287,9 @@ namespace M8 {
             mLoadAct = null;
         }
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             //add roots
             if(rootPackages != null) {
                 for(int i = 0; i < rootPackages.Length; i++) {

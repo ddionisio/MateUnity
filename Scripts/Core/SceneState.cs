@@ -718,7 +718,9 @@ namespace M8 {
             }
         }
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             UserData.main.actCallback += OnUserDataAction;
 
             mStartData = new Dictionary<string, InitData[]>(startData.Length);

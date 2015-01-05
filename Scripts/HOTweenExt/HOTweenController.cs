@@ -13,7 +13,9 @@ namespace M8 {
         public bool overwriteEnable = true; //he said it's awesome, so normally this is set to true.
         public bool overwriteShowLog = false; //if true, overwrite will spam the log when it is overwriting a tween.
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             HOTween.Init(true, showCount, overwriteEnable);
 
             if(overwriteEnable)

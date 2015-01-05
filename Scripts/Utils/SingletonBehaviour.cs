@@ -51,5 +51,14 @@ namespace M8 {
             mInstance = null;
             mInstantiated = false;
         }
+
+        protected virtual void Awake() {
+            if(!mInstantiated) {
+                mInstance = this as T;
+                mInstantiated = true;
+            }
+            else
+                DestroyImmediate(gameObject);
+        }
     }
 }

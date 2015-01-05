@@ -563,7 +563,9 @@ namespace M8 {
             base.OnDestroy();
         }
 
-        protected virtual void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             fastJSON.JSON.Parameters.UseExtensions = false;
 
             if(actionConfig != null) {

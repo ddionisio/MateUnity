@@ -204,7 +204,9 @@ namespace M8 {
             mFirstTime = false;
         }
 
-        void Awake() {
+        protected override void Awake() {
+            base.Awake();
+
             mCurSceneStr = Application.loadedLevelName;
             //mIsFullscreen = Screen.fullScreen;
 
@@ -215,15 +217,6 @@ namespace M8 {
             if(stackEnable)
                 mSceneStack = new Stack<string>(stackCapacity);
         }
-
-        /*void Update() {
-            //lame
-            //check resolution and fullscreen
-            if(mIsFullscreen != Screen.fullScreen) {
-                mIsFullscreen = Screen.fullScreen;
-                RootBroadcastMessage("OnSceneScreenChanged", null, SendMessageOptions.DontRequireReceiver);
-            }
-        }*/
 
         void DoLoad() {
             if(sceneChangeCallback != null) sceneChangeCallback(mSceneToLoad);
