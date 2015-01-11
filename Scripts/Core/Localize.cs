@@ -6,7 +6,6 @@ namespace M8 {
     [PrefabCore]
     [AddComponentMenu("M8/Core/Localize")]
     public class Localize : SingletonBehaviour<Localize> {
-        public Language defaultLanguage = Language.English;
 
         public delegate string ParameterCallback(string paramKey);
         public delegate void LocalizeCallback();
@@ -30,15 +29,20 @@ namespace M8 {
             public string[] param;
         }
 
+        public TextAsset baseFile; //the default localization
+        public TableDataPlatform[] basePlatforms;
+
         public TableData[] tables; //table info for each language
 
         public event LocalizeCallback localizeCallback;
 
+        private Dictionary<string, string> mTableBase;
+        private Dictionary<string, string[]> mTableBaseParams;
+
         private Dictionary<string, string> mTable;
         private Dictionary<string, string[]> mTableParams;
-        private bool mLoaded = false;
 
-        private Language mCurLanguage = Language.English;
+        private Language mCurLanguage = Language.Default;
 
         private Dictionary<string, ParameterCallback> mParams = null;
 
@@ -47,7 +51,7 @@ namespace M8 {
             set {
                 if(mCurLanguage != value) {
                     mCurLanguage = value;
-                    Load();
+                    LoadCurrentLanguage();
                 }
             }
         }
@@ -108,67 +112,81 @@ namespace M8 {
         }
 
         public void Refresh() {
-            if(mLoaded) {
-                if(localizeCallback != null)
-                    localizeCallback();
+            if(localizeCallback != null)
+                localizeCallback();
+        }
+
+        void LoadTables(string textData, ref Dictionary<string, string> table, ref Dictionary<string, string[]> tableParams) {
+            List<Entry> tableEntries = fastJSON.JSON.ToObject<List<Entry>>(textData);
+
+            foreach(Entry entry in tableEntries) {
+                if(table.ContainsKey(entry.key))
+                    table[entry.key] = entry.text;
+                else {
+                    table.Add(entry.key, entry.text);
+
+                    if(entry.param != null && entry.param.Length > 0)
+                        tableParams.Add(entry.key, entry.param);
+                }
             }
         }
 
-        void Load() {
-            int langInd = (int)mCurLanguage;
-
-            TableData dat = tables[langInd];
-
-            if(dat.file) {
-                fastJSON.JSON.Parameters.UseExtensions = false;
-                List<Entry> tableEntries = fastJSON.JSON.ToObject<List<Entry>>(dat.file.text);
-
-                mTable = new Dictionary<string, string>(tableEntries.Count);
-                mTableParams = new Dictionary<string, string[]>(tableEntries.Count);
-
-                foreach(Entry entry in tableEntries) {
-                    mTable.Add(entry.key, entry.text);
-
-                    if(entry.param != null && entry.param.Length > 0)
-                        mTableParams.Add(entry.key, entry.param);
-                }
-
-                //append platform specific entries
-                TableDataPlatform platform = null;
-                foreach(TableDataPlatform platformDat in dat.platforms) {
-                    if(platformDat.platform == Application.platform) {
-                        platform = platformDat;
-                        break;
-                    }
-                }
-
-                //override entries based on platform
-                if(platform != null) {
-                    List<Entry> platformEntries = fastJSON.JSON.ToObject<List<Entry>>(platform.file.text);
-
-                    foreach(Entry platformEntry in platformEntries) {
-                        if(mTable.ContainsKey(platformEntry.key)) {
-                            mTable[platformEntry.key] = platformEntry.text;
-                        }
-                    }
-                }
-
-                //already loaded before? then let everyone know it has changed
-                if(mLoaded) {
-                    if(localizeCallback != null)
-                        localizeCallback();
-                }
-                else {
-                    mLoaded = true;
+        void LoadCurrentPlatform(TableDataPlatform[] platforms) {
+            //append platform specific entries
+            TableDataPlatform platform = null;
+            foreach(TableDataPlatform platformDat in platforms) {
+                if(platformDat.platform == Application.platform) {
+                    platform = platformDat;
+                    break;
                 }
             }
-            else
-                Debug.LogWarning("File not found for language: " + mCurLanguage);
+
+            //override entries based on platform
+            if(platform != null) {
+                List<Entry> platformEntries = fastJSON.JSON.ToObject<List<Entry>>(platform.file.text);
+
+                foreach(Entry platformEntry in platformEntries) {
+                    if(mTable.ContainsKey(platformEntry.key)) {
+                        mTable[platformEntry.key] = platformEntry.text;
+                    }
+                }
+            }
+        }
+
+        void LoadCurrentLanguage() {
+            fastJSON.JSON.Parameters.UseExtensions = false;
+
+            //copy base
+            mTable = mTableBase != null ? new Dictionary<string, string>(mTableBase) : new Dictionary<string, string>();
+            mTableParams = mTableParams != null ? new Dictionary<string, string[]>(mTableBaseParams) : new Dictionary<string, string[]>();
+
+            //load language
+            int langInd = (int)mCurLanguage;
+
+            TableData dat = langInd < tables.Length ? tables[langInd] : null;
+            if(dat != null) {
+                if(dat.file)
+                    LoadTables(dat.file.text, ref mTable, ref mTableParams);
+
+                LoadCurrentPlatform(dat.platforms);
+            }
+
+            if(localizeCallback != null)
+                localizeCallback();
         }
 
         protected override void OnInstanceInit() {
-            mCurLanguage = defaultLanguage;
-            Load();
+            //load base localize
+            if(baseFile) {
+                fastJSON.JSON.Parameters.UseExtensions = false;
+
+                mTableBase = new Dictionary<string, string>();
+                mTableBaseParams = new Dictionary<string, string[]>();
+
+                LoadTables(baseFile.text, ref mTableBase, ref mTableBaseParams);
+
+                LoadCurrentPlatform(basePlatforms);
+            }
         }
     }
 }

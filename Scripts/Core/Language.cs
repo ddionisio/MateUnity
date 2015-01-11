@@ -4,6 +4,8 @@
         French,
         Italian,
         German,
-        Spanish
+        Spanish,
+
+        Default = -1
     }
 }

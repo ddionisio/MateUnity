@@ -20,7 +20,9 @@ namespace M8 {
             base.OnInstanceInit();
 
             //load settings
-            Localize.instance.language = (Language)userData.GetInt(languageKey, (int)Language.English);
+            Language lang = (Language)userData.GetInt(languageKey, (int)Language.Default);
+            if(lang != Language.Default)
+                Localize.instance.language = lang;
         }
     }
 }
