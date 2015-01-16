@@ -90,15 +90,59 @@ namespace M8.EditorExt {
         }
 
         public static bool DrawAddButton(string toolTip = "Click to add") {
-            return GUILayout.Button(new GUIContent("+", toolTip), EditorStyles.toolbarButton);
+            return DrawSimpleButton("+", toolTip);
         }
 
         public static bool DrawRemoveButton(string toolTip = "Click to remove") {
-            return GUILayout.Button(new GUIContent("-", toolTip), EditorStyles.toolbarButton);
+            return DrawSimpleButton("-", toolTip);
         }
 
         public static bool DrawCopyButton(string toolTip = "Click to copy") {
-            return GUILayout.Button(new GUIContent("C", toolTip), EditorStyles.toolbarButton);
+            return DrawSimpleButton("C", toolTip);
+        }
+
+        public static bool DrawSimpleButton(string character, string toolTip) {
+            return GUILayout.Button(new GUIContent(character, toolTip), EditorStyles.toolbarButton, GUILayout.MaxWidth(20f));
+        }
+
+        public static bool TextFieldEx(ref string output, string focusName, ref string editingValue, ref string lastFocusedControl, string hint) {
+            GUI.SetNextControlName(focusName);
+
+            if(GUI.GetNameOfFocusedControl() != focusName) {
+
+                if(Event.current.type == EventType.Repaint && string.IsNullOrEmpty(output) && !string.IsNullOrEmpty(hint)) {
+                    GUIStyle style = new GUIStyle(GUI.skin.textField);
+                    style.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 0.75f);
+                    EditorGUILayout.TextField(hint, style);
+                }
+                else
+                    EditorGUILayout.TextField(output);
+
+                return false;
+            }
+
+            //Debug.Log("Focusing " + GUI.GetNameOfFocusedControl());   // Uncomment to show which control has focus.
+
+            if(lastFocusedControl != focusName) {
+                lastFocusedControl = focusName;
+                editingValue = output;
+            }
+
+            bool applying = false;
+
+            if(Event.current.isKey) {
+                switch(Event.current.keyCode) {
+                    case KeyCode.Return:
+                    case KeyCode.KeypadEnter:
+                        output = editingValue;
+                        applying = true;
+                        Event.current.Use();    // Ignore event, otherwise there will be control name conflicts!
+                        break;
+                }
+            }
+
+            editingValue = EditorGUILayout.TextField(editingValue);
+            return applying;
         }
 
         /// <summary>
@@ -111,11 +155,15 @@ namespace M8.EditorExt {
         /// Adds the buttons which control a list item
         /// </summary>
         /// <returns>LIST_BUTTONS - The LIST_BUTTONS pressed or LIST_BUTTONS.None</returns>
-        public static ListButtonResult DrawListButtons() {
+        public static ListButtonResult DrawListButtons(bool addOnly = false) {
             #region Layout
             int buttonSpacer = 6;
 
             EditorGUILayout.BeginHorizontal(GUILayout.MaxWidth(100));
+
+            bool lastEnabled = GUI.enabled;
+            GUI.enabled = !addOnly;
+
             // The up arrow will move things towards the beginning of the List
             var upArrow = '\u25B2'.ToString();
             bool upPressed = GUILayout.Button(new GUIContent(upArrow, "Click to shift up"),
@@ -132,6 +180,8 @@ namespace M8.EditorExt {
             // Remove Button - Process presses later
             bool removePressed = GUILayout.Button(new GUIContent("-", "Click to remove"),
                                                   EditorStyles.toolbarButton);
+
+            GUI.enabled = lastEnabled;
 
             // Add button - Process presses later
             bool addPressed = GUILayout.Button(new GUIContent("+", "Click to insert new"),
@@ -241,12 +291,113 @@ namespace M8.EditorExt {
                             }
                             break;
                     }
+
+                    GUIUtility.keyboardControl = 0;
+                    GUIUtility.hotControl = 0;
                 }
 
                 EditorGUIUtility.LookLikeControls();
             }
 
             GUILayout.EndVertical();
+        }
+
+        public static bool DrawStringArrayAlt(ref string[] data, ref string lastItemText) {
+            bool hasChange = false;
+
+            GUILayout.BeginVertical();
+
+            //EditorGUIUtility.LookLikeControls(0, 50);
+            EditorGUIUtility.LookLikeControls(20, 200);
+
+            if(data != null && data.Length > 0) {
+                ListButtonResult act = ListButtonResult.None;
+                int actInd = -1;
+
+
+                for(int i = 0; i < data.Length; i++) {
+                    GUILayout.BeginHorizontal();
+
+                    string editText = EditorGUILayout.TextField(i.ToString(), data[i]);
+                    if(data[i] != editText) {
+                        data[i] = editText;
+                        hasChange = true;
+                    }
+
+                    GUILayout.Space(6f);
+
+                    if(act == EditorExt.Utility.ListButtonResult.None) {
+                        act = DrawListButtons();
+                        if(act != ListButtonResult.None) {
+                            actInd = i;
+                            hasChange = true;
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+                }
+
+                if(actInd != -1) {
+                    switch(act) {
+                        case ListButtonResult.Add:
+                            string copy = data[actInd];
+                            M8.ArrayUtil.InsertAfter(ref data, actInd, copy);
+                            break;
+
+                        case ListButtonResult.Remove:
+                            M8.ArrayUtil.RemoveAt(ref data, actInd);
+                            break;
+
+                        case ListButtonResult.Up:
+                            if(actInd > 0) {
+                                string t = data[actInd - 1];
+                                data[actInd - 1] = data[actInd];
+                                data[actInd] = t;
+                            }
+                            break;
+
+                        case ListButtonResult.Down:
+                            if(actInd < data.Length - 1) {
+                                string t = data[actInd + 1];
+                                data[actInd + 1] = data[actInd];
+                                data[actInd] = t;
+                            }
+                            break;
+                    }
+
+                    GUIUtility.keyboardControl = 0;
+                    GUIUtility.hotControl = 0;
+                }
+            }
+
+            //extra field for append
+            GUILayout.BeginHorizontal();
+
+            lastItemText = EditorGUILayout.TextField(" ", lastItemText != null ? lastItemText : "");
+
+            GUILayout.Space(6f);
+
+            if(DrawListButtons(true) == ListButtonResult.Add) {
+                if(data != null) {
+                    System.Array.Resize(ref data, data.Length + 1);
+                    data[data.Length - 1] = lastItemText;
+                }
+                else
+                    data = new string[] { lastItemText };
+
+                lastItemText = "";
+
+                hasChange = true;
+            }
+
+            GUILayout.EndHorizontal();
+            //
+
+            EditorGUIUtility.LookLikeControls();
+
+            GUILayout.EndVertical();
+
+            return hasChange;
         }
 
         public static bool IsDirectory(Object obj) {

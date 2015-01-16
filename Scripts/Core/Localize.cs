@@ -25,8 +25,8 @@ namespace M8 {
 
         public class Entry {
             public string key;
-            public string text;
-            public string[] param;
+            public string text = "";
+            public string[] param = null; //set this to null if you want to reference param from base
         }
 
         public TextAsset baseFile; //the default localization
@@ -36,11 +36,33 @@ namespace M8 {
 
         public event LocalizeCallback localizeCallback;
 
-        private Dictionary<string, string> mTableBase;
-        private Dictionary<string, string[]> mTableBaseParams;
+        private struct Data {
+            public string text;
+            public string[] param;
 
-        private Dictionary<string, string> mTable;
-        private Dictionary<string, string[]> mTableParams;
+            public Data(string aText, string[] aParam) {
+                text = aText;
+                param = aParam;
+            }
+
+            public void ApplyParams(Dictionary<string, ParameterCallback> paramCallbacks) {
+                if(param != null && param.Length > 0) {
+                    //convert parameters
+                    string[] textParams = new string[param.Length];
+                    for(int i = 0; i < param.Length; i++) {
+                        ParameterCallback cb;
+                        if(paramCallbacks.TryGetValue(param[i], out cb))
+                            textParams[i] = cb(param[i]);
+                    }
+
+                    text = string.Format(text, textParams);
+                }
+            }
+        }
+
+        private Dictionary<string, Data> mTableBase;
+
+        private Dictionary<string, Data> mTable;
 
         private Language mCurLanguage = Language.Default;
 
@@ -73,43 +95,16 @@ namespace M8 {
         /// Only call this after Load.
         /// </summary>
         public string GetText(string key) {
-            string ret;
+            Data ret = new Data("", null);
 
             if(mTable == null || !mTable.TryGetValue(key, out ret)) {
-                if(mTableBase != null) { //try base
-                    if(!mTableBase.TryGetValue(key, out ret)) {
-                        Debug.LogWarning("String table key not found: " + key);
-                        return "";
-                    }
-                }
-                else {
-                    Debug.LogWarning("Attempting to access string table when not initialized! Key: " + key);
-                    return "";
-                }
+                if(mTableBase == null || !mTableBase.TryGetValue(key, out ret))
+                    Debug.LogWarning("Key not found: " + key);
             }
 
-            //see if there's params
-            string[] keyParams = null;
+            ret.ApplyParams(mParams);
 
-            if(mTableParams == null || !mTableParams.TryGetValue(key, out keyParams)) {
-                if(mTableBaseParams != null) //try base
-                    mTableBaseParams.TryGetValue(key, out keyParams);
-            }
-
-            if(keyParams != null) {
-                //convert parameters
-                string[] textParams = new string[keyParams.Length];
-                for(int i = 0; i < keyParams.Length; i++) {
-                    ParameterCallback cb;
-                    if(mParams.TryGetValue(keyParams[i], out cb)) {
-                        textParams[i] = cb(keyParams[i]);
-                    }
-                }
-
-                ret = string.Format(ret, textParams);
-            }
-
-            return ret;
+            return ret.text;
         }
 
         public void Refresh() {
@@ -117,25 +112,27 @@ namespace M8 {
                 localizeCallback();
         }
 
-        void LoadTables(string textData, ref Dictionary<string, string> table, ref Dictionary<string, string[]> tableParams) {
+        void LoadTables(string textData, ref Dictionary<string, Data> table) {
             List<Entry> tableEntries = fastJSON.JSON.ToObject<List<Entry>>(textData);
 
-            table = new Dictionary<string, string>();
-            tableParams = new Dictionary<string, string[]>();
+            table = new Dictionary<string, Data>(tableEntries.Count);
 
             foreach(Entry entry in tableEntries) {
-                if(table.ContainsKey(entry.key))
-                    table[entry.key] = entry.text;
-                else {
-                    table.Add(entry.key, entry.text);
+                string[] parms = null;
 
-                    if(entry.param != null && entry.param.Length > 0)
-                        tableParams.Add(entry.key, entry.param);
+                if(entry.param == null && table != mTableBase) {
+                    Data dat;
+                    if(mTableBase.TryGetValue(entry.key, out dat))
+                        parms = dat.param;
                 }
+                else
+                    parms = entry.param;
+
+                table.Add(entry.key, new Data(entry.text, parms));
             }
         }
 
-        void LoadCurrentPlatform(TableDataPlatform[] platforms, Dictionary<string, string> table) {
+        void LoadCurrentPlatform(TableDataPlatform[] platforms, Dictionary<string, Data> table) {
             if(platforms == null) return;
 
             //append platform specific entries
@@ -152,9 +149,16 @@ namespace M8 {
                 List<Entry> platformEntries = fastJSON.JSON.ToObject<List<Entry>>(platform.file.text);
 
                 foreach(Entry platformEntry in platformEntries) {
-                    if(table.ContainsKey(platformEntry.key)) {
-                        table[platformEntry.key] = platformEntry.text;
+                    Data dat;
+                    if(table.TryGetValue(platformEntry.key, out dat)) {
+                        dat.text = platformEntry.text;
+                        if(platformEntry.param != null)
+                            dat.param = platformEntry.param;
+
+                        table[platformEntry.key] = dat;
                     }
+                    else
+                        table.Add(platformEntry.key, new Data(platformEntry.text, platformEntry.param));
                 }
             }
         }
@@ -168,7 +172,9 @@ namespace M8 {
             TableData dat = langInd < tables.Length ? tables[langInd] : null;
             if(dat != null) {
                 if(dat.file)
-                    LoadTables(dat.file.text, ref mTable, ref mTableParams);
+                    LoadTables(dat.file.text, ref mTable);
+                else
+                    mTable = new Dictionary<string, Data>();
 
                 LoadCurrentPlatform(dat.platforms, mTable);
             }
@@ -182,7 +188,7 @@ namespace M8 {
             if(baseFile) {
                 fastJSON.JSON.Parameters.UseExtensions = false;
 
-                LoadTables(baseFile.text, ref mTableBase, ref mTableBaseParams);
+                LoadTables(baseFile.text, ref mTableBase);
 
                 LoadCurrentPlatform(basePlatforms, mTableBase);
             }
