@@ -56,7 +56,7 @@ namespace M8 {
 
         public class Item {
             public ItemHeader header;
-            
+
             public bool changed; //if true, this item has some modified values
             public bool paramFoldout = true;
 
@@ -116,13 +116,13 @@ namespace M8 {
 
         private Vector2 mEditPathsScroll;
 
-        private List<Item> mEditItems = new List<Item>(); //first one is the base
+        private List<Item> mEditItems = new List<Item>();
         private ItemComparer mEditItemComparer = new ItemComparer();
 
         private string[] mEditItemTexts;
         private int[] mEditItemInds;
         private int mEditItemInd;
-                
+
         private List<ItemHeader> mEditItemLoads = new List<ItemHeader>(); //items that need loading
 
         private Vector2 mEditItemsScroll;
@@ -138,7 +138,7 @@ namespace M8 {
 
         private TextEditor mTE = new TextEditor();
 
-        public static void Open(Localize localize) {
+        public static LocalizeConfig Open(Localize localize) {
             LocalizeConfig win = EditorWindow.GetWindow(typeof(LocalizeConfig)) as LocalizeConfig;
 
             if(localize) {
@@ -159,7 +159,7 @@ namespace M8 {
 
                 win.LoadAllItems();
 
-                win.GenerateBaseKeyItems();
+                GenerateBaseKeyItems();
 
                 win.InitCurrentMode();
             }
@@ -167,6 +167,72 @@ namespace M8 {
                 //ask to select component
                 win.mMode = Mode.SelectComponent;
             }
+
+            return win;
+        }
+
+        public static string DrawSelector(string key) {
+            //load localize if not yet set
+            if(!mLocalize) {
+                mLocalize = LoadLocalizeObjectFromPath();
+
+                if(mLocalize) {
+                    mEditItemBase = new Item { header=new ItemHeader { text=mLocalize.baseFile, language=Language.Default, isPlatform=false } };
+                    LoadItem(mEditItemBase);
+                }
+                else { //no localize setup
+                    if(GUILayout.Button("Configure Localization"))
+                        Open(null);
+
+                    Color prevClr = GUI.color;
+                    GUI.color = Color.red;
+                    GUILayout.Label("Localization is not found.", GUI.skin.box);
+                    GUI.color = prevClr;
+
+                    return "";
+                }
+            }
+
+            //get current index
+            int selectInd = 0;
+            for(int i = 0; i < mEditItemBaseKeyTexts.Length; i++) {
+                if(mEditItemBaseKeyTexts[i] == key) {
+                    selectInd = i;
+                    break;
+                }
+            }
+
+            //selection
+            GUILayout.BeginHorizontal();
+
+            selectInd = EditorGUILayout.IntPopup(selectInd, mEditItemBaseKeyTexts, mEditItemBaseKeyInds);
+
+            if(EditorExt.Utility.DrawSimpleButton("E", "Configure localization.")) {
+                Open(null);
+
+                mEditItemBaseKeyInd = selectInd;
+            }
+
+            GUILayout.EndHorizontal();
+
+            return mEditItemBaseKeyTexts[selectInd];
+        }
+
+        public static string GetBaseValue(string key) {
+            if(!mLocalize) {
+                mLocalize = LoadLocalizeObjectFromPath();
+
+                if(mLocalize) {
+                    mEditItemBase = new Item { header=new ItemHeader { text=mLocalize.baseFile, language=Language.Default, isPlatform=false } };
+                    LoadItem(mEditItemBase);
+                }
+                else //no localize setup
+                    return "";
+            }
+
+            //grab value
+            Data dat = null;
+            return mEditItemBase != null && mEditItemBase.items.TryGetValue(key, out dat) ? dat.value : "";
         }
 
         [MenuItem("M8/Localize")]
@@ -189,7 +255,7 @@ namespace M8 {
                     default:
                         Debug.LogWarning(string.Format("{0} needs to be from a prefab or prefab instance.", l.name));
                         break;
-                }   
+                }
             }
 
             return false;
@@ -206,6 +272,50 @@ namespace M8 {
             }
 
             return null;
+        }
+
+        static void GenerateBaseKeyItems() {
+            if(mEditItemBase != null) {
+                mEditItemBaseKeyTexts = new string[mEditItemBase.items.Count];
+                mEditItemBaseKeyInds = new int[mEditItemBase.items.Count];
+
+                int i = 0;
+                foreach(var pair in mEditItemBase.items) {
+                    mEditItemBaseKeyTexts[i] = pair.Key;
+                    mEditItemBaseKeyInds[i] = i;
+                    i++;
+                }
+
+                System.Array.Sort(mEditItemBaseKeyTexts);
+            }
+
+            mEditItemBaseKeyInd = 0;
+        }
+
+        static void LoadItem(Item item) {
+            //clear up items
+            item.items = new Dictionary<string, Data>();
+
+            //load up the entries
+            string textData = item.header.text.text;
+            if(!string.IsNullOrEmpty(textData)) {
+                fastJSON.JSON.Parameters.UseExtensions = false;
+
+                try {
+                    List<Localize.Entry> tableEntries = fastJSON.JSON.ToObject<List<Localize.Entry>>(textData);
+                    foreach(var entry in tableEntries)
+                        item.items.Add(entry.key, new Data { value=entry.text, param=entry.param, paramIsRef=entry.param==null });
+                }
+                catch(System.Exception e) {
+                    Debug.LogError(e.ToString());
+                }
+            }
+
+            //generate base keys
+            if(item == mEditItemBase)
+                GenerateBaseKeyItems();
+
+            item.changed = false;
         }
 
         void OnEnable() {
@@ -389,7 +499,7 @@ namespace M8 {
                         removeInd = i;
 
                     EditorGUILayout.EndHorizontal();
-                                        
+
                     PathItemEdit(mLocalize.tables[i].language, ref mLocalize.tables[i].file, ref mLocalize.tables[i].platforms);
 
                     EditorGUILayout.EndVertical();
@@ -416,32 +526,6 @@ namespace M8 {
             if(EditorGUI.EndChangeCheck()) {
                 EditorUtility.SetDirty(mLocalize);
             }
-        }
-
-        void LoadItem(Item item) {
-            //clear up items
-            item.items = new Dictionary<string, Data>();
-
-            //load up the entries
-            string textData = item.header.text.text;
-            if(!string.IsNullOrEmpty(textData)) {
-                fastJSON.JSON.Parameters.UseExtensions = false;
-
-                try {
-                    List<Localize.Entry> tableEntries = fastJSON.JSON.ToObject<List<Localize.Entry>>(textData);
-                    foreach(var entry in tableEntries)
-                        item.items.Add(entry.key, new Data { value=entry.text, param=entry.param, paramIsRef=entry.param==null });
-                }
-                catch(System.Exception e) {
-                    Debug.LogError(e.ToString());
-                }
-            }
-
-            //generate base keys
-            if(item == mEditItemBase)
-                GenerateBaseKeyItems();
-
-            item.changed = false;
         }
 
         void LoadItem(TextAsset text, Language lang, bool isPlatform, RuntimePlatform platform) {
@@ -491,24 +575,6 @@ namespace M8 {
             }
 
             item.changed = false;
-        }
-
-        void GenerateBaseKeyItems() {
-            if(mEditItemBase != null) {
-                mEditItemBaseKeyTexts = new string[mEditItemBase.items.Count];
-                mEditItemBaseKeyInds = new int[mEditItemBase.items.Count];
-
-                int i = 0;
-                foreach(var pair in mEditItemBase.items) {
-                    mEditItemBaseKeyTexts[i] = pair.Key;
-                    mEditItemBaseKeyInds[i] = i;
-                    i++;
-                }
-
-                System.Array.Sort(mEditItemBaseKeyTexts);
-            }
-
-            mEditItemBaseKeyInd = 0;
         }
 
         bool RemoveInvalidItems() {
@@ -769,7 +835,7 @@ namespace M8 {
                     if(EditorExt.Utility.DrawSimpleButton("X", "Cancel")) {
                         mEditItemsKeyEdit = false;
                     }
-                                        
+
                     GUILayout.EndHorizontal();
                 }
                 else {
@@ -840,7 +906,7 @@ namespace M8 {
 
             mEditItemsLocalizeFoldout = EditorGUILayout.Foldout(mEditItemsLocalizeFoldout, "Localize");
             if(mEditItemsLocalizeFoldout && mEditItems.Count > 0) {
-                GUI.enabled = !string.IsNullOrEmpty(baseCurKey);
+                GUI.enabled = !(mEditItemsKeyEdit || string.IsNullOrEmpty(baseCurKey));
 
                 if(mEditItemInd >= mEditItemTexts.Length)
                     mEditItemInd = 0;
@@ -910,7 +976,7 @@ namespace M8 {
             if(GUILayout.Button("Revert", GUILayout.Width(100f))) {
                 if(mEditItemBase.changed)
                     LoadItem(mEditItemBase);
-                
+
 
                 foreach(Item item in mEditItems) {
                     if(item.changed)
