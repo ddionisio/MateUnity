@@ -8,16 +8,9 @@ namespace M8 {
     [AttributeUsage(AttributeTargets.Class, Inherited = true)]
     public class PrefabFromResourceAttribute : Attribute {
         public readonly string path;
-        public readonly bool persistent;
-
-        public PrefabFromResourceAttribute(string path, bool persistent) {
-            this.path = path;
-            this.persistent = persistent;
-        }
 
         public PrefabFromResourceAttribute(string path) {
             this.path = path;
-            this.persistent = false;
         }
 
         public GameObject InstantiateGameObject() {
@@ -38,9 +31,6 @@ namespace M8 {
                 else
                     Debug.LogError("Could not find Prefab \"" + path + "\" on Resources.");
             }
-
-            if(persistent)
-                UnityEngine.Object.DontDestroyOnLoad(go);
 
             return go;
         }
@@ -68,7 +58,7 @@ namespace M8 {
         //private static GameObject mCoreGameObject = null;
 
         public PrefabCoreAttribute()
-            : base("core", true) {
+            : base("core") {
 
         }
     }

@@ -16,15 +16,17 @@ namespace M8 {
         /// Some.Thing obj = c() as Some.Thing;
         /// </summary>
         public static Instance Generate(string type) {
-            Type constructType = Type.GetType(type);
+            return Generate(Type.GetType(type));
+        }
 
-            if(constructType == null)
+        public static Instance Generate(Type type) {
+            if(type == null)
                 return null;
 
-            DynamicMethod dynMethod = new DynamicMethod("construct", constructType, null);
+            DynamicMethod dynMethod = new DynamicMethod("construct", type, null);
             ILGenerator ilGen = dynMethod.GetILGenerator();
 
-            ilGen.Emit(OpCodes.Newobj, constructType.GetConstructor(Type.EmptyTypes));
+            ilGen.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
             ilGen.Emit(OpCodes.Ret);
 
             return (Instance)dynMethod.CreateDelegate(typeof(Instance));

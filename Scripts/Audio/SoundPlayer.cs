@@ -43,7 +43,7 @@ namespace M8 {
         }
 
         protected virtual void OnDestroy() {
-            if(UserSettingAudio.instantiated)
+            if(UserSettingAudio.instance)
                 UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
         }
 

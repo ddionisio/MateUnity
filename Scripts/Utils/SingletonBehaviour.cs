@@ -7,68 +7,91 @@ namespace M8 {
     /// http://kleber-swf.com/singleton-monobehaviour-unity-projects/
     /// </summary>
     public abstract class SingletonBehaviour<T> : MonoBehaviour where T : MonoBehaviour {
+        public enum InstanceState {
+            Uninitialized,
+            Initialized,
+            Destroyed
+        }
+
         private static T mInstance;
-        private static bool mInstantiated;
+        private static InstanceState mInstanceState = InstanceState.Uninitialized;
 
         public static T instance {
             get {
-                if(!mInstantiated) {
-                    var type = typeof(T);
-                    var attribute = Attribute.GetCustomAttribute(type, typeof(PrefabFromResourceAttribute)) as PrefabFromResourceAttribute;
-                    if(attribute != null) {
-                        GameObject go = attribute.InstantiateGameObject();
-                        if(!mInstantiated)
-                            mInstance = go.GetComponentInChildren<T>();
-                    }
-                    else {
-                        //manually grab
-                        var objects = FindObjectsOfType<T>();
-
-                        if(objects.Length > 0) {
-                            mInstance = objects[0];
-                            if(objects.Length > 1) {
-                                Debug.LogWarning("There is more than one instance of Singleton of type \"" + type + "\". Keeping the first. Destroying the others.");
-                                for(var i = 1; i < objects.Length; i++) DestroyImmediate(objects[i].gameObject);
-                            }
-                        }
-                        else {
-                            //just create a gameobject
-                            GameObject go = new GameObject(type.ToString());
-                            mInstance = go.AddComponent<T>();
-                        }
-                    }
-
-                    if(!mInstantiated) { //not instantiated via awake?
-                        mInstantiated = true;
-                        (mInstance as SingletonBehaviour<T>).OnInstanceInit();
-                    }
-                }
+                if(mInstanceState == InstanceState.Uninitialized)
+                    Instantiate();
 
                 return mInstance;
             }
         }
 
         /// <summary>
-        /// Use this during OnDestroy to prevent GameObject from being re-created (usu. when switching levels with non-persistent instances or stopping play mode in edit).
+        /// In case you need this instance again after it is destroyed.
         /// </summary>
-        public static bool instantiated { get { return mInstantiated; } }
+        public static void Reinstantiate() {
+            if(mInstance)
+                DestroyImmediate(mInstance.gameObject);
+            mInstanceState = InstanceState.Uninitialized;
+
+            Instantiate();
+        }
+
+        private static void Instantiate() {
+            var type = typeof(T);
+            var attribute = Attribute.GetCustomAttribute(type, typeof(PrefabFromResourceAttribute)) as PrefabFromResourceAttribute;
+            if(attribute != null) {
+                GameObject go = attribute.InstantiateGameObject();
+                DontDestroyOnLoad(go);
+
+                if(!mInstance)
+                    mInstance = go.GetComponentInChildren<T>();
+            }
+            else {
+                //manually grab
+                var objects = FindObjectsOfType<T>();
+
+                if(objects.Length > 0) {
+                    mInstance = objects[0];
+                    if(objects.Length > 1) {
+                        Debug.LogWarning("There is more than one instance of Singleton of type \"" + type + "\". Keeping the first. Destroying the others.");
+                        for(var i = 1; i < objects.Length; i++) DestroyImmediate(objects[i].gameObject);
+                    }
+                }
+                else {
+                    //just create a gameobject
+                    GameObject go = new GameObject(type.ToString());
+                    mInstance = go.AddComponent<T>();
+                }
+            }
+
+            if(mInstanceState == InstanceState.Uninitialized) { //not instantiated via awake?
+                mInstanceState = InstanceState.Initialized;
+                (mInstance as SingletonBehaviour<T>).OnInstanceInit();
+            }
+        }
 
         protected virtual void OnInstanceInit() { }
         protected virtual void OnInstanceDeinit() { }
 
         void OnDestroy() {
-            OnInstanceDeinit();
+            if(mInstance == this) {
+                OnInstanceDeinit();
 
-            mInstance = null;
-            mInstantiated = false;
+                mInstance = null;
+                mInstanceState = InstanceState.Destroyed;
+            }
         }
 
         void Awake() {
-            if(!mInstantiated) {
-                mInstantiated = true;
+            if(mInstanceState != InstanceState.Initialized) {
+                mInstanceState = InstanceState.Initialized;
                 mInstance = this as T;
                 OnInstanceInit();
+
+                DontDestroyOnLoad(gameObject);
             }
+            else
+                DestroyImmediate(gameObject);
         }
     }
 }

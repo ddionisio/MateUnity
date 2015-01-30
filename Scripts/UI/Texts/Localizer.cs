@@ -27,7 +27,7 @@ namespace M8.UI.Texts {
         /// </summary>
 
         void OnEnable() { Localize.instance.localizeCallback += Apply; if(mStarted) Apply(); }
-        void OnDisable() { if(Localize.instantiated) Localize.instance.localizeCallback -= Apply; }
+        void OnDisable() { if(Localize.instance) Localize.instance.localizeCallback -= Apply; }
 
         void Awake() {
             mUIText = GetComponent<Text>();

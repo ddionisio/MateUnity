@@ -48,10 +48,10 @@ namespace M8 {
         public static UserData main { 
             get {
                 if(!mMainExists) {
-                    if(!mMainPrefabCoreCheck) {
+                    if(!mMainPrefabCoreCheck) { //instantiate core if we haven't yet, this will only happen once in runtime
                         mMainPrefabCoreCheck = true;
 
-                        //try grabbing from core, it should fill main upon instantiation
+                        //instantiating the gameobject ought to fill in the main UserData via Awake if there is any.
                         var attribute = Attribute.GetCustomAttribute(typeof(UserData), typeof(PrefabCoreAttribute)) as PrefabCoreAttribute;
                         if(attribute != null)
                             attribute.InstantiateGameObject();
@@ -286,7 +286,7 @@ namespace M8 {
             if(mInstances != null && !string.IsNullOrEmpty(id))
                 mInstances.Remove(id);
 
-            if(SceneManager.instantiated)
+            if(SceneManager.instance)
                 SceneManager.instance.sceneChangeCallback -= SceneChange;
         }
 

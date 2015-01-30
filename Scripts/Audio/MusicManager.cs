@@ -134,7 +134,7 @@ namespace M8 {
             if(mInstance == this) {
                 mInstance = null;
 
-                if(UserSettingAudio.instantiated)
+                if(UserSettingAudio.instance)
                     UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
 
                 musicFinishCallback = null;

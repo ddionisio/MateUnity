@@ -495,10 +495,12 @@ namespace M8 {
         }
 
         public void ClearAllButtonCalls() {
-            foreach(BindData bd in mBinds) {
-                if(bd != null && bd.players != null) {
-                    foreach(PlayerData pd in bd.players) {
-                        pd.callback = null;
+            if(mBinds != null) {
+                foreach(BindData bd in mBinds) {
+                    if(bd != null && bd.players != null) {
+                        foreach(PlayerData pd in bd.players) {
+                            pd.callback = null;
+                        }
                     }
                 }
             }

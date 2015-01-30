@@ -138,7 +138,7 @@ namespace M8 {
         }
 
         void OnDestroy() {
-            if(UserSettingAudio.instantiated)
+            if(UserSettingAudio.instance)
                 UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
         }
 

@@ -289,6 +289,21 @@ namespace M8 {
         }
     }
 
+	//-------------- Bounds --------------
+    public struct BoundsUtil {
+        public static bool Intersect(Bounds b1, Bounds b2, out Bounds bOut) {
+            bool ret = b1.Intersects(b2);
+            if(ret) {
+                bOut = new Bounds();
+                bOut.SetMinMax(
+                    Vector3.Max(b1.min, b2.min),
+                    Vector3.Min(b1.max, b2.max));
+            }
+            else
+                bOut = b1;
+            return ret;
+        }
+    }
 
     //-------------- Easing --------------
 

@@ -21,7 +21,7 @@ namespace M8 {
         private SceneSerializer mSerializer;
 
         void OnDestroy() {
-            if(SceneManager.instantiated)
+            if(SceneManager.instance)
                 SceneManager.instance.sceneChangeCallback -= OnSceneLoad;
             if(persistent && UserData.main)
                 UserData.main.actCallback -= OnUserDataAction;
