@@ -65,7 +65,8 @@ namespace M8 {
         }
 
         public void ApplyResolution() {
-            Screen.SetResolution(mScreenWidth, mScreenHeight, mFullscreen, mScreenRefreshRate);
+			if(mScreenWidth > 0 && mScreenHeight > 0)
+				Screen.SetResolution(mScreenWidth, mScreenHeight, mFullscreen, mScreenRefreshRate);
         }
 
         protected override void OnInstanceInit() {
