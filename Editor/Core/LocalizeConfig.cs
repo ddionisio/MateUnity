@@ -12,6 +12,10 @@ namespace M8 {
         public const float valueTextAreaMinHeight = 150f;
         public const float valueTextAreaMaxHeight = 500f;
 
+        const string editKeyControl = "EditKey";
+        const string editItemControl1 = "EditItem1";
+        const string editItemControl2 = "EditItem2";
+
         public enum Mode {
             EditPaths,
             EditItems,
@@ -717,9 +721,11 @@ namespace M8 {
             mEditItemBaseKeyInd = System.Array.IndexOf(mEditItemBaseKeyTexts, newKey);
         }
 
-        void DrawItemData(Item item, Data dat, ref string paramLastText) {
+        void DrawItemData(string controlName, Item item, Data dat, ref string paramLastText) {
             //content
             GUILayout.Label("Value");
+
+            GUI.SetNextControlName(controlName);
 
             if(dat != null) {
                 string editText = EditorGUILayout.TextArea(dat.value, GUILayout.MinHeight(valueTextAreaMinHeight), GUILayout.MaxHeight(valueTextAreaMaxHeight));
@@ -755,7 +761,7 @@ namespace M8 {
                 GUILayout.EndVertical();
             }
             else {
-                GUILayout.TextArea("", GUILayout.MinHeight(valueTextAreaMinHeight), GUILayout.MaxHeight(valueTextAreaMaxHeight));
+                EditorGUILayout.TextArea("", GUILayout.MinHeight(valueTextAreaMinHeight), GUILayout.MaxHeight(valueTextAreaMaxHeight));
 
                 GUILayout.BeginVertical(GUI.skin.box);
 
@@ -787,7 +793,7 @@ namespace M8 {
                 if(mEditItemsKeyEdit) {
                     GUILayout.BeginHorizontal();
 
-                    GUI.SetNextControlName("EditKey");
+                    GUI.SetNextControlName(editKeyControl);
 
                     mEditItemsKeyText = EditorGUILayout.TextField(mEditItemsKeyText);
 
@@ -827,6 +833,8 @@ namespace M8 {
 
                         mEditItemsKeyEdit = false;
                         mEditItemsKeyEditIsNew = false;
+
+                        EditorGUI.FocusTextInControl(editItemControl1);
                     }
 
                     GUI.enabled = true;
@@ -834,6 +842,8 @@ namespace M8 {
                     //cancel
                     if(EditorExt.Utility.DrawSimpleButton("X", "Cancel")) {
                         mEditItemsKeyEdit = false;
+
+                        EditorGUI.FocusTextInControl(editItemControl1);
                     }
 
                     GUILayout.EndHorizontal();
@@ -851,7 +861,7 @@ namespace M8 {
                     if(EditorExt.Utility.DrawSimpleButton("E", "Edit")) {
                         mEditItemsKeyText = mEditItemBaseKeyTexts[mEditItemBaseKeyInd];
                         mEditItemsKeyEdit = true;
-                        EditorGUI.FocusTextInControl("EditKey");
+                        EditorGUI.FocusTextInControl(editKeyControl);
                     }
 
                     //copy key text
@@ -866,7 +876,7 @@ namespace M8 {
                         mEditItemsKeyText = "";
                         mEditItemsKeyEdit = true;
                         mEditItemsKeyEditIsNew = true;
-                        EditorGUI.FocusTextInControl("EditKey");
+                        EditorGUI.FocusTextInControl(editKeyControl);
                     }
 
                     //remove
@@ -890,7 +900,7 @@ namespace M8 {
 
                 GUI.enabled = !mEditItemsKeyEdit;
 
-                DrawItemData(mEditItemBase, baseCurDat, ref mEditItemParamText);
+                DrawItemData(editItemControl1, mEditItemBase, baseCurDat, ref mEditItemParamText);
 
                 GUI.enabled = true;
             }
@@ -899,7 +909,7 @@ namespace M8 {
 
                 mEditItemsKeyText = "";
                 mEditItemsKeyEdit = true;
-                EditorGUI.FocusTextInControl("EditKey");
+                EditorGUI.FocusTextInControl(editKeyControl);
             }
 
             //Localize
@@ -928,7 +938,7 @@ namespace M8 {
                     }
                 }
 
-                DrawItemData(localizeItem, localizeDat, ref mEditItemLocalizeParamText);
+                DrawItemData(editItemControl2, localizeItem, localizeDat, ref mEditItemLocalizeParamText);
 
                 GUI.enabled = true;
             }

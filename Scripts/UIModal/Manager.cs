@@ -53,7 +53,10 @@ namespace M8.UIModal {
                 else
                     mUI = _ui;
 
-                mTransition = ui.GetComponent<TransitionBase>();
+                if(mUI)
+                    mTransition = mUI.GetComponent<TransitionBase>();
+                else
+                    Debug.LogWarning("UIController not set.");
             }
         }
 

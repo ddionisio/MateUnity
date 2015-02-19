@@ -260,7 +260,24 @@ namespace M8 {
             }
         }
 
+        public static void DestroyAllGroup() {
+            if(mControllers != null) {
+                foreach(var pair in mControllers) {
+                    pair.Value.ReleaseAll();
+                    Object.Destroy(pair.Value.gameObject);
+                }
 
+                mControllers.Clear();
+            }
+        }
+
+        public static void ReleaseAllGroup() {
+            if(mControllers != null) {
+                foreach(var pair in mControllers)
+                    pair.Value.ReleaseAll();
+            }
+        }
+        
         //////////////////////////////////////////////////////////
         // Methods
 

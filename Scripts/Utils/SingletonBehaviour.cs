@@ -43,8 +43,13 @@ namespace M8 {
                 GameObject go = attribute.InstantiateGameObject();
                 DontDestroyOnLoad(go);
 
-                if(!mInstance)
+                if(!mInstance) {
                     mInstance = go.GetComponentInChildren<T>();
+                    if(!mInstance) { //expecting the component to be in the prefab
+                        Debug.LogError(type.ToString() + " not found in " + attribute.path);
+                        return;
+                    }
+                }
             }
             else {
                 //manually grab
