@@ -28,6 +28,7 @@ namespace M8 {
             public ResourceLoader loader { get; private set; }
             public int counter; //inc by groups using this package, once 0, it will be deleted
             public bool loadQueue; //set to true when in queue
+            public int priority; //determines the order of package to look for resource, higher value gets first
             public Dictionary<string, ResourceLoader.Request> processedRequests { get; private set; } //files requested and being processed or done
 
             public void Unload() {
@@ -41,7 +42,7 @@ namespace M8 {
                 processedRequests.Clear();
             }
 
-            public Package(string path, LoaderType type) {
+            public Package(string path, LoaderType type, int _priority) {
                 switch(type) {
                     case LoaderType.Internal:
                         loader = new ResourceLoaderInternal(path);
@@ -56,7 +57,14 @@ namespace M8 {
 
                 counter = 1;
                 loadQueue = false;
+                priority = _priority;
                 processedRequests = new Dictionary<string, ResourceLoader.Request>();
+            }
+        }
+
+        private class PackagePriorityCompare : IComparer<Package> {
+            public int Compare(Package pk1, Package pk2) {
+                return pk1.priority - pk2.priority;
             }
         }
 
@@ -66,6 +74,7 @@ namespace M8 {
         }
 
         private List<Package> mPackages = new List<Package>(); //all unique packages loaded
+        private PackagePriorityCompare mPackagePriorityCompare = new PackagePriorityCompare();
 
         private Dictionary<string, List<Package>> mGroups = new Dictionary<string,List<Package>>(); //list of reference to packages
 
@@ -79,7 +88,7 @@ namespace M8 {
         /// <summary>
         /// Add a package/path for group, group is created if it doesn't exist.  For Internal or LocalStream, this is a directory.
         /// </summary>
-        public void AddToGroup(string group, string path, LoaderType type) {
+        public void AddToGroup(string group, string path, LoaderType type, int priority) {
             List<Package> packageRefs;
             if(!mGroups.TryGetValue(group, out packageRefs)) {
                 packageRefs = new List<Package>();
@@ -97,18 +106,21 @@ namespace M8 {
                 if(mPackages[i].loader.rootPath == path) {
                     mPackages[i].counter++;
                     packageRefs.Add(mPackages[i]);
+                    packageRefs.Sort(mPackagePriorityCompare);
                     return;
                 }
             }
 
             //add new package
-            Package newPack = new Package(path, type);
+            Package newPack = new Package(path, type, priority);
             
             //add to global packages
             mPackages.Add(newPack);
+            mPackages.Sort(mPackagePriorityCompare);
 
             //add to package reference
             packageRefs.Add(newPack);
+            packageRefs.Sort(mPackagePriorityCompare);
 
         }
 
@@ -291,7 +303,7 @@ namespace M8 {
             if(rootPackages != null) {
                 for(int i = 0; i < rootPackages.Length; i++) {
                     //add new package
-                    Package newPack = new Package(rootPackages[i].path, rootPackages[i].type);
+                    Package newPack = new Package(rootPackages[i].path, rootPackages[i].type, 0);
 
                     //add to global packages
                     mPackages.Add(newPack);
@@ -299,6 +311,8 @@ namespace M8 {
                     //add to root
                     mRoot.Add(newPack);
                 }
+
+                mPackages.Sort(mPackagePriorityCompare);
             }
 
             //other groups
