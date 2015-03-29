@@ -93,13 +93,20 @@ namespace M8 {
             return false;
         }
 
-        public static bool Contains<T>(T[] src, T itm) where T:Component {
+        public static bool Contains<T>(T[] src, T itm) where T:UnityEngine.Object {
             if(src != null) {
                 for(int i = 0; i < src.Length; i++)
                     if(src[i] == itm)
                         return true;
             }
             return false;
+        }
+
+        public static int[] GenerateIndexArray(Array array) {
+            int[] indices = new int[array.Length];
+            for(int i = 0; i < indices.Length; i++)
+                indices[i] = i;
+            return indices;
         }
 	}
 }

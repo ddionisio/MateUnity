@@ -464,5 +464,13 @@ namespace M8.EditorExt {
         public static string PreferenceKey(string klass, string field) {
             return string.Format("m8.{0}.{1}.{2}", GetProjectName(), klass, field);
         }
+
+        public static void CreateAssetToCurrentSelectionFolder<T>() where T : ScriptableObject {
+            var asset = ScriptableObject.CreateInstance<T>();
+
+            string dir = GetSelectionFolder();
+
+            ProjectWindowUtil.CreateAsset(asset, string.Format("{0}{1}.asset", dir, typeof(T).Name));
+        }
     }
 }
