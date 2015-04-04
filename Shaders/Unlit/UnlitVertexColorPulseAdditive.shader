@@ -7,7 +7,7 @@ Shader "M8/Unlit/Vertex Color Pulse Additive" {
   }
   SubShader {
     Tags { "Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent" }
-	Lighting Off Fog { Mode Off }
+	ZWrite Off Lighting Off Fog { Mode Off }
     ColorMask RGB
     Blend SrcAlpha One
 

@@ -9,6 +9,8 @@ Shader "M8/Unlit/Vertex Color Transparent" {
     Blend SrcAlpha OneMinusSrcAlpha
 
 	Pass {
+        Name "FORWARD"
+
 		CGPROGRAM
 		#pragma vertex vert_vct
 		#pragma fragment frag_mult

@@ -52,6 +52,7 @@ namespace M8 {
                 for(int i = 0; i < num; i++) {
                     //PoolDataController
                     Transform t = (Transform)Object.Instantiate(template);
+                    t.name = template.name;
 
                     t.parent = mInactiveHolder;
                     t.localPosition = Vector3.zero;
@@ -75,8 +76,7 @@ namespace M8 {
                 pdc.claimed = true;
 
                 Transform t = pdc.transform;
-                t.parent = mInactiveHolder;
-                t.localPosition = Vector3.zero;
+                t.SetParent(mInactiveHolder, false);
 
                 if(removeFromActive)
                     mActives.Remove(pdc);
@@ -104,10 +104,7 @@ namespace M8 {
 
                 Transform t = pdc.transform;
                 t.name = string.IsNullOrEmpty(name) ? template.name + (mNameHolder++) : name;
-                t.parent = parent == null ? defaultParent : parent;
-                t.localPosition = Vector3.zero;
-                t.localRotation = Quaternion.identity;
-                t.localScale = Vector3.one;
+                t.SetParent(parent == null ? defaultParent : parent, false);
 
                 t.gameObject.SetActive(true);
 
@@ -150,6 +147,8 @@ namespace M8 {
             if(mControllers == null || !mControllers.TryGetValue(group, out pc)) {
                 GameObject go = new GameObject(group);
                 pc = go.AddComponent<PoolController>();
+
+                //Debug.Log ( "Creating group " + group);
             }
 
             return pc;
@@ -277,7 +276,7 @@ namespace M8 {
                     pair.Value.ReleaseAll();
             }
         }
-        
+
         //////////////////////////////////////////////////////////
         // Methods
 
@@ -492,6 +491,8 @@ namespace M8 {
                 if(mControllers.Count == 0)
                     mControllers = null;
             }
+
+            //Debug.Log ( "Destroying group " + group );
         }
 
         void Awake() {
