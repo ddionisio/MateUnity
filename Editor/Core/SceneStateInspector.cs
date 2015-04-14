@@ -191,31 +191,29 @@ namespace M8 {
                 //global scene data
                 runtimeGlobalFoldout = EditorGUILayout.Foldout(runtimeGlobalFoldout, "Global Scene Data");
 
-                if(runtimeGlobalFoldout) {
-                    if(data.globalStates != null) {
-                        foreach(KeyValuePair<string, SceneState.StateValue> dat in data.globalStates) {
-                            GUILayout.BeginVertical(GUI.skin.box);
+                if(runtimeGlobalFoldout && data.global != null) {
+                    foreach(var pair in data.global) {
+                        GUILayout.BeginVertical(GUI.skin.box);
 
-                            GUILayout.Label(dat.Key);
+                        GUILayout.Label(pair.Key);
 
-                            switch(dat.Value.type) {
-                                case SceneState.Type.Integer:
-                                    EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
-                                    EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
-                                    break;
-                                case SceneState.Type.Float:
-                                    EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
-                                    break;
-                                case SceneState.Type.String:
-                                    EditorGUILayout.LabelField("String", dat.Value.sval);
-                                    break;
-                                case SceneState.Type.Invalid:
-                                    EditorGUILayout.LabelField("Invalid!");
-                                    break;
-                            }
-
-                            GUILayout.EndVertical();
+                        switch(pair.Value.type) {
+                            case SceneState.Type.Integer:
+                                EditorGUILayout.LabelField("Value", pair.Value.ival.ToString());
+                                EditorGUILayout.MaskField("Flags", pair.Value.ival, mMasks);
+                                break;
+                            case SceneState.Type.Float:
+                                EditorGUILayout.LabelField("Float", pair.Value.fval.ToString());
+                                break;
+                            case SceneState.Type.String:
+                                EditorGUILayout.LabelField("String", pair.Value.sval);
+                                break;
+                            case SceneState.Type.Invalid:
+                                EditorGUILayout.LabelField("Invalid!");
+                                break;
                         }
+
+                        GUILayout.EndVertical();
                     }
                 }
 
@@ -224,31 +222,29 @@ namespace M8 {
                 //Scene data
                 runtimeFoldout = EditorGUILayout.Foldout(runtimeFoldout, "Scene Data");
 
-                if(runtimeFoldout) {
-                    if(data.states != null) {
-                        foreach(KeyValuePair<string, SceneState.StateValue> dat in data.states) {
-                            GUILayout.BeginVertical(GUI.skin.box);
+                if(runtimeFoldout && data.local != null) {
+                    foreach(var pair in data.local) {
+                        GUILayout.BeginVertical(GUI.skin.box);
 
-                            GUILayout.Label(dat.Key);
+                        GUILayout.Label(pair.Key);
 
-                            switch(dat.Value.type) {
-                                case SceneState.Type.Integer:
-                                    EditorGUILayout.LabelField("Value", dat.Value.ival.ToString());
-                                    EditorGUILayout.MaskField("Flags", dat.Value.ival, mMasks);
-                                    break;
-                                case SceneState.Type.Float:
-                                    EditorGUILayout.LabelField("Float", dat.Value.fval.ToString());
-                                    break;
-                                case SceneState.Type.String:
-                                    EditorGUILayout.LabelField("String", dat.Value.sval);
-                                    break;
-                                case SceneState.Type.Invalid:
-                                    EditorGUILayout.LabelField("Invalid!");
-                                    break;
-                            }
-
-                            GUILayout.EndVertical();
+                        switch(pair.Value.type) {
+                            case SceneState.Type.Integer:
+                                EditorGUILayout.LabelField("Value", pair.Value.ival.ToString());
+                                EditorGUILayout.MaskField("Flags", pair.Value.ival, mMasks);
+                                break;
+                            case SceneState.Type.Float:
+                                EditorGUILayout.LabelField("Float", pair.Value.fval.ToString());
+                                break;
+                            case SceneState.Type.String:
+                                EditorGUILayout.LabelField("String", pair.Value.sval);
+                                break;
+                            case SceneState.Type.Invalid:
+                                EditorGUILayout.LabelField("Invalid!");
+                                break;
                         }
+
+                        GUILayout.EndVertical();
                     }
                 }
 
@@ -278,19 +274,18 @@ namespace M8 {
                 mApplyToGlobal = GUILayout.Toggle(mApplyToGlobal, "Global");
                 mApplyPersistent = GUILayout.Toggle(mApplyPersistent, "Persistent");
 
+                var table = mApplyToGlobal ? data.global : data.local;
+
                 if(GUILayout.Button("Apply") && !string.IsNullOrEmpty(mApplyName)) {
                     switch(mApplyType) {
                         case SceneState.Type.Integer:
-                            if(mApplyToGlobal) data.SetGlobalValue(mApplyName, mApplyValue, mApplyPersistent);
-                            else data.SetValue(mApplyName, mApplyValue, mApplyPersistent);
+                            table.SetValue(mApplyName, mApplyValue, mApplyPersistent);
                             break;
                         case SceneState.Type.Float:
-                            if(mApplyToGlobal) data.SetGlobalValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
-                            else data.SetValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
+                            table.SetValueFloat(mApplyName, mApplyFValue, mApplyPersistent);
                             break;
                         case SceneState.Type.String:
-                            if(mApplyToGlobal) data.SetGlobalValueString(mApplyName, mApplySValue, mApplyPersistent);
-                            else data.SetValueString(mApplyName, mApplySValue, mApplyPersistent);
+                            table.SetValueString(mApplyName, mApplySValue, mApplyPersistent);
                             break;
                     }
 
@@ -304,8 +299,10 @@ namespace M8 {
                 //refresh
                 if(GUILayout.Button("Refresh")) {
                     if(!string.IsNullOrEmpty(mApplyName)) {
-                        mApplyValue = data.GetValue(mApplyName);
-                        mApplyFValue = data.GetValueFloat(mApplyName);
+                        var val = table.GetValueRaw(mApplyName);
+                        mApplyValue = val.ival;
+                        mApplyFValue = val.fval;
+                        mApplySValue = val.sval;
                     }
                     Repaint();
                 }

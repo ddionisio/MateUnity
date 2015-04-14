@@ -7,10 +7,9 @@ namespace M8 {
     [AddComponentMenu("M8/Core/SceneState")]
     public class SceneState : SingletonBehaviour<SceneState> {
         public const string GlobalDataPrefix = "g:";
-        public const string GlobalDataFormat = "g:{0}";
         public const string DataFormat = "{0}:{1}";
 
-        public delegate void StateCallback(bool isGlobal, string name, StateValue val);
+        public delegate void StateCallback(string name, StateValue val);
 
         public enum Type {
             Invalid,
@@ -71,11 +70,390 @@ namespace M8 {
                 ival = 0; fval = 0.0f; sval = aSval;
             }
 
-            public void Apply(UserData ud, string key) {
+            public StateValue(UserData ud, string key) {
                 System.Type t = ud.GetType(key);
-                if(t == typeof(int)) { type = Type.Integer; ival = ud.GetInt(key, ival); }
-                else if(t == typeof(float)) { type = Type.Float; fval = ud.GetFloat(key, fval); }
-                else if(t == typeof(string)) { type = Type.String; sval = ud.GetString(key, sval); }
+                if(t == typeof(int)) { type = Type.Integer; ival = ud.GetInt(key, 0); fval = 0f; sval = ""; }
+                else if(t == typeof(float)) { type = Type.Float; fval = ud.GetFloat(key, 0f); ival = 0; sval = ""; }
+                else if(t == typeof(string)) { type = Type.String; sval = ud.GetString(key, ""); ival = 0; fval = 0f; }
+                else { type = Type.Invalid; ival = 0; fval = 0f; sval = ""; }
+            }
+        }
+
+        public class Table : IEnumerable<KeyValuePair<string, StateValue>> {
+            public event StateCallback onValueChange;
+
+            private Dictionary<string, StateValue> mStates;
+            private string mPrefix;
+
+            private Dictionary<string, StateValue> mStatesSnapshot;
+            private InitData[] mStartData;
+
+            public Table(string prefix, InitData[] startData = null) {
+                mStates = new Dictionary<string, StateValue>();
+
+                Init(prefix, startData);
+            }
+
+            public void Init(string prefix, InitData[] startData) {
+                mPrefix = prefix;
+                mStartData = startData;
+
+                Reset();
+            }
+
+            /// <summary>
+            /// Reset all data to startData
+            /// </summary>
+            public void Reset() {
+                Clear(false);
+
+                //TODO: currently only grab from main userdata
+                UserData ud = UserData.main;
+
+                if(mStartData != null) {
+                    for(int i = 0; i < mStartData.Length; i++) {
+                        InitData dat = mStartData[i];
+                        if(!string.IsNullOrEmpty(dat.name)) {
+                            string key = string.Format(DataFormat, mPrefix, dat.name);
+
+                            //check from userdata first, if invalid, then use init data
+                            StateValue s = new StateValue(ud, key);
+                            if(s.type == Type.Invalid)
+                                s = dat.stateValue;
+
+                            //dat.stateValue;
+                            if(s.type != Type.Invalid) {
+                                if(mStates.ContainsKey(dat.name))
+                                    mStates[dat.name] = s;
+                                else
+                                    mStates.Add(dat.name, s);
+
+                                if(onValueChange != null) {
+                                    onValueChange(dat.name, s);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            public IEnumerator<KeyValuePair<string, StateValue>> GetEnumerator() {
+                return mStates.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() {
+                return GetEnumerator();
+            }
+
+            public void RefreshFromUserData(UserData ud) {
+                string[] keys = new string[mStates.Count];
+                mStates.Keys.CopyTo(keys, 0);
+
+                for(int i = 0; i < keys.Length; i++) {
+                    string key = keys[i];
+
+                    //set only if valid
+                    StateValue val = new StateValue(ud, string.Format(DataFormat, mPrefix, key));
+                    if(val.type != Type.Invalid)
+                        mStates[key] = val;
+                }
+            }
+
+            public bool Contains(string name) {
+                if(!mStates.ContainsKey(name)) {
+                    //try user data
+                    return UserData.main.HasKey(string.Format(DataFormat, mPrefix, name));
+                }
+
+                return true;
+            }
+
+            public void DeleteValuesByNameContain(string nameContains, bool persistent) {
+                foreach(string key in new List<string>(mStates.Keys)) {
+                    if(key.Contains(nameContains))
+                        DeleteValue(key, persistent);
+                }
+            }
+
+            public void DeleteValue(string name, bool persistent) {
+                mStates.Remove(name);
+
+                if(persistent)
+                    UserData.main.Delete(string.Format(DataFormat, mPrefix, name));
+            }
+
+            /// <summary>
+            /// Clear out states, if persistent is true, calls ClearUserData beforehand
+            /// </summary>
+            /// <param name="persistent"></param>
+            public void Clear(bool persistent) {
+                if(persistent)
+                    ClearUserData();
+
+                mStates.Clear();
+            }
+
+            /// <summary>
+            /// Clear up saved states from UserData.main, this does not clear actual states
+            /// </summary>
+            public void ClearUserData() {
+                foreach(var pair in mStates)
+                    UserData.main.Delete(string.Format(DataFormat, mPrefix, pair.Key));
+            }
+
+            public StateValue GetValueRaw(string name) {
+                if(mStates != null) {
+                    StateValue v;
+                    if(mStates.TryGetValue(name, out v))
+                        return v;
+                }
+
+                return new StateValue() { type=Type.Invalid };
+            }
+
+            public Type GetValueType(string name) {
+                if(mStates != null) {
+                    StateValue v;
+                    if(!mStates.TryGetValue(name, out v)) {
+                        System.Type t = UserData.main.GetType(string.Format(DataFormat, mPrefix, name));
+                        if(t == typeof(int))
+                            return Type.Integer;
+                        else if(t == typeof(float))
+                            return Type.Float;
+                        else if(t == typeof(string))
+                            return Type.String;
+                    }
+                    else
+                        return v.type;
+                }
+                return Type.Invalid;
+            }
+
+            public int GetValue(string name, int defaultVal = 0) {
+                StateValue v;
+                //try local
+                if(!mStates.TryGetValue(name, out v)) {
+                    //try user data; if valid, add to states
+                    string key = string.Format(DataFormat, mPrefix, name);
+                    v = new StateValue(UserData.main, key);
+                    if(v.type == Type.Integer) {
+                        mStates.Add(name, v);
+                        return v.ival;
+                    }
+                }
+                else if(v.type == Type.Integer)
+                    return v.ival;
+
+                return defaultVal;
+            }
+
+            public void SetValue(string name, int val, bool persistent) {
+                bool isValueSet = false;
+                StateValue curVal;
+                if(mStates.TryGetValue(name, out curVal)) {
+                    if(curVal.type == Type.Integer) {
+                        isValueSet = curVal.ival != val;
+
+                        if(isValueSet) {
+                            curVal.ival = val;
+                            mStates[name] = curVal;
+                        }
+                    }
+                    else {
+                        isValueSet = true;
+                        mStates[name] = curVal = new StateValue(val);
+                    }
+                }
+                else {
+                    isValueSet = true;
+                    mStates.Add(name, curVal = new StateValue(val));
+                }
+
+                if(isValueSet) {
+                    if(persistent) {
+                        string key = string.Format(DataFormat, mPrefix, name);
+                        UserData.main.SetInt(key, val);
+                    }
+
+                    if(onValueChange != null) {
+                        onValueChange(name, curVal);
+                    }
+                }
+            }
+
+            public void SetPersist(string name, bool persist) {
+                if(persist) {
+                    StateValue curVal;
+                    if(mStates.TryGetValue(name, out curVal)) {
+                        string key = string.Format(DataFormat, mPrefix, name);
+                        switch(curVal.type) {
+                            case Type.Integer:
+                                UserData.main.SetInt(key, curVal.ival);
+                                break;
+                            case Type.Float:
+                                UserData.main.SetFloat(key, curVal.fval);
+                                break;
+                            case Type.String:
+                                UserData.main.SetString(key, curVal.sval);
+                                break;
+                        }
+                    }
+                }
+                else {
+                    string key = string.Format(DataFormat, mPrefix, name);
+                    UserData.main.Delete(key);
+                }
+            }
+
+            public bool CheckFlag(string name, int bit) {
+                return CheckFlagMask(name, 1 << bit);
+            }
+
+            public bool CheckFlagMask(string name, int mask) {
+                int flags = GetValue(name);
+
+                return (flags & mask) != 0;
+            }
+
+            public void SetFlag(string name, int bit, bool state, bool persistent) {
+                int flags = GetValue(name);
+
+                if(state)
+                    flags |= 1 << bit;
+                else
+                    flags &= ~(1 << bit);
+
+                SetValue(name, flags, persistent);
+            }
+
+            public float GetValueFloat(string name, float defaultVal = 0.0f) {
+                StateValue v;
+                //try local
+                if(!mStates.TryGetValue(name, out v)) {
+                    //try user data; if valid, add to states
+                    string key = string.Format(DataFormat, mPrefix, name);
+                    v = new StateValue(UserData.main, key);
+                    if(v.type == Type.Float) {
+                        mStates.Add(name, v);
+                        return v.fval;
+                    }
+                }
+                else if(v.type == Type.Float)
+                    return v.fval;
+
+                return defaultVal;
+            }
+
+            public void SetValueFloat(string name, float val, bool persistent) {
+                bool isValueSet = false;
+                StateValue curVal;
+                if(mStates.TryGetValue(name, out curVal)) {
+                    if(curVal.type == Type.Float) {
+                        isValueSet = curVal.fval != val;
+
+                        if(isValueSet) {
+                            curVal.fval = val;
+                            mStates[name] = curVal;
+                        }
+                    }
+                    else {
+                        isValueSet = true;
+                        mStates[name] = curVal = new StateValue(val);
+                    }
+                }
+                else {
+                    isValueSet = true;
+                    mStates.Add(name, curVal = new StateValue(val));
+                }
+
+                if(isValueSet) {
+                    if(persistent) {
+                        string key = string.Format(DataFormat, mPrefix, name);
+                        UserData.main.SetFloat(key, val);
+                    }
+
+                    if(onValueChange != null) {
+                        onValueChange(name, curVal);
+                    }
+                }
+            }
+
+            public string GetValueString(string name, string defaultVal = "") {
+                StateValue v;
+                //try local
+                if(!mStates.TryGetValue(name, out v)) {
+                    //try user data; if valid, add to states
+                    string key = string.Format(DataFormat, mPrefix, name);
+                    v = new StateValue(UserData.main, key);
+                    if(v.type == Type.String) {
+                        mStates.Add(name, v);
+                        return v.sval;
+                    }
+                }
+                else if(v.type == Type.String)
+                    return v.sval;
+
+                return defaultVal;
+            }
+
+            public void SetValueString(string name, string val, bool persistent) {
+                bool isValueSet = false;
+                StateValue curVal;
+                if(mStates.TryGetValue(name, out curVal)) {
+                    if(curVal.type == Type.String) {
+                        isValueSet = curVal.sval != val;
+
+                        if(isValueSet) {
+                            curVal.sval = val;
+                            mStates[name] = curVal;
+                        }
+                    }
+                    else {
+                        isValueSet = true;
+                        mStates[name] = curVal = new StateValue(val);
+                    }
+                }
+                else {
+                    isValueSet = true;
+                    mStates.Add(name, curVal = new StateValue(val));
+                }
+
+                if(isValueSet) {
+                    if(persistent) {
+                        string key = string.Format(DataFormat, mPrefix, name);
+                        UserData.main.SetString(key, val);
+                    }
+
+                    if(onValueChange != null) {
+                        onValueChange(name, curVal);
+                    }
+                }
+            }
+
+            public string[] GetKeys(System.Predicate<KeyValuePair<string, StateValue>> predicate) {
+                List<string> items = new List<string>(mStates.Count);
+                foreach(KeyValuePair<string, StateValue> pair in mStates) {
+                    if(predicate(pair))
+                        items.Add(pair.Key);
+                }
+
+                return items.ToArray();
+            }
+
+            public void SnapshotSave() {
+                if(mStates != null)
+                    mStatesSnapshot = new Dictionary<string, StateValue>(mStates);
+                else
+                    mStatesSnapshot = null;
+            }
+
+            public void SnapshotRestore() {
+                if(mStatesSnapshot != null)
+                    mStates = new Dictionary<string, StateValue>(mStatesSnapshot);
+            }
+
+            public void SnapshotDelete() {
+                mStatesSnapshot = null;
             }
         }
 
@@ -83,640 +461,14 @@ namespace M8 {
 
         public InitSceneData[] startData; //use for debug
 
-        public event StateCallback onValueChange;
-
         private Dictionary<string, InitData[]> mStartData;
 
-        private string mScene = null; //scene associated with current flags
-        private Dictionary<string, StateValue> mStates = null;
+        private Table mLocal = null;
+        private Table mGlobal = null;
 
-        private Dictionary<string, StateValue> mGlobalStates = new Dictionary<string, StateValue>();
+        public Table global { get { return mGlobal; } }
 
-        private Dictionary<string, StateValue> mGlobalStatesSnapshot;
-
-        //only buffer one level previous for now
-        private string mPrevScene = null;
-        private Dictionary<string, StateValue> mPrevStates = null;
-
-        public Dictionary<string, StateValue> globalStates { get { return mGlobalStates; } }
-
-        public Dictionary<string, StateValue> states { get { return mStates; } }
-
-        public bool HasValue(string name) {
-            if(!mStates.ContainsKey(name)) {
-                //try user data
-                return UserData.main.HasKey(string.Format(DataFormat, mScene, name));
-            }
-
-            return true;
-        }
-
-        public void DeleteValuesByNameContain(string nameContains) {
-            foreach(string key in new List<string>(mStates.Keys)) {
-                if(key.Contains(nameContains)) {
-                    mStates.Remove(key);
-                }
-            }
-
-            foreach(string key in new List<string>(mGlobalStates.Keys)) {
-                if(key.Contains(nameContains)) {
-                    mGlobalStates.Remove(key);
-                }
-            }
-
-            UserData.main.DeleteAllByNameContain(nameContains);//string.Format(DataFormat, mScene, nameContains));
-        }
-
-        public void DeleteValue(string name, bool persistent) {
-            mStates.Remove(name);
-
-            if(persistent)
-                UserData.main.Delete(string.Format(DataFormat, mScene, name));
-        }
-
-        public StateValue GetValueRaw(string name) {
-            if(mStates != null) {
-                StateValue v;
-                if(mStates.TryGetValue(name, out v))
-                    return v;
-            }
-
-            return new StateValue() { type=Type.Invalid };
-        }
-
-        public Type GetValueType(string name) {
-            if(mStates != null) {
-                StateValue v;
-                if(!mStates.TryGetValue(name, out v)) {
-                    System.Type t = UserData.main.GetType(string.Format(DataFormat, mScene, name));
-                    if(t == typeof(int))
-                        return Type.Integer;
-                    else if(t == typeof(float))
-                        return Type.Float;
-                    else if(t == typeof(string))
-                        return Type.String;
-                }
-                else
-                    return v.type;
-            }
-            return Type.Invalid;
-        }
-
-        public int GetValue(string name, int defaultVal = 0) {
-            if(mStates == null) {
-                mStates = new Dictionary<string, StateValue>();
-            }
-
-            StateValue v;
-            //try local
-            if(!mStates.TryGetValue(name, out v)) {
-                //try user data
-                string key = string.Format(DataFormat, mScene, name);
-                if(UserData.main.HasKey(key)) {
-                    v.Apply(UserData.main, key);
-                    if(v.type == Type.Integer) {
-                        mStates.Add(name, v);
-                        return v.ival;
-                    }
-                }
-            }
-            else if(v.type == Type.Integer)
-                return v.ival;
-
-            return defaultVal;
-        }
-
-        public void SetValue(string name, int val, bool persistent) {
-            if(mStates == null) {
-                mStates = new Dictionary<string, StateValue>();
-            }
-
-            bool isValueSet = false;
-            StateValue curVal;
-            if(mStates.TryGetValue(name, out curVal)) {
-                if(curVal.type == Type.Integer) {
-                    isValueSet = curVal.ival != val;
-
-                    if(isValueSet) {
-                        curVal.ival = val;
-                        mStates[name] = curVal;
-                    }
-                }
-                else {
-                    isValueSet = true;
-                    mStates[name] = curVal = new StateValue(val);
-                }
-            }
-            else {
-                isValueSet = true;
-                mStates.Add(name, curVal = new StateValue(val));
-            }
-
-            if(isValueSet) {
-                if(persistent) {
-                    string key = string.Format(DataFormat, mScene, name);
-                    UserData.main.SetInt(key, val);
-                }
-
-                if(onValueChange != null) {
-                    onValueChange(false, name, curVal);
-                }
-            }
-        }
-
-        public void SetPersist(string name, bool persist) {
-            if(persist) {
-                if(mStates == null)
-                    return;
-
-                StateValue curVal;
-                if(mStates.TryGetValue(name, out curVal)) {
-                    string key = string.Format(DataFormat, mScene, name);
-                    switch(curVal.type) {
-                        case Type.Integer:
-                            UserData.main.SetInt(key, curVal.ival);
-                            break;
-                        case Type.Float:
-                            UserData.main.SetFloat(key, curVal.fval);
-                            break;
-                        case Type.String:
-                            UserData.main.SetString(key, curVal.sval);
-                            break;
-                    }
-                }
-            }
-            else {
-                string key = string.Format(DataFormat, mScene, name);
-                UserData.main.Delete(key);
-            }
-        }
-
-        public bool CheckFlag(string name, int bit) {
-            return CheckFlagMask(name, 1 << bit);
-        }
-
-        public bool CheckFlagMask(string name, int mask) {
-            int flags = GetValue(name);
-
-            return (flags & mask) != 0;
-        }
-
-        public void SetFlag(string name, int bit, bool state, bool persistent) {
-            int flags = GetValue(name);
-
-            if(state)
-                flags |= 1 << bit;
-            else
-                flags &= ~(1 << bit);
-
-            SetValue(name, flags, persistent);
-        }
-
-        public float GetValueFloat(string name, float defaultVal = 0.0f) {
-            if(mStates == null) {
-                mStates = new Dictionary<string, StateValue>();
-            }
-
-            StateValue v;
-            //try local
-            if(!mStates.TryGetValue(name, out v)) {
-                //try user data
-                string key = string.Format(DataFormat, mScene, name);
-                if(UserData.main.HasKey(key)) {
-                    v.Apply(UserData.main, key);
-                    if(v.type == Type.Float) {
-                        mStates.Add(name, v);
-                        return v.fval;
-                    }
-                }
-            }
-            else if(v.type == Type.Float)
-                return v.fval;
-
-            return defaultVal;
-        }
-
-        public void SetValueFloat(string name, float val, bool persistent) {
-            if(mStates == null) {
-                mStates = new Dictionary<string, StateValue>();
-            }
-
-            bool isValueSet = false;
-            StateValue curVal;
-            if(mStates.TryGetValue(name, out curVal)) {
-                if(curVal.type == Type.Float) {
-                    isValueSet = curVal.fval != val;
-
-                    if(isValueSet) {
-                        curVal.fval = val;
-                        mStates[name] = curVal;
-                    }
-                }
-                else {
-                    isValueSet = true;
-                    mStates[name] = curVal = new StateValue(val);
-                }
-            }
-            else {
-                isValueSet = true;
-                mStates.Add(name, curVal = new StateValue(val));
-            }
-
-            if(isValueSet) {
-                if(persistent) {
-                    string key = string.Format(DataFormat, mScene, name);
-                    UserData.main.SetFloat(key, val);
-                }
-
-                if(onValueChange != null) {
-                    onValueChange(false, name, curVal);
-                }
-            }
-        }
-
-        public string GetValueString(string name, string defaultVal = "") {
-            if(mStates == null) {
-                mStates = new Dictionary<string, StateValue>();
-            }
-
-            StateValue v;
-            //try local
-            if(!mStates.TryGetValue(name, out v)) {
-                //try user data
-                string key = string.Format(DataFormat, mScene, name);
-                if(UserData.main.HasKey(key)) {
-                    v.Apply(UserData.main, key);
-                    if(v.type == Type.String) {
-                        mStates.Add(name, v);
-                        return v.sval;
-                    }
-                }
-            }
-            else if(v.type == Type.String)
-                return v.sval;
-
-            return defaultVal;
-        }
-
-        public void SetValueString(string name, string val, bool persistent) {
-            if(mStates == null) {
-                mStates = new Dictionary<string, StateValue>();
-            }
-
-            bool isValueSet = false;
-            StateValue curVal;
-            if(mStates.TryGetValue(name, out curVal)) {
-                if(curVal.type == Type.String) {
-                    isValueSet = curVal.sval != val;
-
-                    if(isValueSet) {
-                        curVal.sval = val;
-                        mStates[name] = curVal;
-                    }
-                }
-                else {
-                    isValueSet = true;
-                    mStates[name] = curVal = new StateValue(val);
-                }
-            }
-            else {
-                isValueSet = true;
-                mStates.Add(name, curVal = new StateValue(val));
-            }
-
-            if(isValueSet) {
-                if(persistent) {
-                    string key = string.Format(DataFormat, mScene, name);
-                    UserData.main.SetString(key, val);
-                }
-
-                if(onValueChange != null) {
-                    onValueChange(false, name, curVal);
-                }
-            }
-        }
-
-        public void GlobalSnapshotSave() {
-            if(mGlobalStates != null)
-                mGlobalStatesSnapshot = new Dictionary<string, StateValue>(mGlobalStates);
-            else
-                mGlobalStatesSnapshot = null;
-        }
-
-        public void GlobalSnapshotRestore() {
-            if(mGlobalStatesSnapshot != null)
-                mGlobalStates = new Dictionary<string, StateValue>(mGlobalStatesSnapshot);
-        }
-
-        public void GlobalSnapshotDelete() {
-            mGlobalStatesSnapshot = null;
-        }
-
-        public string[] GetGlobalKeys(System.Predicate<KeyValuePair<string, StateValue>> predicate) {
-            List<string> items = new List<string>(mGlobalStates.Count);
-            foreach(KeyValuePair<string, StateValue> pair in mGlobalStates) {
-                if(predicate(pair))
-                    items.Add(pair.Key);
-            }
-
-            return items.ToArray();
-        }
-
-        public bool HasGlobalValue(string name) {
-            if(!mGlobalStates.ContainsKey(name)) {
-                //try user data
-                return UserData.main.HasKey(string.Format(GlobalDataFormat, name));
-            }
-
-            return true;
-        }
-
-        public void DeleteGlobalValue(string name, bool persistent) {
-            mGlobalStates.Remove(name);
-
-            if(persistent)
-                UserData.main.Delete(string.Format(GlobalDataFormat, name));
-        }
-
-        public StateValue GetGlobalValueRaw(string name) {
-            if(mGlobalStates != null) {
-                StateValue v;
-                if(mGlobalStates.TryGetValue(name, out v))
-                    return v;
-            }
-
-            return new StateValue() { type=Type.Invalid };
-        }
-
-        public Type GetGlobalValueType(string name) {
-            if(mGlobalStates != null) {
-                StateValue v;
-                if(!mGlobalStates.TryGetValue(name, out v)) {
-                    System.Type t = UserData.main.GetType(string.Format(GlobalDataFormat, name));
-                    if(t == typeof(int))
-                        return Type.Integer;
-                    else if(t == typeof(float))
-                        return Type.Float;
-                    else if(t == typeof(string))
-                        return Type.String;
-                }
-                else
-                    return v.type;
-            }
-            return Type.Invalid;
-        }
-
-        public int GetGlobalValue(string name, int defaultVal = 0) {
-            if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
-
-            StateValue v;
-            //try local
-            if(!mGlobalStates.TryGetValue(name, out v)) {
-                //try user data
-                string key = string.Format(GlobalDataFormat, name);
-                if(UserData.main.HasKey(key)) {
-                    v.Apply(UserData.main, key);
-                    if(v.type == Type.Integer) {
-                        mGlobalStates.Add(name, v);
-                        return v.ival;
-                    }
-                }
-            }
-            else if(v.type == Type.Integer)
-                return v.ival;
-
-            return defaultVal;
-        }
-
-        public void SetGlobalValue(string name, int val, bool persistent) {
-            if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
-
-            bool isValueSet = false;
-            StateValue curVal;
-            if(mGlobalStates.TryGetValue(name, out curVal)) {
-                if(curVal.type == Type.Integer) {
-                    isValueSet = curVal.ival != val;
-
-                    if(isValueSet) {
-                        curVal.ival = val;
-                        mGlobalStates[name] = curVal;
-                    }
-                }
-                else {
-                    isValueSet = true;
-                    mGlobalStates[name] = curVal = new StateValue(val);
-                }
-            }
-            else {
-                isValueSet = true;
-                mGlobalStates.Add(name, curVal = new StateValue(val));
-            }
-
-            if(isValueSet) {
-                if(persistent) {
-                    string key = string.Format(GlobalDataFormat, name);
-                    UserData.main.SetInt(key, val);
-                }
-
-                if(onValueChange != null) {
-                    onValueChange(true, name, curVal);
-                }
-            }
-        }
-
-        public void SetGlobalPersist(string name, bool persist) {
-            if(persist) {
-                if(mGlobalStates == null)
-                    return;
-
-                StateValue curVal;
-                if(mGlobalStates.TryGetValue(name, out curVal)) {
-                    string key = string.Format(DataFormat, mScene, name);
-                    switch(curVal.type) {
-                        case Type.Integer:
-                            UserData.main.SetInt(key, curVal.ival);
-                            break;
-                        case Type.Float:
-                            UserData.main.SetFloat(key, curVal.fval);
-                            break;
-                        case Type.String:
-                            UserData.main.SetString(key, curVal.sval);
-                            break;
-                    }
-                }
-            }
-            else {
-                string key = string.Format(DataFormat, mScene, name);
-                UserData.main.Delete(key);
-            }
-        }
-
-        public bool CheckGlobalFlag(string name, int bit) {
-            return CheckGlobalFlagMask(name, 1 << bit);
-        }
-
-        public bool CheckGlobalFlagMask(string name, int mask) {
-            int flags = GetGlobalValue(name);
-
-            return (flags & mask) == mask;
-        }
-
-        public void SetGlobalFlag(string name, int bit, bool state, bool persistent) {
-            int flags = GetGlobalValue(name);
-
-            if(state)
-                flags |= 1 << bit;
-            else
-                flags &= ~(1 << bit);
-
-            SetGlobalValue(name, flags, persistent);
-        }
-
-        public float GetGlobalValueFloat(string name, float defaultVal = 0.0f) {
-            if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
-
-            StateValue v;
-            //try local
-            if(!mGlobalStates.TryGetValue(name, out v)) {
-                //try user data
-                string key = string.Format(GlobalDataFormat, name);
-                if(UserData.main.HasKey(key)) {
-                    v.Apply(UserData.main, key);
-                    if(v.type == Type.Float) {
-                        mGlobalStates.Add(name, v);
-                        return v.fval;
-                    }
-                }
-            }
-            else if(v.type == Type.Float)
-                return v.fval;
-
-            return defaultVal;
-        }
-
-        public void SetGlobalValueFloat(string name, float val, bool persistent) {
-            if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
-
-            bool isValueSet = false;
-            StateValue curVal;
-            if(mGlobalStates.TryGetValue(name, out curVal)) {
-                if(curVal.type == Type.Float) {
-                    isValueSet = curVal.fval != val;
-
-                    if(isValueSet) {
-                        curVal.fval = val;
-                        mGlobalStates[name] = curVal;
-                    }
-                }
-                else {
-                    isValueSet = true;
-                    mGlobalStates[name] = curVal = new StateValue(val);
-                }
-            }
-            else {
-                isValueSet = true;
-                mGlobalStates.Add(name, curVal = new StateValue(val));
-            }
-
-            if(isValueSet) {
-                if(persistent) {
-                    string key = string.Format(GlobalDataFormat, name);
-                    UserData.main.SetFloat(key, val);
-                }
-
-                if(onValueChange != null) {
-                    onValueChange(true, name, curVal);
-                }
-            }
-        }
-
-        public string GetGlobalValueString(string name, string defaultVal = "") {
-            if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
-
-            StateValue v;
-            //try local
-            if(!mGlobalStates.TryGetValue(name, out v)) {
-                //try user data
-                string key = string.Format(GlobalDataFormat, name);
-                if(UserData.main.HasKey(key)) {
-                    v.Apply(UserData.main, key);
-                    if(v.type == Type.String) {
-                        mGlobalStates.Add(name, v);
-                        return v.sval;
-                    }
-                }
-            }
-            else if(v.type == Type.String)
-                return v.sval;
-
-            return defaultVal;
-        }
-
-        public void SetGlobalValueString(string name, string val, bool persistent) {
-            if(mGlobalStates == null) mGlobalStates = new Dictionary<string, StateValue>();
-
-            bool isValueSet = false;
-            StateValue curVal;
-            if(mGlobalStates.TryGetValue(name, out curVal)) {
-                if(curVal.type == Type.String) {
-                    isValueSet = curVal.sval != val;
-
-                    if(isValueSet) {
-                        curVal.sval = val;
-                        mGlobalStates[name] = curVal;
-                    }
-                }
-                else {
-                    isValueSet = true;
-                    mGlobalStates[name] = curVal = new StateValue(val);
-                }
-            }
-            else {
-                isValueSet = true;
-                mGlobalStates.Add(name, curVal = new StateValue(val));
-            }
-
-            if(isValueSet) {
-                if(persistent) {
-                    string key = string.Format(GlobalDataFormat, name);
-                    UserData.main.SetString(key, val);
-                }
-
-                if(onValueChange != null) {
-                    onValueChange(true, name, curVal);
-                }
-            }
-        }
-
-        public void ResetGlobalValues() {
-            mGlobalStates.Clear();
-
-            AppendGlobalInitData();
-        }
-
-        public void ResetValues() {
-            mStates = null;
-            mPrevStates = null;
-            mPrevScene = null;
-
-            AppendInitData();
-        }
-
-        public void ClearAllSavedData(bool resetValues = true) {
-            if(mGlobalStates != null) {
-                UserData.main.DeleteAllByNameContain(GlobalDataPrefix);
-
-                if(resetValues)
-                    ResetGlobalValues();
-            }
-
-            if(mStates != null && !string.IsNullOrEmpty(mScene)) {
-                UserData.main.DeleteAllByNameContain(mScene + ":");
-
-                if(resetValues)
-                    ResetValues();
-            }
-        }
+        public Table local { get { return mLocal; } }
 
         protected override void OnInstanceInit() {
             UserData.main.actCallback += OnUserDataAction;
@@ -727,13 +479,8 @@ namespace M8 {
                     mStartData.Add(sdat.scene, sdat.data);
             }
 
-            AppendGlobalInitData();
-
-            if(mStates == null && mScene == null) {
-                mScene = Application.loadedLevelName;
-                mStates = new Dictionary<string, StateValue>();
-                AppendInitData();
-            }
+            InitLocalData();
+            InitGlobalData();
 
             SceneManager.instance.sceneChangeCallback += SceneChange;
         }
@@ -741,100 +488,39 @@ namespace M8 {
         void SceneChange(string toScene) {
             //new scene is being loaded, save current state to previous
             //revert flags if new scene is previous
-            if(toScene != mScene) {
-                string curScene = mScene;
-                Dictionary<string, StateValue> curStates = mStates;
-
-                mScene = toScene;
-
-                if(toScene == mPrevScene) {
-                    mStates = mPrevStates;
-                }
-                else {
-                    mStates = new Dictionary<string, StateValue>();
-                    AppendInitData();
-                }
-
-                mPrevScene = curScene;
-                mPrevStates = curStates;
-            }
+            //TODO: preserve previous scene data
+            InitLocalData();
         }
 
         void OnUserDataAction(UserData ud, UserData.Action act) {
             switch(act) {
                 case UserData.Action.Load:
                     //update global states
-                    if(mGlobalStates != null && mGlobalStates.Count > 0) {
-                        string[] keys = new string[mGlobalStates.Count];
-                        mGlobalStates.Keys.CopyTo(keys, 0);
+                    mGlobal.RefreshFromUserData(ud);
 
-                        foreach(string key in keys) {
-                            StateValue val = mGlobalStates[key];
-                            val.Apply(ud, string.Format(GlobalDataFormat, key));
-                            mGlobalStates[key] = val;
-                        }
-                    }
-
-                    //update states
-                    if(mStates != null && mStates.Count > 0 && !string.IsNullOrEmpty(mScene)) {
-                        string[] keys = new string[mStates.Count];
-                        mStates.Keys.CopyTo(keys, 0);
-
-                        foreach(string key in keys) {
-                            StateValue val = mStates[key];
-                            val.Apply(ud, string.Format(DataFormat, mScene, key));
-                            mStates[key] = val;
-                        }
-                    }
+                    //update local states
+                    mLocal.RefreshFromUserData(ud);
                     break;
             }
         }
 
-        void AppendGlobalInitData() {
-            foreach(InitData dat in globalStartData) {
-                if(!string.IsNullOrEmpty(dat.name)) {
-                    //check if data exists in user first
-                    string key = string.Format(GlobalDataFormat, dat.name);
-
-                    StateValue s = dat.stateValue;
-                    s.Apply(UserData.main, key);
-                    if(s.type != Type.Invalid) {
-                        if(mGlobalStates.ContainsKey(dat.name))
-                            mGlobalStates[dat.name] = s;
-                        else
-                            mGlobalStates.Add(dat.name, s);
-
-                        if(onValueChange != null) {
-                            onValueChange(true, dat.name, s);
-                        }
-                    }
-                }
-            }
+        void InitGlobalData() {
+            if(mGlobal != null)
+                mGlobal.Init("g", globalStartData);
+            else
+                mGlobal = new Table("g", globalStartData);
         }
 
-        void AppendInitData() {
-            InitData[] dats;
-            if(mStartData.TryGetValue(mScene, out dats)) {
-                foreach(InitData dat in dats) {
-                    if(!string.IsNullOrEmpty(dat.name)) {
-                        //check if data exists in user first
-                        string key = string.Format(DataFormat, mScene, dat.name);
+        void InitLocalData() {
+            string scene = Application.loadedLevelName;
 
-                        StateValue s = dat.stateValue;
-                        s.Apply(UserData.main, key);
-                        if(s.type != Type.Invalid) {
-                            if(mStates.ContainsKey(dat.name))
-                                mStates[dat.name] = s;
-                            else
-                                mStates.Add(dat.name, s);
+            InitData[] dats = null;
+            mStartData.TryGetValue(scene, out dats);
 
-                            if(onValueChange != null) {
-                                onValueChange(false, dat.name, s);
-                            }
-                        }
-                    }
-                }
-            }
+            if(mLocal != null)
+                mLocal.Init(scene, dats);
+            else
+                mLocal = new Table(scene, dats);
         }
     }
 }

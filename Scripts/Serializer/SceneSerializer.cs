@@ -63,7 +63,7 @@ namespace M8 {
         }
 
         public static void DeleteValues(int sid) {
-            SceneState.instance.DeleteValuesByNameContain(GetVarKey(sid));
+            SceneState.instance.local.DeleteValuesByNameContain(GetVarKey(sid), true);
         }
 
         static string GetVarKey(int sid) {
@@ -75,73 +75,73 @@ namespace M8 {
         }
 
         public bool HasValue(string name) {
-            return SceneState.instance.HasValue(GetVarKey(name));
+            return SceneState.instance.local.Contains(GetVarKey(name));
         }
 
         public void DeleteValue(string name, bool persistent) {
             if(_id != invalidID)
-                SceneState.instance.DeleteValue(GetVarKey(name), persistent);
+                SceneState.instance.local.DeleteValue(GetVarKey(name), persistent);
         }
 
         public SceneState.Type GetValueType(string name) {
             if(_id == invalidID)
                 return SceneState.Type.Invalid;
-            return SceneState.instance.GetValueType(GetVarKey(name));
+            return SceneState.instance.local.GetValueType(GetVarKey(name));
         }
 
         public int GetValue(string name, int defaultVal = 0) {
             if(_id == invalidID)
                 return defaultVal;
 
-            return SceneState.instance.GetValue(GetVarKey(name), defaultVal);
+            return SceneState.instance.local.GetValue(GetVarKey(name), defaultVal);
         }
 
         public void SetValue(string name, int val, bool persistent) {
             if(_id != invalidID)
-                SceneState.instance.SetValue(GetVarKey(name), val, persistent);
+                SceneState.instance.local.SetValue(GetVarKey(name), val, persistent);
         }
 
         public bool CheckFlag(string name, int bit) {
             if(_id == invalidID)
                 return false;
 
-            return SceneState.instance.CheckFlagMask(GetVarKey(name), 1 << bit);
+            return SceneState.instance.local.CheckFlagMask(GetVarKey(name), 1 << bit);
         }
 
         public bool CheckFlagMask(string name, int mask) {
             if(_id == invalidID)
                 return false;
 
-            return SceneState.instance.CheckFlagMask(GetVarKey(name), mask);
+            return SceneState.instance.local.CheckFlagMask(GetVarKey(name), mask);
         }
 
         public void SetFlag(string name, int bit, bool state, bool persistent) {
             if(_id != invalidID)
-                SceneState.instance.SetFlag(GetVarKey(name), bit, state, persistent);
+                SceneState.instance.local.SetFlag(GetVarKey(name), bit, state, persistent);
         }
 
         public float GetValueFloat(string name, float defaultVal = 0.0f) {
             if(_id == invalidID)
                 return defaultVal;
 
-            return SceneState.instance.GetValueFloat(GetVarKey(name), defaultVal);
+            return SceneState.instance.local.GetValueFloat(GetVarKey(name), defaultVal);
         }
 
         public void SetValueFloat(string name, float val, bool persistent) {
             if(_id != invalidID)
-                SceneState.instance.SetValueFloat(GetVarKey(name), val, persistent);
+                SceneState.instance.local.SetValueFloat(GetVarKey(name), val, persistent);
         }
 
         public string GetValueString(string name, string defaultVal = "") {
             if(_id == invalidID)
                 return defaultVal;
 
-            return SceneState.instance.GetValueString(GetVarKey(name), defaultVal);
+            return SceneState.instance.local.GetValueString(GetVarKey(name), defaultVal);
         }
 
         public void SetValueString(string name, string val, bool persistent) {
             if(_id != invalidID)
-                SceneState.instance.SetValueString(GetVarKey(name), val, persistent);
+                SceneState.instance.local.SetValueString(GetVarKey(name), val, persistent);
         }
 
         /// <summary>

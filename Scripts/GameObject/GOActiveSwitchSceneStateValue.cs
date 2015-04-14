@@ -48,7 +48,7 @@ namespace M8 {
         }
 
         private int GetValue() {
-            return global ? SceneState.instance.GetGlobalValue(variable) : SceneState.instance.GetValue(variable);
+            return (global ? SceneState.instance.global : SceneState.instance.local).GetValue(variable);
         }
     }
 }

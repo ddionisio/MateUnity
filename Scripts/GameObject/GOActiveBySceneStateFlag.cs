@@ -20,7 +20,7 @@ namespace M8 {
 
         void OnEnable() {
             if(mStarted) {
-                bool val = global ? SceneState.instance.CheckGlobalFlagMask(flag, flagBit) : SceneState.instance.CheckFlag(flag, flagBit);
+                bool val = (global ? SceneState.instance.global : SceneState.instance.local).CheckFlag(flag, flagBit);
                 if(val)
                     target.SetActive(setActive);
                 else
@@ -43,7 +43,7 @@ namespace M8 {
 
             mStarted = true;
 
-            bool val = global ? SceneState.instance.CheckGlobalFlagMask(flag, flagBit) : SceneState.instance.CheckFlag(flag, flagBit);
+            bool val = (global ? SceneState.instance.global : SceneState.instance.local).CheckFlag(flag, flagBit);
             if(val)
                 target.SetActive(setActive);
             else
