@@ -6,8 +6,9 @@ namespace M8 {
     [PrefabCore]
     [AddComponentMenu("M8/Core/SceneState")]
     public class SceneState : SingletonBehaviour<SceneState> {
-        public const string GlobalDataPrefix = "g:";
         public const string DataFormat = "{0}:{1}";
+
+        public int localStateCache = 0;
 
         public delegate void StateCallback(string name, StateValue val);
 
@@ -88,16 +89,64 @@ namespace M8 {
             private Dictionary<string, StateValue> mStatesSnapshot;
             private InitData[] mStartData;
 
-            public Table(string prefix, InitData[] startData = null) {
+            //cache is used for when Init is called with a different prefix
+            private struct CacheData {
+                public string prefix;
+                public Dictionary<string, StateValue> states;
+            }
+
+            private List<CacheData> mCache;
+
+            public string prefix { get { return mPrefix; } }
+
+            public Table(string prefix, InitData[] startData, int cacheCount = 0) {
                 mStates = new Dictionary<string, StateValue>();
+
+                if(cacheCount > 0)
+                    mCache = new List<CacheData>(cacheCount);
 
                 Init(prefix, startData);
             }
 
             public void Init(string prefix, InitData[] startData) {
-                mPrefix = prefix;
                 mStartData = startData;
 
+                //store current prefix, restore data if new prefix exists
+                if(mCache != null && mPrefix != prefix) {
+                    int cacheInd = -1;
+                    for(int i = 0; i < mCache.Count; i++) {
+                        var cache = mCache[i];
+                        if(cache.prefix == mPrefix) {
+                            //store states
+                            cache.states = new Dictionary<string, StateValue>(mStates);
+                            mCache[i] = cache;
+                            cacheInd = i;
+                            break;
+                        }
+                    }
+
+                    //store new cache
+                    if(cacheInd == -1) {
+                        //remove oldest cache
+                        if(mCache.Count == mCache.Capacity)
+                            mCache.RemoveAt(0);
+
+                        mCache.Add(new CacheData() { prefix=mPrefix, states=new Dictionary<string, StateValue>(mStates) });
+                    }
+
+                    //if new prefix exists, use its values
+                    for(int i = 0; i < mCache.Count; i++) {
+                        var cache = mCache[i];
+                        if(cache.prefix == prefix) {
+                            mPrefix = prefix;
+                            mStates = cache.states;
+                            return;
+                        }
+                    }
+                }
+
+                mPrefix = prefix;
+                                                                                
                 Reset();
             }
 
@@ -490,14 +539,9 @@ namespace M8 {
 
             InitLocalData();
             InitGlobalData();
-
-            SceneManager.instance.sceneChangeCallback += SceneChange;
         }
 
-        void SceneChange(string toScene) {
-            //new scene is being loaded, save current state to previous
-            //revert flags if new scene is previous
-            //TODO: preserve previous scene data
+        void OnLevelWasLoaded(int level) {
             InitLocalData();
         }
 
@@ -526,10 +570,14 @@ namespace M8 {
             InitData[] dats = null;
             mStartData.TryGetValue(scene, out dats);
 
-            if(mLocal != null)
-                mLocal.Init(scene, dats);
+            if(mLocal != null) {
+                mLocal.SnapshotDelete();
+
+                if(localStateCache == 0 || mLocal.prefix != scene)
+                    mLocal.Init(scene, dats);
+            }
             else
-                mLocal = new Table(scene, dats);
+                mLocal = new Table(scene, dats, localStateCache);
         }
     }
 }

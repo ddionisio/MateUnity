@@ -93,6 +93,8 @@ namespace M8 {
                 initFoldout = EditorGUILayout.Foldout(initFoldout, "Scene Data");
 
                 if(initFoldout) {
+                    data.localStateCache = EditorGUILayout.IntField("Cache Count", data.localStateCache);
+
                     if(data.startData == null)
                         data.startData = new SceneState.InitSceneData[0];
 
