@@ -204,8 +204,17 @@ namespace M8 {
             public StateValue GetValueRaw(string name) {
                 if(mStates != null) {
                     StateValue v;
-                    if(mStates.TryGetValue(name, out v))
-                        return v;
+                    if(!mStates.TryGetValue(name, out v)) {
+                        //try user data; if valid, add to states
+                        string key = string.Format(DataFormat, mPrefix, name);
+                        v = new StateValue(UserData.main, key);
+                        if(v.type != Type.Invalid) {
+                            mStates.Add(name, v);
+                            return v;
+                        }
+                    }
+
+                    return v;
                 }
 
                 return new StateValue() { type=Type.Invalid };
