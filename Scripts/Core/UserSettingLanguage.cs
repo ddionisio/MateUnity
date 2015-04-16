@@ -7,12 +7,21 @@ namespace M8 {
     public class UserSettingLanguage : UserSetting<UserSettingLanguage> {
         public const string languageKey = "lang";
 
-        public Language language {
+        public string language {
             get { return Localize.instance.language; }
             set {
-                userData.SetInt(languageKey, (int)value);
+                int ind = Localize.instance.GetLanguageIndex(value);
+                if(ind != -1)
+                    languageIndex = ind;
+            }
+        }
 
-                Localize.instance.language = value;
+        public int languageIndex {
+            get { return Localize.instance.languageIndex; }
+            set {
+                userData.SetInt(languageKey, value);
+
+                Localize.instance.languageIndex = value;
             }
         }
 
@@ -20,9 +29,8 @@ namespace M8 {
             base.OnInstanceInit();
 
             //load settings
-            Language lang = (Language)userData.GetInt(languageKey, (int)Language.Default);
-            if(lang != Language.Default)
-                Localize.instance.language = lang;
+            int langInd = userData.GetInt(languageKey);
+            Localize.instance.languageIndex = langInd;
         }
     }
 }

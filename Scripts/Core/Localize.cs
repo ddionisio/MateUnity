@@ -10,33 +10,13 @@ namespace M8 {
         public delegate string ParameterCallback(string paramKey);
         public delegate void LocalizeCallback();
 
-        [System.Serializable]
-        public class TableDataPlatform {
-            public RuntimePlatform platform;
-            public TextAsset file;
-        }
-
-        [System.Serializable]
-        public class TableData {
-            public Language language;
-            public TextAsset file;
-            public TableDataPlatform[] platforms; //these overwrite certain keys in the string table
-        }
-
         public class Entry {
             public string key;
             public string text = "";
             public string[] param = null; //set this to null if you want to reference param from base
         }
 
-        public TextAsset baseFile; //the default localization
-        public TableDataPlatform[] basePlatforms;
-
-        public TableData[] tables; //table info for each language
-
-        public event LocalizeCallback localizeCallback;
-
-        private struct Data {
+        public struct Data {
             public string text;
             public string[] param;
 
@@ -60,22 +40,146 @@ namespace M8 {
             }
         }
 
-        private Dictionary<string, Data> mTableBase;
+        [System.Serializable]
+        public class TableDataPlatform {
+            public RuntimePlatform platform;
+            public TextAsset file;
+        }
 
-        private Dictionary<string, Data> mTable;
+        [System.Serializable]
+        public class TableData {
+            public string language;
+            public TextAsset file;
+            public TableDataPlatform[] platforms; //these overwrite certain keys in the string table
 
-        private Language mCurLanguage = Language.Default;
+            private Dictionary<string, Data> mEntries;
 
-        private Dictionary<string, ParameterCallback> mParams = null;
+            public Dictionary<string, Data> entries { get { return mEntries; } }
 
-        public Language language {
-            get { return mCurLanguage; }
-            set {
-                if(mCurLanguage != value) {
-                    mCurLanguage = value;
-                    LoadCurrentLanguage();
+            public void Generate(Dictionary<string, Data> baseTable) {
+                if(mEntries != null) return;
+
+                fastJSON.JSON.Parameters.UseExtensions = false;
+
+                List<Entry> tableEntries = fastJSON.JSON.ToObject<List<Entry>>(file.text);
+
+                mEntries = new Dictionary<string, Data>(tableEntries.Count);
+
+                foreach(Entry entry in tableEntries) {
+                    string[] parms = null;
+
+                    //if no params, grab from base
+                    if(entry.param == null && baseTable != null) {
+                        Data dat;
+                        if(baseTable.TryGetValue(entry.key, out dat))
+                            parms = dat.param;
+                    }
+                    else
+                        parms = entry.param;
+
+                    mEntries.Add(entry.key, new Data(entry.text, parms));
+                }
+
+                //append platform specific entries
+                if(platforms != null) {
+                    TableDataPlatform platform = null;
+                    foreach(TableDataPlatform platformDat in platforms) {
+                        if(platformDat.platform == Application.platform) {
+                            platform = platformDat;
+                            break;
+                        }
+                    }
+
+                    //override entries based on platform
+                    if(platform != null) {
+                        List<Entry> platformEntries = fastJSON.JSON.ToObject<List<Entry>>(platform.file.text);
+
+                        foreach(Entry platformEntry in platformEntries) {
+                            Data dat;
+                            if(mEntries.TryGetValue(platformEntry.key, out dat)) {
+                                dat.text = platformEntry.text;
+                                if(platformEntry.param != null)
+                                    dat.param = platformEntry.param;
+
+                                mEntries[platformEntry.key] = dat;
+                            }
+                            else
+                                mEntries.Add(platformEntry.key, new Data(platformEntry.text, platformEntry.param));
+                        }
+                    }
                 }
             }
+        }
+        
+        [SerializeField]
+        TableData[] tables; //table info for each language, first element is the root
+
+        public event LocalizeCallback localizeCallback;
+                
+        private int mCurIndex;
+
+        private Dictionary<string, ParameterCallback> mParams;
+
+        public string this[string index] {
+            get {
+                return GetText(index);
+            }
+        }
+                
+        /// <summary>
+        /// Set this to null or empty to use default
+        /// </summary>
+        public string language {
+            get { return tables[mCurIndex].language; }
+            set {
+                if(language != value) {
+                    if(!string.IsNullOrEmpty(value)) {
+                        int ind = GetLanguageIndex(value);
+                        if(ind != -1)
+                            languageIndex = ind;
+                    }
+                    else
+                        languageIndex = 0;
+                }
+            }
+        }
+
+        public int languageIndex {
+            get { return mCurIndex; }
+            set {
+                if(mCurIndex != value) {
+                    mCurIndex = value;
+                    tables[mCurIndex].Generate(mCurIndex > 0 ? tables[0].entries : null);
+
+                    Refresh();
+                }
+            }
+        }
+
+        public string[] languages {
+            get {
+                string[] ret = new string[tables.Length];
+                for(int i = 0; i < ret.Length; i++)
+                    ret[i] = tables[i].language;
+                return ret;
+            }
+        }
+
+        public int languageCount {
+            get { return tables.Length; }
+        }
+
+        public int GetLanguageIndex(string lang) {
+            for(int i = 0; i < tables.Length; i++) {
+                if(tables[i].language == lang)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public string GetLanguageName(int langInd) {
+            return tables[langInd].language;
         }
 
         /// <summary>
@@ -97,8 +201,8 @@ namespace M8 {
         public string GetText(string key) {
             Data ret = new Data("", null);
 
-            if(mTable == null || !mTable.TryGetValue(key, out ret)) {
-                if(mTableBase == null || !mTableBase.TryGetValue(key, out ret))
+            if(!tables[mCurIndex].entries.TryGetValue(key, out ret)) {
+                if(mCurIndex == 0 || !tables[0].entries.TryGetValue(key, out ret))
                     Debug.LogWarning("Key not found: " + key);
             }
 
@@ -112,86 +216,10 @@ namespace M8 {
                 localizeCallback();
         }
 
-        void LoadTables(string textData, ref Dictionary<string, Data> table) {
-            List<Entry> tableEntries = fastJSON.JSON.ToObject<List<Entry>>(textData);
-
-            table = new Dictionary<string, Data>(tableEntries.Count);
-
-            foreach(Entry entry in tableEntries) {
-                string[] parms = null;
-
-                if(entry.param == null && table != mTableBase) {
-                    Data dat;
-                    if(mTableBase.TryGetValue(entry.key, out dat))
-                        parms = dat.param;
-                }
-                else
-                    parms = entry.param;
-
-                table.Add(entry.key, new Data(entry.text, parms));
-            }
-        }
-
-        void LoadCurrentPlatform(TableDataPlatform[] platforms, Dictionary<string, Data> table) {
-            if(platforms == null) return;
-
-            //append platform specific entries
-            TableDataPlatform platform = null;
-            foreach(TableDataPlatform platformDat in platforms) {
-                if(platformDat.platform == Application.platform) {
-                    platform = platformDat;
-                    break;
-                }
-            }
-
-            //override entries based on platform
-            if(platform != null) {
-                List<Entry> platformEntries = fastJSON.JSON.ToObject<List<Entry>>(platform.file.text);
-
-                foreach(Entry platformEntry in platformEntries) {
-                    Data dat;
-                    if(table.TryGetValue(platformEntry.key, out dat)) {
-                        dat.text = platformEntry.text;
-                        if(platformEntry.param != null)
-                            dat.param = platformEntry.param;
-
-                        table[platformEntry.key] = dat;
-                    }
-                    else
-                        table.Add(platformEntry.key, new Data(platformEntry.text, platformEntry.param));
-                }
-            }
-        }
-
-        void LoadCurrentLanguage() {
-            fastJSON.JSON.Parameters.UseExtensions = false;
-
-            //load language
-            int langInd = (int)mCurLanguage;
-
-            TableData dat = langInd < tables.Length ? tables[langInd] : null;
-            if(dat != null) {
-                if(dat.file)
-                    LoadTables(dat.file.text, ref mTable);
-                else
-                    mTable = new Dictionary<string, Data>();
-
-                LoadCurrentPlatform(dat.platforms, mTable);
-            }
-
-            if(localizeCallback != null)
-                localizeCallback();
-        }
-
         protected override void OnInstanceInit() {
             //load base localize
-            if(baseFile) {
-                fastJSON.JSON.Parameters.UseExtensions = false;
-
-                LoadTables(baseFile.text, ref mTableBase);
-
-                LoadCurrentPlatform(basePlatforms, mTableBase);
-            }
+            if(tables != null && tables.Length > 0)
+                tables[0].Generate(null);
         }
     }
 }

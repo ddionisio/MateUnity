@@ -17,7 +17,7 @@ namespace M8 {
         const string editItemControl2 = "EditItem2";
 
         public enum Mode {
-            EditPaths,
+            EditLanguages,
             EditItems,
             SelectComponent
         }
@@ -31,7 +31,7 @@ namespace M8 {
         }
 
         public struct ItemHeader {
-            public Language language;
+            public int language;
             public bool isPlatform;
             public RuntimePlatform platform;
 
@@ -41,7 +41,7 @@ namespace M8 {
                 return IsEqualTo(other.language, other.isPlatform, other.platform);
             }
 
-            public bool IsEqualTo(Language aLanguage, bool aIsPlatform, RuntimePlatform aPlatform) {
+            public bool IsEqualTo(int aLanguage, bool aIsPlatform, RuntimePlatform aPlatform) {
                 return language == aLanguage && isPlatform == aIsPlatform && (!isPlatform || platform == aPlatform);
             }
 
@@ -49,12 +49,8 @@ namespace M8 {
                 if(language == other.language) {
                     return isPlatform ? other.isPlatform ? (int)platform - (int)other.platform : 1 : -1;
                 }
-                else {
-                    if(language == Language.Default) return -1;
-                    else if(other.language == Language.Default) return 1;
-
-                    return (int)language - (int)other.language;
-                }
+                else
+                    return language - other.language;
             }
         }
 
@@ -107,6 +103,7 @@ namespace M8 {
         }
 
         private static Localize mLocalize;
+        private static Localize.TableData[] mLocalizeTable;
 
         private static Item mEditItemBase;
         private static string[] mEditItemBaseKeyTexts;
@@ -115,7 +112,7 @@ namespace M8 {
 
         private Mode mMode;
 
-        private string[] mModeTexts = new string[] { "Edit Paths", "Edit Items", "Select Component" };
+        private string[] mModeTexts = new string[] { "Edit Languages", "Edit Items", "Select Component" };
         private int[] mModeInds = new int[] { 0, 1, 2 };
 
         private Vector2 mEditPathsScroll;
@@ -143,23 +140,16 @@ namespace M8 {
         private TextEditor mTE = new TextEditor();
 
         public static LocalizeConfig Open(Localize localize) {
-            LocalizeConfig win = EditorWindow.GetWindow(typeof(LocalizeConfig)) as LocalizeConfig;
+            SetLocalize(localize, false);
 
-            if(localize) {
-                if(mLocalize != localize && SaveLocalizeObjectPath(localize))
-                    mLocalize = localize;
-            }
-            else if(!mLocalize) {
-                //see if we can load from previous
-                mLocalize = LoadLocalizeObjectFromPath();
-            }
+            LocalizeConfig win = EditorWindow.GetWindow(typeof(LocalizeConfig)) as LocalizeConfig;
 
             if(mLocalize) {
                 //check if base path is already set
-                if(mLocalize.baseFile)
+                if(mLocalizeTable[0].file)
                     win.mMode = Mode.EditItems;
                 else
-                    win.mMode = Mode.EditPaths;
+                    win.mMode = Mode.EditLanguages;
 
                 win.LoadAllItems();
 
@@ -175,13 +165,41 @@ namespace M8 {
             return win;
         }
 
+        private static void SetLocalize(Localize localize, bool forceSet) {
+            if(localize) {
+                if(mLocalize != localize && SaveLocalizeObjectPath(localize))
+                    mLocalize = localize;
+            }
+            else {
+                if(forceSet)
+                    mLocalize = null;
+                else if(!mLocalize) //see if we can load from previous
+                    mLocalize = LoadLocalizeObjectFromPath();
+            }
+
+            if(mLocalize) {
+                var _lt = typeof(Localize).GetField("tables", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                mLocalizeTable = _lt.GetValue(mLocalize) as Localize.TableData[];
+                if(mLocalizeTable == null) {
+                    mLocalizeTable = new Localize.TableData[1];
+                    mLocalizeTable[0] = new Localize.TableData();
+
+                    _lt.SetValue(mLocalize, mLocalizeTable);
+
+                    EditorUtility.SetDirty(mLocalize);
+                }
+            }
+            else
+                mLocalizeTable = null;
+        }
+
         public static string DrawSelector(string key) {
             //load localize if not yet set
             if(!mLocalize) {
                 mLocalize = LoadLocalizeObjectFromPath();
 
                 if(mLocalize) {
-                    mEditItemBase = new Item { header=new ItemHeader { text=mLocalize.baseFile, language=Language.Default, isPlatform=false } };
+                    mEditItemBase = new Item { header=new ItemHeader { text=mLocalizeTable[0].file, language=0, isPlatform=false } };
                     LoadItem(mEditItemBase);
                 }
                 else { //no localize setup
@@ -227,7 +245,7 @@ namespace M8 {
                 mLocalize = LoadLocalizeObjectFromPath();
 
                 if(mLocalize) {
-                    mEditItemBase = new Item { header=new ItemHeader { text=mLocalize.baseFile, language=Language.Default, isPlatform=false } };
+                    mEditItemBase = new Item { header=new ItemHeader { text=mLocalizeTable[0].file, language=0, isPlatform=false } };
                     LoadItem(mEditItemBase);
                 }
                 else //no localize setup
@@ -346,8 +364,8 @@ namespace M8 {
             EditorExt.Utility.DrawSeparator();
 
             switch(mMode) {
-                case Mode.EditPaths:
-                    DoEditPaths();
+                case Mode.EditLanguages:
+                    DoEditLanguages();
                     break;
 
                 case Mode.EditItems:
@@ -382,7 +400,7 @@ namespace M8 {
             }
         }
 
-        void PathItemEdit(Language lang, ref TextAsset textAsset, ref Localize.TableDataPlatform[] platforms) {
+        void PathItemEdit(int lang, ref TextAsset textAsset, ref Localize.TableDataPlatform[] platforms) {
             TextAsset eTextAsset = EditorGUILayout.ObjectField(textAsset, typeof(TextAsset), false) as TextAsset;
             if(textAsset != eTextAsset) {
                 textAsset = eTextAsset;
@@ -435,7 +453,7 @@ namespace M8 {
             EditorGUILayout.EndVertical();
         }
 
-        void AddItemLoad(TextAsset text, Language lang, bool isPlatform, RuntimePlatform platform) {
+        void AddItemLoad(TextAsset text, int lang, bool isPlatform, RuntimePlatform platform) {
             //check if exists
             int itemInd = -1;
             for(int i = 0; i < mEditItemLoads.Count; i++) {
@@ -453,7 +471,7 @@ namespace M8 {
                 mEditItemLoads[itemInd] = itemAdd;
         }
 
-        void RemoveItemLoad(Language lang, bool isPlatform, RuntimePlatform platform) {
+        void RemoveItemLoad(int lang, bool isPlatform, RuntimePlatform platform) {
             for(int i = 0; i < mEditItemLoads.Count; i++) {
                 if(mEditItemLoads[i].IsEqualTo(lang, isPlatform, platform)) {
                     mEditItemLoads.RemoveAt(i);
@@ -462,7 +480,7 @@ namespace M8 {
             }
         }
 
-        void DoEditPaths() {
+        void DoEditLanguages() {
             EditorGUI.BeginChangeCheck();
 
             mEditPathsScroll = GUILayout.BeginScrollView(mEditPathsScroll);
@@ -472,56 +490,72 @@ namespace M8 {
 
             GUILayout.Label("Base");
 
-            PathItemEdit(Language.Default, ref mLocalize.baseFile, ref mLocalize.basePlatforms);
+            mLocalizeTable[0].language = EditorGUILayout.TextField("Language", mLocalizeTable[0].language);
+
+            PathItemEdit(0, ref mLocalizeTable[0].file, ref mLocalizeTable[0].platforms);
 
             EditorGUILayout.EndVertical();
 
             //languages
-            if(mLocalize.tables != null) {
+            if(mLocalizeTable != null) {
                 int removeInd = -1;
 
-                for(int i = 0; i < mLocalize.tables.Length; i++) {
+                for(int i = 1; i < mLocalizeTable.Length; i++) {
                     EditorGUILayout.BeginVertical(GUI.skin.box);
 
                     EditorGUILayout.BeginHorizontal();
 
-                    Language lang = (Language)EditorGUILayout.EnumPopup(mLocalize.tables[i].language);
-
-                    //language changed
-                    if(mLocalize.tables[i].language != lang) {
-                        Language prevLang = mLocalize.tables[i].language;
-                        mLocalize.tables[i].language = lang;
-
-                        //refresh any pending loads
-                        for(int j = 0; j < mEditItemLoads.Count; j++) {
-                            if(mEditItemLoads[j].language == prevLang)
-                                mEditItemLoads[j] = new ItemHeader { text=mEditItemLoads[j].text, language=lang, isPlatform=mEditItemLoads[j].isPlatform, platform=mEditItemLoads[j].platform };
-                        }
-                    }
+                    mLocalizeTable[i].language = EditorGUILayout.TextField("Language", mLocalizeTable[i].language);
 
                     if(EditorExt.Utility.DrawRemoveButton())
                         removeInd = i;
 
                     EditorGUILayout.EndHorizontal();
 
-                    PathItemEdit(mLocalize.tables[i].language, ref mLocalize.tables[i].file, ref mLocalize.tables[i].platforms);
+                    PathItemEdit(i, ref mLocalizeTable[i].file, ref mLocalizeTable[i].platforms);
 
                     EditorGUILayout.EndVertical();
                 }
 
                 if(removeInd != -1) {
-                    M8.ArrayUtil.RemoveAt(ref mLocalize.tables, removeInd);
+                    M8.ArrayUtil.RemoveAt(ref mLocalizeTable, removeInd);
+
+                    //refresh items
+                    for(int j = 0; j < mEditItemLoads.Count; j++) {
+                        if(mEditItemLoads[j].language > removeInd) {
+                            var itm = mEditItemLoads[j];
+                            itm.language--;
+                            mEditItemLoads[j] = itm;
+                        }
+                        else if(mEditItemLoads[j].language == removeInd) {
+                            mEditItemLoads.RemoveAt(j);
+                            j--;
+                        }
+                    }
+
+                    for(int j = 0; j < mEditItems.Count; j++) {
+                        if(mEditItems[j].header.language > removeInd) {
+                            var itm = mEditItems[j].header;
+                            itm.language--;
+                            mEditItems[j].header = itm;
+                        }
+                        else if(mEditItems[j].header.language == removeInd) {
+                            mEditItems.RemoveAt(j);
+                            j--;
+                        }
+                    }
+
                     GUI.changed = true;
                 }
             }
 
-            if(GUILayout.Button("Add Language")) {
-                if(mLocalize.tables != null)
-                    System.Array.Resize(ref mLocalize.tables, mLocalize.tables.Length + 1);
+            if(GUILayout.Button("Add New Language")) {
+                if(mLocalizeTable != null)
+                    System.Array.Resize(ref mLocalizeTable, mLocalizeTable.Length + 1);
                 else
-                    mLocalize.tables = new Localize.TableData[1];
+                    mLocalizeTable = new Localize.TableData[1];
 
-                mLocalize.tables[mLocalize.tables.Length - 1] = new Localize.TableData();
+                mLocalizeTable[mLocalizeTable.Length - 1] = new Localize.TableData();
                 GUI.changed = true;
             }
 
@@ -532,10 +566,10 @@ namespace M8 {
             }
         }
 
-        void LoadItem(TextAsset text, Language lang, bool isPlatform, RuntimePlatform platform) {
+        void LoadItem(TextAsset text, int lang, bool isPlatform, RuntimePlatform platform) {
             Item item = null;
 
-            if(lang == Language.Default && !isPlatform) {
+            if(lang == 0 && !isPlatform) {
                 if(mEditItemBase == null)
                     mEditItemBase = new Item { header=new ItemHeader { text=text, language=lang, isPlatform=isPlatform } };
 
@@ -566,8 +600,11 @@ namespace M8 {
                 List<Localize.Entry> tableEntries = new List<Localize.Entry>();
 
                 foreach(var pair in item.items) {
-                    Localize.Entry entry = new Localize.Entry { key=pair.Key, text=pair.Value.value, param=item != mEditItemBase && pair.Value.paramIsRef ? null : pair.Value.param };
-                    tableEntries.Add(entry);
+                    //if text is empty, do not save if we are not base or platform specific
+                    if((item.header.language == 0 && !item.header.isPlatform) || !string.IsNullOrEmpty(pair.Value.value)) {
+                        Localize.Entry entry = new Localize.Entry { key=pair.Key, text=pair.Value.value, param=item != mEditItemBase && pair.Value.paramIsRef ? null : pair.Value.param };
+                        tableEntries.Add(entry);
+                    }
                 }
 
                 //save
@@ -585,11 +622,11 @@ namespace M8 {
             bool ret = false;
 
             for(int i = 0; i < mEditItems.Count; i++) {
-                if(mEditItems[i].header.language == Language.Default) {
+                if(mEditItems[i].header.language == 0) {
                     if(mEditItems[i].header.isPlatform) {
                         bool found = false;
-                        for(int p = 0; p < mLocalize.basePlatforms.Length; p++) {
-                            if(mLocalize.basePlatforms[p].platform == mEditItems[i].header.platform) {
+                        for(int p = 0; p < mLocalizeTable[0].platforms.Length; p++) {
+                            if(mLocalizeTable[0].platforms[p].platform == mEditItems[i].header.platform) {
                                 found = true;
                                 break;
                             }
@@ -603,11 +640,11 @@ namespace M8 {
                 }
                 else {
                     bool found = false;
-                    for(int l = 0; l < mLocalize.tables.Length; l++) {
-                        if(mLocalize.tables[l].language == mEditItems[i].header.language) {
+                    for(int l = 0; l < mLocalizeTable.Length; l++) {
+                        if(mEditItems[i].header.language == l) {
                             if(mEditItems[i].header.isPlatform) {
-                                for(int p = 0; p < mLocalize.tables[l].platforms.Length; p++) {
-                                    if(mLocalize.tables[l].platforms[p].platform == mEditItems[i].header.platform) {
+                                for(int p = 0; p < mLocalizeTable[l].platforms.Length; p++) {
+                                    if(mLocalizeTable[l].platforms[p].platform == mEditItems[i].header.platform) {
                                         found = true;
                                         break;
                                     }
@@ -635,8 +672,8 @@ namespace M8 {
             mEditItemInds = new int[c];
             for(int i = 0; i < c; i++) {
                 mEditItemTexts[i] = mEditItems[i].header.isPlatform ?
-                                string.Format("{0} ({1})", mEditItems[i].header.language.ToString(), mEditItems[i].header.platform.ToString())
-                              : mEditItems[i].header.language.ToString();
+                                string.Format("{0} ({1})", mLocalizeTable[mEditItems[i].header.language].language, mEditItems[i].header.platform.ToString())
+                              : mLocalizeTable[mEditItems[i].header.language].language;
 
                 mEditItemInds[i] = i;
             }
@@ -680,24 +717,14 @@ namespace M8 {
             mEditItems.Clear();
 
             if(mLocalize) {
-                //base
-                if(mLocalize.baseFile)
-                    LoadItem(mLocalize.baseFile, Language.Default, false, RuntimePlatform.WindowsEditor);
-
-                if(mLocalize.basePlatforms != null) {
-                    for(int i = 0; i < mLocalize.basePlatforms.Length; i++)
-                        LoadItem(mLocalize.basePlatforms[i].file, Language.Default, true, mLocalize.basePlatforms[i].platform);
-                }
-
-                //others
-                if(mLocalize.tables != null) {
-                    for(int i = 0; i < mLocalize.tables.Length; i++) {
-                        if(mLocalize.tables[i].file)
-                            LoadItem(mLocalize.tables[i].file, mLocalize.tables[i].language, false, RuntimePlatform.WindowsEditor);
-                        if(mLocalize.tables[i].platforms != null) {
-                            for(int p = 0; p < mLocalize.tables[i].platforms.Length; p++) {
-                                if(mLocalize.tables[i].platforms[p].file)
-                                    LoadItem(mLocalize.tables[i].platforms[p].file, mLocalize.tables[i].language, true, mLocalize.tables[i].platforms[p].platform);
+                if(mLocalizeTable != null) {
+                    for(int i = 0; i < mLocalizeTable.Length; i++) {
+                        if(mLocalizeTable[i].file)
+                            LoadItem(mLocalizeTable[i].file, i, false, RuntimePlatform.WindowsEditor);
+                        if(mLocalizeTable[i].platforms != null) {
+                            for(int p = 0; p < mLocalizeTable[i].platforms.Length; p++) {
+                                if(mLocalizeTable[i].platforms[p].file)
+                                    LoadItem(mLocalizeTable[i].platforms[p].file, i, true, mLocalizeTable[i].platforms[p].platform);
                             }
                         }
                     }
@@ -772,7 +799,7 @@ namespace M8 {
         }
 
         void DoEditItems() {
-            if(mLocalize.baseFile == null || mEditItemBase == null) {
+            if(mLocalizeTable == null || mLocalizeTable.Length == 0 || mLocalizeTable[0].file == null || mEditItemBase == null) {
                 GUILayout.Label("Base File is not set!");
                 return;
             }
@@ -1006,18 +1033,12 @@ namespace M8 {
         void DoSelectComponent() {
             GUILayout.Label("Grab from a core prefab.");
             Localize localize = EditorGUILayout.ObjectField(mLocalize, typeof(Localize), false) as Localize;
+
             if(mLocalize != localize) {
-                mLocalize = localize;
+                SetLocalize(localize, true);
 
-                if(localize) {
-                    //save if it's from a prefab
-                    if(SaveLocalizeObjectPath(localize)) {
-                        mLocalize = localize;
-
-                        LoadAllItems();
-                        GenerateBaseKeyItems();
-                    }
-                }
+                LoadAllItems();
+                GenerateBaseKeyItems();
 
                 Repaint();
             }
