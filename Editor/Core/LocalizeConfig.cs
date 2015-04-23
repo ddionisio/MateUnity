@@ -28,6 +28,20 @@ namespace M8 {
 
             //editor specifics
             public bool paramIsRef = false; //if true, parameters are set to null upon save.
+
+            public Data Clone() {
+                Data ret = new Data();
+                ret.value = value;
+
+                if(param != null) {
+                    ret.param = new string[param.Length];
+                    System.Array.Copy(param, ret.param, param.Length);
+                }
+
+                ret.paramIsRef = paramIsRef;
+
+                return ret;
+            }
         }
 
         public struct ItemHeader {
@@ -80,13 +94,13 @@ namespace M8 {
                 return ret;
             }
 
-            public void AddNewItem(string newKey) {
+            public void AddNewItem(string newKey, Data copyFrom) {
                 if(items == null)
                     items = new Dictionary<string, Data>();
 
                 changed = true;
 
-                items.Add(newKey, new Data());
+                items.Add(newKey, copyFrom != null ? copyFrom.Clone() : new Data());
             }
         }
 
@@ -136,8 +150,6 @@ namespace M8 {
         private string mEditItemLocalizeParamText = "";
 
         private int mEditItemsCurKeyGen;
-
-        private TextEditor mTE = new TextEditor();
 
         public static LocalizeConfig Open(Localize localize) {
             SetLocalize(localize, false);
@@ -798,6 +810,22 @@ namespace M8 {
             }
         }
 
+        void AddNewItem(string key, Data copyFrom) {
+            mEditItemBase.AddNewItem(key, copyFrom);
+
+            int newCount = mEditItemBaseKeyTexts.Length + 1;
+
+            System.Array.Resize(ref mEditItemBaseKeyTexts, newCount);
+            System.Array.Resize(ref mEditItemBaseKeyInds, newCount);
+
+            mEditItemBaseKeyTexts[newCount - 1] = key;
+            mEditItemBaseKeyInds[newCount - 1] = newCount - 1;
+
+            System.Array.Sort(mEditItemBaseKeyTexts);
+
+            mEditItemBaseKeyInd = System.Array.IndexOf(mEditItemBaseKeyTexts, key);
+        }
+
         void DoEditItems() {
             if(mLocalizeTable == null || mLocalizeTable.Length == 0 || mLocalizeTable[0].file == null || mEditItemBase == null) {
                 GUILayout.Label("Base File is not set!");
@@ -829,19 +857,7 @@ namespace M8 {
                     //change key
                     if(EditorExt.Utility.DrawSimpleButton("√", "Accept")) {
                         if(mEditItemsKeyEditIsNew) {
-                            mEditItemBase.AddNewItem(mEditItemsKeyText);
-
-                            int newCount = mEditItemBaseKeyTexts.Length + 1;
-
-                            System.Array.Resize(ref mEditItemBaseKeyTexts, newCount);
-                            System.Array.Resize(ref mEditItemBaseKeyInds, newCount);
-
-                            mEditItemBaseKeyTexts[newCount - 1] = mEditItemsKeyText;
-                            mEditItemBaseKeyInds[newCount - 1] = newCount - 1;
-
-                            System.Array.Sort(mEditItemBaseKeyTexts);
-
-                            mEditItemBaseKeyInd = System.Array.IndexOf(mEditItemBaseKeyTexts, mEditItemsKeyText);
+                            AddNewItem(mEditItemsKeyText, null);
                         }
                         else {
                             //remove old key
@@ -885,17 +901,24 @@ namespace M8 {
                     }
 
                     //edit key
-                    if(EditorExt.Utility.DrawSimpleButton("E", "Edit")) {
+                    if(EditorExt.Utility.DrawSimpleButton("E", "Edit key text")) {
                         mEditItemsKeyText = mEditItemBaseKeyTexts[mEditItemBaseKeyInd];
                         mEditItemsKeyEdit = true;
                         EditorGUI.FocusTextInControl(editKeyControl);
                     }
 
-                    //copy key text
-                    if(EditorExt.Utility.DrawCopyButton("Copy key text")) {
-                        mTE.content = new GUIContent(mEditItemBaseKeyTexts[mEditItemBaseKeyInd]);
-                        mTE.SelectAll();
-                        mTE.Copy();
+                    //duplicate
+                    if(EditorExt.Utility.DrawSimpleButton("D", "Duplicate")) {
+                        //generate unique key
+                        string key = mEditItemBaseKeyTexts[mEditItemBaseKeyInd];
+                        
+                        string newKey;
+                        int dupInd = 1;
+                        do {
+                            newKey = string.Format("{0}({1})", key, dupInd++);
+                        } while(mEditItemBase.items.ContainsKey(newKey));
+
+                        AddNewItem(newKey, mEditItemBase.items[key]);
                     }
 
                     //add
