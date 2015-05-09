@@ -33,7 +33,7 @@ namespace M8 {
                 return false;
             }
 
-            AssetBundleRequest resReq = mAssetBundle.LoadAsync(path, req.type);
+            AssetBundleRequest resReq = mAssetBundle.LoadAssetAsync(path, req.type);
             ireq.processor = new RequestProcessBundle(resReq);
             return true;
         }

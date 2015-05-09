@@ -46,7 +46,7 @@ namespace M8 {
 
         void Awake() {
             if(!cameraSource)
-                cameraSource = camera;
+                cameraSource = GetComponent<Camera>();
             if(cameraSource)
                 mSource = cameraSource.transform;
         }

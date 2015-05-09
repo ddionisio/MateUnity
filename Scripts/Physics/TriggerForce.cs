@@ -45,11 +45,17 @@ namespace M8 {
         public float lingerDrag = 0.0f;
         public bool lingerUpdateDir = true;
 
+        private Collider mColl;
+
         private HashSet<Collider> mColliders = new HashSet<Collider>();
 
         void OnDisable() {
             mColliders.Clear();
             StopAllCoroutines();
+        }
+
+        void Awake() {
+            mColl = GetComponent<Collider>();
         }
 
         Vector3 GetWorldDir() {
@@ -82,7 +88,7 @@ namespace M8 {
         void OnTriggerEnter(Collider col) {
 
             if(!mColliders.Contains(col)) {
-                Rigidbody body = col.rigidbody;
+                Rigidbody body = col.GetComponent<Rigidbody>();
 
                 if(body != null && !body.isKinematic && (_tags.Length == 0 || CheckTag(col.gameObject.tag))) {
                     //check tags
@@ -153,7 +159,7 @@ namespace M8 {
                             break;
                     }
 
-                    if(collider.enabled && col.enabled && col.gameObject.activeSelf) {
+                    if(mColl.enabled && col.enabled && col.gameObject.activeSelf) {
                         StartCoroutine(DoForceLinger(col, dir));
                     }
                 }
@@ -167,7 +173,7 @@ namespace M8 {
 
             float t = 0;
 
-            Rigidbody body = col.rigidbody;
+            Rigidbody body = col.GetComponent<Rigidbody>();
 
             RigidBodyController ctrl = col.GetComponent<RigidBodyController>();
             if(ctrl) { ctrl.enabled = false; }

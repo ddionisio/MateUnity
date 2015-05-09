@@ -22,52 +22,36 @@ namespace M8 {
 
         public int max = 10;
 
-        private struct SoundPlaying {
-            public SoundData data;
-            public SoundPlayer player;
-            public float startTime;
-            public OnSoundEnd onEndCallback;
-            public object onEndParam;
-        }
-
         private Dictionary<string, SoundData> mSfx;
 
-        private List<SoundPlaying> mSfxPlaying;
+        private CacheList<SoundPlayer> mAvailable;
 
-        private int mNextId = 0;
+        public SoundPlayer Play(string name, OnSoundEnd onEndCallback = null, params object[] onEndParam) {
+            return Play(name, Vector3.zero, onEndCallback, onEndParam);
+        }
 
-        public GameObject Play(string name, OnSoundEnd onEndCallback = null, object onEndParam = null) {
+        public SoundPlayer Play(string name, Vector3 position, OnSoundEnd onEndCallback = null, params object[] onEndParam) {
             SoundData dat;
 
-            GameObject ret = null;
+            SoundPlayer ret = null;
 
             if(mSfx.TryGetValue(name, out dat)) {
                 ret = GetAvailable();
                 if(ret != null) {
-                    ret.audio.clip = dat.clip;
-                    ret.audio.volume = dat.volume;
-                    ret.audio.loop = dat.loop;
+                    ret.transform.position = position;
 
-                    SoundPlayer sp = ret.GetComponent<SoundPlayer>();
-                    sp.playOnActive = false;
-                    sp.defaultVolume = dat.volume;
-                    sp.playDelay = dat.delay;
+                    ret.target.clip = dat.clip;
+                    ret.target.volume = dat.volume;
+                    ret.target.loop = dat.loop;
 
-                    sp.Play();
+                    ret.defaultVolume = dat.volume;
+                    ret.playDelay = dat.delay;
 
-                    SoundPlaying newPlay = new SoundPlaying() {
-                        data = dat,
-                        player = sp,
-                        startTime = dat.realtime ? Time.realtimeSinceStartup : Time.time,
-                        onEndCallback = onEndCallback,
-                        onEndParam = onEndParam
-                    };
+                    if(ret.target.loop)
+                        ret.Play();
+                    else
+                        ret.StartCoroutine(DoSoundPlay(ret, onEndCallback, onEndParam));
 
-                    mSfxPlaying.Add(newPlay);
-
-                    //   sp.StartCoroutine(OnSoundPlayFinish(dat.clip.length + dat.delay, ret, onEndCallback, onEndParam));
-
-                    ret.SetActive(true);
                 }
                 /*else {
                     Debug.LogWarning("Ran out of available sound player for: " + name);
@@ -80,45 +64,34 @@ namespace M8 {
             return ret;
         }
 
-        GameObject GetAvailable() {
-            GameObject ret = null;
+        SoundPlayer GetAvailable() {
+            SoundPlayer ret = mAvailable.Remove();
 
-            Transform thisT = transform;
-
-            for(int i = 0; i < max; i++) {
-                Transform t = thisT.GetChild(mNextId);
-                GameObject go = t.gameObject;
-
-                if(!go.activeSelf) {
-                    ret = go;
-                    ret.SetActive(true);
-
-                    mNextId++; if(mNextId == max) mNextId = 0;
-                    break;
-                }
-                else {
-                    mNextId++; if(mNextId == max) mNextId = 0;
-                }
-            }
+            if(ret)
+                ret.gameObject.SetActive(true);
 
             return ret;
         }
 
         /// <summary>
-        /// Call this with GameObject returned by Play, normally use this for looping clip
+        /// Call this with SoundPlayer returned by Play, normally use this for looping clip
         /// </summary>
-        public void Stop(GameObject go) {
+        public void Stop(SoundPlayer sp) {
             //in case parent is set elsewhere
-            if(go.transform.parent != transform)
-                go.transform.parent = transform;
+            sp.transform.SetParent(transform, false);
 
-            go.SetActive(false);
+            sp.gameObject.SetActive(false);
+
+            mAvailable.Add(sp);
         }
 
-        IEnumerator OnSoundPlayFinish(float delay, GameObject go, OnSoundEnd endCallback, object endParam) {
-            yield return new WaitForSeconds(delay);
+        IEnumerator DoSoundPlay(SoundPlayer sp, OnSoundEnd endCallback, params object[] endParam) {
+            sp.Play();
 
-            Stop(go);
+            while(sp.target.isPlaying)
+                yield return null;
+
+            Stop(sp);
 
             if(endCallback != null)
                 endCallback(endParam);
@@ -133,55 +106,20 @@ namespace M8 {
                 mSfx.Add(sd.name, sd);
 
             //generate pool
-            for(int i = 0; i < max; i++) {
-                CreateSource(i);
-            }
-
-            mSfxPlaying = new List<SoundPlaying>(max);
-
-            mNextId = 0;
+            mAvailable = new CacheList<SoundPlayer>(max);
+            for(int i = 0; i < max; i++)
+                mAvailable.Add(CreateSource(i));
         }
 
-        void Update() {
-            for(int i = 0, max = mSfxPlaying.Count; i < max; i++) {
-                SoundPlaying playing = mSfxPlaying[i];
-
-                bool isDone = false;
-
-                if(!playing.player.gameObject.activeSelf) {
-                    isDone = true;
-                }
-                else if(!playing.data.loop) {
-                    float duration = playing.data.clip.length + playing.data.delay;
-
-                    if(playing.data.realtime) {
-                        isDone = Time.realtimeSinceStartup - playing.startTime >= duration;
-                    }
-                    else {
-                        isDone = Time.time - playing.startTime >= duration;
-                    }
-                }
-
-                if(isDone) {
-                    mSfxPlaying.RemoveAt(i);
-                    max = mSfxPlaying.Count;
-                    i--;
-
-                    Stop(playing.player.gameObject);
-
-                    if(playing.onEndCallback != null)
-                        playing.onEndCallback(playing.onEndParam);
-                }
-            }
-        }
-
-        private GameObject CreateSource(int ind) {
+        private SoundPlayer CreateSource(int ind) {
             GameObject go = new GameObject(ind.ToString(), typeof(AudioSource), typeof(SoundPlayer));
-            go.transform.parent = transform;
+            go.transform.SetParent(transform, false);
+
+            SoundPlayer sp = go.GetComponent<SoundPlayer>();
 
             go.SetActive(false);
 
-            return go;
+            return sp;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace M8 {
         private Rigidbody mBody;
 
         void Awake() {
-            mBody = rigidbody;
+            mBody = GetComponent<Rigidbody>();
         }
 
         void FixedUpdate() {

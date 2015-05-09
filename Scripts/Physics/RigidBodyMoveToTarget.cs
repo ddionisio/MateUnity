@@ -15,13 +15,15 @@ namespace M8 {
         public bool ignoreRotation = false;
         public Vector3 rotOfs;
 
+        private Rigidbody mBody;
+
         private Quaternion mRotQ;
 
 #if UNITY_EDITOR
         // Update is called once per frame
         void Update() {
             if(!Application.isPlaying && target != null) {
-                Collider col = thisCollider != null ? thisCollider : collider;
+                Collider col = thisCollider != null ? thisCollider : GetComponent<Collider>();
                 if(col != null) {
                     Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(col.bounds.center);
 
@@ -49,16 +51,18 @@ namespace M8 {
                     newPos = target.position + target.rotation * offset;
 
                 if(transform.position != newPos)
-                    rigidbody.MovePosition(newPos);
+                    mBody.MovePosition(newPos);
 
                 if(!ignoreRotation)
-                    rigidbody.MoveRotation(mRotQ * target.rotation);
+                    mBody.MoveRotation(mRotQ * target.rotation);
             }
         }
 
         void Awake() {
             if(thisCollider == null)
-                thisCollider = collider;
+                thisCollider = GetComponent<Collider>();
+
+            mBody = GetComponent<Rigidbody>();
 
             mRotQ = Quaternion.Euler(rotOfs);
         }

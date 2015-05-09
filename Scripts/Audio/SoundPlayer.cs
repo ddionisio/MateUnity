@@ -4,12 +4,14 @@ using System.Collections;
 namespace M8 {
     /// <summary>
     /// Base class for playing sounds, need to inherit from this in order to allow global sound settings to affect.
-    /// Put this alongside an audio source
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
     [AddComponentMenu("M8/Audio/SoundPlayer")]
     public class SoundPlayer : MonoBehaviour {
         public const float refRate = 44100.0f;
+
+        [SerializeField]
+        AudioSource _target;
 
         /// <summary>
         /// Play the sound whenever it is enabled
@@ -21,20 +23,31 @@ namespace M8 {
         private bool mStarted = false;
         private float mDefaultVolume = 1.0f;
 
-        public bool isPlaying { get { return audio.isPlaying; } }
+        public AudioSource target {
+            get { return _target; }
+            set {
+                if(_target != value) {
+                    _target = value;
+                    if(_target)
+                        InitTarget();
+                }
+            }
+        }
+
+        public bool isPlaying { get { return _target.isPlaying; } }
         public float defaultVolume { get { return mDefaultVolume; } set { mDefaultVolume = value; } }
 
         public virtual void Play() {
-            audio.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
+            _target.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
 
             if(playDelay > 0.0f)
-                audio.PlayDelayed(playDelay);
+                _target.PlayDelayed(playDelay);
             else
-                audio.Play();
+                _target.Play();
         }
 
         public virtual void Stop() {
-            audio.Stop();
+            _target.Stop();
         }
 
         protected virtual void OnEnable() {
@@ -48,11 +61,10 @@ namespace M8 {
         }
 
         protected virtual void Awake() {
-            audio.playOnAwake = false;
-
-            mDefaultVolume = audio.volume;
-
-            audio.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
+            if(_target)
+                InitTarget();
+            else
+                target = GetComponent<AudioSource>();
 
             UserSettingAudio.instance.changeCallback += UserSettingsChanged;
         }
@@ -65,9 +77,15 @@ namespace M8 {
                 Play();
         }
 
+        void InitTarget() {
+            _target.playOnAwake = false;
+            mDefaultVolume = _target.volume;
+            _target.volume = mDefaultVolume * UserSettingAudio.instance.soundVolume;
+        }
+
         void UserSettingsChanged(UserSettingAudio us) {
             //if(audio.isPlaying)
-            audio.volume = mDefaultVolume * us.soundVolume;
+            _target.volume = mDefaultVolume * us.soundVolume;
         }
     }
 }

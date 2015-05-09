@@ -11,7 +11,7 @@ namespace M8 {
         void OnDrawGizmos() {
 
             if(useCollider) {
-                BoxCollider bc = collider != null ? collider as BoxCollider : null;
+                BoxCollider bc = GetComponent<BoxCollider>();
                 if(bc != null) {
                     bound.center = bc.center;
                     bound.extents = new Vector3(bc.size.x * transform.localScale.x, bc.size.y * transform.localScale.y, bc.size.z * transform.localScale.z) * 0.5f;

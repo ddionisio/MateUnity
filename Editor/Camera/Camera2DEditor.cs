@@ -7,7 +7,7 @@ namespace M8 {
     public class Camera2DEditor : Editor {
         public override void OnInspectorGUI() {
             Camera2D cam = target as Camera2D;
-            Camera unityCam = cam.camera;
+            Camera unityCam = cam.GetComponent<Camera>();
 
             //resolution
             GUILayout.BeginHorizontal();

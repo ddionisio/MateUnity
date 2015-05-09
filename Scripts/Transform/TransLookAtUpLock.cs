@@ -12,6 +12,8 @@ namespace M8 {
 
         public Transform source; //if null, use this transform
 
+        private Renderer mRenderer;
+
         void Awake() {
             if(target == null) {
                 GameObject go = GameObject.FindGameObjectWithTag(targetTag);
@@ -21,11 +23,14 @@ namespace M8 {
 
             if(source == null)
                 source = transform;
+
+            if(visibleCheck)
+                mRenderer = source.GetComponent<Renderer>();
         }
 
         // Update is called once per frame
         void Update() {
-            if(!visibleCheck || source.renderer.isVisible) {
+            if(!visibleCheck || mRenderer.isVisible) {
                 float angle = M8.MathUtil.AngleForwardAxis(
                     source.worldToLocalMatrix,
                     source.position,

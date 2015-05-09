@@ -43,7 +43,7 @@ namespace M8 {
         }
 
         void Awake() {
-            mMat = renderer.material;
+            mMat = GetComponent<Renderer>().material;
             mColorId = Shader.PropertyToID(colorVar);
             mTextureId = Shader.PropertyToID(textureVar);
         }

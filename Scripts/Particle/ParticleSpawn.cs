@@ -36,7 +36,7 @@ namespace M8 {
         }
 
         void Awake() {
-            mParticles = particleSystem;
+            mParticles = GetComponent<ParticleSystem>();
         }
 
         void DoPlay() {

@@ -11,11 +11,16 @@ namespace M8 {
         public Transform target;
         public Vector3 offset;
 
-        // Update is called once per frame
+        private Collider mCollider;
+
+        void Awake() {
+            mCollider = GetComponent<Collider>();
+        }
+
         void Update() {
             if(target != null) {
-                if(collider != null) {
-                    Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(collider.bounds.center);
+                if(mCollider != null) {
+                    Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(mCollider.bounds.center);
 
                     transform.position = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
                 }

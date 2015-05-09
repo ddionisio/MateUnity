@@ -7,6 +7,8 @@ namespace M8 {
         protected abstract void UnitAdded(T unit);
         protected abstract void UnitRemoved(T unit);
 
+        protected Collider mCollider;
+
         private HashSet<T> mUnits = new HashSet<T>();
 
         public HashSet<T> items {
@@ -20,11 +22,15 @@ namespace M8 {
         }
 
         protected virtual void OnEnable() {
-            collider.enabled = true;
+            mCollider.enabled = true;
         }
 
         protected virtual void OnDisable() {
-            collider.enabled = false;
+            mCollider.enabled = false;
+        }
+
+        protected virtual void Awake() {
+            mCollider = GetComponent<Collider>();
         }
 
         void OnTriggerEnter(Collider other) {

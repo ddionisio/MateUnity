@@ -58,7 +58,7 @@ namespace M8 {
             EditorGUILayout.EndHorizontal();
 
             if(serializedObject.ApplyModifiedProperties()) {
-                Renderer r = (target as MonoBehaviour).renderer;
+                Renderer r = (target as MonoBehaviour).GetComponent<Renderer>();
                 if(r) {
                     r.sortingLayerName = sortingLayerName.stringValue;
                     r.sortingOrder = sortingOrder.intValue;

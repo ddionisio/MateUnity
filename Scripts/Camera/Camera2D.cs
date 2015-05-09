@@ -104,15 +104,10 @@ namespace M8 {
         }
 
         void Awake() {
-            mCamera = camera;
+            mCamera = GetComponent<Camera>();
 
             if(!mCamera.orthographic)
                 mCamera.transparencySortMode = transparencySortMode;
-        }
-
-        // Use this for initialization
-        void Start() {
-
         }
 
 #if UNITY_EDITOR

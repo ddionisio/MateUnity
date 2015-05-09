@@ -13,6 +13,7 @@ namespace M8 {
 
         public class CollideInfo {
             public Collider collider;
+            public Rigidbody body;
             public CollisionFlags flag;
             public Vector3 contactPoint;
             public Vector3 normal;
@@ -101,6 +102,7 @@ namespace M8 {
         private float mMoveScale = 1.0f;
 
         protected Rigidbody mBody;
+        protected Collider mColl;
 
         public float moveForward { get { return mCurMoveAxis.y; } set { mCurMoveAxis.y = value; } }
         public float moveSide { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
@@ -385,6 +387,7 @@ namespace M8 {
                 }
 
                 newInfo.collider = whichColl;
+                newInfo.body = whichColl.GetComponent<Rigidbody>();
                 newInfo.contactPoint = p;
                 newInfo.normal = n;
                 newInfo.flag = cf;
@@ -568,7 +571,7 @@ namespace M8 {
         }
 
         protected virtual void Awake() {
-            mBody = rigidbody;
+            mBody = GetComponent<Rigidbody>();
 
             mColls = new CollideInfo[maxColls];
             for(int i = 0; i < maxColls; i++)
@@ -580,11 +583,12 @@ namespace M8 {
             mSlopLimitCos = Mathf.Cos(slopLimit * Mathf.Deg2Rad);
             mAboveLimitCos = Mathf.Cos(aboveLimit * Mathf.Deg2Rad);
 
-            if(collider != null) {
-                if(collider is SphereCollider)
-                    mRadius = ((SphereCollider)collider).radius;
-                else if(collider is CapsuleCollider) {
-                    mCapsuleColl = collider as CapsuleCollider;
+            mColl = GetComponent<Collider>();
+            if(mColl != null) {
+                if(mColl is SphereCollider)
+                    mRadius = ((SphereCollider)mColl).radius;
+                else if(mColl is CapsuleCollider) {
+                    mCapsuleColl = mColl as CapsuleCollider;
                     mRadius = mCapsuleColl.radius;
                 }
             }
@@ -773,7 +777,7 @@ namespace M8 {
                     }
 
                     //for platforms
-                    Rigidbody body = inf.collider.rigidbody;
+                    Rigidbody body = inf.body;
                     if(body != null) {
                         mGroundMoveVel += body.velocity;
                     }

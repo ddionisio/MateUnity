@@ -14,7 +14,7 @@ namespace M8 {
             Vector3 ofs = offset;
 
             if(useCollider) {
-                SphereCollider sc = collider != null ? collider as SphereCollider : null;
+                SphereCollider sc = GetComponent<SphereCollider>();
                 if(sc != null) {
                     radius = sc.radius;
                     ofs += sc.center;

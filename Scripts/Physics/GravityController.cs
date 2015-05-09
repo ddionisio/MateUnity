@@ -29,6 +29,10 @@ namespace M8 {
         private int mGravityFieldCurCount;
 
         private Rigidbody mBody;
+        private Collider mColl;
+
+        public new Rigidbody rigidbody { get { return mBody; } }
+        public new Collider collider { get { return mColl; } }
 
         public bool gravityLocked { get { return mGravityLocked; } set { mGravityLocked = value; } }
         public float startGravity { get { return mStartGravity; } }
@@ -102,8 +106,10 @@ namespace M8 {
         }
 
         protected virtual void Awake() {
-            mBody = rigidbody;
+            mBody = GetComponent<Rigidbody>();
             mBody.useGravity = false;
+
+            mColl = GetComponent<Collider>();
 
             if(startUp == Vector3.zero)
                 startUp = transform.up;

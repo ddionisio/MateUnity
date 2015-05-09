@@ -59,6 +59,23 @@ namespace M8 {
             mCount++;
         }
 
+        /// <summary>
+        /// Remove and return the first available item.
+        /// </summary>
+        public T Remove() {
+            if(mCount > 0) {
+                T ret = mItems[0];
+
+                mItems[0] = mItems[mCount - 1];
+                mCount--;
+                mItems[mCount] = default(T);
+
+                return ret;
+            }
+
+            return default(T);
+        }
+
         public bool Remove(T item) {
             for(int i = 0; i < mCount; i++) {
                 if(mItems[i].Equals(item)) {

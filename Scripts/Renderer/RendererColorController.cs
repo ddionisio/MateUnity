@@ -12,6 +12,8 @@ namespace M8 {
 
         public bool recursive;
 
+        private Renderer mRenderer;
+
         private int mColorId;
         private Color mColor;
         private Material[] mMats;
@@ -48,7 +50,7 @@ namespace M8 {
                             }
                         }
                         else {
-                            Material[] sms = renderer.sharedMaterials;
+                            Material[] sms = mRenderer.sharedMaterials;
                             for(int j = 0; j < sms.Length; j++) {
                                 Material sm = sms[j];
                                 if(sm.HasProperty(mColorId)) {
@@ -60,7 +62,7 @@ namespace M8 {
                                     sms[j] = mat;
                                 }
                             }
-                            renderer.sharedMaterials = sms;
+                            mRenderer.sharedMaterials = sms;
                         }
 
                         mMats = matList.ToArray();
@@ -79,6 +81,10 @@ namespace M8 {
                         DestroyImmediate(mMats[i]);
                 }
             }
+        }
+
+        void Awake() {
+            mRenderer = GetComponent<Renderer>();
         }
 
         // Use this for initialization

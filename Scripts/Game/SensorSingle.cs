@@ -9,6 +9,8 @@ namespace M8 {
         public event Callback stayCallback;
         public event Callback exitCallback;
 
+        protected Collider mCollider;
+
         protected abstract bool UnitVerify(T unit);
 
         protected virtual void UnitEnter(T unit) { }
@@ -16,13 +18,21 @@ namespace M8 {
         protected virtual void UnitExit(T unit) { }
 
         void OnEnable() {
-            if(collider != null)
-                collider.enabled = true;
+            mCollider.enabled = true;
         }
 
         void OnDisable() {
-            if(collider != null)
-                collider.enabled = false;
+            mCollider.enabled = false;
+        }
+
+        void OnDestroy() {
+            enterCallback = null;
+            stayCallback = null;
+            exitCallback = null;
+        }
+
+        void Awake() {
+            mCollider = GetComponent<Collider>();
         }
 
         void OnTriggerEnter(Collider other) {
@@ -56,12 +66,6 @@ namespace M8 {
                     exitCallback(unit);
                 }
             }
-        }
-
-        void OnDestroy() {
-            enterCallback = null;
-            stayCallback = null;
-            exitCallback = null;
         }
     }
 }

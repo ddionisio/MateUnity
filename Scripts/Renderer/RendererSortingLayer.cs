@@ -11,8 +11,9 @@ namespace M8 {
         int _sortingOrder;
 
         void Awake() {
-            renderer.sortingLayerName = _sortingLayerName;
-            renderer.sortingOrder = _sortingOrder;
+            Renderer r = GetComponent<Renderer>();
+            r.sortingLayerName = _sortingLayerName;
+            r.sortingOrder = _sortingOrder;
         }
     }
 }

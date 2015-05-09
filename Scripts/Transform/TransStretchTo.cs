@@ -25,11 +25,22 @@ namespace M8 {
         public bool lockY;
         public bool lockZ = true; //true for 2d
 
+        private Collider mAnchorColl;
+        private Collider mTargetColl;
+
+        void Awake() {
+            if(anchor)
+                mAnchorColl = anchor.GetComponent<Collider>();
+
+            if(target)
+                mTargetColl = target.GetComponent<Collider>();
+        }
+
         // Update is called once per frame
         void Update() {
             if(target) {
-                Vector3 apos = anchor ? anchorColliderCenter && anchor.collider ? anchor.collider.bounds.center : anchor.position : transform.position;
-                Vector3 pos = colliderCenter && target.collider ? target.collider.bounds.center : target.position;
+                Vector3 apos = anchor ? anchorColliderCenter && mAnchorColl ? mAnchorColl.bounds.center : anchor.position : transform.position;
+                Vector3 pos = colliderCenter && mTargetColl ? mTargetColl.bounds.center : target.position;
 
                 Vector3 d = pos - apos;
 

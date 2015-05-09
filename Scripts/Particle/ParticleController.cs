@@ -12,25 +12,27 @@ namespace M8 {
 
         private bool mStarted;
 
+        private ParticleSystem mPS;
+
         public void Play(bool withChildren) {
-            particleSystem.Play(withChildren);
+            mPS.Play(withChildren);
         }
 
         public void Stop() {
-            particleSystem.Stop();
+            mPS.Stop();
         }
 
         public void Pause() {
-            particleSystem.Pause();
+            mPS.Pause();
         }
 
         public void SetLoop(bool loop) {
-            particleSystem.loop = loop;
+            mPS.loop = loop;
         }
 
         void OnEnable() {
-            if(mStarted && playOnEnable && !particleSystem.isPlaying) {
-                particleSystem.Clear();
+            if(mStarted && playOnEnable && !mPS.isPlaying) {
+                mPS.Clear();
 
                 if(playOnEnableDelay > 0.0f)
                     Invoke("DoPlay", playOnEnableDelay);
@@ -41,18 +43,22 @@ namespace M8 {
         }
 
         void DoPlay() {
-            particleSystem.Play();
+            mPS.Play();
         }
 
         void OnDisable() {
             CancelInvoke();
 
             if(mStarted && stopOnDisable) {
-                particleSystem.Stop();
+                mPS.Stop();
 
                 if(clearOnStop)
-                    particleSystem.Clear();
+                    mPS.Clear();
             }
+        }
+
+        void Awake() {
+            mPS = GetComponent<ParticleSystem>();
         }
 
         void Start() {

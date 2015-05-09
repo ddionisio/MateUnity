@@ -32,7 +32,7 @@ namespace M8 {
 
 
         void Awake() {
-            mMat = renderer.material;
+            mMat = GetComponent<Renderer>().material;
             mTrans = transform;
         }
 

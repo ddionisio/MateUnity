@@ -37,7 +37,7 @@ namespace M8 {
             Vector3 c;
             Vector3 s;
 
-            Generate(target ? target : collider, out c, out s);
+            Generate(target ? target : GetComponent<Collider>(), out c, out s);
 
             mColl = gameObject.AddComponent<BoxCollider>();
             mColl.isTrigger = true;
@@ -113,7 +113,7 @@ namespace M8 {
             Vector3 c;
             Vector3 s;
 
-            Collider coll = target ? target : collider;
+            Collider coll = target ? target : GetComponent<Collider>();
             if(coll) {
                 Generate(coll, out c, out s);
 

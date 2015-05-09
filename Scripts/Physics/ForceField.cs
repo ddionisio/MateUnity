@@ -42,7 +42,7 @@ namespace M8 {
         private HashSet<Rigidbody> mBodies = new HashSet<Rigidbody>();
 
         void OnTriggerEnter(Collider t) {
-            Rigidbody body = t.rigidbody;
+            Rigidbody body = t.GetComponent<Rigidbody>();
             if(body != null && !mBodies.Contains(body)) {
                 if(impulse != 0.0f) {
                     Vector3 dir = Vector3.zero;
@@ -78,7 +78,7 @@ namespace M8 {
         }
 
         void OnTriggerExit(Collider t) {
-            Rigidbody body = t.rigidbody;
+            Rigidbody body = t.GetComponent<Rigidbody>();
             if(body != null) {
                 mBodies.Remove(body);
             }
@@ -153,7 +153,7 @@ namespace M8 {
                     if(setDrag)
                         body.drag = drag;
 
-                    Vector3 vel = body.rigidbody.velocity;
+                    Vector3 vel = body.velocity;
                     if(vel.sqrMagnitude < _maxSpeed * _maxSpeed || Vector3.Angle(dir, vel) >= 90.0f) {
                         body.AddForce(dir * force, ForceMode.Force);
                     }

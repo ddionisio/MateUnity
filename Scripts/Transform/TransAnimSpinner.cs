@@ -46,7 +46,7 @@ namespace M8 {
 
         // Use this for initialization
         void Awake() {
-            mBody = rigidbody;
+            mBody = GetComponent<Rigidbody>();
             mEulerAnglesOrig = transform.eulerAngles;
 
             mEulerAnglesDefault = local ? transform.localEulerAngles : mEulerAnglesOrig;
