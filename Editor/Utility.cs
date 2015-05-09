@@ -430,6 +430,24 @@ namespace M8.EditorExt {
             }
         }
 
+        public static string CleanUpPath(string dir, bool appendSlash) {
+            if(string.IsNullOrEmpty(dir))
+                return "";
+
+            string ret = dir.Replace('\\', '/');
+
+            if(appendSlash) {
+                if(ret.LastIndexOf('/') == -1)
+                    ret += '/';
+            }
+            else {
+                if(ret.LastIndexOf('/') == ret.Length - 1)
+                    ret = ret.Substring(0, ret.Length - 1);
+            }
+
+            return ret;
+        }
+
         public static string GetSelectionFolder() {
             if(Selection.activeObject != null) {
                 string path = AssetDatabase.GetAssetPath(Selection.activeObject.GetInstanceID());
