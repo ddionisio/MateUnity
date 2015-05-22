@@ -10,8 +10,6 @@ namespace M8.UI {
 
             InputModule obj = target as InputModule;
 
-            obj.primaryInputMode = (InputModule.InputMode)EditorGUILayout.EnumPopup("Primary Input", obj.primaryInputMode);
-
             obj.playerIndex = EditorGUILayout.IntField("Player Index", obj.playerIndex);
 
             obj.horizontalAxis = EditorExt.InputBinder.GUISelectInputAction("Horizontal Axis", obj.horizontalAxis);

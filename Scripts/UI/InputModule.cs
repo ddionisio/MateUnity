@@ -10,22 +10,11 @@ namespace M8.UI {
     public class InputModule : PointerInputModule {
         private float m_NextAction;
 
-        private InputMode m_CurrentInputMode = InputMode.Mouse;
-
         private Vector2 m_LastMousePosition;
         private Vector2 m_MousePosition;
 
         protected InputModule() { }
 
-        public enum InputMode {
-            Mouse,
-            Buttons
-        }
-
-        public InputMode inputMode {
-            get { return m_CurrentInputMode; }
-        }
-                
         [SerializeField]
         private int m_playerIndex = 0;
 
@@ -55,17 +44,6 @@ namespace M8.UI {
 
         [SerializeField]
         private bool m_AllowActivationOnMobileDevice;
-
-        /// <summary>
-        /// The starting input mode while active
-        /// </summary>
-        [SerializeField]
-        private InputMode m_primaryInputMode = InputMode.Mouse;
-
-        public InputMode primaryInputMode {
-            get { return m_primaryInputMode; }
-            set { m_primaryInputMode = value; }
-        }
 
         public bool allowActivationOnMobileDevice {
             get { return m_AllowActivationOnMobileDevice; }
@@ -138,8 +116,6 @@ namespace M8.UI {
         public override void ActivateModule() {
             base.ActivateModule();
 
-            m_CurrentInputMode = m_primaryInputMode;
-
             m_MousePosition = Input.mousePosition;
             m_LastMousePosition = Input.mousePosition;
 
@@ -149,7 +125,6 @@ namespace M8.UI {
             if(toSelect == null)
                 toSelect = eventSystem.firstSelectedGameObject;
 
-            eventSystem.SetSelectedGameObject(null, GetBaseEventData());
             eventSystem.SetSelectedGameObject(toSelect, GetBaseEventData());
         }
 
@@ -176,7 +151,7 @@ namespace M8.UI {
         /// Process submit keys.
         /// </summary>
         private bool SendSubmitEventToSelectedObject() {
-            if(eventSystem.currentSelectedGameObject == null || m_CurrentInputMode != InputMode.Buttons)
+            if(eventSystem.currentSelectedGameObject == null)
                 return false;
 
             InputManager input = InputManager.instance;
@@ -235,45 +210,10 @@ namespace M8.UI {
             var axisEventData = GetAxisEventData(movement.x, movement.y, 0.6f);
             if(!Mathf.Approximately(axisEventData.moveVector.x, 0f)
                 || !Mathf.Approximately(axisEventData.moveVector.y, 0f)) {
-                if(m_CurrentInputMode != InputMode.Buttons) {
-                    // so if we are chaning to keyboard
-                    m_CurrentInputMode = InputMode.Buttons;
-
-                    // if we are doing a 'fresh selection'
-                    // return as we don't want to do a move.
-                    if(ResetSelection()) {
-                        m_NextAction = time + 1f / m_InputActionsPerSecond;
-                        return true;
-                    }
-                }
                 ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, axisEventData, ExecuteEvents.moveHandler);
             }
             m_NextAction = time + 1f / m_InputActionsPerSecond;
             return axisEventData.used;
-        }
-
-        private bool ResetSelection() {
-            var baseEventData = GetBaseEventData();
-            // clear all selection
-            // & figure out what the mouse is over
-            var lastMousePointer = GetLastPointerEventData(kMouseLeftId);
-            var hoveredObject = lastMousePointer == null ? null : lastMousePointer.pointerEnter;
-            HandlePointerExitAndEnter(lastMousePointer, null);
-            eventSystem.SetSelectedGameObject(null, baseEventData);
-
-            // if we were hovering something...
-            // use this as the basis for the selection
-            bool resetSelection = false;
-            GameObject toSelect = ExecuteEvents.GetEventHandler<ISelectHandler>(hoveredObject);
-            if(toSelect == null) {
-                // if there was no hover
-                // then use the last selected
-                toSelect = eventSystem.lastSelectedGameObject;
-                resetSelection = true;
-            }
-
-            eventSystem.SetSelectedGameObject(toSelect, baseEventData);
-            return resetSelection;
         }
 
         /// <summary>
@@ -307,17 +247,11 @@ namespace M8.UI {
             }
         }
 
-        private bool UseMouse(bool pressed, bool released, PointerEventData pointerData) {
-            if(m_CurrentInputMode == InputMode.Mouse)
+        private static bool UseMouse(bool pressed, bool released, PointerEventData pointerData) {
+            if(pressed || released || pointerData.IsPointerMoving() || pointerData.IsScrolling())
                 return true;
 
-            // On mouse action switch back to mouse control scheme
-            if(pressed || released) {
-                m_CurrentInputMode = InputMode.Mouse;
-                eventSystem.SetSelectedGameObject(null);
-            }
-
-            return m_CurrentInputMode == InputMode.Mouse;
+            return false;
         }
 
         private bool SendUpdateEventToSelectedObject() {
@@ -406,11 +340,11 @@ namespace M8.UI {
                 pointerEvent.eligibleForClick = false;
                 pointerEvent.pointerPress = null;
                 pointerEvent.rawPointerPress = null;
-                pointerEvent.dragging = false;
 
-                if(pointerEvent.pointerDrag != null)
+                if(pointerEvent.pointerDrag != null && pointerEvent.dragging)
                     ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
 
+                pointerEvent.dragging = false;
                 pointerEvent.pointerDrag = null;
 
                 // redo pointer enter / exit to refresh state
