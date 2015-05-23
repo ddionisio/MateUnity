@@ -483,6 +483,10 @@ namespace M8.EditorExt {
             return string.Format("m8.{0}.{1}.{2}", GetProjectName(), klass, field);
         }
 
+        public static string PreferenceGlobalKey(string klass, string field) {
+            return string.Format("m8.{0}.{1}", klass, field);
+        }
+
         public static void CreateAssetToCurrentSelectionFolder<T>() where T : ScriptableObject {
             var asset = ScriptableObject.CreateInstance<T>();
 

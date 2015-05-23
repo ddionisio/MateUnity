@@ -9,11 +9,9 @@ using System.Text.RegularExpressions;
 
 namespace M8.EditorExt {
     public class InputBinder : EditorWindow {
-        public const string PrefKlass = "InputBinder";
-        public const string PrefFileMapper = "File";
-
-        public const string PrefScriptFolderPath = "ScriptFolder";
-        public const string PrefScriptGenerate = "ScriptGenerate";
+        public const string projConfigTextAction = "input.textAction";
+        public const string projConfigScriptFolder = "input.scriptFolder";
+        public const string projConfigScriptGenerate = "input.scriptGenerate";
 
         private static List<string> mActions = null;
 
@@ -37,9 +35,9 @@ namespace M8.EditorExt {
             get {
                 if(mActions == null) {
                     //try to load it
-                    string path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlass, PrefFileMapper), "");
-                    if(!string.IsNullOrEmpty(path))
-                        GetInputActions(AssetDatabase.LoadAssetAtPath(path, typeof(TextAsset)) as TextAsset);
+                    TextAsset text = ProjectConfig.GetObject<TextAsset>(projConfigTextAction);
+                    if(text)
+                        GetInputActions(text);
                 }
 
                 return mActions;
@@ -116,7 +114,7 @@ namespace M8.EditorExt {
             }
         }
 
-        public const string PrefTextBinder = "Text";
+        public const string projConfigTextBind = "input.textBind";
 
         private static bool mBindingFoldout;
 
@@ -231,34 +229,23 @@ namespace M8.EditorExt {
 
         void OnEnable() {
             //mapper
-            string path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlass, PrefFileMapper), "");
-            if(!string.IsNullOrEmpty(path)) {
-                Object obj = AssetDatabase.LoadAssetAtPath(path, typeof(TextAsset));
-                if(obj != null)
-                    mTextFileMapper = (TextAsset)obj;
-            }
-
-            mGenerateScriptFolder = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlass, PrefScriptFolderPath), mGenerateScriptFolder);
-            mGenerateScript = EditorPrefs.GetBool(Utility.PreferenceKey(PrefKlass, PrefScriptGenerate), false);
+            mTextFileMapper = ProjectConfig.GetObject<TextAsset>(projConfigTextAction);
+            mGenerateScriptFolder = ProjectConfig.GetString(projConfigScriptFolder, mGenerateScriptFolder);
+            mGenerateScript = ProjectConfig.GetInt(projConfigScriptGenerate) > 0;
 
             //binder
-            path = EditorPrefs.GetString(Utility.PreferenceKey(PrefKlass, PrefTextBinder), "");
-            if(!string.IsNullOrEmpty(path)) {
-                Object obj = AssetDatabase.LoadAssetAtPath(path, typeof(TextAsset));
-                if(obj != null)
-                    mTextFileBinder = (TextAsset)obj;
-            }
+            mTextFileBinder = ProjectConfig.GetObject<TextAsset>(projConfigTextBind);
         }
 
         void OnDisable() {
             if(mTextFileMapper != null)
-                EditorPrefs.SetString(Utility.PreferenceKey(PrefKlass, PrefFileMapper), AssetDatabase.GetAssetPath(mTextFileMapper));
+                ProjectConfig.SetObject(projConfigTextAction, mTextFileMapper);
 
             if(mTextFileBinder != null)
-                EditorPrefs.SetString(Utility.PreferenceKey(PrefKlass, PrefTextBinder), AssetDatabase.GetAssetPath(mTextFileBinder));
+                ProjectConfig.SetObject(projConfigTextBind, mTextFileBinder);
 
-             EditorPrefs.SetString(Utility.PreferenceKey(PrefKlass, PrefScriptFolderPath), mGenerateScriptFolder);
-             EditorPrefs.SetBool(Utility.PreferenceKey(PrefKlass, PrefScriptGenerate), mGenerateScript);
+            ProjectConfig.SetString(projConfigScriptFolder, mGenerateScriptFolder);
+            ProjectConfig.SetInt(projConfigScriptGenerate, mGenerateScript ? 1 : 0);
         }
 
         void OnGUI() {

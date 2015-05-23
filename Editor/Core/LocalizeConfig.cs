@@ -6,9 +6,7 @@ using System.IO;
 
 namespace M8 {
     public class LocalizeConfig : EditorWindow {
-        public const string PrefKlass = "Localize";
-        public const string PrefFileMapper = "localize";
-
+        public const string projConfigKey = "localize";
         public const float valueTextAreaMinHeight = 150f;
         public const float valueTextAreaMaxHeight = 500f;
 
@@ -280,9 +278,9 @@ namespace M8 {
                 switch(prefabType) {
                     case PrefabType.Prefab:
                     case PrefabType.PrefabInstance:
-                        Object obj = PrefabUtility.GetPrefabObject(l.gameObject);
+                        Object obj = PrefabUtility.FindPrefabRoot(l.gameObject);
                         if(obj)//save path
-                            EditorPrefs.SetString(EditorExt.Utility.PreferenceKey(PrefKlass, PrefFileMapper), AssetDatabase.GetAssetPath(obj));
+                            ProjectConfig.SetObject(projConfigKey, obj);
                         else
                             Debug.LogWarning(string.Format("{0} needs to be from a prefab or prefab instance.", l.name));
                         return true;
@@ -296,13 +294,10 @@ namespace M8 {
         }
 
         static Localize LoadLocalizeObjectFromPath() {
-            string path = EditorPrefs.GetString(EditorExt.Utility.PreferenceKey(PrefKlass, PrefFileMapper), "");
-            if(!string.IsNullOrEmpty(path)) {
-                GameObject go = AssetDatabase.LoadAssetAtPath(path, typeof(GameObject)) as GameObject;
-                if(go != null) {
-                    Localize[] locs = go.GetComponentsInChildren<Localize>(true);
-                    return locs.Length > 0 ? locs[0] : null;
-                }
+            GameObject go = ProjectConfig.GetObject<GameObject>(projConfigKey);
+            if(go != null) {
+                Localize[] locs = go.GetComponentsInChildren<Localize>(true);
+                return locs.Length > 0 ? locs[0] : null;
             }
 
             return null;
