@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>fastJSON</name>
+    </assembly>
+    <members>
+        <member name="F:fastJSON.JSONParameters.UseOptimizedDatasetSchema">
+            <summary>
+            Use the optimized fast Dataset Schema format (default = True)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.UseFastGuid">
+            <summary>
+            Use the fast GUID format (default = True)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.SerializeNullValues">
+            <summary>
+            Serialize null values to the output (default = True)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.UseUTCDateTime">
+            <summary>
+            Use the UTC date format (default = True)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.ShowReadOnlyProperties">
+            <summary>
+            Show the readonly properties of types in the output (default = False)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.UsingGlobalTypes">
+            <summary>
+            Use the $types extension to optimise the output json (default = True)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.IgnoreCaseOnDeserialize">
+            <summary>
+            Ignore case when processing json and deserializing 
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.EnableAnonymousTypes">
+            <summary>
+            Anonymous types have read only properties 
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.UseExtensions">
+            <summary>
+            Enable fastJSON extensions $types, $type, $map (default = True)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.UseEscapedUnicode">
+            <summary>
+            Use escaped unicode i.e. \uXXXX format for non ASCII characters (default = True)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.KVStyleStringDictionary">
+            <summary>
+            Output string key dictionaries as "k"/"v" format (default = False) 
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.UseValuesOfEnums">
+            <summary>
+            Output Enum values instead of names (default = False)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.IgnoreAttributes">
+            <summary>
+            Ignore attributes to check for (default : XmlIgnoreAttribute)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.ParametricConstructorOverride">
+            <summary>
+            If you have parametric and no default constructor for you classes (default = False)
+            
+            IMPORTANT NOTE : If True then all initial values within the class will be ignored and will be not set
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.DateTimeMilliseconds">
+            <summary>
+            Serialize DateTime milliseconds i.e. yyyy-MM-dd HH:mm:ss.nnn (default = false)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.SerializerMaxDepth">
+            <summary>
+            Maximum depth for circular references in inline mode (default = 20)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.InlineCircularReferences">
+            <summary>
+            Inline circular or already seen objects instead of replacement with $i (default = False) 
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSONParameters.SerializeToLowerCaseNames">
+            <summary>
+            Save property/field names as lowercase (default = false)
+            </summary>
+        </member>
+        <member name="F:fastJSON.JSON.Parameters">
+            <summary>
+            Globally set-able parameters for controlling the serializer
+            </summary>
+        </member>
+        <member name="M:fastJSON.JSON.ToNiceJSON(System.Object,fastJSON.JSONParameters)">
+            <summary>
+            Create a formatted json string (beautified) from an object
+            </summary>
+            <param name="obj"></param>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.ToJSON(System.Object)">
+            <summary>
+            Create a json representation for an object
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.ToJSON(System.Object,fastJSON.JSONParameters)">
+            <summary>
+            Create a json representation for an object with parameter override on this call
+            </summary>
+            <param name="obj"></param>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.Parse(System.String)">
+            <summary>
+            Parse a json string and generate a Dictionary&lt;string,object&gt; or List&lt;object&gt; structure
+            </summary>
+            <param name="json"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.ToObject``1(System.String)">
+            <summary>
+            Create a typed generic object from the json
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="json"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.ToObject``1(System.String,fastJSON.JSONParameters)">
+            <summary>
+            Create a typed generic object from the json with parameter override on this call
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="json"></param>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.ToObject(System.String)">
+            <summary>
+            Create an object from the json
+            </summary>
+            <param name="json"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.ToObject(System.String,fastJSON.JSONParameters)">
+            <summary>
+            Create an object from the json with parameter override on this call
+            </summary>
+            <param name="json"></param>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.ToObject(System.String,System.Type)">
+            <summary>
+            Create an object of type from the json
+            </summary>
+            <param name="json"></param>
+            <param name="type"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.FillObject(System.Object,System.String)">
+            <summary>
+            Fill a given object with the json represenation
+            </summary>
+            <param name="input"></param>
+            <param name="json"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.DeepCopy(System.Object)">
+            <summary>
+            Deep copy an object i.e. clone to a new object
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.DeepCopy``1(``0)">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.Beautify(System.String)">
+            <summary>
+            Create a human readable string from the json 
+            </summary>
+            <param name="input"></param>
+            <returns></returns>
+        </member>
+        <member name="M:fastJSON.JSON.RegisterCustomType(System.Type,fastJSON.Serialize,fastJSON.Deserialize)">
+            <summary>
+            Register custom type handlers for your own types not natively handled by fastJSON
+            </summary>
+            <param name="type"></param>
+            <param name="serializer"></param>
+            <param name="deserializer"></param>
+        </member>
+        <member name="M:fastJSON.JSON.ClearReflectionCache">
+            <summary>
+            Clear the internal reflection cache so you can start from new (you will loose performance)
+            </summary>
+        </member>
+        <member name="T:fastJSON.JsonParser">
+            <summary>
+            This class encodes and decodes JSON strings.
+            Spec. details, see http://www.json.org/
+            </summary>
+        </member>
+    </members>
+</doc>
