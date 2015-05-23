@@ -278,7 +278,7 @@ namespace M8 {
                 switch(prefabType) {
                     case PrefabType.Prefab:
                     case PrefabType.PrefabInstance:
-                        Object obj = PrefabUtility.FindPrefabRoot(l.gameObject);
+                        Object obj = PrefabUtility.GetPrefabParent(l.gameObject);
                         if(obj)//save path
                             ProjectConfig.SetObject(projConfigKey, obj);
                         else
