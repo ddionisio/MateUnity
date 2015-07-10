@@ -1,9 +1,11 @@
 ﻿Shader "Hidden/Internal-DeferredShading-CrossHatch" {
 Properties {
     _CrossHatchDeferredTexture("Cross Hatch Lookup", 2D) = "" {}
-    _CrossHatchScale("Cross Hatch Scale", Float) = 1
-    _CrossHatchTriplanarSharpness("Cross Hatch Tri-Planar Sharpness", Float) = 1
 
+    _CrossHatchDeferredLightRamp("Light Ramp", 2D) = "" {}
+
+    _CrossHatchDeferredLightOffset("Light Offset", 2D) = "" {}
+    
 	_LightTexture0 ("", any) = "" {}
 	_LightTextureB0 ("", 2D) = "" {}
 	_ShadowMapTexture ("", any) = "" {}
@@ -35,38 +37,99 @@ CGPROGRAM
 #include "UnityStandardBRDF.cginc"
 
 sampler2D _CrossHatchDeferredTexture;
-float _CrossHatchScale;
-float _CrossHatchTriplanarSharpness;
+
+sampler2D _CrossHatchDeferredLightRamp;
 
 sampler2D _CameraGBufferTexture0;
 sampler2D _CameraGBufferTexture1;
 sampler2D _CameraGBufferTexture2;
 
-half4 CrossWeights(half shade) {
-    half4 shadingFactor = half4(shade.xxxx);
-    const half4 leftRoot = half4(-0.25, 0.0, 0.25, 0.5);
-    const half4 rightRoot = half4(0.25, 0.5, 0.75, 1.0);
+//modified PBS with separate diffuse and specular output
+void PBS_1_DiffuseSpec(half3 specColor, half oneMinusReflectivity, half oneMinusRoughness,
+	half3 normal, half3 viewDir, UnityLight light, UnityIndirect gi,
+    out half3 diffOut, out half3 specOut)
+{
+	half roughness = 1-oneMinusRoughness;
+	half3 halfDir = Unity_SafeNormalize (light.dir + viewDir);
 
-    return 4.0 * clamp(shadingFactor - leftRoot, 0, rightRoot - shadingFactor);
+	half nl = light.ndotl;
+	half nh = BlinnTerm (normal, halfDir);
+	half nv = DotClamped (normal, viewDir);
+	half lv = DotClamped (light.dir, viewDir);
+	half lh = DotClamped (light.dir, halfDir);
+
+#if UNITY_BRDF_GGX
+	half V = SmithGGXVisibilityTerm (nl, nv, roughness);
+	half D = GGXTerm (nh, roughness);
+#else
+	half V = SmithBeckmannVisibilityTerm (nl, nv, roughness);
+	half D = NDFBlinnPhongNormalizedTerm (nh, RoughnessToSpecPower (roughness));
+#endif
+
+	half nlPow5 = Pow5 (1-nl);
+	half nvPow5 = Pow5 (1-nv);
+	half Fd90 = 0.5 + 2 * lh * lh * roughness;
+	half disneyDiffuse = (1 + (Fd90-1) * nlPow5) * (1 + (Fd90-1) * nvPow5);
+	
+	// HACK: theoretically we should divide by Pi diffuseTerm and not multiply specularTerm!
+	// BUT 1) that will make shader look significantly darker than Legacy ones
+	// and 2) on engine side "Non-important" lights have to be divided by Pi to in cases when they are injected into ambient SH
+	// NOTE: multiplication by Pi is part of single constant together with 1/4 now
+
+	half specularTerm = max(0, (V * D * nl) * unity_LightGammaCorrectionConsts_PIDiv4);// Torrance-Sparrow model, Fresnel is applied later (for optimization reasons)
+    half grazingTerm = saturate(oneMinusRoughness + (1-oneMinusReflectivity));
+	
+    diffOut = disneyDiffuse * nl;
+    specOut = specularTerm * light.color * FresnelTerm (specColor, lh) + gi.specular * FresnelLerp (specColor, grazingTerm, nv);
 }
 
-half4 CrossTex(float3 position, float3 normal) {
-    float3 weights = pow(abs(normal), _CrossHatchTriplanarSharpness);
+float3 TriPlanarWeights(float3 normal) {
+    const float _TriplanarSharpness = 1;
+
+    float3 weights = pow(abs(normal), _TriplanarSharpness);
     weights /= (weights.x + weights.y + weights.z);
 
-    half4 xTex = tex2D(_CrossHatchDeferredTexture, position.yz*_CrossHatchScale);
-    half4 yTex = tex2D(_CrossHatchDeferredTexture, position.xz*_CrossHatchScale);
-    half4 zTex = tex2D(_CrossHatchDeferredTexture, position.xy*_CrossHatchScale);
+    return weights;
+}
+
+half4 Tex2DTriPlanar(sampler2D tex, float3 position, float3 weights, float scale) {
+    half4 xTex = tex2D(tex, position.yz*scale);
+    half4 yTex = tex2D(tex, position.xz*scale);
+    half4 zTex = tex2D(tex, position.xy*scale);
 
     return xTex*weights.x + yTex*weights.y + zTex*weights.z;
 }
 
-half CrossShade(half4 hatch, half4 weights) {
-    half t = saturate(weights.x+weights.y+weights.z+weights.w);
+half CrossShade(half shade, float3 position, half3 texWeights) {
+    const float _CrossHatchScale = 1;
 
-    half shade = lerp(1, dot(weights, hatch.abgr), t);
+    //grab hatch info
+    half4 hatch = Tex2DTriPlanar(_CrossHatchDeferredTexture, position, texWeights, _CrossHatchScale);
 
-    return shade;
+    //compute weights
+    half4 shadingFactor = half4(shade.xxxx);
+    const half4 leftRoot = half4(-0.25, 0.0, 0.25, 0.5);
+    const half4 rightRoot = half4(0.25, 0.5, 0.75, 1.0);
+
+    half4 weights = 4.0 * max(0, min(rightRoot - shadingFactor, shadingFactor - leftRoot));
+
+    //final shade
+
+    return dot(weights, hatch.abgr) + 4.0*clamp(shade - 0.75, 0, 0.25);
+}
+
+half LightOffset(half lum) {
+    return lum;
+}
+
+half3 Posterize(half3 color) {
+    const float _CrossHatchPosterizeGamma = 0.6;
+    const float _CrossHatchPosterizeColors = 6; 
+
+    half3 ret = pow(color, _CrossHatchPosterizeGamma);
+    ret = floor(ret*_CrossHatchPosterizeColors) / _CrossHatchPosterizeColors;
+   
+    return pow(ret, 1.0/_CrossHatchPosterizeGamma);
 }
 		
 half4 CalculateLight (unity_v2f_deferred i)
@@ -100,18 +163,33 @@ half4 CalculateLight (unity_v2f_deferred i)
 
     //half4 res = UNITY_BRDF_PBS (baseColor, specColor, oneMinusReflectivity, oneMinusRoughness, normalWorld, -eyeVec, light, ind);
 
-    //assuming a white surface to grab 'luminance'
-    half4 lum = UNITY_BRDF_PBS (half3(1,1,1), 0, oneMinusReflectivity, oneMinusRoughness, normalWorld, -eyeVec, light, ind);
+    //compute light
+    half3 diffuseTerm;
+    half3 specular;
 
-    half lumV = Luminance(lum);
+    PBS_1_DiffuseSpec(specColor, oneMinusReflectivity, oneMinusRoughness, normalWorld, -eyeVec, light, ind, diffuseTerm, specular);
 
-    half4 crossW = CrossWeights(lumV);
+    ////////////////
 
-    half4 crossInfo = CrossTex(wpos, normalWorld);
+    //grab texture uv weights
+    float3 uvWeights = TriPlanarWeights(normalWorld);
 
-    half shade = CrossShade(crossInfo, crossW);
+    //--lighting
 
-    half4 res = half4(shade.xxx, 1);
+    //offset diffuse
+    half diffuseTermOfs = LightOffset(diffuseTerm.r);
+
+    half3 l = ind.diffuse + light.color*tex2D(_CrossHatchDeferredLightRamp, half2(diffuseTermOfs, 0.5)); //lum*tex2D(_CrossHatchDeferredLightRamp, half2(lumVOfs, 0.5));
+
+    //--cross-hatch
+    half lumV = Luminance(light.color*diffuseTerm);
+    half cross = CrossShade(lumV, wpos, uvWeights);
+
+    //TODO: specular
+    
+    ////////////////
+
+    half4 res = half4(baseColor*l*cross, 1);
 
 	return res;
 }
