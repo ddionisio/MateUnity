@@ -40,6 +40,8 @@ sampler2D _CrossHatchDeferredTexture;
 
 sampler2D _CrossHatchDeferredLightRamp;
 
+sampler2D _CrossHatchDeferredLightOffset;
+
 sampler2D _CameraGBufferTexture0;
 sampler2D _CameraGBufferTexture1;
 sampler2D _CameraGBufferTexture2;
@@ -118,8 +120,12 @@ half CrossShade(half shade, float3 position, half3 texWeights) {
     return dot(weights, hatch.abgr) + 4.0*clamp(shade - 0.75, 0, 0.25);
 }
 
-half LightOffset(half lum) {
-    return lum;
+half Displacement(half lum, float3 position, half3 texWeights) {
+    const float _CrossHatchLightOffsetScale = 0.1;
+    const float _CrossHatchLightOffsetAmount = -0.15;
+
+    half4 ofs = Tex2DTriPlanar(_CrossHatchDeferredLightOffset, position, texWeights, _CrossHatchLightOffsetScale);
+    return saturate(lum + ofs.x*_CrossHatchLightOffsetAmount);
 }
 
 half3 Posterize(half3 color) {
@@ -177,7 +183,7 @@ half4 CalculateLight (unity_v2f_deferred i)
     //--lighting
 
     //offset diffuse
-    half diffuseTermOfs = LightOffset(diffuseTerm.r);
+    half diffuseTermOfs = Displacement(diffuseTerm.r, wpos, uvWeights);
 
     half3 l = ind.diffuse + light.color*tex2D(_CrossHatchDeferredLightRamp, half2(diffuseTermOfs, 0.5)); //lum*tex2D(_CrossHatchDeferredLightRamp, half2(lumVOfs, 0.5));
 
