@@ -13,7 +13,6 @@ namespace M8 {
 
         public class CollideInfo {
             public Collider collider;
-            public Rigidbody body;
             public CollisionFlags flag;
             public Vector3 contactPoint;
             public Vector3 normal;
@@ -73,15 +72,13 @@ namespace M8 {
         //protected Dictionary<Collider, List<CollideInfo>> mColls = new Dictionary<Collider, List<CollideInfo>>(16);
 
         protected CollisionFlags mCollFlags;
-        protected int mCollGroundLayerMask = 0;
+        protected int mCollLayerMask = 0; //layer masks that are colliding us (ground and side)
 
         private float mSlopLimitCos;
         private float mAboveLimitCos;
 
         private bool mIsSlopSlide;
         private Vector3 mSlopNormal;
-
-        private Vector3 mGroundMoveVel;
 
         private Vector3 mLocalVelocity;
 
@@ -93,7 +90,7 @@ namespace M8 {
 
         private CapsuleCollider mCapsuleColl;
 
-        private bool mLockDrag = false;
+        private int mLockDragCounter = 0;
         private bool mStanding = false;
         private float mStandingLastTime;
 
@@ -110,9 +107,9 @@ namespace M8 {
         public bool isSlopSlide { get { return mIsSlopSlide; } }
 
         /// <summary>
-        /// Use this to override the rigidbody's drag such that ground/air/stand drag is ignored
+        /// Use this to override the rigidbody's drag such that ground/air/stand drag is ignored, set to 0 to unlock
         /// </summary>
-        public bool lockDrag { get { return mLockDrag; } set { mLockDrag = value; } }
+        public int lockDragCounter { get { return mLockDragCounter; } set { mLockDragCounter = value; if(mLockDragCounter < 0) mLockDragCounter = 0; } }
 
         public Vector3 moveDir { get { return mCurMoveDir; } }
         public CollisionFlags collisionFlags { get { return mCollFlags; } }
@@ -126,7 +123,6 @@ namespace M8 {
 
         public bool isUnderWater { get { return mWaterCounter > 0; } }
         public float radius { get { return mRadius; } }
-        public Vector3 groundMoveVelocity { get { return mGroundMoveVel; } }
         public GravityController gravityController { get { return mGravCtrl; } }
         public Vector3 localVelocity {
             get { return mLocalVelocity; }
@@ -207,9 +203,8 @@ namespace M8 {
 
         public virtual void ResetCollision() {
             mCollFlags = CollisionFlags.None;
-            mCollGroundLayerMask = 0;
+            mCollLayerMask = 0;
             mIsSlopSlide = false;
-            mGroundMoveVel = Vector3.zero;
             mCollCount = 0;
             mWaterCounter = 0;
             mCurMoveAxis = Vector2.zero;
@@ -387,7 +382,6 @@ namespace M8 {
                 }
 
                 newInfo.collider = whichColl;
-                newInfo.body = whichColl.GetComponent<Rigidbody>();
                 newInfo.contactPoint = p;
                 newInfo.normal = n;
                 newInfo.flag = cf;
@@ -624,13 +618,13 @@ namespace M8 {
             if(mCurMoveAxis != Vector2.zero) {
                 //move
                 if(isGrounded) {
-                    if(!mLockDrag)
+                    if(mLockDragCounter == 0)
                         mBody.drag = isUnderWater ? waterDrag : groundDrag;
 
                     Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveForce);
                 }
                 else {
-                    if(!mLockDrag)
+                    if(mLockDragCounter == 0)
                         mBody.drag = isUnderWater ? waterDrag : airDrag;
 
                     Move(dirHolder.rotation, Vector3.forward, Vector3.right, mCurMoveAxis, moveAirForce);
@@ -641,8 +635,8 @@ namespace M8 {
             else {
                 mCurMoveDir = Vector3.zero;
 
-                if(!mLockDrag && !mBody.isKinematic)
-                    mBody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollGroundLayerMask) == 0 ? groundDrag : GetStandDrag() : airDrag;
+                if(mLockDragCounter == 0 && !mBody.isKinematic)
+                    mBody.drag = isUnderWater ? waterDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollLayerMask) == 0 ? groundDrag : GetStandDrag() : airDrag;
             }
         }
 
@@ -723,8 +717,9 @@ namespace M8 {
         }
 
         protected virtual bool CanMove(Vector3 dir, float maxSpeed) {
-            Vector3 vel = mBody.velocity - mGroundMoveVel;
-            float sqrMag = vel.sqrMagnitude;
+            //only check the x/z velocity
+            Vector2 localVel2 = new Vector2(mLocalVelocity.x, mLocalVelocity.z);
+            float sqrMag = localVel2.sqrMagnitude;
 
             bool ret = sqrMag < maxSpeed * maxSpeed;
 
@@ -739,9 +734,8 @@ namespace M8 {
 
         protected virtual void RefreshCollInfo() {
             mCollFlags = CollisionFlags.None;
-            mCollGroundLayerMask = 0;
+            mCollLayerMask = 0;
             mIsSlopSlide = false;
-            mGroundMoveVel = Vector3.zero;
 
             bool groundNoSlope = false; //prevent slope slide if we are also touching a non-slidable ground (standing on the corner base of slope)
 
@@ -776,13 +770,7 @@ namespace M8 {
                         }
                     }
 
-                    //for platforms
-                    Rigidbody body = inf.body;
-                    if(body != null) {
-                        mGroundMoveVel += body.velocity;
-                    }
-
-                    mCollGroundLayerMask |= 1 << inf.collider.gameObject.layer;
+                    mCollLayerMask |= 1 << inf.collider.gameObject.layer;
                 }
             }
 
