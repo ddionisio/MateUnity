@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: c7410cb974f16cc48b765b5cf8deb2dd
+timeCreated: 1435886311
+licenseType: Free
+ShaderImporter:
+  defaultTextures:
+  - _CrossHatchDeferredTexture: {instanceID: 0}
+  - _LightTexture0: {instanceID: 0}
+  - _LightTextureB0: {instanceID: 0}
+  - _ShadowMapTexture: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
