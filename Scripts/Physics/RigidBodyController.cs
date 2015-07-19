@@ -1,3 +1,5 @@
+//Note: for debug display, add project definition: MATE_PHYSICS_DEBUG
+
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -59,6 +61,7 @@ namespace M8 {
         public event CallbackEvent waterExitCallback;
         public event CollisionCallbackEvent collisionEnterCallback;
         public event CollisionCallbackEvent collisionStayCallback;
+        public event CollisionCallbackEvent collisionExitCallback;
         public event TriggerCallbackEvent triggerEnterCallback;
 
         private Vector2 mCurMoveAxis;
@@ -81,6 +84,7 @@ namespace M8 {
         private Vector3 mSlopNormal;
 
         private Vector3 mLocalVelocity;
+        private bool mIsLocalVelocityComputed;
 
         private int mWaterCounter; //counter for water triggers
 
@@ -210,6 +214,7 @@ namespace M8 {
             mCurMoveAxis = Vector2.zero;
             mCurMoveDir = Vector3.zero;
             mStanding = false;
+            mIsLocalVelocityComputed = false;
         }
 
         void GetCapsuleInfo(out Vector3 p1, out Vector3 p2, out float r, float reduceOfs) {
@@ -503,6 +508,9 @@ namespace M8 {
 
             RefreshCollInfo();
 
+            if(collisionExitCallback != null)
+                collisionExitCallback(this, col);
+
             //Debug.Log("exit count: " + mCollCount);
         }
 
@@ -559,6 +567,7 @@ namespace M8 {
 
             collisionEnterCallback = null;
             collisionStayCallback = null;
+            collisionExitCallback = null;
             waterEnterCallback = null;
             waterExitCallback = null;
             triggerEnterCallback = null;
@@ -605,7 +614,9 @@ namespace M8 {
             mSlopLimitCos = Mathf.Cos(slopLimit * Mathf.Deg2Rad);
             mAboveLimitCos = Mathf.Cos(aboveLimit * Mathf.Deg2Rad);
 #endif
-            ComputeLocalVelocity();
+            //refresh local velocity
+            ComputeLocalVelocity(false);
+            mIsLocalVelocityComputed = false;
 
             if(mIsSlopSlide) {
                 //mBody.drag = isUnderWater ? waterDrag : groundDrag;
@@ -702,7 +713,9 @@ namespace M8 {
                 }
             }*/
 
-            //M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
+#if MATE_PHYSICS_DEBUG
+            M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
+#endif
 
             //check if we can move based on speed or if going against new direction
             bool canMove = CanMove(mCurMoveDir, maxSpeed * moveScale);
@@ -779,8 +792,11 @@ namespace M8 {
                 mStanding = false;
         }
 
-        protected void ComputeLocalVelocity() {
-            mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(mBody.velocity);
+        protected void ComputeLocalVelocity(bool forceUpdate) {
+            if(!mIsLocalVelocityComputed || forceUpdate) {
+                mLocalVelocity = dirHolder.worldToLocalMatrix.MultiplyVector(mBody.velocity);
+                mIsLocalVelocityComputed = true;
+            }
         }
     }
 }

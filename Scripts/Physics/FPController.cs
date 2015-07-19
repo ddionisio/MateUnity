@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace M8 {
     //TODO: right now it assumes a sphere collider
-    [AddComponentMenu("M8/Physics/First-Person RigidBodyController")]
+    [AddComponentMenu("M8/Physics/First-Person Controller")]
     public class FPController : RigidBodyController {
         [SerializeField]
         Transform _eye;
