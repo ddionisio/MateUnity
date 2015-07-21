@@ -30,18 +30,18 @@ namespace M8 {
         [SerializeField]
         float speedCap = 0.0f; //set to > 0 to cap speed
 
-        public float moveForce = 50.0f;
-        public float moveAirForce = 30.0f;
-        public float moveMaxSpeed = 8.5f;
+        public float moveForce = 30.0f;
+        public float moveAirForce = 5.0f;
+        public float moveMaxSpeed = 10f;
 
         public float slopSlideForce = 40.0f;
 
         public float airMaxSpeed = 6f;
         public float airDrag = 0.015f; //if there is no ground collision, this is the drag
 
-        public float groundDrag = 0.0f; //if there is ground and/or side collision and/or we are moving
+        public float groundDrag = 5.0f; //if there is ground and/or side collision and/or we are moving
 
-        [Tooltip("Ease towards standDrag, make sure to start < 1, then end at 1.")]
+        [Tooltip("Ease towards standDrag, make sure to start at [0, 1), then end at 1.")]
         public AnimationCurve standEase;
         public float standEaseDelay = 0; //if > 0, use standEase
         public float standDrag = 60.0f;
@@ -656,11 +656,13 @@ namespace M8 {
                 mStanding = true;
                 mStandingLastTime = Time.fixedTime;
             }
-
-            float curT = Time.fixedTime - mStandingLastTime;
-            if(standEaseDelay > 0 && curT <= standEaseDelay) {
-                float t = curT/standEaseDelay; if(t > 1.0f) t = 1.0f;
-                return standEase.Evaluate(t) * standDrag;
+                       
+            if(standEaseDelay > 0) {
+                float curT = Time.fixedTime - mStandingLastTime;
+                if(curT < standEaseDelay)
+                    return standEase.Evaluate(curT/standEaseDelay) * standDrag;
+                else
+                    return standDrag;
             }
             else
                 return standDrag;
