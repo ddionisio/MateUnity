@@ -7,11 +7,11 @@ namespace M8 {
         [SerializeField]
         Transform _eye; //optional, can be set at runtime for cutscene, etc.
 
-        public float eyeDistance;
+        public float eyeDistance = 5;
 
-        public float eyeMoveSpeed = 20;
+        public float eyeMoveSpeed = 30;
         public float eyeLookAtSpeed = 15;
-        public float eyeCollisionRadius = 0.4f;
+        public float eyeCollisionRadius = 0.3f;
         public LayerMask eyeCollisionMask;
 
         public float lookPitchSpeed = 8.0f;
@@ -121,7 +121,12 @@ namespace M8 {
                 }
 
                 lookYaw = lookInputYaw != InputManager.ActionInvalid ? input.GetAxis(player, lookInputYaw)*lookYawSpeed : 0.0f;
+                if(lookYawInvert)
+                    lookYaw *= -1;
+
                 lookPitch = lookInputPitch != InputManager.ActionInvalid ? input.GetAxis(player, lookInputPitch)*lookPitchSpeed : 0.0f;
+                if(lookPitchInvert)
+                    lookPitch *= -1;
 
                 if(lookYaw != 0f) {
                     ndir = MathUtil.Rotate(ndir, lookYaw * Mathf.Deg2Rad);
@@ -156,10 +161,7 @@ namespace M8 {
             Vector3 dirForward = dirHolder.forward;
 
             //update origin
-            if(!updateOrigin)
-                updateOrigin = ndir.sqrMagnitude != eyeDistance*eyeDistance;
-
-            if(updateOrigin) {
+            if(updateOrigin || ndir.sqrMagnitude != eyeDistance*eyeDistance) {
                 mOrigin = dirPos - dirForward*eyeDistance;
                 updateEye = true;
             }
@@ -174,9 +176,14 @@ namespace M8 {
                 mEyePos = dirPos + dirHolder.localToWorldMatrix.MultiplyVector(dpos);
             }
 
-            /*RaycastHit hit;
-            if(Physics.SphereCast(dirPos + dirForward*eyeCollisionRadius, eyeCollisionRadius, -dirForward, out hit, eyeDistance + eyeCollisionRadius, eyeCollisionMask))
-                mEyePos = hit.point + dirForward*eyeCollisionRadius;*/
+            Vector3 forwardCheck = mEyePos - mEyeLookAtPos;
+            float forwardCheckDist = forwardCheck.magnitude;
+            if(forwardCheckDist > 0.0f) {
+                forwardCheck /= forwardCheckDist;
+                RaycastHit hit;
+                if(Physics.SphereCast(mEyeLookAtPos - forwardCheck*eyeCollisionRadius, eyeCollisionRadius, forwardCheck, out hit, forwardCheckDist + eyeCollisionRadius, eyeCollisionMask))
+                    mEyePos = hit.point + hit.normal*eyeCollisionRadius;
+            }
         }
 
         void OnDrawGizmosSelected() {
