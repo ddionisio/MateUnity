@@ -78,11 +78,14 @@ void PBS_1_DiffuseSpec(half3 specColor, half oneMinusReflectivity, half oneMinus
 	// and 2) on engine side "Non-important" lights have to be divided by Pi to in cases when they are injected into ambient SH
 	// NOTE: multiplication by Pi is part of single constant together with 1/4 now
 
-	half specularTerm = max(0, (V * D * nl) * unity_LightGammaCorrectionConsts_PIDiv4);// Torrance-Sparrow model, Fresnel is applied later (for optimization reasons)
+	half specularTerm = (V * D) * (UNITY_PI / 4);// Torrance-Sparrow model, Fresnel is applied later (for optimization reasons)
+	if (IsGammaSpace())
+		specularTerm = sqrt(max(1e-4h, specularTerm));
+
     half grazingTerm = saturate(oneMinusRoughness + (1-oneMinusReflectivity));
 	
     diffOut = disneyDiffuse * nl;
-    specOut = specularTerm * light.color * FresnelTerm (specColor, lh) + gi.specular * FresnelLerp (specColor, grazingTerm, nv);
+    specOut = specularTerm * light.color * FresnelTerm(specColor, lh) + gi.specular * FresnelLerp (specColor, grazingTerm, nv);
 }
 
 float3 TriPlanarWeights(float3 normal) {

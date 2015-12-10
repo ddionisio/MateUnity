@@ -9,9 +9,11 @@ namespace M8 {
         }
 
         public override IEnumerator Load() {
-            mAssetBundle = AssetBundle.CreateFromFile(rootPath); //why is there no async for this, and yet there is one for memory load?
+            var request = AssetBundle.LoadFromFileAsync(rootPath);
+            yield return request;
+
+            mAssetBundle = request.assetBundle;
             status = Status.Loaded;
-            yield return null;
         }
 
         public override void Unload() {
