@@ -565,7 +565,7 @@ namespace M8 {
         }
 
         void InitLocalData() {
-            string scene = Application.loadedLevelName;
+            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
             InitData[] dats = null;
             mStartData.TryGetValue(scene, out dats);

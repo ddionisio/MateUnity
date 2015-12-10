@@ -88,20 +88,22 @@ namespace M8 {
         }
 
         void DoSave() {
+            string curScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if(mSpawns != null && mSpawns.Count > 0) {
                 BinaryFormatter bf = new BinaryFormatter();
                 MemoryStream ms = new MemoryStream();
                 bf.Serialize(ms, new List<SpawnInfo>(mSpawns.Values));
-                UserData.main.SetString("sssm_" + Application.loadedLevelName, System.Convert.ToBase64String(ms.GetBuffer()));
+                UserData.main.SetString("sssm_" + curScene, System.Convert.ToBase64String(ms.GetBuffer()));
             }
             else {
-                UserData.main.Delete("sssm_" + Application.loadedLevelName);
+                UserData.main.Delete("sssm_" + curScene);
             }
         }
 
         void DoSpawns() {
             //load
-            string dat = UserData.main.GetString("sssm_" + Application.loadedLevelName);
+            string curScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            string dat = UserData.main.GetString("sssm_" + curScene);
 
             if(!string.IsNullOrEmpty(dat)) {
                 BinaryFormatter bf = new BinaryFormatter();

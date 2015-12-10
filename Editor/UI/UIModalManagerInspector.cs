@@ -41,7 +41,7 @@ public class UIModalManagerInspector : Editor {
 
             if(dat.e_ui != null) {
                 if(M8.EditorExt.Utility.DrawCopyButton("Click to copy name.")) {
-                    mTE.content = new GUIContent(dat.e_ui.name);
+                    mTE.text = dat.e_ui.name;
                     mTE.SelectAll();
                     mTE.Copy();
                 }

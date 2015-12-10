@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.Collections;
+using UnityEditor.SceneManagement;
 using System.Collections.Generic;
 
 namespace M8 {
@@ -53,7 +53,7 @@ namespace M8 {
             SceneSerializer data = obj as SceneSerializer;
 
             //check if we need to generate keys
-            if(mRefs == null || mRefScene != EditorApplication.currentScene)
+            if(mRefs == null || mRefScene != EditorSceneManager.GetActiveScene().name)
                 RegenerateIDs();
             else if(data.id == SceneSerializer.invalidID || mRefs[data.id] != data) {
                 int nid = 1;
@@ -75,9 +75,11 @@ namespace M8 {
         }
 
         void RegenerateIDs() {
-            if(mRefs == null || mRefScene != EditorApplication.currentScene) {
+            string curScene = EditorSceneManager.GetActiveScene().name;
+
+            if(mRefs == null || mRefScene != curScene) {
                 mRefs = new Dictionary<int, SceneSerializer>();
-                mRefScene = EditorApplication.currentScene;
+                mRefScene = curScene;
             }
 
             //get all objects in scene with serializedID

@@ -72,8 +72,9 @@ namespace M8.EditorExt {
 
         void OnGUI() {
             GUILayout.BeginVertical();
-
-            EditorGUIUtility.LookLikeControls(20, 50);
+            
+            EditorGUIUtility.labelWidth = 20f;
+            EditorGUIUtility.fieldWidth = 50f;
 
             GUILayout.BeginHorizontal();
 
@@ -98,7 +99,8 @@ namespace M8.EditorExt {
             mLayerMask = EditorGUILayout.MaskField(mLayerMask, mLayerMasks);
 
             //prefab
-            EditorGUIUtility.LookLikeControls();
+            EditorGUIUtility.labelWidth = 0f;
+            EditorGUIUtility.fieldWidth = 0f;
 
             GameObject prevPrefab = mPrefab;
             mPrefab = EditorGUILayout.ObjectField("Object", mPrefab, typeof(GameObject), true) as GameObject;
@@ -163,7 +165,8 @@ namespace M8.EditorExt {
 
             GUI.enabled = prevEnabled;
 
-            EditorGUIUtility.LookLikeControls();
+            EditorGUIUtility.labelWidth = 0f;
+            EditorGUIUtility.fieldWidth = 0f;
 
             GUILayout.EndVertical();
         }

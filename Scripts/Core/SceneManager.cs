@@ -200,12 +200,12 @@ namespace M8 {
         }
 
         void OnLevelWasLoaded(int sceneInd) {
-            mCurSceneStr = Application.loadedLevelName;
+            mCurSceneStr = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             mFirstTime = false;
         }
 
         protected override void OnInstanceInit() {
-            mCurSceneStr = Application.loadedLevelName;
+            mCurSceneStr = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             //mIsFullscreen = Screen.fullScreen;
 
             mPrevTimeScale = Time.timeScale;
@@ -221,7 +221,7 @@ namespace M8 {
 
             mCurSceneStr = mSceneToLoad;
 
-            Application.LoadLevel(mSceneToLoad);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(mSceneToLoad);
         }
 
         void OnScreenTransBeginLoadScene(ScreenTrans trans, ScreenTransManager.Action act) {

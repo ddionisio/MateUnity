@@ -243,7 +243,8 @@ namespace M8.EditorExt {
             }
 
             if(foldout) {
-                EditorGUIUtility.LookLikeControls(20, 200);
+                EditorGUIUtility.labelWidth = 20f;
+                EditorGUIUtility.fieldWidth = 200f;
 
                 ListButtonResult act = ListButtonResult.None;
                 int actInd = -1;
@@ -296,7 +297,8 @@ namespace M8.EditorExt {
                     GUIUtility.hotControl = 0;
                 }
 
-                EditorGUIUtility.LookLikeControls();
+                EditorGUIUtility.labelWidth = 0f;
+                EditorGUIUtility.fieldWidth = 0f;
             }
 
             GUILayout.EndVertical();
@@ -307,8 +309,8 @@ namespace M8.EditorExt {
 
             GUILayout.BeginVertical();
 
-            //EditorGUIUtility.LookLikeControls(0, 50);
-            EditorGUIUtility.LookLikeControls(20, 200);
+            EditorGUIUtility.labelWidth = 20f;
+            EditorGUIUtility.fieldWidth = 200f;
 
             if(data != null && data.Length > 0) {
                 ListButtonResult act = ListButtonResult.None;
@@ -393,7 +395,8 @@ namespace M8.EditorExt {
             GUILayout.EndHorizontal();
             //
 
-            EditorGUIUtility.LookLikeControls();
+            EditorGUIUtility.labelWidth = 0f;
+            EditorGUIUtility.fieldWidth = 0f;
 
             GUILayout.EndVertical();
 
