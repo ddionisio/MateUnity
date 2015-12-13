@@ -277,6 +277,8 @@ namespace M8 {
                 PrefabType prefabType = PrefabUtility.GetPrefabType(l.gameObject);
                 switch(prefabType) {
                     case PrefabType.Prefab:
+                        ProjectConfig.SetObject(projConfigKey, l.gameObject);
+                        return true;
                     case PrefabType.PrefabInstance:
                         Object obj = PrefabUtility.GetPrefabParent(l.gameObject);
                         if(obj)//save path
@@ -328,10 +330,8 @@ namespace M8 {
             //load up the entries
             string textData = item.header.text.text;
             if(!string.IsNullOrEmpty(textData)) {
-                fastJSON.JSON.Parameters.UseExtensions = false;
-
                 try {
-                    List<Localize.Entry> tableEntries = fastJSON.JSON.ToObject<List<Localize.Entry>>(textData);
+                    List<Localize.Entry> tableEntries = Localize.EntryList.FromJSON(textData);
                     foreach(var entry in tableEntries)
                         item.items.Add(entry.key, new Data { value=entry.text, param=entry.param, paramIsRef=entry.param==null });
                 }
@@ -615,8 +615,7 @@ namespace M8 {
                 }
 
                 //save
-                fastJSON.JSON.Parameters.UseExtensions = false;
-                string output = fastJSON.JSON.ToNiceJSON(tableEntries, fastJSON.JSON.Parameters);
+                string output = Localize.EntryList.ToJSON(tableEntries, true);
 
                 string path = AssetDatabase.GetAssetPath(item.header.text);
                 File.WriteAllText(path, output);

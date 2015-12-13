@@ -16,11 +16,13 @@ namespace M8 {
 
         public float lookPitchSpeed = 8.0f;
         public bool lookPitchInvert = false;
-        public float lookPitchMin = -90.0f; //angle
-        public float lookPitchMax = 90.0f;
+        public float lookPitchMin = -60.0f; //angle
+        public float lookPitchMax = 70.0f;
 
         public float lookYawSpeed = 8.0f;
         public bool lookYawInvert = false;
+
+        public bool moveXCircular = true; //if true, X movement is relative to the circumference of the origin
 
         public int player = 0;
         public int moveInputX = InputManager.ActionInvalid;
@@ -150,10 +152,12 @@ namespace M8 {
             ComputeLocalVelocity(false);
 
             //rotate dir based on eye origin
-            dirHolder.forward = dirHolder.localToWorldMatrix.MultiplyVector(new Vector3(ndir.x, 0f, ndir.y));
+            if(moveXCircular || updateOrigin) {
+                dirHolder.forward = dirHolder.localToWorldMatrix.MultiplyVector(new Vector3(ndir.x, 0f, ndir.y));
 
-            //refresh current velocty based on rotation
-            mBody.velocity = dirHolder.localToWorldMatrix.MultiplyVector(localVelocity);
+                //refresh current velocty based on rotation
+                mBody.velocity = dirHolder.localToWorldMatrix.MultiplyVector(localVelocity);
+            }
 
             base.FixedUpdate();
 

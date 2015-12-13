@@ -38,6 +38,7 @@ namespace M8 {
             public int index;
         }
 
+        [System.Serializable]
         public class Key {
             public int player = 0;
 
@@ -161,6 +162,7 @@ namespace M8 {
             }
         }
 
+        [System.Serializable]
         public class Bind {
             public int action = 0;
             public Control control = InputManager.Control.Button;
@@ -169,6 +171,34 @@ namespace M8 {
             public bool forceRaw;
 
             public List<Key> keys = null;
+        }
+
+        [System.Serializable]
+        public struct BindList {
+            [SerializeField]
+            List<Bind> items;
+            
+            public static string ToJSON(List<Bind> items, bool prettyPrint) {
+                return JsonUtility.ToJson(new BindList() { items = items }, prettyPrint);
+            }
+
+            public static List<Bind> FromJSON(string json) {
+                return JsonUtility.FromJson<BindList>(json).items;
+            }
+        }
+
+        [System.Serializable]
+        public struct ActionList {
+            [SerializeField]
+            List<string> items;
+
+            public static string ToJSON(List<string> items, bool prettyPrint) {
+                return JsonUtility.ToJson(new ActionList() { items = items }, prettyPrint);
+            }
+
+            public static List<string> FromJSON(string json) {
+                return JsonUtility.FromJson<ActionList>(json).items;
+            }
         }
 
         public class PlayerData {
@@ -274,21 +304,49 @@ namespace M8 {
             return mBinds[action];
         }
 
+        public void LoadBinds(string json) {
+            if(mActionNames == null || mActionNames.Length == 0) {
+                Debug.LogWarning("No action config loaded.  There will be no bindings!");
+                return;
+            }
+
+            List<Bind> keys = BindList.FromJSON(json);
+
+            if(mBinds == null || mBinds.Length == 0) {
+                Dictionary<int, BindData> binds = new Dictionary<int, BindData>();
+                
+                foreach(Bind key in keys) {
+                    if(key != null && key.keys != null)
+                        binds.Add(key.action, new BindData(key));
+                }
+
+                //set bindings
+                mBinds = new BindData[actionCount];
+                foreach(KeyValuePair<int, BindData> pair in binds) {
+                    mBinds[pair.Key] = pair.Value;
+                }
+
+                //register input actions to localizer
+                for(int i = 0; i < actionCount; i++)
+                    Localize.instance.RegisterParam("input_" + i, OnTextParam);
+            }
+            else {
+                foreach(Bind key in keys) {
+                    if(key != null && key.keys != null) {
+                        if(mBinds[key.action] != null) {
+                            BindData bindDat = mBinds[key.action];
+                            bindDat.ApplyKeys(key);
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Reverts bind settings to loaded configuration
         /// </summary>
         public void RevertBinds() {
-            fastJSON.JSON.Parameters.UseExtensions = false;
-            List<Bind> keys = fastJSON.JSON.ToObject<List<Bind>>(config.text);
-
-            foreach(Bind key in keys) {
-                if(key != null && key.keys != null) {
-                    if(mBinds[key.action] != null) {
-                        BindData bindDat = mBinds[key.action];
-                        bindDat.ApplyKeys(key);
-                    }
-                }
-            }
+            LoadBinds(config.text);
         }
 
         public void UnBindKey(int player, int action, int index) {
@@ -565,38 +623,17 @@ namespace M8 {
         }
 
         protected override void OnInstanceInit() {
-            fastJSON.JSON.Parameters.UseExtensions = false;
-
             if(actionConfig != null) {
-                List<string> actionLoad = fastJSON.JSON.ToObject<List<string>>(actionConfig.text);
+                List<string> actionLoad = ActionList.FromJSON(actionConfig.text);
                 mActionNames = actionLoad != null ? actionLoad.ToArray() : new string[0];
             }
             else
                 Debug.LogWarning("No action config loaded.  There will be no bindings!");
 
-            if(config != null && mActionNames != null) {
-                Dictionary<int, BindData> binds = new Dictionary<int, BindData>();
-
-                List<Bind> bindCfg = fastJSON.JSON.ToObject<List<Bind>>(config.text);
-
-                foreach(Bind key in bindCfg) {
-                    if(key != null && key.keys != null)
-                        binds.Add(key.action, new BindData(key));
-                }
-
-                //set bindings
-                mBinds = new BindData[actionCount];
-                foreach(KeyValuePair<int, BindData> pair in binds) {
-                    mBinds[pair.Key] = pair.Value;
-                }
-
-                //register input actions to localizer
-                for(int i = 0; i < actionCount; i++)
-                    Localize.instance.RegisterParam("input_"+i, OnTextParam);
-            }
-            else {
+            if(config != null && mActionNames != null)
+                LoadBinds(config.text);
+            else
                 mBinds = new BindData[0];
-            }
         }
 
         string OnTextParam(string key) {

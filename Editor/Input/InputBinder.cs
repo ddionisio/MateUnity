@@ -67,13 +67,10 @@ namespace M8.EditorExt {
 
         private static void GetInputActions(TextAsset cfg) {
             if(cfg != null) {
-                fastJSON.JSON.Parameters.UseExtensions = false;
-                try {
-                    mActions = fastJSON.JSON.ToObject<List<string>>(cfg.text);
-                }
-                catch {
+                mActions = InputManager.ActionList.FromJSON(cfg.text);
+                if(mActions == null)
                     mActions = new List<string>();
-                }
+
                 RefreshInputActionEdits();
             }
         }
@@ -272,9 +269,7 @@ namespace M8.EditorExt {
             if(GUILayout.Button("Save")) {
                 //save mapping
                 if(mActions != null) {
-                    fastJSON.JSON.Parameters.UseExtensions = false;
-
-                    string actionString = fastJSON.JSON.ToJSON(mActions);
+                    string actionString = InputManager.ActionList.ToJSON(mActions, false);
                     File.WriteAllText(mTextFilePathMapper, actionString);
 
                     RefreshInputActionEdits();
@@ -293,7 +288,7 @@ namespace M8.EditorExt {
                         saveBinds.Add(mBinds[i].bind);
                     }
 
-                    string bindString = fastJSON.JSON.ToJSON(saveBinds);
+                    string bindString = InputManager.BindList.ToJSON(saveBinds, false);
                     File.WriteAllText(mTextFilePathBinder, bindString);
                 }
                 //
@@ -482,8 +477,7 @@ namespace M8.EditorExt {
                 //load from file
                 if(refreshBinds && mTextFileBinder.text.Length > 0) {
                     //load data
-                    fastJSON.JSON.Parameters.UseExtensions = false;
-                    List<InputManager.Bind> loadBinds = fastJSON.JSON.ToObject<List<InputManager.Bind>>(mTextFileBinder.text);
+                    List<InputManager.Bind> loadBinds = InputManager.BindList.FromJSON(mTextFileBinder.text);
                     foreach(InputManager.Bind bind in loadBinds) {
                         if(bind.action < mBinds.Length) {
                             mBinds[bind.action].bind = bind;

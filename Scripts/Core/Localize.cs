@@ -10,10 +10,25 @@ namespace M8 {
         public delegate string ParameterCallback(string paramKey);
         public delegate void LocalizeCallback();
 
+        [System.Serializable]
         public class Entry {
             public string key;
             public string text = "";
             public string[] param = null; //set this to null if you want to reference param from base
+        }
+
+        [System.Serializable]
+        public struct EntryList {
+            [SerializeField]
+            private List<Entry> items;
+
+            public static List<Entry> FromJSON(string json) {
+                return JsonUtility.FromJson<EntryList>(json).items;
+            }
+
+            public static string ToJSON(List<Entry> _items, bool prettyPrint) {
+                return JsonUtility.ToJson(new EntryList() { items = _items }, prettyPrint);
+            }
         }
 
         public struct Data {
@@ -55,13 +70,15 @@ namespace M8 {
             private Dictionary<string, Data> mEntries;
 
             public Dictionary<string, Data> entries { get { return mEntries; } }
-
+            
             public void Generate(Dictionary<string, Data> baseTable) {
+                Generate(file.text, baseTable);
+            }
+
+            public void Generate(string json, Dictionary<string, Data> baseTable) {
                 if(mEntries != null) return;
 
-                fastJSON.JSON.Parameters.UseExtensions = false;
-
-                List<Entry> tableEntries = fastJSON.JSON.ToObject<List<Entry>>(file.text);
+                List<Entry> tableEntries = EntryList.FromJSON(json);
 
                 mEntries = new Dictionary<string, Data>(tableEntries.Count);
 
@@ -92,7 +109,7 @@ namespace M8 {
 
                     //override entries based on platform
                     if(platform != null) {
-                        List<Entry> platformEntries = fastJSON.JSON.ToObject<List<Entry>>(platform.file.text);
+                        List<Entry> platformEntries = EntryList.FromJSON(platform.file.text);
 
                         foreach(Entry platformEntry in platformEntries) {
                             Data dat;
@@ -167,6 +184,27 @@ namespace M8 {
 
         public int languageCount {
             get { return tables.Length; }
+        }
+
+        public bool LoadLanguage(string language, string json) {
+            int languageInd = GetLanguageIndex(language);
+            if(languageInd == -1) {
+                TableData newTable = new TableData();
+                newTable.language = language;
+                newTable.Generate(tables != null && tables.Length > 0 ? tables[0].entries : null);
+
+                if(tables == null)
+                    tables = new TableData[1];
+                else
+                    System.Array.Resize(ref tables, tables.Length + 1);
+
+                tables[tables.Length - 1] = newTable;
+            }
+            else {
+                tables[languageInd].Generate(json, languageInd > 0 ? tables[0].entries : null);
+            }
+
+            return true;
         }
 
         public int GetLanguageIndex(string lang) {
