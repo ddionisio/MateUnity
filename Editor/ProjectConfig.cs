@@ -39,7 +39,7 @@ namespace M8 {
 
                     //create a new one
                     if(mInstance == null) {
-                        mInstance = new ProjectConfig();
+                        mInstance = ScriptableObject.CreateInstance<ProjectConfig>();
                         AssetDatabase.CreateAsset(mInstance, filePath);
                         AssetDatabase.SaveAssets();
                     }
