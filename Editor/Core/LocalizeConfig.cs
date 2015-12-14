@@ -178,7 +178,7 @@ namespace M8 {
         private static void SetLocalize(Localize localize, bool forceSet) {
             if(localize) {
                 if(mLocalize != localize && SaveLocalizeObjectPath(localize))
-                    mLocalize = localize;
+                    mLocalize = LoadLocalizeObjectFromPath();
             }
             else {
                 if(forceSet)
