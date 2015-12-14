@@ -227,25 +227,33 @@ namespace M8 {
 
             //get current index
             int selectInd = 0;
-            for(int i = 0; i < mEditItemBaseKeyTexts.Length; i++) {
-                if(mEditItemBaseKeyTexts[i] == key) {
-                    selectInd = i;
-                    break;
+            if(mEditItemBaseKeyTexts != null) {
+                for(int i = 0; i < mEditItemBaseKeyTexts.Length; i++) {
+                    if(mEditItemBaseKeyTexts[i] == key) {
+                        selectInd = i;
+                        break;
+                    }
                 }
+
+                //selection
+                GUILayout.BeginHorizontal();
+
+                selectInd = EditorGUILayout.IntPopup(selectInd, mEditItemBaseKeyTexts, mEditItemBaseKeyInds);
+
+                if(EditorExt.Utility.DrawSimpleButton("E", "Configure localization.")) {
+                    Open(null);
+
+                    mEditItemBaseKeyInd = selectInd;
+                }
+
+                GUILayout.EndHorizontal();
             }
+            else {
+                if(GUILayout.Button("Configure Localization"))
+                    Open(null);
 
-            //selection
-            GUILayout.BeginHorizontal();
-
-            selectInd = EditorGUILayout.IntPopup(selectInd, mEditItemBaseKeyTexts, mEditItemBaseKeyInds);
-
-            if(EditorExt.Utility.DrawSimpleButton("E", "Configure localization.")) {
-                Open(null);
-
-                mEditItemBaseKeyInd = selectInd;
+                return "";
             }
-
-            GUILayout.EndHorizontal();
 
             return mEditItemBaseKeyTexts[selectInd];
         }

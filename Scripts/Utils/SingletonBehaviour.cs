@@ -93,7 +93,8 @@ namespace M8 {
                 mInstance = this as T;
                 OnInstanceInit();
 
-                DontDestroyOnLoad(gameObject);
+                if(transform.parent == null)
+                    DontDestroyOnLoad(gameObject);
             }
             else
                 DestroyImmediate(gameObject);
