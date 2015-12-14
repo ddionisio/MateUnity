@@ -209,8 +209,9 @@ namespace M8 {
                 mLocalize = LoadLocalizeObjectFromPath();
 
                 if(mLocalize) {
-                    mEditItemBase = new Item { header=new ItemHeader { text=mLocalizeTable[0].file, language=0, isPlatform=false } };
-                    LoadItem(mEditItemBase);
+                    if(mLocalizeTable == null) { //need to load base
+                        SetLocalize(mLocalize, false);
+                    }
                 }
                 else { //no localize setup
                     if(GUILayout.Button("Configure Localization"))
@@ -225,8 +226,14 @@ namespace M8 {
                 }
             }
 
+            //generate base data
+            if(mEditItemBaseKeyTexts == null) {
+                mEditItemBase = new Item { header = new ItemHeader { text = mLocalizeTable[0].file, language = 0, isPlatform = false } };
+                LoadItem(mEditItemBase);
+            }
+
             //get current index
-            int selectInd = 0;
+                int selectInd = 0;
             if(mEditItemBaseKeyTexts != null) {
                 for(int i = 0; i < mEditItemBaseKeyTexts.Length; i++) {
                     if(mEditItemBaseKeyTexts[i] == key) {
