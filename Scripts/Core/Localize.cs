@@ -23,7 +23,7 @@ namespace M8 {
             private List<Entry> items;
 
             public static List<Entry> FromJSON(string json) {
-                return JsonUtility.FromJson<EntryList>(json).items;
+                return !string.IsNullOrEmpty(json) ? JsonUtility.FromJson<EntryList>(json).items : new List<Entry>();
             }
 
             public static string ToJSON(List<Entry> _items, bool prettyPrint) {

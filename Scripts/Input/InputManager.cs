@@ -183,7 +183,7 @@ namespace M8 {
             }
 
             public static List<Bind> FromJSON(string json) {
-                return JsonUtility.FromJson<BindList>(json).items;
+                return !string.IsNullOrEmpty(json) ? JsonUtility.FromJson<BindList>(json).items : new List<Bind>();
             }
         }
 
@@ -197,7 +197,7 @@ namespace M8 {
             }
 
             public static List<string> FromJSON(string json) {
-                return JsonUtility.FromJson<ActionList>(json).items;
+                return !string.IsNullOrEmpty(json) ? JsonUtility.FromJson<ActionList>(json).items : new List<string>();
             }
         }
 
