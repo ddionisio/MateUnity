@@ -122,7 +122,8 @@ namespace M8 {
         }
 
         void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
-            RestorePlayer();
+            if(mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
+                RestorePlayer();
         }
 
         IEnumerator DoProgress() {

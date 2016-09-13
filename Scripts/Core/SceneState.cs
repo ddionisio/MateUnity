@@ -539,7 +539,7 @@ namespace M8 {
                     mStartData.Add(sdat.scene, sdat.data);
             }
 
-            InitLocalData();
+            InitLocalData(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             InitGlobalData();
         }
 
@@ -548,7 +548,8 @@ namespace M8 {
         }
 
         void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
-            InitLocalData();
+            if(mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
+                InitLocalData(scene);
         }
 
         void OnUserDataAction(UserData ud, UserData.Action act) {
@@ -570,20 +571,20 @@ namespace M8 {
                 mGlobal = new Table("g", globalStartData);
         }
 
-        void InitLocalData() {
-            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        void InitLocalData(UnityEngine.SceneManagement.Scene scene) {
+            string sceneName = scene.name;
 
             InitData[] dats = null;
-            mStartData.TryGetValue(scene, out dats);
+            mStartData.TryGetValue(sceneName, out dats);
 
             if(mLocal != null) {
                 mLocal.SnapshotDelete();
 
-                if(localStateCache == 0 || mLocal.prefix != scene)
-                    mLocal.Init(scene, dats);
+                if(localStateCache == 0 || mLocal.prefix != sceneName)
+                    mLocal.Init(sceneName, dats);
             }
             else
-                mLocal = new Table(scene, dats, localStateCache);
+                mLocal = new Table(sceneName, dats, localStateCache);
         }
     }
 }

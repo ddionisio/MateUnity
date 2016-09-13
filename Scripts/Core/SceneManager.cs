@@ -226,8 +226,10 @@ namespace M8 {
         }
 
         void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
-            mCurSceneStr = scene.name;
-            mFirstTime = false;
+            if(mode == UnityEngine.SceneManagement.LoadSceneMode.Single) {
+                mCurSceneStr = scene.name;
+                mFirstTime = false;
+            }
         }
 
         void OnScreenTransBeginLoadScene(ScreenTrans trans, ScreenTransManager.Action act) {
