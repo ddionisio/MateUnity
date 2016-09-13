@@ -531,6 +531,8 @@ namespace M8 {
         protected override void OnInstanceInit() {
             UserData.main.actCallback += OnUserDataAction;
 
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+
             mStartData = new Dictionary<string, InitData[]>(startData.Length);
             foreach(InitSceneData sdat in startData) {
                 if(!string.IsNullOrEmpty(sdat.scene) && sdat.data != null)
@@ -541,7 +543,11 @@ namespace M8 {
             InitGlobalData();
         }
 
-        void OnLevelWasLoaded(int level) {
+        protected override void OnInstanceDeinit() {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
             InitLocalData();
         }
 

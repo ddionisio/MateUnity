@@ -72,7 +72,8 @@ namespace M8 {
             public Dictionary<string, Data> entries { get { return mEntries; } }
             
             public void Generate(Dictionary<string, Data> baseTable) {
-                Generate(file.text, baseTable);
+                if(file)
+                    Generate(file.text, baseTable);
             }
 
             public void Generate(string json, Dictionary<string, Data> baseTable) {

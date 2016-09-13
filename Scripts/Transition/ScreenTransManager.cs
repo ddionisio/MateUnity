@@ -106,19 +106,23 @@ namespace M8 {
         public void Play(string transName, Callback callback) {
             Play(GetTransition(transName), callback);
         }
+        
+        protected override void OnInstanceInit() {
+            if(libraryFromChildren)
+                library = GetComponentsInChildren<ScreenTrans>();
 
-        void OnLevelWasLoaded(int lvl) {
-            RestorePlayer();
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         protected override void OnInstanceDeinit() {
             if(mRenderTexture)
                 DestroyImmediate(mRenderTexture);
+
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
-        protected override void OnInstanceInit() {
-            if(libraryFromChildren)
-                library = GetComponentsInChildren<ScreenTrans>();
+        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
+            RestorePlayer();
         }
 
         IEnumerator DoProgress() {

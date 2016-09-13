@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 Shader "Hidden/CrossHatch"
 {
 	Properties {
@@ -65,7 +67,7 @@ Shader "Hidden/CrossHatch"
 				o.lightDir = normalize(ObjSpaceLightDir(v.vertex));
 								
 				//spherical harmonics and vertex lights
-				float4 posWorld = mul(_Object2World, v.vertex);
+				float4 posWorld = mul(unity_ObjectToWorld, v.vertex);
 				float3 normalWorld = UnityObjectToWorldNormal(v.normal);
 				
 				TRANSFER_VERTEX_TO_FRAGMENT(o);

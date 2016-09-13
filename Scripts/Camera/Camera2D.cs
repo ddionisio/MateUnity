@@ -328,7 +328,6 @@ namespace M8 {
 
             // Only need the half texel offset on PC/D3D
             bool needHalfTexelOffset = (Application.platform == RuntimePlatform.WindowsPlayer ||
-		                            Application.platform == RuntimePlatform.WindowsWebPlayer ||
 		                            Application.platform == RuntimePlatform.WindowsEditor);
             float halfTexel = (halfTexelOffset && needHalfTexelOffset) ? 0.5f : 0.0f;
 

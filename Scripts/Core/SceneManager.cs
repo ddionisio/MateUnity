@@ -198,12 +198,7 @@ namespace M8 {
             if(t)
                 Destroy(t.gameObject);
         }
-
-        void OnLevelWasLoaded(int sceneInd) {
-            mCurSceneStr = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            mFirstTime = false;
-        }
-
+                
         protected override void OnInstanceInit() {
             mCurSceneStr = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             //mIsFullscreen = Screen.fullScreen;
@@ -214,6 +209,12 @@ namespace M8 {
 
             if(stackEnable)
                 mSceneStack = new Stack<string>(stackCapacity);
+
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        protected override void OnInstanceDeinit() {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
         void DoLoad() {
@@ -222,6 +223,11 @@ namespace M8 {
             mCurSceneStr = mSceneToLoad;
 
             UnityEngine.SceneManagement.SceneManager.LoadScene(mSceneToLoad);
+        }
+
+        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
+            mCurSceneStr = scene.name;
+            mFirstTime = false;
         }
 
         void OnScreenTransBeginLoadScene(ScreenTrans trans, ScreenTransManager.Action act) {

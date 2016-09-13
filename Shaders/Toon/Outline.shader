@@ -1,3 +1,6 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
+
 //by Gabe McCauley from http://www.artisticexperiments.com/cg-shaders/cg-shaders-outline
 
 Shader "M8/Toon/Outline"
@@ -41,8 +44,8 @@ Shader "M8/Toon/Outline"
 			vert2Pixel vShader(app2vert IN) {
 				vert2Pixel OUT;
 				float4x4 WorldViewProjection = UNITY_MATRIX_MVP;
-				float4x4 WorldInverseTranspose = _World2Object; 
-				float4x4 World = _Object2World;
+				float4x4 WorldInverseTranspose = unity_WorldToObject; 
+				float4x4 World = unity_ObjectToWorld;
 				
 				float4 deformedPosition = mul(World, IN.vertex);
 				fixed3 norm = normalize(mul(  IN.normal.xyz , WorldInverseTranspose ).xyz);	

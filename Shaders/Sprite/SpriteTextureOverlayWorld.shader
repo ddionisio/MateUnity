@@ -1,4 +1,6 @@
-﻿//Only use for sprites
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+//Only use for sprites
 Shader "M8/Sprite/TextureOverlayWorld"
 {
 	Properties
@@ -57,7 +59,7 @@ Shader "M8/Sprite/TextureOverlayWorld"
 				v2f OUT;
 				OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
 				OUT.texcoord = IN.texcoord;
-				OUT.worldcoord = mul(_Object2World, IN.vertex);
+				OUT.worldcoord = mul(unity_ObjectToWorld, IN.vertex);
 				OUT.color = IN.color * _Color;
 				#ifdef PIXELSNAP_ON
 				OUT.vertex = UnityPixelSnap (OUT.vertex);

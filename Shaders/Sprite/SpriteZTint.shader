@@ -1,4 +1,6 @@
-﻿Shader "M8/Sprite/ZTint"
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+Shader "M8/Sprite/ZTint"
 {
 	Properties
 	{
@@ -64,7 +66,7 @@
 				OUT.vertex = UnityPixelSnap (OUT.vertex);
 				#endif
 
-				float wpz = dot(_Object2World._m20_m21_m22, IN.vertex) + _Object2World._m23;
+				float wpz = dot(unity_ObjectToWorld._m20_m21_m22, IN.vertex) + unity_ObjectToWorld._m23;
 
 				OUT.color *= lerp(fixed4(1,1,1,1), _ZColor, clamp(abs(wpz - _ZOfs)/_ZUnit, 0, 1));
 
