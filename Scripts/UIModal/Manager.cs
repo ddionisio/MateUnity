@@ -20,7 +20,12 @@ namespace M8.UIModal {
             public Transform instantiateTo; //target to instantiate ui if it's a prefab
 
             private Controller mUI;
-            private TransitionBase mTransition;
+
+            private Interface.IOpen[] mIOpens;
+            private Interface.IOpening[] mIOpenings;
+            private Interface.IClosing[] mIClosings;
+            private Interface.IClose[] mICloses;
+            private Interface.IActive[] mIActives;
 
             public Controller ui {
                 get {
@@ -30,17 +35,32 @@ namespace M8.UIModal {
                 }
             }
 
-            public TransitionBase transition {
-                get {
-                    if(!mUI) 
-                        GrabUI(); //this will also grab transition
-                    return mTransition;
-                }
+            public void Open() {
+                for(int i = 0; i < mIOpens.Length; i++)
+                    mIOpens[i].Open();
             }
 
-#if UNITY_EDITOR
-            public Controller e_ui { get { return _ui; } set { _ui = value; } }
-#endif
+            public void Close() {
+                for(int i = 0; i < mICloses.Length; i++)
+                    mICloses[i].Close();
+            }
+
+            public IEnumerator Opening() {
+                for(int i = 0; i < mIOpenings.Length; i++)
+                    yield return mIOpenings[i].Opening();
+            }
+
+            public IEnumerator Closing() {
+                for(int i = 0; i < mIClosings.Length; i++)
+                    yield return mIClosings[i].Closing();
+            }
+
+            public void SetActive(bool aActive) {
+                for(int i = 0; i < mIActives.Length; i++)
+                    mIActives[i].SetActive(aActive);
+            }
+
+            public Controller e_ui  { get { return _ui; } set { _ui = value; } }
 
             private void GrabUI() {
                 if(isPrefab) {
@@ -53,8 +73,27 @@ namespace M8.UIModal {
                 else
                     mUI = _ui;
 
-                if(mUI)
-                    mTransition = mUI.GetComponent<TransitionBase>();
+                if(mUI) {
+                    var comps = mUI.GetComponents(typeof(Interface.IOpen));
+                    mIOpens = new Interface.IOpen[comps.Length];
+                    for(int i = 0; i < comps.Length; i++) mIOpens[i] = comps[i] as Interface.IOpen;
+
+                    comps = mUI.GetComponents(typeof(Interface.IOpening));
+                    mIOpenings = new Interface.IOpening[comps.Length];
+                    for(int i = 0; i < comps.Length; i++) mIOpenings[i] = comps[i] as Interface.IOpening;
+                    
+                    comps = mUI.GetComponents(typeof(Interface.IClosing));
+                    mIClosings = new Interface.IClosing[comps.Length];
+                    for(int i = 0; i < comps.Length; i++) mIClosings[i] = comps[i] as Interface.IClosing;
+
+                    comps = mUI.GetComponents(typeof(Interface.IClose));
+                    mICloses = new Interface.IClose[comps.Length];
+                    for(int i = 0; i < comps.Length; i++) mICloses[i] = comps[i] as Interface.IClose;
+
+                    comps = mUI.GetComponents(typeof(Interface.IActive));
+                    mIActives = new Interface.IActive[comps.Length];
+                    for(int i = 0; i < comps.Length; i++) mIActives[i] = comps[i] as Interface.IActive;
+                }
                 else
                     Debug.LogWarning("UIController not set.");
             }
@@ -69,10 +108,7 @@ namespace M8.UIModal {
         private Queue<UIData> mModalToOpen;
         
         private int mModalCloseCount;
-
-        private TransitionBase[] mTransitions;
-        private int mTransitionCount;
-
+        
         private bool mTaskActive;
 
         public event CallbackBool activeCallback;
@@ -168,21 +204,19 @@ namespace M8.UIModal {
 
         void OnDisable() {
             mTaskActive = false;
-            mTransitionCount = 0;
         }
 
         protected override void OnInstanceInit() {
             mModals = new Dictionary<string, UIData>(uis.Length);
             mModalStack = new Stack<UIData>(uis.Length);
             mModalToOpen = new Queue<UIData>(uis.Length);
-            mTransitions = new TransitionBase[uis.Length];
 
             //setup data and deactivate object
             for(int i = 0; i < uis.Length; i++) {
-                UIData uid = uis[i];
-                Controller ui = uid.ui;
-                if(ui != null) {
-                    ui.gameObject.SetActive(false);
+                var uid = uis[i];
+                var ui = uid.ui;
+                if(ui) {
+                    ui.root.SetActive(false);
                 }
 
                 mModals.Add(uid.name, uid);
@@ -201,71 +235,76 @@ namespace M8.UIModal {
             int lastCount = mModalStack.Count;
 
             //close modals
-            while(mModalCloseCount > 0) {
-                if(mModalStack.Count > 0) {
-                    UIData uid = mModalStack.Pop();
-                    Controller ui = uid.ui;
-                    ui._active(false);
+            if(mModalCloseCount > 0) {
+                while(mModalCloseCount > 0 && mModalStack.Count > 0) {
+                    var uid = mModalStack.Pop();
+                    var ui = uid.ui;
 
-                    if(ui.gameObject.activeSelf) {
-                        ui.Close();
-                        //wait for closing? (animation, etc)
-                        if(uid.transition)
-                            yield return StartCoroutine(uid.transition.Close());
+                    yield return uid.Closing();
 
-                        ui.gameObject.SetActive(false);
-                    }
+                    uid.Close();
 
-                    //last modal to close?
-                    if(mModalCloseCount == 1 && mModalStack.Count > 0) {
-                        UIData prevUID = mModalStack.Peek();
-                        Controller prevUI = prevUID.ui;
+                    uid.SetActive(false);
 
-                        if(uid.exclusive) {
-                            //open previous UIs
-                            yield return StartCoroutine(DoOpenPrevs());
-                        }
-
-                        prevUI._active(true);
-                    }
+                    ui.root.SetActive(false);
 
                     mModalCloseCount--;
                 }
-                else //ran out of things to close?
-                    mModalCloseCount = 0;
+
+                mModalCloseCount = 0;
+
+                //open new top
+                if(mModalStack.Count > 0) {
+                    var prevUID = mModalStack.Peek();
+                    var prevUI = prevUID.ui;
+
+                    prevUI.root.SetActive(true);
+
+                    prevUID.Open();
+
+                    yield return prevUID.Opening();
+
+                    prevUID.SetActive(true);
+                }
             }
 
             //open new modals
-            Controller uiLastOpen = null;
+            UIData uidLastOpen = null;
 
             while(mModalToOpen.Count > 0) {
-                UIData uid = mModalToOpen.Dequeue();
+                uidLastOpen = mModalToOpen.Dequeue();
+                var uiLastOpen = uidLastOpen.ui;
 
                 if(mModalStack.Count > 0) {
-                    UIData prevUID = mModalStack.Peek();
-                    Controller prevUI = prevUID.ui;
+                    var prevUID = mModalStack.Peek();
+                    var prevUI = prevUID.ui;
 
-                    prevUI._active(false);
+                    if(uiLastOpen.exclusive) {
+                        //hide below
+                        yield return prevUID.Closing();
 
-                    //hide below
-                    if(uid.exclusive) {
-                        yield return StartCoroutine(DoClosePrevs());
+                        prevUID.Close();
+
+                        prevUID.SetActive(false);
+
+                        prevUI.root.SetActive(false);
                     }
+                    else //just set inactive
+                        prevUID.SetActive(false);
                 }
 
                 //open
-                mModalStack.Push(uid);
+                mModalStack.Push(uidLastOpen);
 
-                uiLastOpen = uid.ui;
-                uiLastOpen.gameObject.SetActive(true);
-                uiLastOpen.Open();
+                uiLastOpen.root.SetActive(true);
 
-                if(uid.transition)
-                    yield return StartCoroutine(uid.transition.Open());
+                uidLastOpen.Open();
+
+                yield return uidLastOpen.Opening();
             }
 
-            if(uiLastOpen)
-                uiLastOpen._active(true);
+            if(uidLastOpen != null)
+                uidLastOpen.SetActive(true);
 
             if(activeCallback != null) {
                 if(lastCount > 0) {
@@ -280,65 +319,6 @@ namespace M8.UIModal {
             }
 
             mTaskActive = false;
-        }
-
-        IEnumerator DoOpenPrevs() {
-            mTransitionCount = 0;
-
-            //re-show modals behind
-            foreach(UIData prevUId in mModalStack) {
-                prevUId.ui.gameObject.SetActive(true);
-                prevUId.ui.Open();
-
-                TransitionBase trans = prevUId.transition;
-                if(trans) {
-                    mTransitions[mTransitionCount] = trans;
-                    mTransitionCount++;
-                    StartCoroutine(trans.Open());
-                }
-
-                if(prevUId.exclusive)
-                    break;
-            }
-
-            //wait till everything is done
-            for(int i = 0; i < mTransitionCount; i++) {
-                while(mTransitions[i].state == TransitionBase.State.Open)
-                    yield return null;
-            }
-
-            mTransitionCount = 0;
-        }
-
-        IEnumerator DoClosePrevs() {
-            mTransitionCount = 0;
-
-            //re-show modals behind
-            foreach(UIData prevUId in mModalStack) {
-                prevUId.ui.Close();
-
-                TransitionBase trans = prevUId.transition;
-                if(trans) {
-                    mTransitions[mTransitionCount] = trans;
-                    mTransitionCount++;
-                    StartCoroutine(trans.Close());
-                }
-                else
-                    prevUId.ui.gameObject.SetActive(false);
-
-                if(prevUId.exclusive)
-                    break;
-            }
-
-            //wait till everything is done
-            for(int i = 0; i < mTransitionCount; i++) {
-                while(mTransitions[i].state == TransitionBase.State.Close)
-                    yield return null;
-
-                mTransitions[i].gameObject.SetActive(false);
-            }
-
-            mTransitionCount = 0;
         }
     }
 }

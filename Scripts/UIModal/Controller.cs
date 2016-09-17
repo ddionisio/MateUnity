@@ -4,48 +4,35 @@ using System.Collections;
 namespace M8.UIModal {
     [AddComponentMenu("M8/UI Modal/Controller")]
     [DisallowMultipleComponent]
-    public class Controller : MonoBehaviour {
-        public bool exclusive = true; //hide modals behind if this is the top
+    public class Controller : MonoBehaviour, Interface.IActive {
+        [Tooltip("Hide modals behind if this is the top")]
+        public bool exclusive = true;
+
+        [Tooltip("Root to deactive after close.  Leave empty to use self.")]
+        [SerializeField]
+        GameObject _root;
 
         public delegate void ActiveCallback(bool active);
-        public delegate void Callback();
 
         public bool isActive { get { return mActive; } }
 
+        public GameObject root { get { return _root ? _root : gameObject; } }
+
         public event ActiveCallback onActiveCallback;
-
-        /// <summary>
-        /// Called whenever this controller becomes the top modal (active) or a new modal is pushed (inactive), once everything has opened/closed.
-        /// </summary>
-        protected virtual void OnActive(bool active) { }
-
-        /// <summary>
-        /// Called when modal needs to show up, use this to refresh ui stuff.
-        /// </summary>
-        public virtual void Open() { }
-
-        /// <summary>
-        /// Called when modal needs to hide.
-        /// </summary>
-        public virtual void Close() { }
-
+        
         private bool mActive;
 
         //don't call these, only uimodalmanager
 
-        public void _active(bool active) {
-            if(mActive != active) {
-                mActive = active;
+        void Interface.IActive.SetActive(bool aActive) {
+            if(mActive != aActive) {
+                mActive = aActive;
 
-                if(active) {
-                    OnActive(true);
-
+                if(aActive) {
                     if(onActiveCallback != null)
                         onActiveCallback(true);
                 }
                 else {
-                    OnActive(false);
-
                     if(onActiveCallback != null)
                         onActiveCallback(false);
                 }
