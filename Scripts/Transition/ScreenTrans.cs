@@ -43,10 +43,17 @@ namespace M8 {
 
         public ToType target = ToType.Camera;
         public Texture targetTexture; //for ToType.Texture
-
+                
         private float mCurTime;
-        private bool mIsReady; //if true, this transition has been initialized and ready to play
         private Material mMat;
+
+        private RenderTexture mRenderTexture;
+        private Vector2 mRenderTextureScreenSize;
+
+        private Coroutine mPlayRout;
+
+        private bool mIsRenderActive;
+        private ScreenTransRender mTransRender;
 
         public float curTime { get { return mCurTime; } }
         public float curTimeNormalized { get { return mCurTime/delay; } }
@@ -56,7 +63,27 @@ namespace M8 {
         /// </summary>
         public float curCurveValue { get { return curve.Evaluate(curveNormalized ? curTimeNormalized : curTime); } }
 
-        public bool isDone { get { return mCurTime >= delay; } }
+        public bool isPrepared { get; private set; }
+        public bool isPlaying { get { return mPlayRout != null; } }
+
+        public bool isRenderActive {
+            get { return mIsRenderActive; }
+
+            set {
+                mIsRenderActive = value;
+                if(mIsRenderActive) {
+                    if(!mTransRender) {
+                        mTransRender = GetPlayer();
+                        if(mTransRender)
+                            mTransRender.AddRender(this);
+                    }
+                }
+                else if(mTransRender) {
+                    mTransRender.RemoveRender(this);
+                    mTransRender = null;
+                }
+            }
+        }
 
         public Material material {
             get {
@@ -66,20 +93,33 @@ namespace M8 {
             }
         }
 
+        private RenderTexture renderTexture
+        {
+            get
+            {
+                Vector2 screenSize = new Vector2(Screen.width, Screen.height);
+                if(mRenderTexture == null || mRenderTextureScreenSize != screenSize) {
+                    if(mRenderTexture)
+                        DestroyImmediate(mRenderTexture);
+
+                    mRenderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32);
+
+                    mRenderTextureScreenSize = screenSize;
+                }
+
+                return mRenderTexture;
+            }
+        }
+
         /// <summary>
         /// Depending on cameraType, set cameraTarget to the appropriate reference.
         /// </summary>
         public Camera GetCameraTarget() {
-            Camera cam = cameraTarget;
-
             switch(cameraType) {
                 case CameraType.Main:
-                    cam = Camera.main;
-                    break;
+                    return Camera.main;
                 case CameraType.Target:
-                    if(!cam)
-                        cam = Camera.main;
-                    break;
+                    return cameraTarget ? cameraTarget : Camera.main;
                 case CameraType.All:
                     Camera[] cams = Camera.allCameras;
                     float maxDepth = float.MinValue;
@@ -91,60 +131,71 @@ namespace M8 {
                         }
                     }
 
-                    cam = maxIndex == -1 ? Camera.main : cams[maxIndex];
-                    break;
+                    return maxIndex == -1 ? Camera.main : cams[maxIndex];
             }
 
-            return cam;
-        }
-
-        public void Prepare() {
-            if(!mIsReady) {
-                //set textures
-
-                OnPrepare();
-
-                mCurTime = 0.0f;
-                mIsReady = true;
-            }
-        }
-
-        public void End() {
-            mCurTime = delay;
-            mIsReady = false;
-            OnFinish();
+            return null;
         }
 
         /// <summary>
-        /// Called by ScreenTransPlayer
+        /// Certain transitions need to prepare before Play can be called (e.g. cross fade)
         /// </summary>
-        public void Run(float dt) {
-            if(mIsReady) {
-                mCurTime += dt;
-                if(mCurTime > delay)
-                    mCurTime = delay;
+        public void Prepare() {
+            if(!isPrepared) {
+                mCurTime = 0f;
 
-                OnUpdate();
+                OnPrepare();
+                OnUpdate(); //do one update
 
-                if(mCurTime == delay) {
-                    mIsReady = false;
-                    OnFinish();
-                }
+                isPrepared = true;
             }
         }
+        
+        /// <summary>
+        /// Call this to start rendering. Note: will continue to render after duration, you will need to call End to stop rendering.
+        /// </summary>
+        public void Play() {
+            if(mPlayRout != null)
+                StopCoroutine(mPlayRout);
 
+            mPlayRout = StartCoroutine(DoPlay());
+        }
+
+        /// <summary>
+        /// Call this to stop rendering.  Note: make sure to call this after Play
+        /// </summary>
+        public void End() {
+            mCurTime = delay;
+            isPrepared = false;
+            isRenderActive = false;
+
+            if(mPlayRout != null) {
+                StopCoroutine(mPlayRout);
+                mPlayRout = null;
+            }
+
+            OnFinish();
+
+            if(mRenderTexture) {
+                DestroyImmediate(mRenderTexture);
+                mRenderTexture = null;
+            }
+        }
+        
         protected void SetSourceTexture(SourceType source, Texture sourceTexture) {
+            Debug.Log("set source texture");
+
             switch(source) {
                 case SourceType.CameraSnapShot:
                     switch(cameraType) {
                         case CameraType.Main:
-                            material.SetTexture("_SourceTex", ScreenTransManager.instance.CameraSnapshot(Camera.main));
+                            material.SetTexture("_SourceTex", CameraSnapshot(Camera.main));
                             break;
                         case CameraType.Target:
-                            material.SetTexture("_SourceTex", ScreenTransManager.instance.CameraSnapshot(cameraTarget ? cameraTarget : Camera.main));
+                            material.SetTexture("_SourceTex", CameraSnapshot(cameraTarget ? cameraTarget : Camera.main));
                             break;
                         case CameraType.All:
-                            material.SetTexture("_SourceTex", ScreenTransManager.instance.CameraSnapshot(M8.Util.GetAllCameraDepthSorted()));
+                            material.SetTexture("_SourceTex", CameraSnapshot(Util.GetAllCameraDepthSorted()));
                             break;
                     }
                     break;
@@ -245,10 +296,108 @@ namespace M8 {
             return ret;
         }
 
+        protected virtual void OnDisable() {
+            End();
+        }
+
+        protected virtual void Awake() {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
         protected virtual void OnDestroy() {
             if(mMat)
                 DestroyImmediate(mMat);
+
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
         }
+
+        #region internal
+
+        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
+            if(mode == UnityEngine.SceneManagement.LoadSceneMode.Single) {
+                //restore render?
+                if(mIsRenderActive) {
+                    if(!mTransRender) {
+                        mTransRender = GetPlayer();
+                        if(mTransRender)
+                            mTransRender.AddRender(this); //re-establish
+                        else
+                            End(); //abort
+                    }
+                }
+            }
+        }
+
+        IEnumerator DoPlay() {
+            Prepare();
+
+            isRenderActive = true;
+
+            if(!mTransRender) {
+                End();
+                yield break;
+            }
+            
+            var wait = new WaitForEndOfFrame();
+
+            while(mCurTime < delay) {
+                yield return wait;
+
+                mCurTime = Mathf.Min(mCurTime + Time.smoothDeltaTime, delay);
+
+                OnUpdate();
+            }
+
+            mPlayRout = null;
+        }
+
+        ScreenTransRender GetPlayer() {
+            Camera cam = GetCameraTarget();
+            if(cam) {
+                var player = cam.GetComponent<ScreenTransRender>();
+                if(!player)
+                    player = cam.gameObject.AddComponent<ScreenTransRender>();
+
+                return player;
+            }
+
+            return null;
+        }
+
+        Texture CameraSnapshot(Camera cam) {
+            //RenderTexture lastRT = RenderTexture.active;
+            //RenderTexture.active = renderTexture;
+            //GL.Clear(false, true, Color.clear);
+            if(!cam.targetTexture) {
+                cam.targetTexture = renderTexture;
+                cam.Render();
+                cam.targetTexture = null;
+            }
+            //RenderTexture.active = lastRT;
+
+            return renderTexture;
+        }
+
+        Texture CameraSnapshot(Camera[] cams) {
+            //RenderTexture lastRT = RenderTexture.active;
+            //RenderTexture.active = renderTexture;
+            //GL.Clear(false, true, Color.clear);
+
+            //NOTE: assumes cams are in the correct depth order
+            for(int i = 0; i < cams.Length; i++) {
+                if(!cams[i].targetTexture) {
+                    cams[i].targetTexture = renderTexture;
+                    cams[i].Render();
+                    cams[i].targetTexture = null;
+                }
+            }
+
+            //RenderTexture.active = lastRT;
+
+            return renderTexture;
+        }
+
+        #endregion
 
         #region implements
 
@@ -271,3 +420,4 @@ namespace M8 {
         #endregion
     }
 }
+ 

@@ -531,25 +531,25 @@ namespace M8 {
         protected override void OnInstanceInit() {
             UserData.main.actCallback += OnUserDataAction;
 
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
-
+            SceneManager.instance.sceneChangePostCallback += OnScenePostLoaded;
+            
             mStartData = new Dictionary<string, InitData[]>(startData.Length);
             foreach(InitSceneData sdat in startData) {
                 if(!string.IsNullOrEmpty(sdat.scene) && sdat.data != null)
                     mStartData.Add(sdat.scene, sdat.data);
             }
 
-            InitLocalData(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            InitLocalData(SceneManager.instance.curScene);
             InitGlobalData();
         }
 
         protected override void OnInstanceDeinit() {
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+            if(SceneManager.instance)
+                SceneManager.instance.sceneChangePostCallback -= OnScenePostLoaded;
         }
 
-        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
-            if(mode == UnityEngine.SceneManagement.LoadSceneMode.Single)
-                InitLocalData(scene);
+        void OnScenePostLoaded() {
+            InitLocalData(SceneManager.instance.curScene);
         }
 
         void OnUserDataAction(UserData ud, UserData.Action act) {

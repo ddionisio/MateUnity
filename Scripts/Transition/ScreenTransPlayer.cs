@@ -2,55 +2,52 @@
 using System.Collections;
 
 namespace M8 {
+    /// <summary>
+    /// Add this component with ScreenTrans to play when M8.SceneManager changes to new scene
+    /// </summary>
     [AddComponentMenu("M8/Screen Transition/Player")]
-    [RequireComponent(typeof(Camera))]
-    public class ScreenTransPlayer : MonoBehaviour {
-        private ScreenTrans mPrevTrans; //do a one frame render before going to next transition
-        private ScreenTrans mCurrentTrans;
+    public class ScreenTransPlayer : MonoBehaviour, SceneManager.ITransition {
+        int SceneManager.ITransition.priority { get { return 0; } }
 
-        public void Play(ScreenTrans trans) {
-            mPrevTrans = mCurrentTrans;
-
-            mCurrentTrans = trans;
-            if(mCurrentTrans) {
-                mCurrentTrans.Prepare();
-
-                enabled = true;
-            }
-            else
-                enabled = false;
-        }
-
-        public void Stop() {
-            mPrevTrans = mCurrentTrans = null;
-            enabled = false;
-        }
-
+        public ScreenTrans transitionOut;
+        public ScreenTrans transitionIn;
+        
         void OnDestroy() {
-            //if(mCurrentTrans)
-            //mCurrentTrans.End();
+            if(SceneManager.instance)
+                SceneManager.instance.RemoveTransition(this);
         }
 
         void Awake() {
-            enabled = false;
+            SceneManager.instance.AddTransition(this);
         }
 
-        void LateUpdate() {
-            if(mCurrentTrans.isDone) {
-                mCurrentTrans = null;
-                enabled = false;
+        IEnumerator SceneManager.ITransition.Out() {
+            if(transitionOut) {
+                transitionOut.Play();
+
+                while(transitionOut.isPlaying)
+                    yield return null;
+            }
+            else if(transitionIn) {
+                transitionIn.Prepare();
+                transitionIn.isRenderActive = true;
             }
         }
 
-        void OnRenderImage(RenderTexture source, RenderTexture destination) {
-            if(mPrevTrans) {
-                mPrevTrans.OnRenderImage(source, destination);
-                mPrevTrans = null;
+        IEnumerator SceneManager.ITransition.In() {
+            if(transitionOut) {
+                yield return new WaitForEndOfFrame(); //wait one render
+
+                transitionOut.End();
             }
 
-            if(mCurrentTrans) {
-                mCurrentTrans.Run(Time.smoothDeltaTime);
-                mCurrentTrans.OnRenderImage(source, destination);
+            if(transitionIn) {
+                transitionIn.Play();
+
+                while(transitionIn.isPlaying)
+                    yield return null;
+
+                transitionIn.End();
             }
         }
     }

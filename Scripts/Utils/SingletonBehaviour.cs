@@ -25,6 +25,8 @@ namespace M8 {
             }
         }
 
+        public static bool isInstantiated { get { return mInstanceState == InstanceState.Initialized; } }
+
         /// <summary>
         /// In case you need this instance again after it is destroyed.
         /// </summary>

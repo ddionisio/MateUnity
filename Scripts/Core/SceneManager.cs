@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnitySceneManager = UnityEngine.SceneManagement.SceneManager;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,136 +8,132 @@ namespace M8 {
     [PrefabCore]
     [AddComponentMenu("M8/Core/SceneManager")]
     public class SceneManager : SingletonBehaviour<SceneManager> {
-        public const string levelString = "level";
-        public const int stackCapacity = 8;
+        public enum Mode {
+            Single,
+            Additive
+        }
 
+        public interface ITransition {
+            /// <summary>
+            /// Higher priority executes first.
+            /// </summary>
+            int priority { get; }
+
+            IEnumerator Out();
+            IEnumerator In();            
+        }
+
+        public const int stackCapacity = 8;
+        
+        public delegate void OnSceneCallback();
         public delegate void OnSceneBoolCallback(bool b);
         public delegate void OnSceneStringCallback(string nextScene);
 
+        /// <summary>
+        /// Whenever Pause/Resume is called
+        /// </summary>
         public event OnSceneBoolCallback pauseCallback;
+
+        /// <summary>
+        /// Called after transition (e.g. load screen, save states); and before unloading current scene, and then load new scene.
+        /// </summary>
         public event OnSceneStringCallback sceneChangeCallback;
 
-        //transitions, make sure ScreenTransitionManager is available
+        /// <summary>
+        /// Called after new scene is loaded, before transition in
+        /// </summary>
+        public event OnSceneCallback sceneChangePostCallback;
 
-        [Tooltip("The Screen Transition to play when exiting the scene.  Make sure ScreenTransManager is available.")]
+        [Tooltip("Use additive if you want to start the game with a root scene, and having one scene to append/replace as you load new scene.")]
         [SerializeField]
-        string sceneTransitionOut;
-        [Tooltip("The Screen Transition to play when entering the new scene.  Make sure ScreenTransManager is available.")]
+        Mode _mode = Mode.Single;
+        
+        [Tooltip("Prefix for loading level by index.")]
         [SerializeField]
-        string sceneTransitionIn;
-
+        string levelString = "level";
+        
         [SerializeField]
         bool stackEnable = false;
-
-        private string mCurSceneStr;
-
-        private int mCurLevel;
-
+        
+        private Scene mCurScene;
+        private Scene mRootScene; //used for additive mode
+        
         private Stack<string> mSceneStack;
 
+        private List<ITransition> mTransitions;
+
         private float mPrevTimeScale;
-
-        private bool mFirstTime = true;
-
-        private string mSceneToLoad = null;
-
-        private string mScreenTransOut, mScreenTransIn;
-
-        //private bool mIsFullscreen = false;
-        private bool mPaused = false;
-
+        
         private Transform mHolder; //for use with storing game objects to be transferred to other scenes
 
-        public bool isPaused {
-            get {
-                return mPaused;
-            }
-        }
-
-        public int curLevel {
-            get {
-                return mCurLevel;
-            }
-        }
-
-        public string curLevelName {
-            get {
-                return mCurSceneStr;
-            }
-        }
-
-        void _LoadScene(string scene, string transOut, string transIn) {
-            //make sure the scene is not paused
-            Resume();
-
-            mSceneToLoad = scene;
-            mFirstTime = false;
-            mScreenTransOut = transOut;
-            mScreenTransIn = transIn;
-
-            if(mFirstTime)
-                DoLoad();
-            else {
-                if(!string.IsNullOrEmpty(mScreenTransOut)) {
-                    if(string.IsNullOrEmpty(mScreenTransIn))
-                        ScreenTransManager.instance.Play(mScreenTransOut, OnScreenTransEndLoadScene);
-                    else {
-                        //allow transition to call prepare before loading next scene
-                        ScreenTransManager.instance.Play(mScreenTransOut, null);
-                        ScreenTransManager.instance.Play(mScreenTransIn, OnScreenTransBeginLoadScene);
-                    }
+        public Mode mode {
+            get { return _mode; }
+            set {
+                if(isLoading) {
+                    Debug.LogError("Current scene is still loading, can't set mode.");
+                    return;
                 }
-                else if(!string.IsNullOrEmpty(mScreenTransIn))
-                    ScreenTransManager.instance.Play(mScreenTransIn, OnScreenTransBeginLoadScene);
-                else
-                    DoLoad();
+
+                _mode = value;
             }
         }
+        
+        public bool isPaused { get; private set; }
 
-        public void LoadSceneNoTransition(string scene) {
-            SceneStackPush(mCurSceneStr, scene);
-            _LoadScene(scene, null, null);
-        }
+        public int curLevel { get; private set; }
 
+        public Scene curScene { get { return mCurScene; } }
+
+        public bool isLoading { get; private set; }
+                        
         public void LoadScene(string scene) {
-            SceneStackPush(mCurSceneStr, scene);
-            _LoadScene(scene, sceneTransitionOut, sceneTransitionIn);
-        }
+            //can't allow this
+            if(isLoading) {
+                Debug.LogError("Current scene is still loading, can't load: "+scene);
+                return;
+            }
 
-        public void LoadScene(string scene, string transitionOut, string transitionIn) {
-            SceneStackPush(mCurSceneStr, scene);
-            _LoadScene(scene, transitionOut, transitionIn);
-        }
+            SceneStackPush(mCurScene.name, scene);
 
+            LoadSceneMode loadMode = LoadSceneMode.Single;
+            bool unloadCurrent = false;
+
+            //check if we are loading additive
+            switch(mode) {
+                case Mode.Additive:
+                    loadMode = LoadSceneMode.Additive;
+                    unloadCurrent = true;
+                    break;
+            }
+            
+            StartCoroutine(DoLoadScene(scene, loadMode, unloadCurrent));
+        }
+        
         public void LoadLevel(int level) {
-            mCurLevel = level;
+            curLevel = level;
             LoadScene(levelString + level);
         }
 
-        public void LoadLevel(int level, string transitionOut, string transitionIn) {
-            mCurLevel = level;
-            LoadScene(levelString + level, transitionOut, transitionIn);
+        /// <summary>
+        /// Load back root.  This can be used to reset the entire game.
+        /// </summary>
+        public void LoadRoot() {
+            LoadScene(mRootScene.name);
         }
-
+        
         public void Reload() {
-            if(!string.IsNullOrEmpty(mCurSceneStr)) {
-                LoadScene(mCurSceneStr);
+            if(!string.IsNullOrEmpty(mCurScene.name)) {
+                LoadScene(mCurScene.name);
             }
         }
-
-        public void Reload(string transitionOut, string transitionIn) {
-            if(!string.IsNullOrEmpty(mCurSceneStr)) {
-                LoadScene(mCurSceneStr, transitionOut, transitionIn);
-            }
-        }
-
+        
         /// <summary>
         /// Angry if stack is not enabled
         /// </summary>
         public void LoadLastSceneStack() {
             if(stackEnable) {
                 if(mSceneStack.Count > 0) {
-                    _LoadScene(mSceneStack.Pop(), sceneTransitionOut, sceneTransitionIn);
+                    LoadScene(mSceneStack.Pop());
                 }
                 else {
                     Debug.Log("No more scenes to pop!");
@@ -156,25 +154,25 @@ namespace M8 {
         }
 
         public void Pause() {
-            if(!mPaused) {
-                mPaused = true;
+            if(!isPaused) {
+                isPaused = true;
 
                 if(Time.timeScale != 0.0f) {
                     mPrevTimeScale = Time.timeScale;
                     Time.timeScale = 0.0f;
                 }
 
-                if(pauseCallback != null) pauseCallback(mPaused);
+                if(pauseCallback != null) pauseCallback(isPaused);
             }
         }
 
         public void Resume() {
-            if(mPaused) {
-                mPaused = false;
+            if(isPaused) {
+                isPaused = false;
 
                 Time.timeScale = mPrevTimeScale;
 
-                if(pauseCallback != null) pauseCallback(mPaused);
+                if(pauseCallback != null) pauseCallback(isPaused);
             }
         }
 
@@ -198,48 +196,88 @@ namespace M8 {
             if(t)
                 Destroy(t.gameObject);
         }
-                
+        
+        public void AddTransition(ITransition trans) {
+            //only add if it doesn't exist
+            if(!mTransitions.Contains(trans)) {
+                if(mTransitions.Count > 0) {
+                    for(int i = mTransitions.Count - 1; i >= 0; i--) {
+                        if(mTransitions[i].priority >= trans.priority) {
+                            mTransitions.Insert(i, trans);
+                            break;
+                        }
+                    }
+                }
+                else
+                    mTransitions.Add(trans);
+            }
+        }
+
+        public void RemoveTransition(ITransition trans) {
+            mTransitions.Remove(trans);
+        }
+        
         protected override void OnInstanceInit() {
-            mCurSceneStr = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            mRootScene = mCurScene = UnitySceneManager.GetActiveScene();
             //mIsFullscreen = Screen.fullScreen;
 
             mPrevTimeScale = Time.timeScale;
 
-            mPaused = false;
+            isPaused = false;
+
+            mTransitions = new List<ITransition>();
 
             if(stackEnable)
                 mSceneStack = new Stack<string>(stackCapacity);
-
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
-        protected override void OnInstanceDeinit() {
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
+        IEnumerator DoLoadScene(string toScene, LoadSceneMode mode, bool unloadCurrent) {
+            isLoading = true;
 
-        void DoLoad() {
-            if(sceneChangeCallback != null) sceneChangeCallback(mSceneToLoad);
+            //make sure the scene is not paused
+            Resume();
 
-            mCurSceneStr = mSceneToLoad;
+            //play out transitions
+            for(int i = 0; i < mTransitions.Count; i++)
+                yield return mTransitions[i].Out();
+            
+            //scene is about to change
+            if(sceneChangeCallback != null)
+                sceneChangeCallback(toScene);
 
-            UnityEngine.SceneManagement.SceneManager.LoadScene(mSceneToLoad);
-        }
+            bool doLoad = true;
 
-        void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
-            if(mode == UnityEngine.SceneManagement.LoadSceneMode.Single) {
-                mCurSceneStr = scene.name;
-                mFirstTime = false;
+            if(mode == LoadSceneMode.Additive) {
+                Debug.Log("unload: "+mCurScene);
+                if(unloadCurrent && mCurScene != mRootScene)
+                    UnitySceneManager.UnloadScene(mCurScene);
+                
+                //load only if it doesn't exist
+                doLoad = !UnitySceneManager.GetSceneByName(toScene).IsValid();
             }
-        }
 
-        void OnScreenTransBeginLoadScene(ScreenTrans trans, ScreenTransManager.Action act) {
-            if(act == ScreenTransManager.Action.Begin)
-                DoLoad();
-        }
+            //load
+            if(doLoad) {
+                var sync = UnitySceneManager.LoadSceneAsync(toScene, mode);
 
-        void OnScreenTransEndLoadScene(ScreenTrans trans, ScreenTransManager.Action act) {
-            if(act == ScreenTransManager.Action.End)
-                DoLoad();
+                while(!sync.isDone)
+                    yield return null;
+            }
+            else {
+                yield return null;
+            }
+
+            mCurScene = UnitySceneManager.GetSceneByName(toScene);
+            UnitySceneManager.SetActiveScene(mCurScene);
+
+            if(sceneChangePostCallback != null)
+                sceneChangePostCallback();
+
+            //play in transitions
+            for(int i = 0; i < mTransitions.Count; i++)
+                yield return mTransitions[i].In();
+
+            isLoading = false;
         }
 
         private void SceneStackPush(string scene, string nextScene) {

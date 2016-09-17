@@ -14,7 +14,7 @@ namespace M8 {
             //wait for one update to ensure all initialization has occured
             yield return new WaitForFixedUpdate();
 
-            SceneManager.instance.LoadSceneNoTransition(_toScene);
+            SceneManager.instance.LoadScene(_toScene);
         }
     }
 }
