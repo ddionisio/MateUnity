@@ -307,7 +307,7 @@ namespace M8 {
 
     //-------------- Easing --------------
 
-    public struct Ease {
+    public struct Easing {
         public static float In(float t, float tMax, float start, float delta) {
             return start + delta * _in(t / tMax);
         }

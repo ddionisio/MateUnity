@@ -245,17 +245,17 @@ namespace M8 {
                             case Move.EaseIn:
                                 ApplyPosition(
                                     new Vector3(
-                                        M8.Ease.In(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
-                                        M8.Ease.In(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
-                                        M8.Ease.In(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)), true);
+                                        Easing.In(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
+                                        Easing.In(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
+                                        Easing.In(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)), true);
                                 break;
 
                             case Move.EaseOut:
                                 ApplyPosition(
                                     new Vector3(
-                                        M8.Ease.Out(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
-                                        M8.Ease.Out(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
-                                        M8.Ease.Out(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)), true);
+                                        Easing.Out(mCurTime, moveDelay, mStartPos.x, mEndPos.x - mStartPos.x),
+                                        Easing.Out(mCurTime, moveDelay, mStartPos.y, mEndPos.y - mStartPos.y),
+                                        Easing.Out(mCurTime, moveDelay, mStartPos.z, mEndPos.z - mStartPos.z)), true);
                                 break;
 
                             case Move.Damp:
