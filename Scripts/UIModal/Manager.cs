@@ -21,18 +21,30 @@ namespace M8.UIModal {
 
             private Controller mUI;
 
+            private Interface.IPush[] mIPushes;
+            private Interface.IPop[] mIPops;
             private Interface.IOpen[] mIOpens;
             private Interface.IOpening[] mIOpenings;
-            private Interface.IClosing[] mIClosings;
             private Interface.IClose[] mICloses;
+            private Interface.IClosing[] mIClosings;
             private Interface.IActive[] mIActives;
-
+            
             public Controller ui {
                 get {
                     if(!mUI)
                         GrabUI();
                     return mUI;
                 }
+            }
+
+            public void Push(Params parms) {
+                for(int i = 0; i < mIPushes.Length; i++)
+                    mIPushes[i].Push(parms);
+            }
+
+            public void Pop() {
+                for(int i = 0; i < mIPops.Length; i++)
+                    mIPops[i].Pop();
             }
 
             public void Open() {
@@ -74,40 +86,77 @@ namespace M8.UIModal {
                     mUI = _ui;
 
                 if(mUI) {
-                    var comps = mUI.GetComponents(typeof(Interface.IOpen));
-                    mIOpens = new Interface.IOpen[comps.Length];
-                    for(int i = 0; i < comps.Length; i++) mIOpens[i] = comps[i] as Interface.IOpen;
+                    var comps = mUI.GetComponents<MonoBehaviour>();
 
-                    comps = mUI.GetComponents(typeof(Interface.IOpening));
-                    mIOpenings = new Interface.IOpening[comps.Length];
-                    for(int i = 0; i < comps.Length; i++) mIOpenings[i] = comps[i] as Interface.IOpening;
-                    
-                    comps = mUI.GetComponents(typeof(Interface.IClosing));
-                    mIClosings = new Interface.IClosing[comps.Length];
-                    for(int i = 0; i < comps.Length; i++) mIClosings[i] = comps[i] as Interface.IClosing;
+                    var IPushes = new List<Interface.IPush>();
+                    var IPops = new List<Interface.IPop>();
+                    var IOpens = new List<Interface.IOpen>();
+                    var IOpenings = new List<Interface.IOpening>();
+                    var ICloses = new List<Interface.IClose>();
+                    var IClosings = new List<Interface.IClosing>();
+                    var IActives = new List<Interface.IActive>();
 
-                    comps = mUI.GetComponents(typeof(Interface.IClose));
-                    mICloses = new Interface.IClose[comps.Length];
-                    for(int i = 0; i < comps.Length; i++) mICloses[i] = comps[i] as Interface.IClose;
+                    for(int i = 0; i < comps.Length; i++) {
+                        var comp = comps[i];
 
-                    comps = mUI.GetComponents(typeof(Interface.IActive));
-                    mIActives = new Interface.IActive[comps.Length];
-                    for(int i = 0; i < comps.Length; i++) mIActives[i] = comps[i] as Interface.IActive;
+                        var push = comp as Interface.IPush;
+                        if(comp != null) IPushes.Add(push);
+
+                        var pop = comp as Interface.IPop;
+                        if(comp != null) IPops.Add(pop);
+
+                        var open = comp as Interface.IOpen;
+                        if(comp != null) IOpens.Add(open);
+
+                        var opening = comp as Interface.IOpening;
+                        if(comp != null) IOpenings.Add(opening);
+
+                        var close = comp as Interface.IClose;
+                        if(comp != null) ICloses.Add(close);
+
+                        var closing = comp as Interface.IClosing;
+                        if(comp != null) IClosings.Add(closing);
+
+                        var active = comp as Interface.IActive;
+                        if(comp != null) IActives.Add(active);
+                    }
+
+                    mIPushes = IPushes.ToArray();
+                    mIPops = IPops.ToArray();
+                    mIOpens = IOpens.ToArray();
+                    mIOpenings = IOpenings.ToArray();
+                    mICloses = ICloses.ToArray();
+                    mIClosings = IClosings.ToArray();
+                    mIActives = IActives.ToArray();
                 }
                 else
                     Debug.LogWarning("UIController not set.");
             }
         }
 
+        private enum UICommandType {
+            Push,
+            Pop,
+            PopTo,
+            PopToInclusive,
+            PopAll
+        }
+
+        private struct UICommand {
+            public UICommandType type;
+            public Params parms;
+            public UIData uid;
+        }
+
         public UIData[] uis;
+
+        public Transform instantiateTo; //place prefab modals here if they don't have a designated "instantiateTo"
 
         public string openOnStart = "";
 
         private Dictionary<string, UIData> mModals;
         private Stack<UIData> mModalStack;
-        private Queue<UIData> mModalToOpen;
-        
-        private int mModalCloseCount;
+        private Queue<UICommand> mCommands;
         
         private bool mTaskActive;
 
@@ -118,6 +167,8 @@ namespace M8.UIModal {
                 return mModalStack.Count;
             }
         }
+
+        public bool isBusy { get { return mTaskActive; } }
 
         public UIData ModalGetData(string modal) {
             UIData dat = null;
@@ -150,53 +201,54 @@ namespace M8.UIModal {
         }
 
         //closes all modal and open this
-        public void ModalReplace(string modal) {
+        public void ModalReplace(string modal, Params parms) {
             ModalCloseAll();
 
-            ModalOpen(modal);
-
+            ModalOpen(modal, parms);
         }
 
-        public void ModalOpen(string modal) {
-            UIData uid = null;
-            if(!mModals.TryGetValue(modal, out uid)) {
+        public void ModalReplace(string modal, params ParamArg[] parms) {
+            ModalReplace(modal, new Params(parms));
+        }
+                
+        public void ModalOpen(string modal, Params parms) {
+            var uid = ModalGetData(modal);
+            if(uid == null) {
                 Debug.LogError("Modal not found: " + modal);
                 return;
             }
 
             //wait for an update, this is to allow the ui game object to initialize properly
-            mModalToOpen.Enqueue(uid);
+            mCommands.Enqueue(new UICommand() { type=UICommandType.Push, uid=uid, parms=parms });
 
             if(!mTaskActive)
                 StartCoroutine(DoTask());
         }
 
-        public void ModalCloseTop() {
-            if(mModalCloseCount < mModalStack.Count) {
-                mModalCloseCount++;
+        public void ModalOpen(string modal, params ParamArg[] parms) {
+            ModalOpen(modal, new Params(parms));
+        }
 
-                if(!mTaskActive)
-                    StartCoroutine(DoTask());
-            }
+        public void ModalCloseTop() {
+            mCommands.Enqueue(new UICommand() { type=UICommandType.Pop });
+
+            if(!mTaskActive)
+                StartCoroutine(DoTask());
         }
 
         public void ModalCloseAll() {
-            mModalCloseCount = mModalStack.Count;
+            mCommands.Enqueue(new UICommand() { type=UICommandType.PopAll });
 
             if(!mTaskActive)
                 StartCoroutine(DoTask());
         }
 
         public void ModalCloseUpTo(string modal, bool inclusive) {
-            foreach(UIData dat in mModalStack) {
-                if(dat.name == modal) {
-                    if(inclusive)
-                        mModalCloseCount++;
-                    break;
-                }
-                else
-                    mModalCloseCount++;
-            }
+            var uid = ModalGetData(modal);
+            if(uid == null)
+                return;
+
+            mCommands.Enqueue(new UICommand() { type=inclusive ? UICommandType.PopToInclusive : UICommandType.PopTo, uid=uid });
 
             if(!mTaskActive)
                 StartCoroutine(DoTask());
@@ -209,11 +261,15 @@ namespace M8.UIModal {
         protected override void OnInstanceInit() {
             mModals = new Dictionary<string, UIData>(uis.Length);
             mModalStack = new Stack<UIData>(uis.Length);
-            mModalToOpen = new Queue<UIData>(uis.Length);
+            mCommands = new Queue<UICommand>();
 
             //setup data and deactivate object
             for(int i = 0; i < uis.Length; i++) {
                 var uid = uis[i];
+
+                if(uid.isPrefab && !uid.instantiateTo) //set default instantiate to
+                    uid.instantiateTo = instantiateTo;
+
                 var ui = uid.ui;
                 if(ui) {
                     ui.root.SetActive(false);
@@ -225,7 +281,64 @@ namespace M8.UIModal {
 
         void Start() {
             if(!string.IsNullOrEmpty(openOnStart)) {
-                ModalOpen(openOnStart);
+                ModalOpen(openOnStart, new Params());
+            }
+        }
+        
+        IEnumerator DoPop(UIData uid) {
+            uid.SetActive(false);
+
+            uid.Close();
+
+            yield return uid.Closing();
+                        
+            uid.Pop();
+
+            uid.ui.root.SetActive(false);
+        }
+
+        IEnumerator DoOpenCurrent() {
+            if(mModalStack.Count > 0) {
+                var modalsToOpen = new List<UIData>();
+
+                foreach(var uid in mModalStack) {
+                    modalsToOpen.Add(uid);
+                    if(uid.exclusive)
+                        break;
+                }
+
+                //open from back to front
+                for(int i = modalsToOpen.Count - 1; i >= 0; i--) {
+                    var uid = modalsToOpen[i];
+
+                    uid.ui.root.SetActive(true);
+
+                    uid.Open();
+
+                    yield return uid.Opening();
+                }
+
+                //set top active
+                mModalStack.Peek().SetActive(true);
+            }
+        }
+
+        IEnumerator DoCloseCurrent() {
+            if(mModalStack.Count > 0) {
+                //set top inactive
+                mModalStack.Peek().SetActive(false);
+
+                //close from front to back
+                foreach(var uid in mModalStack) {
+                    uid.Close();
+
+                    yield return uid.Closing();
+
+                    uid.ui.root.SetActive(false);
+
+                    if(uid.exclusive) //things below are already closed
+                        break;
+                }
             }
         }
 
@@ -234,77 +347,71 @@ namespace M8.UIModal {
 
             int lastCount = mModalStack.Count;
 
-            //close modals
-            if(mModalCloseCount > 0) {
-                while(mModalCloseCount > 0 && mModalStack.Count > 0) {
-                    var uid = mModalStack.Pop();
-                    var ui = uid.ui;
+            while(mCommands.Count > 0) {
+                var command = mCommands.Dequeue();
+                
+                switch(command.type) {
+                    case UICommandType.Push:
+                        var pushUID = command.uid;
+                                                
+                        if(pushUID.exclusive) //close previous
+                            yield return DoCloseCurrent();
 
-                    yield return uid.Closing();
+                        mModalStack.Push(pushUID);
 
-                    uid.Close();
+                        pushUID.ui.root.SetActive(true);
 
-                    uid.SetActive(false);
+                        pushUID.Push(command.parms);
 
-                    ui.root.SetActive(false);
+                        pushUID.Open();
 
-                    mModalCloseCount--;
-                }
+                        yield return pushUID.Opening();
 
-                mModalCloseCount = 0;
+                        pushUID.SetActive(true);
+                        break;                                            
+                    case UICommandType.PopTo:
+                        int popToLastStack = mModalStack.Count;
 
-                //open new top
-                if(mModalStack.Count > 0) {
-                    var prevUID = mModalStack.Peek();
-                    var prevUI = prevUID.ui;
+                        while(mModalStack.Count > 0) {
+                            if(mModalStack.Peek() == command.uid)
+                                break;
 
-                    prevUI.root.SetActive(true);
+                            var uid = mModalStack.Pop();
 
-                    prevUID.Open();
+                            yield return DoPop(uid);
+                        }
 
-                    yield return prevUID.Opening();
+                        if(popToLastStack != mModalStack.Count) //make sure there are actual pops
+                            yield return DoOpenCurrent();
+                        break;
+                    case UICommandType.PopToInclusive:
+                        while(mModalStack.Count > 0) {
+                            var uid = mModalStack.Pop();
 
-                    prevUID.SetActive(true);
+                            yield return DoPop(uid);
+
+                            if(uid == command.uid)
+                                break;
+                        }
+
+                        yield return DoOpenCurrent();
+                        break;
+                    case UICommandType.PopAll:
+                        while(mModalStack.Count > 0) {
+                            var uid = mModalStack.Pop();
+                            yield return DoPop(uid);
+                        }
+                        break;
+                    case UICommandType.Pop:
+                        if(mModalStack.Count > 0) {
+                            var uid = mModalStack.Pop();
+                            yield return DoPop(uid);
+
+                            yield return DoOpenCurrent();
+                        }
+                        break;
                 }
             }
-
-            //open new modals
-            UIData uidLastOpen = null;
-
-            while(mModalToOpen.Count > 0) {
-                uidLastOpen = mModalToOpen.Dequeue();
-                var uiLastOpen = uidLastOpen.ui;
-
-                if(mModalStack.Count > 0) {
-                    var prevUID = mModalStack.Peek();
-                    var prevUI = prevUID.ui;
-
-                    if(uiLastOpen.exclusive) {
-                        //hide below
-                        yield return prevUID.Closing();
-
-                        prevUID.Close();
-
-                        prevUID.SetActive(false);
-
-                        prevUI.root.SetActive(false);
-                    }
-                    else //just set inactive
-                        prevUID.SetActive(false);
-                }
-
-                //open
-                mModalStack.Push(uidLastOpen);
-
-                uiLastOpen.root.SetActive(true);
-
-                uidLastOpen.Open();
-
-                yield return uidLastOpen.Opening();
-            }
-
-            if(uidLastOpen != null)
-                uidLastOpen.SetActive(true);
 
             if(activeCallback != null) {
                 if(lastCount > 0) {

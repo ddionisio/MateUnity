@@ -9,22 +9,12 @@ namespace M8.UIModal {
         public const string confirmDialogRef = "confirm";
         public const string messageDialogRef = "message";
 
-        public static CharacterDialogBase CharacterDialog(bool isLocalized, string text, string aName = null, string portraitSpriteRef = null, string[] choices = null) {
-            Manager ui = Manager.instance;
-            CharacterDialogBase dlg = ui.ModalGetController<CharacterDialogBase>(characterDialogRef);
-
-            if(dlg != null) {
-                dlg.Apply(isLocalized, text, aName, portraitSpriteRef, choices);
-
-                if(!ui.ModalIsInStack(characterDialogRef)) {
-                    ui.ModalOpen(characterDialogRef); //will show on the next update
-                }
-            }
-            else {
-                Debug.LogWarning("Failed to open dialog: " + characterDialogRef);
-            }
-
-            return dlg;
+        public static void CharacterDialog(string text, string aName = null, string portraitSpriteRef = null, string[] choices = null) {
+            Manager.instance.ModalOpen(characterDialogRef, 
+                new ParamArg(CharacterDialogBase.paramText, text),
+                new ParamArg(CharacterDialogBase.paramName, aName),
+                new ParamArg(CharacterDialogBase.paramSpriteRef, portraitSpriteRef),
+                new ParamArg(CharacterDialogBase.paramChoiceArray, choices));
         }
 
         public static void Confirm(ConfirmDialogBase.OnConfirm aCallback) {

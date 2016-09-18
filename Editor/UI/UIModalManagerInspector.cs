@@ -64,7 +64,7 @@ public class UIModalManagerInspector : Editor {
                     dat.instantiateTo = EditorGUILayout.ObjectField("instantiateTo", dat.instantiateTo, typeof(Transform), true) as Transform;
                 }
             }
-
+                        
             bool openOnStart = dat.name == input.openOnStart;
             bool newOpenOnStart = EditorGUILayout.Toggle("Open On Start", openOnStart);
             if(openOnStart != newOpenOnStart) {
@@ -99,8 +99,14 @@ public class UIModalManagerInspector : Editor {
         }
 
         GUI.enabled = lastEnabled;
-
+                
         GUILayout.EndVertical();
+
+        var instantiateTo = (Transform)EditorGUILayout.ObjectField(new GUIContent("Instantiate To", "Default parent for instantiating prefab."), input.instantiateTo, typeof(Transform), true);
+        if(input.instantiateTo != instantiateTo) {
+            input.instantiateTo = instantiateTo;
+            GUI.changed = true;
+        }
 
         if(GUI.changed)
             EditorUtility.SetDirty(target);
