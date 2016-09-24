@@ -23,6 +23,13 @@ public class UIModalManagerInspector : Editor {
 
         int delInd = -1;
 
+        if(input.uis.Length == 0) {
+            if(!string.IsNullOrEmpty(input.openOnStart)) {
+                input.openOnStart = "";
+                GUI.changed = true;
+            }
+        }
+
         for(int i = 0; i < input.uis.Length; i++) {
             UIModalManager.UIData dat = input.uis[i];
 
