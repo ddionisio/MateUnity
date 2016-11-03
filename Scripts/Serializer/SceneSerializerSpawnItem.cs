@@ -9,12 +9,12 @@ namespace M8 {
     /// Note: Id is generated upon call to OnSpawned
     /// </summary>
     [AddComponentMenu("M8/Serializer/Object Spawn")]
-    public class SceneSerializerSpawnItem : SceneSerializer {
-        void OnSpawned() {
+    public class SceneSerializerSpawnItem : SceneSerializer, IPoolSpawn, IPoolDespawn {
+        void IPoolSpawn.OnSpawned() {
             SceneSerializerSpawnManager.instance.RegisterSpawn(this);
         }
 
-        void OnDespawned() {
+        void IPoolDespawn.OnDespawned() {
             MarkRemove();
         }
 

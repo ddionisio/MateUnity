@@ -5,9 +5,6 @@ using System.Collections.Generic;
 namespace M8 {
     [AddComponentMenu("M8/Game/PoolController")]
     public class PoolController : MonoBehaviour {
-        public const string OnSpawnMessage = "OnSpawned";
-        public const string OnDespawnMessage = "OnDespawned";
-
         [System.Serializable]
         public class FactoryData {
             public Transform template = null;
@@ -84,7 +81,7 @@ namespace M8 {
                 mAvailable.Add(pdc);
             }
 
-            public Transform Allocate(string group, string name, Transform parent) {
+            public PoolDataController Allocate(string group, string name, Transform parent) {
                 if(mAvailable.Count == 0) {
                     if(mActives.Count + 1 > maxCapacity) {
                         Debug.LogWarning(template.name + " is expanding beyond max capacity: " + maxCapacity);
@@ -110,7 +107,7 @@ namespace M8 {
 
                 mActives.Add(pdc);
 
-                return t;
+                return pdc;
             }
 
             public void DeInit() {
@@ -233,9 +230,24 @@ namespace M8 {
             PoolDataController pdc = entity.GetComponent<PoolDataController>();
             if(pdc != null) {
                 PoolController pc = GetPool(pdc.group);
-                if(pc != null) {
-                    pc.Release(entity);
-                }
+                if(pc != null)
+                    pc.Release(pdc);
+                else
+                    entity.gameObject.SetActive(false);
+                //Object.Destroy(entity.gameObject);
+            }
+            else
+                entity.gameObject.SetActive(false);
+            //Object.Destroy(entity.gameObject);
+        }
+
+        public static void ReleaseAuto(GameObject entity) {
+            //NOTE: don't really need to destroy
+            PoolDataController pdc = entity.GetComponent<PoolDataController>();
+            if(pdc != null) {
+                PoolController pc = GetPool(pdc.group);
+                if(pc != null)
+                    pc.Release(pdc);
                 else
                     entity.gameObject.SetActive(false);
                 //Object.Destroy(entity.gameObject);
@@ -329,61 +341,30 @@ namespace M8 {
         }
 
         public Transform Spawn(string type, string name, Transform toParent, Vector3 position) {
-            Transform entityRet = null;
-
-            FactoryData dat;
-            if(mFactory.TryGetValue(type, out dat)) {
-                entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
-
-                if(entityRet != null) {
-                    entityRet.transform.position = position;
-
-                    entityRet.SendMessage(OnSpawnMessage, null, SendMessageOptions.DontRequireReceiver);
-                }
-                else {
-                    Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
-                }
-            }
-            else {
-                Debug.LogWarning("No such type: " + type + " attempt to allocate: " + name);
-            }
-
-            return entityRet;
+            return Spawn(type, name, toParent, position, null);
         }
 
         public Transform Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot) {
-            Transform entityRet = null;
-
-            FactoryData dat;
-            if(mFactory.TryGetValue(type, out dat)) {
-                entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
-
-                if(entityRet != null) {
-                    entityRet.transform.position = position;
-                    entityRet.transform.rotation = rot;
-
-                    entityRet.SendMessage(OnSpawnMessage, null, SendMessageOptions.DontRequireReceiver);
-                }
-                else {
-                    Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
-                }
-            }
-            else {
-                Debug.LogWarning("No such type: " + type + " attempt to allocate: " + name);
-            }
-
-            return entityRet;
+            return Spawn(type, name, toParent, position, rot);
         }
 
         public Transform Spawn(string type, string name, Transform toParent) {
+            return Spawn(type, name, toParent, null, null);
+        }
+
+        public Transform Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot) {
             Transform entityRet = null;
 
             FactoryData dat;
             if(mFactory.TryGetValue(type, out dat)) {
-                entityRet = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
+                var pdc = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
 
-                if(entityRet != null) {
-                    entityRet.SendMessage(OnSpawnMessage, null, SendMessageOptions.DontRequireReceiver);
+                if(pdc != null) {
+                    entityRet = pdc.transform;
+                    if(position.HasValue) entityRet.position = position.Value;
+                    if(rot.HasValue) entityRet.rotation = rot.Value;
+
+                    pdc.Spawn();
                 }
                 else {
                     Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
@@ -397,18 +378,21 @@ namespace M8 {
         }
 
         public void Release(Transform entity) {
-            entity.SendMessage(OnDespawnMessage, null, SendMessageOptions.DontRequireReceiver);
-
             PoolDataController pdc = entity.GetComponent<PoolDataController>();
-            if(pdc) {
-                FactoryData dat;
-                if(mFactory.TryGetValue(pdc.factoryKey, out dat))
-                    dat.Release(pdc);
-                else
-                    Debug.LogWarning("Unable to find type: "+pdc.factoryKey+" in "+group+", failed to release.");
-            }
+            if(pdc)
+                Release(pdc);
             else //not in the pool, just kill it
                 Object.Destroy(entity.gameObject);
+        }
+
+        public void Release(PoolDataController pdc) {
+            pdc.Despawn();
+
+            FactoryData dat;
+            if(mFactory.TryGetValue(pdc.factoryKey, out dat))
+                dat.Release(pdc);
+            else
+                Debug.LogWarning("Unable to find type: "+pdc.factoryKey+" in "+group+", failed to release.");
         }
 
         /// <summary>
@@ -421,7 +405,7 @@ namespace M8 {
                 for(int i = 0; i < factory.actives.Count; i++) {
                     PoolDataController pdc = factory.actives[i];
 
-                    pdc.SendMessage(OnDespawnMessage, null, SendMessageOptions.DontRequireReceiver);
+                    pdc.Despawn();
 
                     factory.Release(pdc, false);
                 }
@@ -439,7 +423,7 @@ namespace M8 {
                 for(int i = 0; i < factory.actives.Count; i++) {
                     PoolDataController pdc = factory.actives[i];
 
-                    pdc.SendMessage(OnDespawnMessage, null, SendMessageOptions.DontRequireReceiver);
+                    pdc.Despawn();
 
                     factory.Release(pdc, false);
                 }

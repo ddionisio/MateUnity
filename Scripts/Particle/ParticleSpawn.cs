@@ -7,13 +7,13 @@ namespace M8 {
     /// </summary>
     [AddComponentMenu("M8/Particle/Spawn")]
     [RequireComponent(typeof(ParticleSystem))]
-    public class ParticleSpawn : MonoBehaviour {
+    public class ParticleSpawn : MonoBehaviour, IPoolSpawn, IPoolDespawn {
         public float playDelay = 0.1f;
 
         private ParticleSystem mParticles;
         private bool mActive = false;
 
-        void OnSpawned() {
+        void IPoolSpawn.OnSpawned() {
             mActive = false;
 
             if(playDelay > 0)
@@ -22,7 +22,7 @@ namespace M8 {
                 DoPlay();
         }
 
-        void OnDespawned() {
+        void IPoolDespawn.OnDespawned() {
             mActive = false;
 
             CancelInvoke();
@@ -32,7 +32,7 @@ namespace M8 {
         // Update is called once per frame
         void LateUpdate() {
             if(mActive && !mParticles.IsAlive())
-                M8.PoolController.ReleaseAuto(transform);
+                PoolController.ReleaseAuto(transform);
         }
 
         void Awake() {

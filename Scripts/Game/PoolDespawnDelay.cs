@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace M8 {
     [AddComponentMenu("M8/Game/PoolDespawnDelay")]
-    public class PoolDespawnDelay : MonoBehaviour {
+    public class PoolDespawnDelay : MonoBehaviour, IPoolSpawn {
         public delegate void DespawnCall(GameObject go);
 
         public float delay = 1.0f;
@@ -14,7 +14,7 @@ namespace M8 {
             despawnCallback = null;
         }
 
-        void OnSpawned() {
+        void IPoolSpawn.OnSpawned() {
             Invoke("DoDespawn", delay);
         }
 

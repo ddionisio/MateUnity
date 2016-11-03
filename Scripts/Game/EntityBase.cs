@@ -7,8 +7,10 @@ using System.Collections;
 Basic Framework would be something like this:
     protected override void OnDespawned() {
         //reset stuff here
+    }
 
-        base.OnDespawned();
+    protected override void OnSpawned() {
+        //populate data/state for ai, player control, etc.
     }
 
     protected override void OnDestroy() {
@@ -24,7 +26,7 @@ Basic Framework would be something like this:
     protected override void Awake() {
         base.Awake();
 
-        //initialize variables
+        //initialize data/variables
     }
 
     // Use this for initialization
@@ -37,7 +39,7 @@ Basic Framework would be something like this:
 
 namespace M8 {
     [AddComponentMenu("M8/Entity/EntityBase")]
-    public class EntityBase : MonoBehaviour {
+    public class EntityBase : MonoBehaviour, IPoolSpawn, IPoolDespawn {
         public const int StateInvalid = -1;
 
         public delegate void OnGenericCall(EntityBase ent);
@@ -192,17 +194,6 @@ namespace M8 {
         }
 
         protected virtual void OnDespawned() {
-            if(activator != null && activator.defaultParent == transform) {
-                activator.Release(false);
-            }
-
-            if(releaseCallback != null) {
-                releaseCallback(this);
-            }
-
-            mDoSpawnOnWake = false;
-
-            StopAllCoroutines();
         }
 
         protected virtual void ActivatorWakeUp() {
@@ -275,10 +266,30 @@ namespace M8 {
         /// NOTE: calls after an update to ensure Awake and Start is called.
         /// </summary>
         protected virtual void OnSpawned() {
+        }
+        
+        IEnumerator DoSpawn() {
+            if(spawnDelay > 0.0f)
+                yield return new WaitForSeconds(spawnDelay);
+            else
+                yield return null;
+
+            SpawnStart();
+
+            if(spawnCallback != null) {
+                spawnCallback(this);
+            }
+
+            mStartedCounter = 2;
+        }
+
+        void IPoolSpawn.OnSpawned() {
             if(mPoolData == null)
                 mPoolData = GetComponent<PoolDataController>();
 
             mState = mPrevState = StateInvalid; //avoid invalid updates
+
+            OnSpawned();
 
             //allow activator to start and check if we need to spawn now or later
             //ensure start is called before spawning if we are freshly allocated from entity manager
@@ -296,20 +307,21 @@ namespace M8 {
                 StartCoroutine(DoSpawn());
             }
         }
-        
-        IEnumerator DoSpawn() {
-            if(spawnDelay > 0.0f)
-                yield return new WaitForSeconds(spawnDelay);
-            else
-                yield return null;
 
-            SpawnStart();
+        void IPoolDespawn.OnDespawned() {
+            OnDespawned();
 
-            if(spawnCallback != null) {
-                spawnCallback(this);
+            if(activator != null && activator.defaultParent == transform) {
+                activator.Release(false);
             }
 
-            mStartedCounter = 2;
+            if(releaseCallback != null) {
+                releaseCallback(this);
+            }
+
+            mDoSpawnOnWake = false;
+
+            StopAllCoroutines();
         }
     }
 }
