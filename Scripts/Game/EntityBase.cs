@@ -162,7 +162,7 @@ namespace M8 {
         public virtual void Activate() {
             if(mStartedCounter < 2) {
                 StopAllCoroutines();
-                StartCoroutine(DoStart());
+                StartCoroutine(DoSpawn());
             }
         }
 
@@ -210,7 +210,7 @@ namespace M8 {
                 return;
 
             if(activateOnStart && mStartedCounter == 1) { //we didn't get a chance to start properly before being inactivated
-                StartCoroutine(DoStart());
+                StartCoroutine(DoSpawn());
             }
             else if(mDoSpawnOnWake) { //if we haven't properly spawned yet, do so now
                 mDoSpawnOnWake = false;
@@ -234,7 +234,7 @@ namespace M8 {
         protected virtual void OnEnable() {
             //we didn't get a chance to start properly before being inactivated
             if((activator == null || activator.isActive) && activateOnStart && mStartedCounter == 1) {
-                StartCoroutine(DoStart());
+                StartCoroutine(DoSpawn());
             }
         }
 
@@ -258,7 +258,7 @@ namespace M8 {
 
             //for when putting entities on scene, skip the spawning state
             if(activateOnStart) {
-                StartCoroutine(DoStart());
+                StartCoroutine(DoSpawn());
             }
         }
 
@@ -296,22 +296,7 @@ namespace M8 {
                 StartCoroutine(DoSpawn());
             }
         }
-
-        IEnumerator DoStart() {
-            if(spawnDelay > 0.0f)
-                yield return new WaitForSeconds(spawnDelay);
-            else
-                yield return null;
-
-            SpawnStart();
-
-            if(spawnCallback != null) {
-                spawnCallback(this);
-            }
-
-            mStartedCounter = 2;
-        }
-
+        
         IEnumerator DoSpawn() {
             if(spawnDelay > 0.0f)
                 yield return new WaitForSeconds(spawnDelay);
