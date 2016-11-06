@@ -23,7 +23,7 @@ namespace M8.EditorExt {
         private TextAsset mTextFileMapper;
         private string mTextNameMapper = "";
         private string mTextFilePathMapper = "";
-        private string mGenerateScriptFolder = Application.dataPath+"/Scripts";
+        private string mGenerateScriptFolder;
         private bool mGenerateScript = false;
 
         private GUIStyle mTitleFoldoutStyle;
@@ -227,7 +227,7 @@ namespace M8.EditorExt {
         void OnEnable() {
             //mapper
             mTextFileMapper = ProjectConfig.GetObject<TextAsset>(projConfigTextAction);
-            mGenerateScriptFolder = ProjectConfig.GetString(projConfigScriptFolder, mGenerateScriptFolder);
+            mGenerateScriptFolder = ProjectConfig.GetString(projConfigScriptFolder, Application.dataPath+"/Scripts");
             mGenerateScript = ProjectConfig.GetInt(projConfigScriptGenerate) > 0;
 
             //binder

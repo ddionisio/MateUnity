@@ -259,23 +259,25 @@ namespace M8.UIModal {
         }
 
         protected override void OnInstanceInit() {
-            mModals = new Dictionary<string, UIData>(uis.Length);
-            mModalStack = new Stack<UIData>(uis.Length);
+            mModals = new Dictionary<string, UIData>();
+            mModalStack = new Stack<UIData>();
             mCommands = new Queue<UICommand>();
 
             //setup data and deactivate object
-            for(int i = 0; i < uis.Length; i++) {
-                var uid = uis[i];
+            if(uis != null) {
+                for(int i = 0; i < uis.Length; i++) {
+                    var uid = uis[i];
 
-                if(uid.isPrefab && !uid.instantiateTo) //set default instantiate to
-                    uid.instantiateTo = instantiateTo;
+                    if(uid.isPrefab && !uid.instantiateTo) //set default instantiate to
+                        uid.instantiateTo = instantiateTo;
 
-                var ui = uid.ui;
-                if(ui) {
-                    ui.root.SetActive(false);
+                    var ui = uid.ui;
+                    if(ui) {
+                        ui.root.SetActive(false);
+                    }
+
+                    mModals.Add(uid.name, uid);
                 }
-
-                mModals.Add(uid.name, uid);
             }
         }
 
