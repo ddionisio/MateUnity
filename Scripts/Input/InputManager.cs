@@ -208,6 +208,8 @@ namespace M8 {
 
             public Key[] keys;
 
+            public float sensitivity = 1.0f;
+
             public OnButton callback;
 
             public PlayerData(int action, List<Key> aKeys) {
@@ -225,7 +227,7 @@ namespace M8 {
             public Control control;
             public float deadZone;
             public bool forceRaw;
-
+            
             public PlayerData[] players;
 
             public BindData(Bind bind) {
@@ -399,7 +401,7 @@ namespace M8 {
         }
 
         public float GetAxis(int player, int action) {
-            if(action == ActionInvalid) return 0f;
+            if(action == ActionInvalid) return 0.0f;
 
             BindData bindData = mBinds[action];
             PlayerData pd = bindData.players[player];
@@ -411,7 +413,7 @@ namespace M8 {
                 if(key != null) {
                     float axis = ProcessAxis(key, bindData.deadZone, bindData.forceRaw);
                     if(axis != 0.0f) {
-                        pd.info.axis = key.invert ? -axis : axis;
+                        pd.info.axis = (key.invert ? -axis : axis) * pd.sensitivity;
                         break;
                     }
                 }
@@ -423,6 +425,27 @@ namespace M8 {
         public float GetAxis(int player, string action) {
             int actionInd = GetActionIndex(action);
             return GetAxis(player, actionInd);
+        }
+
+        public float GetSensitivity(int player, int action) {
+            if(action == ActionInvalid) return 0.0f;
+
+            return mBinds[action].players[player].sensitivity;
+        }
+
+        public float GetSensitivity(int player, string action) {
+            int actionInd = GetActionIndex(action);
+            return GetSensitivity(player, actionInd);
+        }
+
+        public void SetSensitivity(int player, int action, float sensitivity) {
+            if(action == ActionInvalid) return;
+
+            mBinds[action].players[player].sensitivity = sensitivity;
+        }
+
+        public void SetSensitivity(int player, string action, float sensitivity) {
+            SetSensitivity(player, GetActionIndex(action), sensitivity);
         }
 
         public bool IsPressed(int player, string action) {

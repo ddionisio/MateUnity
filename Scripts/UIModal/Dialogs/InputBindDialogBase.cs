@@ -51,14 +51,14 @@ namespace M8.UIModal.Dialogs {
         }
 
         public void Save() {
-            UserSettingInput.instance.Apply();
+            UserSettingInput.instance.Apply(UserSettingInput.Flags.Binds);
             UserSettingInput.instance.Save();
             mIsDirty = false;
             Localize.instance.Refresh(); //for labels using input stuff
         }
 
         public void Revert(bool toDefault) {
-            UserSettingInput.instance.Revert(toDefault);
+            UserSettingInput.instance.Revert(UserSettingInput.Flags.Binds, toDefault);
             mIsDirty = false;
             Localize.instance.Refresh(); //for labels using input stuff
         }

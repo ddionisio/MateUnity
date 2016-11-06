@@ -19,27 +19,26 @@ namespace M8 {
         public static int CellToIndex(int dep, int row, int col, int numCols, int numRows) {
             return dep*numRows*numCols + row*numCols + col;
         }
-
-        public static int FlagSet(int data, int mask, bool set) {
+        
+        public static uint FlagSet(uint data, uint mask, bool set) {
             return set ? data | mask : data & (~mask);
         }
 
-        public static int FlagSetBit(int data, int bit, bool set) {
-            return FlagSet(data, 1<<bit, set);
+        public static uint FlagSetBit(uint data, int bit, bool set) {
+            return FlagSet(data, 1u<<bit, set);
         }
 
-        public static int FlagFlip(int data, int mask) {
+        public static uint FlagFlip(uint data, uint mask) {
             return data ^ mask;
         }
 
-        public static bool FlagCheck(int data, int mask) {
+        public static bool FlagCheck(uint data, uint mask) {
             return (data & mask) == mask;
         }
 
-        public static bool FlagCheckBit(int data, int bit) {
-            return FlagCheck(data, 1<<bit);
+        public static bool FlagCheckBit(uint data, int bit) {
+            return FlagCheck(data, 1u<<bit);
         }
-
 
         public static T GetOrAddComponent<T>(Component c) where T : Component {
             return GetOrAddComponent<T>(c.gameObject);
