@@ -12,7 +12,7 @@ namespace M8 {
             Initialized,
             Destroyed
         }
-
+        
         private static T mInstance;
         private static InstanceState mInstanceState = InstanceState.Uninitialized;
 
@@ -43,9 +43,8 @@ namespace M8 {
             var attribute = Attribute.GetCustomAttribute(type, typeof(PrefabFromResourceAttribute)) as PrefabFromResourceAttribute;
             if(attribute != null) {
                 GameObject go = attribute.InstantiateGameObject();
-                DontDestroyOnLoad(go);
-
-                if(!mInstance) {
+                
+                if(!mInstance) { //If Awake wasn't called upon instantiation
                     mInstance = go.GetComponentInChildren<T>();
                     if(!mInstance) { //expecting the component to be in the prefab
                         Debug.LogError(type.ToString() + " not found in " + attribute.path);
@@ -94,9 +93,6 @@ namespace M8 {
                 mInstanceState = InstanceState.Initialized;
                 mInstance = this as T;
                 OnInstanceInit();
-
-                if(transform.parent == null)
-                    DontDestroyOnLoad(gameObject);
             }
             else
                 DestroyImmediate(gameObject);

@@ -28,6 +28,7 @@ namespace M8 {
         public delegate void OnSceneCallback();
         public delegate void OnSceneBoolCallback(bool b);
         public delegate void OnSceneStringCallback(string nextScene);
+        public delegate void OnSceneDataCallback(Scene scene);
 
         /// <summary>
         /// Whenever Pause/Resume is called
@@ -44,16 +45,21 @@ namespace M8 {
         /// </summary>
         public event OnSceneCallback sceneChangePostCallback;
 
+        /// <summary>
+        /// Called after a new scene is added via AddScene
+        /// </summary>
+        public event OnSceneDataCallback sceneAddedCallback;
+
         [Tooltip("Use additive if you want to start the game with a root scene, and having one scene to append/replace as you load new scene.")]
         [SerializeField]
-        Mode _mode = Mode.Single;
+        Mode _mode = Mode.Additive;
         
         [Tooltip("Prefix for loading level by index.")]
         [SerializeField]
         string levelString = "level";
         
         [SerializeField]
-        bool stackEnable = false;
+        bool stackEnable = false; //TODO: refactor how stacking works
         
         private Scene mCurScene;
         private Scene mRootScene; //used for additive mode
@@ -61,6 +67,11 @@ namespace M8 {
         private Stack<string> mSceneStack;
 
         private List<ITransition> mTransitions;
+
+        private List<Scene> mScenesAdded; //added scene to current one, filled by AddScene(), cleared out when a new scene is loaded via LoadScene
+        private Queue<string> mScenesToAdd;
+
+        private Coroutine mSceneAddRout;
 
         private float mPrevTimeScale;
         
@@ -153,6 +164,61 @@ namespace M8 {
             }
         }
 
+        /// <summary>
+        /// Add a scene to the current scene. Listen via sceneAddedCallback to know when it's added
+        /// </summary>
+        public void AddScene(string sceneName) {
+            mScenesToAdd.Enqueue(sceneName);
+
+            if(mSceneAddRout == null)
+                mSceneAddRout = StartCoroutine(DoAddScene());
+        }
+
+        /// <summary>
+        /// Unload a scene loaded via AddScene
+        /// </summary>
+        public void UnloadAddedScene(string sceneName) {
+            for(int i = 0; i < mScenesAdded.Count; i++) {
+                if(mScenesAdded[i].name == sceneName) {
+                    mScenesAdded.RemoveAt(i);
+                    UnitySceneManager.UnloadScene(sceneName);
+                    return;
+                }
+            }
+
+            //check the queue
+            if(mScenesToAdd.Contains(sceneName)) {
+                //reconstruct the queue excluding the sceneName
+                var newSceneQueue = new Queue<string>();
+                while(mScenesToAdd.Count > 0) {
+                    var s = mScenesToAdd.Dequeue();
+                    if(s != sceneName)
+                        newSceneQueue.Enqueue(s);
+                }
+                mScenesToAdd = newSceneQueue;
+            }
+        }
+
+        /// <summary>
+        /// Unloads all added scenes loaded via AddScene
+        /// </summary>
+        public void UnloadAddedScenes() {
+            for(int i = 0; i < mScenesAdded.Count; i++)
+                UnitySceneManager.UnloadScene(mScenesAdded[i]);
+
+            ClearAddSceneData();
+        }
+
+        private void ClearAddSceneData() {
+            mScenesAdded.Clear();
+            mScenesToAdd.Clear();
+
+            if(mSceneAddRout != null) {
+                StopCoroutine(mSceneAddRout);
+                mSceneAddRout = null;
+            }
+        }
+
         public void Pause() {
             if(!isPaused) {
                 isPaused = true;
@@ -176,19 +242,27 @@ namespace M8 {
             }
         }
 
-        public void StoreAddObject(Transform t) {
+        private void GenerateHolder() {
             if(mHolder == null) {
-                GameObject newGO = new GameObject("sceneHolder");
+                const string holderName = "M8.SceneHolder";
+                GameObject newGO = GameObject.Find(holderName);
+                if(newGO == null)
+                    newGO = new GameObject(holderName);
+                DontDestroyOnLoad(newGO);
                 mHolder = newGO.transform;
-                mHolder.parent = transform;
             }
+        }
+
+        public void StoreAddObject(Transform t) {
+            GenerateHolder();
 
             t.parent = mHolder;
             t.gameObject.SetActive(false);
         }
 
         public Transform StoreGetObject(string name) {
-            return mHolder ? mHolder.Find(name) : null;
+            GenerateHolder();
+            return mHolder.Find(name);
         }
 
         public void StoreDestroyObject(string name) {
@@ -226,9 +300,12 @@ namespace M8 {
             isPaused = false;
 
             mTransitions = new List<ITransition>();
-
+                        
             if(stackEnable)
                 mSceneStack = new Stack<string>(stackCapacity);
+
+            mScenesAdded = new List<Scene>();
+            mScenesToAdd = new Queue<string>();
         }
 
         IEnumerator DoLoadScene(string toScene, LoadSceneMode mode, bool unloadCurrent) {
@@ -248,12 +325,20 @@ namespace M8 {
             bool doLoad = true;
 
             if(mode == LoadSceneMode.Additive) {
-                Debug.Log("unload: "+mCurScene);
-                if(unloadCurrent && mCurScene != mRootScene)
+                //Debug.Log("unload: "+mCurScene);
+                if(unloadCurrent && mCurScene != mRootScene) {
                     UnitySceneManager.UnloadScene(mCurScene);
+
+                    //unload added scenes
+                    UnloadAddedScenes();
+                }
                 
                 //load only if it doesn't exist
                 doLoad = !UnitySceneManager.GetSceneByName(toScene).IsValid();
+            }
+            else {
+                //single mode removes all other scenes
+                ClearAddSceneData();
             }
 
             //load
@@ -278,6 +363,25 @@ namespace M8 {
                 yield return mTransitions[i].In();
 
             isLoading = false;
+        }
+
+        IEnumerator DoAddScene() {
+            while(mScenesToAdd.Count > 0) {
+                var sceneName = mScenesToAdd.Dequeue();
+
+                var sync = UnitySceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+
+                while(!sync.isDone)
+                    yield return null;
+
+                var sceneAdded = UnitySceneManager.GetSceneByName(sceneName);
+                mScenesAdded.Add(sceneAdded);
+
+                if(sceneAddedCallback != null)
+                    sceneAddedCallback(sceneAdded);
+            }
+
+            mSceneAddRout = null;
         }
 
         private void SceneStackPush(string scene, string nextScene) {

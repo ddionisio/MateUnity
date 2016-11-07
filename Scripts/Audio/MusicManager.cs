@@ -160,9 +160,6 @@ namespace M8 {
 
                 if(autoPlay == AutoPlayType.Shuffled)
                     M8.ArrayUtil.Shuffle(music);
-
-                if(dontDestroy)
-                    Object.DontDestroyOnLoad(gameObject);
             }
             else
                 DestroyImmediate(gameObject);

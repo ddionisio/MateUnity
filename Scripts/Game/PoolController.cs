@@ -121,10 +121,7 @@ namespace M8 {
         }
 
         public string group = "";
-
-        [SerializeField]
-        bool _persistent = false;
-
+        
         [SerializeField]
         FactoryData[] factory;
 
@@ -489,10 +486,7 @@ namespace M8 {
 
             if(!mControllers.ContainsKey(group)) {
                 mControllers.Add(group, this);
-
-                if(_persistent)
-                    DontDestroyOnLoad(gameObject);
-
+                
                 if(poolHolder == null) {
                     GameObject holderGO = new GameObject("holder");
                     poolHolder = holderGO.transform;
