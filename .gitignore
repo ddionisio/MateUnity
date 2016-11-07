@@ -8,6 +8,7 @@
 *.sln
 *.pidb
 *.DotSettings
+*.userprefs
 
 NGUI/
 TK2DROOT/
