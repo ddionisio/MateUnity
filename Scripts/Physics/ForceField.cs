@@ -42,7 +42,7 @@ namespace M8 {
         private HashSet<Rigidbody> mBodies = new HashSet<Rigidbody>();
 
         void OnTriggerEnter(Collider t) {
-            Rigidbody body = t.GetComponent<Rigidbody>();
+            Rigidbody body = t.attachedRigidbody;
             if(body != null && !mBodies.Contains(body)) {
                 if(impulse != 0.0f) {
                     Vector3 dir = Vector3.zero;
@@ -78,7 +78,7 @@ namespace M8 {
         }
 
         void OnTriggerExit(Collider t) {
-            Rigidbody body = t.GetComponent<Rigidbody>();
+            Rigidbody body = t.attachedRigidbody;
             if(body != null) {
                 mBodies.Remove(body);
             }

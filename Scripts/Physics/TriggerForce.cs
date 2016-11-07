@@ -88,7 +88,7 @@ namespace M8 {
         void OnTriggerEnter(Collider col) {
 
             if(!mColliders.Contains(col)) {
-                Rigidbody body = col.GetComponent<Rigidbody>();
+                Rigidbody body = col.attachedRigidbody;
 
                 if(body != null && !body.isKinematic && (_tags.Length == 0 || CheckTag(col.gameObject.tag))) {
                     //check tags
@@ -173,7 +173,7 @@ namespace M8 {
 
             float t = 0;
 
-            Rigidbody body = col.GetComponent<Rigidbody>();
+            Rigidbody body = col.attachedRigidbody;
 
             RigidBodyController ctrl = col.GetComponent<RigidBodyController>();
             if(ctrl) { ctrl.enabled = false; }
