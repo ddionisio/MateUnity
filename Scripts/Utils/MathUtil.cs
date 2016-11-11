@@ -67,6 +67,10 @@ namespace M8 {
             return (v1.x * v2.y) - (v1.y * v2.x);
         }
 
+        public static Vector2 Perpendicular(Vector2 v) {
+            return new Vector2(-v.y, v.x);
+        }
+
         /// <summary>
         /// Caps given destDir with angleLimit (degree) on either side of srcDir, returns which side the destDir is capped relative to srcDir.
         /// </summary>
