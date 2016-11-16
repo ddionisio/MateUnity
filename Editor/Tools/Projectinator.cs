@@ -71,9 +71,7 @@ namespace M8.EditorExt {
             if(GUILayout.Button("Do It!")) {
                 foreach(GameObject go in Selection.gameObjects) {
                     Transform t = go.transform;
-
-					Undo.RecordObject(t, "Projectinate " + go.name);
-
+                    					
                     Vector3 dir = Vector3.forward;
 
                     switch(mAxisInd) {
@@ -90,6 +88,8 @@ namespace M8.EditorExt {
 
                     RaycastHit hit;
                     if(Physics.Raycast(t.position, dir, out hit, mDist, (1<<mLayer))) {
+                        Undo.RecordObject(t, "Projectinate");
+
                         t.position = hit.point + hit.normal*mOfs;
 
                         switch(mAxisInd) {
@@ -104,8 +104,6 @@ namespace M8.EditorExt {
                                 break;
                         }
                     }
-
-					EditorUtility.SetDirty(t);
                 }
             }
 

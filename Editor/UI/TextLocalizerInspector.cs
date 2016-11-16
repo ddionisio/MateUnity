@@ -11,8 +11,8 @@ namespace M8.UI {
             //selection
             string key = LocalizeConfig.DrawSelector(dat.key);
             if(dat.key != key) {
+                Undo.RecordObject(target, "Set Text Localizer Key");
                 dat.key = key;
-                EditorUtility.SetDirty(target);
             }
 
             EditorExt.Utility.DrawSeparator();
@@ -23,7 +23,6 @@ namespace M8.UI {
                 if(textUI) {
                     textUI.text = LocalizeConfig.GetBaseValue(dat.key);
                     Repaint();
-                    EditorUtility.SetDirty(textUI);
                 }
             }
         }

@@ -7,8 +7,6 @@ namespace M8 {
     public class WaypointDataInspector : Editor {
 
         public override void OnInspectorGUI() {
-            GUI.changed = false;
-
             base.OnInspectorGUI();
 
             if(Application.isPlaying) {
@@ -18,9 +16,6 @@ namespace M8 {
 
                 EditorGUILayout.LabelField("Current Index", input.currentIndex.ToString());
             }
-
-            if(GUI.changed)
-                EditorUtility.SetDirty(target);
         }
     }
 }

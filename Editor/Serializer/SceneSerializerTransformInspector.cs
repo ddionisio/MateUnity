@@ -8,14 +8,23 @@ namespace M8 {
         public override void OnInspectorGUI() {
             SceneSerializerTransform data = target as SceneSerializerTransform;
 
-            data.isLocal = EditorGUILayout.Toggle("local", data.isLocal);
-            data.persistent = EditorGUILayout.Toggle("persistent", data.persistent);
+            EditorGUI.BeginChangeCheck();
 
-            data.positionFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumMaskField("position", data.positionFlags);
-            data.rotationFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumMaskField("rotation", data.rotationFlags);
+            var isLocal = EditorGUILayout.Toggle("local", data.isLocal);
+            var persistent = EditorGUILayout.Toggle("persistent", data.persistent);
 
-            if(GUI.changed)
-                EditorUtility.SetDirty(data);
+            var positionFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumMaskField("position", data.positionFlags);
+            var rotationFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumMaskField("rotation", data.rotationFlags);
+
+            if(EditorGUI.EndChangeCheck()) {
+                Undo.RecordObject(target, "Change Scene Serializer");
+
+                data.isLocal = isLocal;
+                data.persistent = persistent;
+
+                data.positionFlags = positionFlags;
+                data.rotationFlags = rotationFlags;
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ namespace M8 {
         public string flag;
 
         [HideInInspector]
-        public int flagBit;
+        public uint flagMask;
 
         public bool global;
 
@@ -20,7 +20,7 @@ namespace M8 {
 
         void OnEnable() {
             if(mStarted) {
-                bool val = (global ? SceneState.instance.global : SceneState.instance.local).CheckFlag(flag, flagBit);
+                bool val = (global ? SceneState.instance.global : SceneState.instance.local).CheckFlagMask(flag, flagMask);
                 if(val)
                     target.SetActive(setActive);
                 else
@@ -43,7 +43,7 @@ namespace M8 {
 
             mStarted = true;
 
-            bool val = (global ? SceneState.instance.global : SceneState.instance.local).CheckFlag(flag, flagBit);
+            bool val = (global ? SceneState.instance.global : SceneState.instance.local).CheckFlagMask(flag, flagMask);
             if(val)
                 target.SetActive(setActive);
             else

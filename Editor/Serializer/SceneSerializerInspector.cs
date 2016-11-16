@@ -70,7 +70,10 @@ namespace M8 {
 
                 data.__SetID(nid);
                 mRefs.Add(nid, data);
-                EditorUtility.SetDirty(data);
+
+                //don't want to undo this
+                //TODO: can't really determine which scene this object belongs to, just mark them all...
+                EditorSceneManager.MarkAllScenesDirty();
             }
         }
 
@@ -85,6 +88,7 @@ namespace M8 {
             //get all objects in scene with serializedID
             Object[] objs = FindObjectsOfType(typeof(SceneSerializer));
 
+            int changeCount = 0;
             int nid = 1;
 
             foreach(SceneSerializer sid in objs) {
@@ -107,9 +111,14 @@ namespace M8 {
                     for(; mRefs.ContainsKey(nid); nid++) ;
                     sid.__SetID(nid);
                     mRefs.Add(nid, sid);
-                    EditorUtility.SetDirty(sid);
+                    changeCount++;
                 }
             }
+
+            //don't want to undo this
+            //TODO: can't really determine which scene the objects belong to, just mark them all...
+            if(changeCount > 0)
+                EditorSceneManager.MarkAllScenesDirty();
         }
     }
 }

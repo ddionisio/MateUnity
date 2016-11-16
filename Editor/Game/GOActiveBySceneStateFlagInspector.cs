@@ -11,16 +11,20 @@ namespace M8 {
             if(mMasks == null)
                 mMasks = M8.EditorExt.Utility.GenerateGenericMaskString();
 
-            GUI.changed = false;
+            EditorGUI.BeginChangeCheck();
 
             GOActiveBySceneStateFlag input = target as GOActiveBySceneStateFlag;
-            input.flag = EditorGUILayout.TextField("Flag Name", input.flag);
-            input.flagBit = EditorGUILayout.MaskField("Flag Bits", input.flagBit, mMasks);
+            var newFlag = EditorGUILayout.TextField("Flag Name", input.flag);
+            var newFlagMask = EditorGUILayout.MaskField("Flag Bits", (int)input.flagMask, mMasks);
 
             base.OnInspectorGUI();
 
-            if(GUI.changed)
-                EditorUtility.SetDirty(target);
+            if(EditorGUI.EndChangeCheck()) {
+                Undo.RecordObject(target, "Change Flags");
+
+                input.flag = newFlag;
+                input.flagMask = (uint)newFlagMask;
+            }
         }
     }
 }

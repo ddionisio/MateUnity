@@ -7,15 +7,19 @@ using UIModalInputStackPop = M8.UIModal.Input.CloseTop;
 [CustomEditor(typeof(UIModalInputStackPop))]
 public class UIModalInputStackPopInspector : Editor {
     public override void OnInspectorGUI() {
-        GUI.changed = false;
-
         UIModalInputStackPop obj = target as UIModalInputStackPop;
 
-        obj.player = EditorGUILayout.IntField("Player", obj.player);
+        EditorGUI.BeginChangeCheck();
 
-        obj.escape = M8.EditorExt.InputBinder.GUISelectInputAction("Escape", obj.escape);
+        var player = EditorGUILayout.IntField("Player", obj.player);
 
-        if(GUI.changed)
-            EditorUtility.SetDirty(target);
+        var escape = M8.EditorExt.InputBinder.GUISelectInputAction("Escape", obj.escape);
+
+        if(EditorGUI.EndChangeCheck()) {
+            Undo.RecordObject(target, "Change Input Stack Pop Key");
+
+            obj.player = player;
+            obj.escape = escape;
+        }
     }
 }

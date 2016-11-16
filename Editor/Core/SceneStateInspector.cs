@@ -30,25 +30,22 @@ namespace M8 {
             SceneState data = target as SceneState;
 
             if(!Application.isPlaying) {
-                GUI.changed = false;
-
                 //Globals 
                 initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
 
                 if(initGlobalFoldout) {
-                    if(data.globalStartData == null)
-                        data.globalStartData = new SceneState.InitData[0];
-
                     GUILayout.BeginVertical(GUI.skin.box);
 
                     int delSubKey = -1;
                     for(int j = 0; j < data.globalStartData.Length; j++) {
                         SceneState.InitData initDat = data.globalStartData[j];
 
+                        EditorGUI.BeginChangeCheck();
+
                         GUILayout.BeginVertical(GUI.skin.box);
 
                         GUILayout.BeginHorizontal();
-
+                                                
                         initDat.name = GUILayout.TextField(initDat.name, GUILayout.MinWidth(200));
 
                         GUILayout.Space(32);
@@ -73,15 +70,26 @@ namespace M8 {
                         }
 
                         GUILayout.EndVertical();
+
+                        if(delSubKey != -1 && EditorGUI.EndChangeCheck()) {
+                            Undo.RecordObject(target, "SceneState - Edit ["+data.globalStartData[j].name+"]");
+
+                            data.globalStartData[j] = initDat;
+                        }
                     }
 
-                    if(delSubKey != -1)
+                    if(delSubKey != -1) {
+                        Undo.RecordObject(target, "SceneState - Removed ["+data.globalStartData[delSubKey].name+"]");
+
                         M8.ArrayUtil.RemoveAt(ref data.globalStartData, delSubKey);
+                    }
 
                     if(GUILayout.Button("New Global Value")) {
+                        Undo.RecordObject(target, "SceneState - New Global Value");
+
                         System.Array.Resize(ref data.globalStartData, data.globalStartData.Length + 1);
 
-                        data.globalStartData[data.globalStartData.Length - 1] = new SceneState.InitData();
+                        data.globalStartData[data.globalStartData.Length - 1] = new SceneState.InitData(SceneState.Type.Integer);
                     }
 
                     GUILayout.EndVertical();
@@ -93,16 +101,25 @@ namespace M8 {
                 initFoldout = EditorGUILayout.Foldout(initFoldout, "Scene Data");
 
                 if(initFoldout) {
-                    data.localStateCache = EditorGUILayout.IntField("Cache Count", data.localStateCache);
+                    //Cache count
 
-                    if(data.startData == null)
-                        data.startData = new SceneState.InitSceneData[0];
+                    EditorGUI.BeginChangeCheck();
+
+                    int cacheCount = EditorGUILayout.IntField("Cache Count", data.localStateCache);
+
+                    if(EditorGUI.EndChangeCheck()) {
+                        Undo.RecordObject(target, "SceneState - Cache Count Change");
+
+                        data.localStateCache = cacheCount;
+                    }
+
+                    //Scenes
 
                     int delKey = -1;
 
                     for(int i = 0; i < data.startData.Length; i++) {
                         SceneState.InitSceneData sceneDat = data.startData[i];
-
+                                                
                         GUILayout.BeginVertical(GUI.skin.box);
 
                         GUILayout.BeginHorizontal();
@@ -111,7 +128,16 @@ namespace M8 {
 
                         GUILayout.Space(4);
 
-                        sceneDat.scene = GUILayout.TextField(sceneDat.scene, GUILayout.MinWidth(200));
+                        //Scene name
+                        EditorGUI.BeginChangeCheck();
+
+                        string newScene = GUILayout.TextField(sceneDat.scene, GUILayout.MinWidth(200));
+
+                        if(EditorGUI.EndChangeCheck()) {
+                            Undo.RecordObject(target, "SceneState - Change Scene Name from "+sceneDat.scene+" to "+newScene);
+
+                            sceneDat.scene = newScene;
+                        }
 
                         GUILayout.Space(32);
 
@@ -126,6 +152,8 @@ namespace M8 {
                             if(sceneDat.data != null) {
                                 int delSubKey = -1;
                                 for(int j = 0; j < sceneDat.data.Length; j++) {
+                                    EditorGUI.BeginChangeCheck();
+
                                     SceneState.InitData initDat = sceneDat.data[j];
 
                                     GUILayout.BeginVertical(GUI.skin.box);
@@ -156,36 +184,49 @@ namespace M8 {
                                     }
 
                                     GUILayout.EndVertical();
+
+                                    if(delKey != -1 && delSubKey != -1 && EditorGUI.EndChangeCheck()) {
+                                        Undo.RecordObject(target, "SceneState ("+sceneDat.scene+") - Edit ["+sceneDat.data[j].name+"]");
+
+                                        sceneDat.data[j] = initDat;
+                                    }
                                 }
 
-                                if(delSubKey != -1)
+                                if(delSubKey != -1) {
+                                    Undo.RecordObject(target, "SceneState ("+sceneDat.scene+") - Removed ["+sceneDat.data[delSubKey].name+"]");
+
                                     M8.ArrayUtil.RemoveAt(ref sceneDat.data, delSubKey);
+                                }
                             }
 
                             if(GUILayout.Button("New Value")) {
+                                Undo.RecordObject(target, "SceneState ("+sceneDat.scene+") - New Value");
+
                                 if(sceneDat.data == null)
                                     sceneDat.data = new SceneState.InitData[1];
                                 else
                                     System.Array.Resize(ref sceneDat.data, sceneDat.data.Length + 1);
 
-                                sceneDat.data[sceneDat.data.Length - 1] = new SceneState.InitData();
+                                sceneDat.data[sceneDat.data.Length - 1] = new SceneState.InitData(SceneState.Type.Integer);
                             }
                         }
 
                         GUILayout.EndVertical();
                     }
 
-                    if(delKey != -1)
+                    if(delKey != -1) {
+                        Undo.RecordObject(target, "SceneState - Removed ["+data.startData[delKey].scene+"]");
+
                         M8.ArrayUtil.RemoveAt(ref data.startData, delKey);
+                    }
 
                     if(GUILayout.Button("New Scene Data")) {
+                        Undo.RecordObject(target, "SceneState - New Scene Set Added");
+
                         System.Array.Resize(ref data.startData, data.startData.Length + 1);
                         data.startData[data.startData.Length - 1] = new SceneState.InitSceneData();
                     }
                 }
-
-                if(GUI.changed)
-                    EditorUtility.SetDirty(target);
             }
             else {
                 M8.EditorExt.Utility.DrawSeparator();

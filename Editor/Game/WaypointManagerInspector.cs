@@ -58,8 +58,6 @@ namespace M8 {
         }
 
         public override void OnInspectorGUI() {
-            GUI.changed = false;
-
             base.OnInspectorGUI();
 
             M8.EditorExt.Utility.DrawSeparator();
@@ -67,7 +65,9 @@ namespace M8 {
             WaypointManager input = target as WaypointManager;
 
             foreach(Transform t in input.transform) {
-                Data dat = mData[t];
+                Data dat;// = mData[t];
+                if(!mData.TryGetValue(t, out dat))
+                    mData.Add(t, dat = new Data());
 
                 GUILayout.BeginVertical(GUI.skin.box);
 
@@ -79,16 +79,21 @@ namespace M8 {
 
                 if(dat.foldout) {
                     GUILayout.BeginHorizontal();
-                    t.name = EditorGUILayout.TextField("New Name", t.name);
 
-                    mLastWaypoint = t.name;
+                    EditorGUI.BeginChangeCheck();
+                    var newName = EditorGUILayout.TextField("New Name", t.name);
+                    if(EditorGUI.EndChangeCheck()) {
+                        Undo.RecordObject(t, "Change Waypoint Name");
+                        
+                        mLastWaypoint = t.name = newName;
+                    }
 
                     if(GUILayout.Button("SEL", GUILayout.MaxWidth(50.0f))) {
                         Selection.activeGameObject = t.gameObject;
                     }
 
                     if(GUILayout.Button("DEL", GUILayout.MaxWidth(50.0f))) {
-                        DestroyImmediate(t.gameObject);
+                        Undo.DestroyObjectImmediate(t.gameObject);
                         Selection.activeGameObject = null;
                     }
                     GUILayout.EndHorizontal();
@@ -102,11 +107,17 @@ namespace M8 {
                             t.position = Vector3.zero;
 
                             GameObject newPt1 = new GameObject("0");
-                            newPt1.transform.parent = t;
+                            Undo.RegisterCreatedObjectUndo(newPt1, "Add New Point");
+                            Undo.SetTransformParent(newPt1.transform, t, "Add New Point");
+
+                            Undo.RecordObject(newPt1.transform, "Add New Point");
                             newPt1.transform.position = pt;
 
                             GameObject newPt2 = new GameObject("1");
-                            newPt2.transform.parent = t;
+                            Undo.RegisterCreatedObjectUndo(newPt2, "Add New Point");
+                            Undo.SetTransformParent(newPt2.transform, t, "Add New Point");
+
+                            Undo.RecordObject(newPt2.transform, "Add New Point");
                             newPt2.transform.position = pt;
 
                             input.__inspectorSelected = newPt2.transform;
@@ -133,19 +144,28 @@ namespace M8 {
                         if(GUILayout.Button("Insert After")) {
                             //add after
                             GameObject newPt1 = new GameObject(dat.selInd.ToString());
-                            newPt1.transform.parent = t;
+                            Undo.RegisterCreatedObjectUndo(newPt1, "Insert Waypoint After");
+
+                            Undo.SetTransformParent(newPt1.transform, t, "Insert Waypoint After");
 
                             if(dat.selInd + 1 < numChild) {
-                                t.GetChild(dat.selInd + 1).position = input.__inspectorSelected.position;
+                                var child = t.GetChild(dat.selInd + 1);
+
+                                Undo.RecordObject(child, "Insert Waypoint After");
+                                child.position = input.__inspectorSelected.position;
+
                                 newPt1 = t.GetChild(dat.selInd + 1).gameObject;
                             }
                             else {
+                                Undo.RecordObject(newPt1.transform, "Insert Waypoint After");
                                 newPt1.transform.position = input.__inspectorSelected.position;
                             }
 
                             //shift others
                             for(int i = numChild; i > dat.selInd; i--) {
-                                t.GetChild(i).name = i.ToString();
+                                var child = t.GetChild(i);
+                                Undo.RecordObject(child, "Insert Waypoint After");
+                                child.name = i.ToString();
                             }
 
                             mLastWaypointInd = dat.selInd + 1;
@@ -161,14 +181,14 @@ namespace M8 {
 
                                 //delete both
                                 GameObject go1 = t.GetChild(0).gameObject, go2 = t.GetChild(1).gameObject;
-                                DestroyImmediate(go1);
-                                DestroyImmediate(go2);
+                                Undo.DestroyObjectImmediate(go1);
+                                Undo.DestroyObjectImmediate(go2);
                                 input.__inspectorSelected = null;
                                 Repaint();
 
                             }
                             else {
-                                DestroyImmediate(t.GetChild(dat.selInd).gameObject);
+                                Undo.DestroyObjectImmediate(t.GetChild(dat.selInd).gameObject);
                                 numChild--;
 
                                 //shift others
@@ -195,7 +215,10 @@ namespace M8 {
 
             if(!string.IsNullOrEmpty(mNewName) && GUILayout.Button("ADD")) {
                 GameObject newGO = new GameObject(mNewName);
-                newGO.transform.parent = input.transform;
+                Undo.RegisterCreatedObjectUndo(newGO, "Add Waypoint");
+                Undo.SetTransformParent(newGO.transform, input.transform, "Add Waypoint");
+
+                Undo.RecordObject(newGO.transform, "Add Waypoint");
                 newGO.transform.localPosition = Vector3.zero;
 
                 mLastWaypoint = mNewName;
@@ -209,9 +232,6 @@ namespace M8 {
 
                 EditorGUILayout.LabelField("Current Index", input.curInd.ToString());
             }*/
-
-            if(GUI.changed)
-                EditorUtility.SetDirty(target);
         }
     }
 }

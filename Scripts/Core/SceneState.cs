@@ -20,12 +20,12 @@ namespace M8 {
         }
 
         [System.Serializable]
-        public class InitData {
-            public string name = "";
-            public Type type = Type.Integer;
-            public int ival = 0;
-            public float fval = 0.0f;
-            public string sval = "";
+        public struct InitData {
+            public string name;
+            public Type type;
+            public int ival;
+            public float fval;
+            public string sval;
 
             public StateValue stateValue {
                 get {
@@ -39,6 +39,40 @@ namespace M8 {
                     }
                     return new StateValue() { type=Type.Invalid };
                 }
+            }
+
+            public InitData(Type t) {
+                type = t; name = ""; ival = 0; fval = 0f; sval = "";
+            }
+
+            public override bool Equals(object other) {
+                InitData d = (InitData)other;
+
+                if(type != d.type)
+                    return false;
+
+                switch(type) {
+                    case Type.Integer:
+                        return ival == d.ival;
+                    case Type.Float:
+                        return fval == d.fval;
+                    case Type.String:
+                        return sval == d.sval;
+                }
+
+                return false;
+            }
+
+            public override int GetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public static bool operator ==(InitData d1, InitData d2) {
+                return d1.Equals(d2);
+            }
+
+            public static bool operator !=(InitData d1, InitData d2) {
+                return !d1.Equals(d2);
             }
         }
 
@@ -77,6 +111,36 @@ namespace M8 {
                 else if(t == typeof(float)) { type = Type.Float; fval = ud.GetFloat(key, 0f); ival = 0; sval = ""; }
                 else if(t == typeof(string)) { type = Type.String; sval = ud.GetString(key, ""); ival = 0; fval = 0f; }
                 else { type = Type.Invalid; ival = 0; fval = 0f; sval = ""; }
+            }
+
+            public override bool Equals(object other) {
+                StateValue d = (StateValue)other;
+
+                if(type != d.type)
+                    return false;
+
+                switch(type) {
+                    case Type.Integer:
+                        return ival == d.ival;
+                    case Type.Float:
+                        return fval == d.fval;
+                    case Type.String:
+                        return sval == d.sval;
+                }
+
+                return false;
+            }
+
+            public override int GetHashCode() {
+                return base.GetHashCode();
+            }
+
+            public static bool operator ==(StateValue d1, StateValue d2) {
+                return d1.Equals(d2);
+            }
+
+            public static bool operator !=(StateValue d1, StateValue d2) {
+                return !d1.Equals(d2);
             }
         }
 
@@ -146,7 +210,7 @@ namespace M8 {
                 }
 
                 mPrefix = prefix;
-                                                                                
+
                 Reset();
             }
 
@@ -364,24 +428,24 @@ namespace M8 {
             }
 
             public bool CheckFlag(string name, int bit) {
-                return CheckFlagMask(name, 1 << bit);
+                return CheckFlagMask(name, 1u << bit);
             }
-
-            public bool CheckFlagMask(string name, int mask) {
-                int flags = GetValue(name);
+            
+            public bool CheckFlagMask(string name, uint mask) {
+                uint flags = (uint)GetValue(name);
 
                 return (flags & mask) != 0;
             }
 
             public void SetFlag(string name, int bit, bool state, bool persistent) {
-                int flags = GetValue(name);
+                uint flags = (uint)GetValue(name);
 
                 if(state)
-                    flags |= 1 << bit;
+                    flags |= 1u << bit;
                 else
-                    flags &= ~(1 << bit);
+                    flags &= ~(1u << bit);
 
-                SetValue(name, flags, persistent);
+                SetValue(name, (int)flags, persistent);
             }
 
             public float GetValueFloat(string name, float defaultVal = 0.0f) {
@@ -532,7 +596,7 @@ namespace M8 {
             UserData.main.actCallback += OnUserDataAction;
 
             SceneManager.instance.sceneChangePostCallback += OnScenePostLoaded;
-            
+
             mStartData = new Dictionary<string, InitData[]>(startData.Length);
             foreach(InitSceneData sdat in startData) {
                 if(!string.IsNullOrEmpty(sdat.scene) && sdat.data != null)

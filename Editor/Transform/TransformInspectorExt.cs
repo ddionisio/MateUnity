@@ -158,7 +158,7 @@ public class TransformInspectorExt : Editor {
                 mRot.quaternionValue = Quaternion.identity;
             }
             else if(altered != Axes.None) {
-                UnityEditor.Undo.RecordObjects(serializedObject.targetObjects, "Change Rotation");
+                Undo.RecordObjects(serializedObject.targetObjects, "Change Rotation");
 
                 foreach(Object obj in serializedObject.targetObjects) {
                     Transform t = obj as Transform;
@@ -169,8 +169,6 @@ public class TransformInspectorExt : Editor {
                     if((altered & Axes.Z) != 0) v.z = visible.z;
 
                     t.localEulerAngles = v;
-
-                    EditorUtility.SetDirty(t);
                 }
             }
         }

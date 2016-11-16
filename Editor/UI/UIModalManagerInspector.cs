@@ -15,18 +15,19 @@ public class UIModalManagerInspector : Editor {
     }
 
     public override void OnInspectorGUI() {
-        GUI.changed = false;
-
-        UIModalManager input = target as UIModalManager;
-        if(input.uis == null)
+        var input = target as UIModalManager;
+        if(input.uis == null) {
             input.uis = new UIModalManager.UIData[0];
+            UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+        }
 
         int delInd = -1;
 
+        //Reset certain values if there are no uis
         if(input.uis.Length == 0) {
             if(!string.IsNullOrEmpty(input.openOnStart)) {
                 input.openOnStart = "";
-                GUI.changed = true;
+                UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
             }
         }
 
@@ -62,29 +63,47 @@ public class UIModalManagerInspector : Editor {
 
             GUILayout.EndHorizontal();
 
-            dat.e_ui = EditorGUILayout.ObjectField("target", dat.e_ui, typeof(UIController), true) as UIController;
-            if(dat.e_ui) {
-                dat.name = dat.e_ui.name;
+            //Fields
+            var uiCtrl = dat.e_ui;
+            var _name = "";
+            var _isPrefab = dat.isPrefab;
+            var _instantiateTo = dat.instantiateTo;
 
-                dat.isPrefab = PrefabUtility.GetPrefabType(dat.e_ui) == PrefabType.Prefab;
-                if(dat.isPrefab) {
-                    dat.instantiateTo = EditorGUILayout.ObjectField("instantiateTo", dat.instantiateTo, typeof(Transform), true) as Transform;
+            EditorGUI.BeginChangeCheck();
+
+            uiCtrl = EditorGUILayout.ObjectField("target", uiCtrl, typeof(UIController), true) as UIController;
+            if(uiCtrl) {
+                _name = uiCtrl.name;
+
+                _isPrefab = PrefabUtility.GetPrefabType(uiCtrl) == PrefabType.Prefab;
+                if(_isPrefab) {
+                    _instantiateTo = EditorGUILayout.ObjectField("instantiateTo", _instantiateTo, typeof(Transform), true) as Transform;                    
                 }
             }
-                        
+
+            if(EditorGUI.EndChangeCheck()) {
+                Undo.RecordObject(target, "Change UI Modal Manager");
+
+                dat.e_ui = uiCtrl;
+                dat.name = _name;
+                dat.isPrefab = _isPrefab;
+                dat.instantiateTo = _instantiateTo;
+            }
+
+            //Toggle which ui to open on start
             bool openOnStart = dat.name == input.openOnStart;
             bool newOpenOnStart = EditorGUILayout.Toggle("Open On Start", openOnStart);
             if(openOnStart != newOpenOnStart) {
+                Undo.RecordObject(target, "Change UI Modal Manager");
                 input.openOnStart = newOpenOnStart ? dat.name : "";
-                GUI.changed = true;
             }
 
             GUILayout.EndVertical();
         }
 
         if(delInd != -1) {
+            Undo.RecordObject(target, "UI Modal Manager Remove");
             M8.ArrayUtil.RemoveAt(ref input.uis, delInd);
-            GUI.changed = true;
         }
 
         //add new
@@ -96,13 +115,13 @@ public class UIModalManagerInspector : Editor {
 
         GUI.enabled = lastEnabled && mNewUI != null;
         if(GUILayout.Button("Add")) {
+            Undo.RecordObject(target, "UI Modal Manager Add");
+
             System.Array.Resize(ref input.uis, input.uis.Length + 1);
             UIModalManager.UIData newDat = new UIModalManager.UIData();
             newDat.e_ui = mNewUI;
             input.uis[input.uis.Length - 1] = newDat;
             mNewUI = null;
-
-            GUI.changed = true;
         }
 
         GUI.enabled = lastEnabled;
@@ -111,11 +130,8 @@ public class UIModalManagerInspector : Editor {
 
         var instantiateTo = (Transform)EditorGUILayout.ObjectField(new GUIContent("Instantiate To", "Default parent for instantiating prefab."), input.instantiateTo, typeof(Transform), true);
         if(input.instantiateTo != instantiateTo) {
+            Undo.RecordObject(target, "Change UI Modal Manager");
             input.instantiateTo = instantiateTo;
-            GUI.changed = true;
         }
-
-        if(GUI.changed)
-            EditorUtility.SetDirty(target);
     }
 }

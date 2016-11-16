@@ -15,7 +15,7 @@ namespace M8 {
         }
 
         [System.Serializable]
-        public class Data {
+        public struct Data {
             public string name;
 
             public Type type;

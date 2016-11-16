@@ -105,10 +105,10 @@ namespace M8 {
             if(_id == invalidID)
                 return false;
 
-            return SceneState.instance.local.CheckFlagMask(GetVarKey(name), 1 << bit);
+            return SceneState.instance.local.CheckFlagMask(GetVarKey(name), 1u << bit);
         }
 
-        public bool CheckFlagMask(string name, int mask) {
+        public bool CheckFlagMask(string name, uint mask) {
             if(_id == invalidID)
                 return false;
 

@@ -15,10 +15,12 @@ namespace M8 {
             if(mValuesFoldout) {
                 if(dat.values != null) {
                     for(int i = 0; i < dat.values.Length; i++) {
-                        GUILayout.BeginVertical(GUI.skin.box);
-
                         var val = dat.values[i];
 
+                        EditorGUI.BeginChangeCheck();
+
+                        GUILayout.BeginVertical(GUI.skin.box);
+                                                                                                
                         //name
                         GUILayout.BeginHorizontal();
 
@@ -27,16 +29,16 @@ namespace M8 {
                         GUILayout.FlexibleSpace();
 
                         if(EditorExt.Utility.DrawAddButton()) {
-                            ArrayUtil.InsertAfter(ref dat.values, i, val.Clone());
-                            GUI.changed = true;
+                            Undo.RecordObject(target, "Shader Global Variables Add");
+                            ArrayUtil.InsertAfter(ref dat.values, i, val.Clone());                            
                             break;
                         }
 
                         GUILayout.Space(4f);
 
                         if(EditorExt.Utility.DrawRemoveButton()) {
+                            Undo.RecordObject(target, "Shader Global Variables Remove");
                             ArrayUtil.RemoveAt(ref dat.values, i);
-                            GUI.changed = true;
                             break;
                         }
 
@@ -63,13 +65,20 @@ namespace M8 {
                                 val.texture = EditorGUILayout.ObjectField(val.texture, typeof(Texture), false) as Texture;
                                 break;
                         }
-
+                        
                         GUILayout.EndVertical();
+
+                        if(EditorGUI.EndChangeCheck()) {
+                            Undo.RecordObject(target, "Shader Global Variables Edit - "+dat.values[i].name);
+                            dat.values[i] = val;
+                        }
                     }
                 }
 
                 //add new
                 if(GUILayout.Button("Add New Value")) {
+                    Undo.RecordObject(target, "Shader Global Variables Add");
+
                     if(dat.values == null || dat.values.Length == 0) {
                         dat.values = new ShaderGlobalVariables.Data[1] { new ShaderGlobalVariables.Data() };
                     }
@@ -78,19 +87,22 @@ namespace M8 {
                         System.Array.Resize(ref dat.values, dat.values.Length + 1);
                         dat.values[dat.values.Length - 1] = newDat;
                     }
-
-                    GUI.changed = true;
                 }
             }
 
             EditorExt.Utility.DrawSeparator();
 
             //Component settings
-            dat.applyOnAwake = GUILayout.Toggle(dat.applyOnAwake, "Apply On Awake");
+            EditorGUI.BeginChangeCheck();
 
-            if(GUI.changed) {
-                EditorUtility.SetDirty(dat);
+            var applyOnAwake = GUILayout.Toggle(dat.applyOnAwake, "Apply On Awake");
+
+            if(EditorGUI.EndChangeCheck()) {
+                Undo.RecordObject(target, "Change Shader Global Variables Component Setting");
+
+                dat.applyOnAwake = applyOnAwake;
             }
+            
 
             //Controls
             if(GUILayout.Button("Refresh")) {
