@@ -20,6 +20,7 @@ namespace M8 {
         public int id { get { return _id; } }
 
         public float value { get { return _value; } }
+        public int valueI { get { return Mathf.RoundToInt(value); } }
 
         public float currentValue {
             get { return mCurVal; }
@@ -32,6 +33,11 @@ namespace M8 {
                         changeCallback(this, mCurVal - prevVal);
                 }
             }
+        }
+
+        public int currentValueI {
+            get { return Mathf.RoundToInt(currentValue); }
+            set { currentValue = value; }
         }
         
         public event System.Action<StatItem, float> changeCallback; //float delta
