@@ -65,10 +65,10 @@ namespace M8 {
                 var comp = comps[i];
 
                 var spawn = comp as IPoolSpawn;
-                if(comp != null) ISpawns.Add(spawn);
+                if(spawn != null) ISpawns.Add(spawn);
 
                 var despawn = comp as IPoolDespawn;
-                if(comp != null) IDespawns.Add(despawn);
+                if(despawn != null) IDespawns.Add(despawn);
             }
 
             mISpawns = ISpawns.ToArray();
