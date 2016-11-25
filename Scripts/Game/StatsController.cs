@@ -1,9 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System;
 
 namespace M8 {
+    [System.Serializable]
+    public struct StatTemplateData {
+        public string name;
+        public int id;
+    };
+
+    [System.Serializable]
+    public struct StatTemplateList {
+        [SerializeField]
+        List<StatTemplateData> items;
+
+        public static string ToJSON(List<StatTemplateData> items, bool prettyPrint) {
+            return JsonUtility.ToJson(new StatTemplateList() { items=items }, prettyPrint);
+        }
+
+        public static List<StatTemplateData> FromJSON(string json) {
+            return !string.IsNullOrEmpty(json) ? JsonUtility.FromJson<StatTemplateList>(json).items : new List<StatTemplateData>();
+        }
+    }
+
     [System.Serializable]
     public class StatItem {
         public const int InvalidID = 0;
@@ -49,6 +68,12 @@ namespace M8 {
             _id = aId;
             _value = 0f;
             _clamp = true;
+        }
+
+        public StatItem(int aId, float aValue, bool aClamp) {
+            _id = aId;
+            _value = aValue;
+            _clamp = aClamp;
         }
 
         public void Reset() {
@@ -119,6 +144,9 @@ namespace M8 {
         }
 
         public void Reset() {
+            if(_stats == null)
+                _stats = new Stats(new StatItem[0]);
+
             _stats.Reset();
         }
 

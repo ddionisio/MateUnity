@@ -10,7 +10,7 @@ namespace M8 {
     /// </summary>
     [AddComponentMenu("M8/Serializer/Object Spawn")]
     public class SceneSerializerSpawnItem : SceneSerializer, IPoolSpawn, IPoolDespawn {
-        void IPoolSpawn.OnSpawned() {
+        void IPoolSpawn.OnSpawned(GenericParams parms) {
             SceneSerializerSpawnManager.instance.RegisterSpawn(this);
         }
 

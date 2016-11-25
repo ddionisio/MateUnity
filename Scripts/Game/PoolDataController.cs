@@ -4,27 +4,43 @@ using System.Collections.Generic;
 
 namespace M8 {
     public class PoolDataController : MonoBehaviour {
-        [System.NonSerialized]
-        public string group;
-
-        [System.NonSerialized]
-        public string factoryKey;
-
-        /// <summary>
-        /// only entity manager ought to set this.
-        /// </summary>
-        [System.NonSerialized]
-        public bool claimed;
+        public string group { get; private set; }
+        
+        public string factoryKey { get; private set; }
+        
+        public bool claimed { get; private set; }
                 
         private bool mIsInterfacesInit;
         private IPoolSpawn[] mISpawns;
         private IPoolDespawn[] mIDespawns;
 
-        public void Spawn() {
-            InitInterfaces();
+        public static PoolDataController Generate(Transform template, string group, Transform parent) {
+            Transform t = Instantiate<Transform>(template);
+            t.name = template.name;
 
+            t.gameObject.SetActive(false);
+
+            t.SetParent(parent, false);
+
+            PoolDataController pdc = t.GetComponent<PoolDataController>();
+            if(pdc == null) {
+                pdc = t.gameObject.AddComponent<PoolDataController>();
+            }
+
+            pdc.group = group;
+            pdc.factoryKey = template.name;
+            pdc.claimed = true;
+
+            return pdc;
+        }
+        
+        public void Spawn(GenericParams parms) {
+            claimed = false;
+
+            InitInterfaces();
+                        
             for(int i = 0; i < mISpawns.Length; i++)
-                mISpawns[i].OnSpawned();
+                mISpawns[i].OnSpawned(parms);
         }
 
         public void Despawn() {
@@ -32,6 +48,8 @@ namespace M8 {
 
             for(int i = 0; i < mIDespawns.Length; i++)
                 mIDespawns[i].OnDespawned();
+
+            claimed = true;
         }
 
         private void InitInterfaces() {

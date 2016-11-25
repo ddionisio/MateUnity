@@ -47,21 +47,7 @@ namespace M8 {
                     maxCapacity = mCapacity;
 
                 for(int i = 0; i < num; i++) {
-                    //PoolDataController
-                    Transform t = (Transform)Object.Instantiate(template);
-                    t.name = template.name;
-
-                    t.parent = mInactiveHolder;
-                    t.localPosition = Vector3.zero;
-
-                    PoolDataController pdc = t.GetComponent<PoolDataController>();
-                    if(pdc == null) {
-                        pdc = t.gameObject.AddComponent<PoolDataController>();
-                    }
-
-                    pdc.group = group;
-                    pdc.factoryKey = template.name;
-
+                    var pdc = PoolDataController.Generate(template, group, mInactiveHolder);
                     mAvailable.Add(pdc);
                 }
             }
@@ -70,9 +56,10 @@ namespace M8 {
             /// Only ReleaseAll and ReleaseAllByType should set removeFromActive to false
             /// </summary>
             public void Release(PoolDataController pdc, bool removeFromActive = true) {
-                pdc.claimed = true;
+                pdc.gameObject.SetActive(false);
 
                 Transform t = pdc.transform;
+
                 t.SetParent(mInactiveHolder, false);
 
                 if(removeFromActive)
@@ -96,11 +83,10 @@ namespace M8 {
                 PoolDataController pdc = mAvailable[mAvailable.Count - 1];
 
                 mAvailable.RemoveAt(mAvailable.Count - 1);
-
-                pdc.claimed = false;
-
+                
                 Transform t = pdc.transform;
                 t.name = string.IsNullOrEmpty(name) ? template.name + (mNameHolder++) : name;
+
                 t.SetParent(parent == null ? defaultParent : parent, false);
 
                 t.gameObject.SetActive(true);
@@ -164,40 +150,40 @@ namespace M8 {
         /// <summary>
         /// type is based on the name of the prefab
         /// </summary>
-        public static Transform Spawn(string group, string type, string name, Transform toParent) {
+        public static Transform Spawn(string group, string type, string name, Transform toParent, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
-                return pc.Spawn(type, name, toParent);
+                return pc.Spawn(type, name, toParent, parms);
             }
             else {
                 return null;
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation) {
+        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
-                return pc.Spawn(type, name, toParent, position, rotation);
+                return pc.Spawn(type, name, toParent, position, rotation, parms);
             }
             else {
                 return null;
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position) {
+        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
-                return pc.Spawn(type, name, toParent, position);
+                return pc.Spawn(type, name, toParent, position, parms);
             }
             else {
                 return null;
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation) {
+        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
-                Transform t = pc.Spawn(type, name, toParent, position, rotation);
+                Transform t = pc.Spawn(type, name, toParent, position, rotation, parms);
                 Vector3 p = t.localPosition;
                 p.z = 0.0f;
                 t.localPosition = p;
@@ -208,10 +194,10 @@ namespace M8 {
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position) {
+        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
-                Transform t = pc.Spawn(type, name, toParent, position);
+                Transform t = pc.Spawn(type, name, toParent, position, parms);
                 Vector3 p = t.localPosition;
                 p.z = 0.0f;
                 t.localPosition = p;
@@ -298,6 +284,9 @@ namespace M8 {
             if(mFactory.ContainsKey(template.name))
                 return false;
 
+            if(poolHolder == null) //default holder to self
+                poolHolder = transform;
+
             FactoryData newData = new FactoryData();
             newData.template = template;
             newData.startCapacity = startCapacity;
@@ -337,19 +326,19 @@ namespace M8 {
             }
         }
 
-        public Transform Spawn(string type, string name, Transform toParent, Vector3 position) {
-            return Spawn(type, name, toParent, position, null);
+        public Transform Spawn(string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
+            return Spawn(type, name, toParent, position, null, parms);
         }
 
-        public Transform Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot) {
-            return Spawn(type, name, toParent, position, rot);
+        public Transform Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot, GenericParams parms) {
+            return Spawn(type, name, toParent, position, rot, parms);
         }
 
-        public Transform Spawn(string type, string name, Transform toParent) {
-            return Spawn(type, name, toParent, null, null);
+        public Transform Spawn(string type, string name, Transform toParent, GenericParams parms) {
+            return Spawn(type, name, toParent, null, null, parms);
         }
 
-        public Transform Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot) {
+        public Transform Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot, GenericParams parms) {
             Transform entityRet = null;
 
             FactoryData dat;
@@ -361,7 +350,7 @@ namespace M8 {
                     if(position.HasValue) entityRet.position = position.Value;
                     if(rot.HasValue) entityRet.rotation = rot.Value;
 
-                    pdc.Spawn();
+                    pdc.Spawn(parms);
                 }
                 else {
                     Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
@@ -486,17 +475,12 @@ namespace M8 {
 
             if(!mControllers.ContainsKey(group)) {
                 mControllers.Add(group, this);
-                
-                if(poolHolder == null) {
-                    GameObject holderGO = new GameObject("holder");
-                    poolHolder = holderGO.transform;
-                    poolHolder.parent = transform;
-                }
-
-                poolHolder.gameObject.SetActive(false);
-
+                                
                 //generate cache and such
                 if(factory != null) {
+                    if(poolHolder == null) //default holder to self
+                        poolHolder = transform;
+
                     mFactory = new Dictionary<string, FactoryData>(factory.Length);
                     foreach(FactoryData factoryData in factory) {
                         factoryData.Init(group, poolHolder);

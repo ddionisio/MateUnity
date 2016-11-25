@@ -9,12 +9,12 @@ namespace M8 {
         public float delay = 1.0f;
 
         public event DespawnCall despawnCallback;
-
+        
         void OnDestroy() {
             despawnCallback = null;
         }
 
-        void IPoolSpawn.OnSpawned() {
+        void IPoolSpawn.OnSpawned(GenericParams parms) {
             Invoke("DoDespawn", delay);
         }
 

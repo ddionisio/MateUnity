@@ -11,10 +11,10 @@ namespace M8.UIModal {
 
         public static void CharacterDialog(string text, string aName = null, string portraitSpriteRef = null, string[] choices = null) {
             Manager.instance.ModalOpen(characterDialogRef, 
-                new ParamArg(CharacterDialogBase.paramText, text),
-                new ParamArg(CharacterDialogBase.paramName, aName),
-                new ParamArg(CharacterDialogBase.paramSpriteRef, portraitSpriteRef),
-                new ParamArg(CharacterDialogBase.paramChoiceArray, choices));
+                new GenericParamArg(CharacterDialogBase.paramText, text),
+                new GenericParamArg(CharacterDialogBase.paramName, aName),
+                new GenericParamArg(CharacterDialogBase.paramSpriteRef, portraitSpriteRef),
+                new GenericParamArg(CharacterDialogBase.paramChoiceArray, choices));
         }
 
         public static void Confirm(ConfirmDialogBase.OnConfirm aCallback) {

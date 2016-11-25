@@ -7,7 +7,6 @@ namespace M8 {
     [CustomEditor(typeof(PoolController))]
     public class PoolControllerInspector : Editor {
         private SerializedProperty mGroupName;
-        private SerializedProperty mPersistent;
         private SerializedProperty mPoolHolder;
 
         //private SerializedProperty mFactory;
@@ -17,7 +16,6 @@ namespace M8 {
 
         void OnEnable() {
             mGroupName = serializedObject.FindProperty("group");
-            mPersistent = serializedObject.FindProperty("_persistent");
             mPoolHolder = serializedObject.FindProperty("poolHolder");
 
             //mFactory = serializedObject.FindProperty("factory");
@@ -43,9 +41,7 @@ namespace M8 {
                 mGroupName.stringValue = "";
 
             EditorGUILayout.EndVertical();
-
-            EditorGUILayout.PropertyField(mPersistent);
-
+            
             EditorGUILayout.PropertyField(mPoolHolder);
 
             M8.EditorExt.Utility.DrawSeparator();

@@ -37,7 +37,7 @@ namespace M8.UIModal {
                 }
             }
 
-            public void Push(Params parms) {
+            public void Push(GenericParams parms) {
                 for(int i = 0; i < mIPushes.Length; i++)
                     mIPushes[i].Push(parms);
             }
@@ -144,7 +144,7 @@ namespace M8.UIModal {
 
         private struct UICommand {
             public UICommandType type;
-            public Params parms;
+            public GenericParams parms;
             public UIData uid;
         }
 
@@ -201,17 +201,17 @@ namespace M8.UIModal {
         }
 
         //closes all modal and open this
-        public void ModalReplace(string modal, Params parms) {
+        public void ModalReplace(string modal, GenericParams parms) {
             ModalCloseAll();
 
             ModalOpen(modal, parms);
         }
 
-        public void ModalReplace(string modal, params ParamArg[] parms) {
-            ModalReplace(modal, new Params(parms));
+        public void ModalReplace(string modal, params GenericParamArg[] parms) {
+            ModalReplace(modal, new GenericParams(parms));
         }
                 
-        public void ModalOpen(string modal, Params parms) {
+        public void ModalOpen(string modal, GenericParams parms) {
             var uid = ModalGetData(modal);
             if(uid == null) {
                 Debug.LogError("Modal not found: " + modal);
@@ -225,8 +225,8 @@ namespace M8.UIModal {
                 StartCoroutine(DoTask());
         }
 
-        public void ModalOpen(string modal, params ParamArg[] parms) {
-            ModalOpen(modal, new Params(parms));
+        public void ModalOpen(string modal, params GenericParamArg[] parms) {
+            ModalOpen(modal, new GenericParams(parms));
         }
 
         public void ModalCloseTop() {
@@ -283,7 +283,7 @@ namespace M8.UIModal {
 
         void Start() {
             if(!string.IsNullOrEmpty(openOnStart)) {
-                ModalOpen(openOnStart, new Params());
+                ModalOpen(openOnStart, new GenericParams());
             }
         }
         

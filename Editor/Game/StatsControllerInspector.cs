@@ -16,6 +16,7 @@ namespace M8 {
             var statsCtrl = (StatsController)target;
 
             var stats = serializedObject.FindProperty("_stats");
+
             var statsItems = stats.FindPropertyRelative("_statItems");
 
             //Items

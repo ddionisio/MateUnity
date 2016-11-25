@@ -6,7 +6,7 @@ namespace M8.UIModal.Interface {
     /// This is when the modal is pushed to the stack, use this for initializing data
     /// </summary>
     public interface IPush {
-        void Push(Params parms);
+        void Push(GenericParams parms);
     }
 
     /// <summary>

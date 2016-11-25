@@ -13,7 +13,7 @@ namespace M8 {
         private ParticleSystem mParticles;
         private bool mActive = false;
 
-        void IPoolSpawn.OnSpawned() {
+        void IPoolSpawn.OnSpawned(GenericParams parms) {
             mActive = false;
 
             if(playDelay > 0)

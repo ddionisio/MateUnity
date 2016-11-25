@@ -1,19 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-namespace M8.UIModal {
-    public struct ParamArg {
+namespace M8 {
+    public struct GenericParamArg {
         public string key;
         public object value;
 
-        public ParamArg(string aKey, object aValue) {
+        public GenericParamArg(string aKey, object aValue) {
             key = aKey;
             value = aValue;
         }
     }
 
-    public class Params : Dictionary<string, object> {
-        public Params(params ParamArg[] args) : base(args.Length) {
+    public class GenericParams : Dictionary<string, object> {
+        public GenericParams(params GenericParamArg[] args) : base(args.Length) {
             for(int i = 0; i < args.Length; i++)
                 Add(args[i].key, args[i].value);
         }

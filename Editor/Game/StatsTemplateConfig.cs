@@ -13,28 +13,8 @@ namespace M8 {
         public const string projConfigScriptFolder = "game.scriptFolder";
 
         public const string defaultFilename = "StatID.cs";
-
-        [System.Serializable]
-        public struct StatData {
-            public string name;
-            public int id;
-        };
-
-        [System.Serializable]
-        public struct StatList {
-            [SerializeField]
-            List<StatData> items;
-
-            public static string ToJSON(List<StatData> items, bool prettyPrint) {
-                return JsonUtility.ToJson(new StatList() { items=items }, prettyPrint);
-            }
-
-            public static List<StatData> FromJSON(string json) {
-                return !string.IsNullOrEmpty(json) ? JsonUtility.FromJson<StatList>(json).items : new List<StatData>();
-            }
-        }
-
-        private static List<StatData> mStats = null;
+        
+        private static List<StatTemplateData> mStats = null;
 
         private TextAsset mTextFileMapper;
         private string mTextNameMapper = "";
@@ -45,7 +25,7 @@ namespace M8 {
 
         private Vector2 mScroll;
 
-        public static List<StatData> stats {
+        public static List<StatTemplateData> stats {
             get {
                 if(mStats == null) {
                     //try to load it
@@ -74,9 +54,9 @@ namespace M8 {
 
         private static void GetStatNames(TextAsset cfg) {
             if(cfg != null) {
-                mStats = StatList.FromJSON(cfg.text);
+                mStats = StatTemplateList.FromJSON(cfg.text);
                 if(mStats == null)
-                    mStats = new List<StatData>();
+                    mStats = new List<StatTemplateData>();
             }
         }
 
@@ -255,9 +235,9 @@ namespace M8 {
                     }
 
                     if(text.Length > 0 && (r.IsMatch(text) && !char.IsDigit(text[0])))
-                        mStats[i] = new StatData() { name=text, id=id };
+                        mStats[i] = new StatTemplateData() { name=text, id=id };
                     else
-                        mStats[i] = new StatData() { name=mStats[i].name, id=id };
+                        mStats[i] = new StatTemplateData() { name=mStats[i].name, id=id };
 
                     GUILayout.EndHorizontal();
                 }
@@ -268,7 +248,7 @@ namespace M8 {
                 GUI.backgroundColor = defaultBkgrndClr;
 
                 if(GUILayout.Button("Add")) {
-                    mStats.Add(new StatData() { name = "Unknown" + (mUnknownCount++), id = GetAvailableID() });
+                    mStats.Add(new StatTemplateData() { name = "Unknown" + (mUnknownCount++), id = GetAvailableID() });
                 }
             }
             
@@ -287,7 +267,7 @@ namespace M8 {
 
             if(GUILayout.Button("Save")) {
                 //save mapping
-                string statString = StatList.ToJSON(mStats, false);
+                string statString = StatTemplateList.ToJSON(mStats, false);
                 File.WriteAllText(mTextFilePathMapper, statString);
 
                 GenerateScript();

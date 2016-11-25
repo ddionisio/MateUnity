@@ -1,5 +1,3 @@
-//#define POOLMANAGER
-
 using UnityEngine;
 using System.Collections;
 
@@ -68,26 +66,11 @@ namespace M8 {
 
         private SceneSerializer mSerializer = null;
 
-        public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position) where T : EntityBase {
-#if POOLMANAGER
-        SpawnPool pool = PoolManager.Pools[spawnGroup];
-
-        Transform spawned = pool.Spawn(pool.prefabs[typeName]);
-        T ent = spawned != null ? spawned.GetComponent<T>() : null;
-
-        if(ent != null) {
-            ent.transform.position = position;
-
-            //add pool data controller
-        }
-
-        return ent;
-#else
-            Transform spawned = PoolController.Spawn(spawnGroup, typeName, typeName, null, position);
+        public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position, GenericParams parms) where T : EntityBase {
+            Transform spawned = PoolController.Spawn(spawnGroup, typeName, typeName, null, position, parms);
             T ent = spawned != null ? spawned.GetComponent<T>() : null;
 
             return ent;
-#endif
         }
 
         private PoolDataController mPoolData;
@@ -143,14 +126,10 @@ namespace M8 {
 
         public bool isReleased {
             get {
-#if POOLMANAGER
-            return !PoolManager.Pools[mPoolData.group].IsSpawned(transform);
-#else
                 if(poolData == null)
                     return false;
 
                 return poolData.claimed;
-#endif
             }
         }
 
@@ -265,7 +244,7 @@ namespace M8 {
         /// Spawn this entity, resets stats, set action to spawning, then later calls OnEntitySpawnFinish.
         /// NOTE: calls after an update to ensure Awake and Start is called.
         /// </summary>
-        protected virtual void OnSpawned() {
+        protected virtual void OnSpawned(GenericParams parms) {
         }
         
         IEnumerator DoSpawn() {
@@ -283,13 +262,13 @@ namespace M8 {
             mStartedCounter = 2;
         }
 
-        void IPoolSpawn.OnSpawned() {
+        void IPoolSpawn.OnSpawned(GenericParams parms) {
             if(mPoolData == null)
                 mPoolData = GetComponent<PoolDataController>();
 
             mState = mPrevState = StateInvalid; //avoid invalid updates
 
-            OnSpawned();
+            OnSpawned(parms);
 
             //allow activator to start and check if we need to spawn now or later
             //ensure start is called before spawning if we are freshly allocated from entity manager
