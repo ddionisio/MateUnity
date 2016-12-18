@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 namespace M8 {
+    [ExecuteInEditMode]
     [AddComponentMenu("M8/Transform/UpLookAt")]
     public class TransUpLookAt : MonoBehaviour {
         public Transform target;
@@ -48,13 +49,12 @@ namespace M8 {
 
             mCurVel = Vector3.zero;
         }
-
-        void Awake() {
-            if(source == null)
-                source = transform;
-        }
-
+        
         void Start() {
+#if UNITY_EDITOR
+            if(!Application.isPlaying) //don't allow during edit mode
+                return;
+#endif
             mStarted = true;
             OnEnable();
         }
@@ -62,7 +62,9 @@ namespace M8 {
         // Update is called once per frame
         void Update() {
             if(target != null) {
-                Vector3 dpos = target.position - source.position;
+                var src = source ? source : transform;
+
+                Vector3 dpos = target.position - src.position;
 
                 if(lockX)
                     dpos.x = 0.0f;
@@ -73,10 +75,10 @@ namespace M8 {
 
                 if(lookDelay > 0.0f) {
                     dpos.Normalize();
-                    source.up = Vector3.SmoothDamp(source.up, dpos, ref mCurVel, lookDelay, Mathf.Infinity, Time.deltaTime);
+                    src.up = Vector3.SmoothDamp(src.up, dpos, ref mCurVel, lookDelay, Mathf.Infinity, Time.deltaTime);
                 }
                 else
-                    source.up = dpos;
+                    src.up = dpos;
             }
         }
     }

@@ -217,7 +217,6 @@ namespace M8 {
                     pc.Release(pdc);
                 else
                     entity.gameObject.SetActive(false);
-                //Object.Destroy(entity.gameObject);
             }
             else
                 entity.gameObject.SetActive(false);
@@ -232,12 +231,10 @@ namespace M8 {
                 if(pc != null)
                     pc.Release(pdc);
                 else
-                    entity.gameObject.SetActive(false);
-                //Object.Destroy(entity.gameObject);
+                    entity.SetActive(false);
             }
             else
-                entity.gameObject.SetActive(false);
-            //Object.Destroy(entity.gameObject);
+                entity.SetActive(false);
         }
 
         public static void ReleaseByGroup(string group, Transform entity) {

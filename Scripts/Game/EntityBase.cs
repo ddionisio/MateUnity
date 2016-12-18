@@ -7,7 +7,7 @@ Basic Framework would be something like this:
         //reset stuff here
     }
 
-    protected override void OnSpawned() {
+    protected override void OnSpawned(M8.GenericParams parms) {
         //populate data/state for ai, player control, etc.
     }
 
