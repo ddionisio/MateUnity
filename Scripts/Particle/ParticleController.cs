@@ -27,7 +27,8 @@ namespace M8 {
         }
 
         public void SetLoop(bool loop) {
-            mPS.loop = loop;
+            var main = mPS.main;
+            main.loop = loop;
         }
 
         void OnEnable() {

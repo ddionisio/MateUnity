@@ -379,7 +379,7 @@ namespace M8 {
             if(mCamera.orthographic) {
                 Matrix4x4 m = getProjectionMatrix(mResolution.x, mResolution.y, true, out mScreenExtent, out mFixedScreenExtent);
 
-#if !(UNITY_3_5 || UNITY_4_0 || UNITY_4_1)
+#if false //Certain devices may require reorientation
                 if(Application.platform == RuntimePlatform.WP8Player &&
 			    (Screen.orientation == ScreenOrientation.LandscapeLeft || Screen.orientation == ScreenOrientation.LandscapeRight)) {
                     float angle = (Screen.orientation == ScreenOrientation.LandscapeRight) ? 90.0f : -90.0f;

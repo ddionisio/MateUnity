@@ -50,6 +50,11 @@ namespace M8 {
         /// </summary>
         public event OnSceneDataCallback sceneAddedCallback;
 
+        /// <summary>
+        /// Called after a scene has unloaded via UnloadAddedScene
+        /// </summary>
+        public event OnSceneDataCallback sceneRemovedCallback;
+
         [Tooltip("Use additive if you want to start the game with a root scene, and having one scene to append/replace as you load new scene.")]
         [SerializeField]
         Mode _mode = Mode.Additive;
@@ -70,8 +75,10 @@ namespace M8 {
 
         private List<Scene> mScenesAdded; //added scene to current one, filled by AddScene(), cleared out when a new scene is loaded via LoadScene
         private Queue<string> mScenesToAdd;
-
         private Coroutine mSceneAddRout;
+
+        private Queue<Scene> mScenesToRemove; //scenes to remove via UnloadAddedScene
+        private Coroutine mSceneRemoveRout;
 
         private float mPrevTimeScale;
         
@@ -144,6 +151,12 @@ namespace M8 {
         public void LoadLastSceneStack() {
             if(stackEnable) {
                 if(mSceneStack.Count > 0) {
+                    //can't allow this
+                    if(isLoading) {
+                        Debug.LogError("Current scene is still loading, can't load: "+mSceneStack.Peek());
+                        return;
+                    }
+
                     LoadScene(mSceneStack.Pop());
                 }
                 else {
@@ -168,6 +181,12 @@ namespace M8 {
         /// Add a scene to the current scene. Listen via sceneAddedCallback to know when it's added
         /// </summary>
         public void AddScene(string sceneName) {
+            //can't allow this
+            if(isLoading) {
+                Debug.LogError("Current scene is still loading, can't add: "+sceneName);
+                return;
+            }
+
             mScenesToAdd.Enqueue(sceneName);
 
             if(mSceneAddRout == null)
@@ -178,10 +197,21 @@ namespace M8 {
         /// Unload a scene loaded via AddScene
         /// </summary>
         public void UnloadAddedScene(string sceneName) {
+            //can't allow this
+            if(isLoading) {
+                Debug.LogError("Current scene is still loading, can't remove: "+sceneName);
+                return;
+            }
+
             for(int i = 0; i < mScenesAdded.Count; i++) {
                 if(mScenesAdded[i].name == sceneName) {
+                    mScenesToRemove.Enqueue(mScenesAdded[i]);
+
                     mScenesAdded.RemoveAt(i);
-                    UnitySceneManager.UnloadScene(sceneName);
+
+                    if(mSceneRemoveRout == null)
+                        mSceneRemoveRout = StartCoroutine(DoRemoveScene());
+
                     return;
                 }
             }
@@ -204,9 +234,12 @@ namespace M8 {
         /// </summary>
         public void UnloadAddedScenes() {
             for(int i = 0; i < mScenesAdded.Count; i++)
-                UnitySceneManager.UnloadScene(mScenesAdded[i]);
+                mScenesToRemove.Enqueue(mScenesAdded[i]);
 
             ClearAddSceneData();
+
+            if(mSceneRemoveRout == null)
+                mSceneRemoveRout = StartCoroutine(DoRemoveScene());
         }
 
         private void ClearAddSceneData() {
@@ -317,7 +350,18 @@ namespace M8 {
             //play out transitions
             for(int i = 0; i < mTransitions.Count; i++)
                 yield return mTransitions[i].Out();
-            
+
+            //wait for scene add to finish
+            while(mSceneAddRout != null)
+                yield return null;
+
+            //unload added scenes
+            UnloadAddedScenes();
+
+            //wait for scene remove to finish
+            while(mSceneRemoveRout != null)
+                yield return null;
+
             //scene is about to change
             if(sceneChangeCallback != null)
                 sceneChangeCallback(toScene);
@@ -327,18 +371,14 @@ namespace M8 {
             if(mode == LoadSceneMode.Additive) {
                 //Debug.Log("unload: "+mCurScene);
                 if(unloadCurrent && mCurScene != mRootScene) {
-                    UnitySceneManager.UnloadScene(mCurScene);
+                    var sync = UnitySceneManager.UnloadSceneAsync(mCurScene);
 
-                    //unload added scenes
-                    UnloadAddedScenes();
+                    while(!sync.isDone)
+                        yield return null;
                 }
                 
                 //load only if it doesn't exist
                 doLoad = !UnitySceneManager.GetSceneByName(toScene).IsValid();
-            }
-            else {
-                //single mode removes all other scenes
-                ClearAddSceneData();
             }
 
             //load
@@ -367,6 +407,10 @@ namespace M8 {
 
         IEnumerator DoAddScene() {
             while(mScenesToAdd.Count > 0) {
+                //wait for scene removes to finish
+                while(mSceneRemoveRout != null)
+                    yield return null;
+
                 var sceneName = mScenesToAdd.Dequeue();
 
                 var sync = UnitySceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
@@ -382,6 +426,22 @@ namespace M8 {
             }
 
             mSceneAddRout = null;
+        }
+
+        IEnumerator DoRemoveScene() {
+            while(mScenesToRemove.Count > 0) {
+                var scene = mScenesToRemove.Dequeue();
+
+                var sync = UnitySceneManager.UnloadSceneAsync(scene);
+
+                while(!sync.isDone)
+                    yield return null;
+
+                if(sceneRemovedCallback != null)
+                    sceneRemovedCallback(scene);
+            }
+
+            mSceneRemoveRout = null;
         }
 
         private void SceneStackPush(string scene, string nextScene) {
