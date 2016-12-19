@@ -5,7 +5,7 @@ namespace M8 {
     [AddComponentMenu("M8/Renderer/SortingLayer")]
     [RequireComponent(typeof(Renderer))]
     public class RendererSortingLayer : MonoBehaviour {
-        [SerializeField]
+        [SerializeField, SortingLayerAttribute]
         string _sortingLayerName;
         [SerializeField]
         int _sortingOrder;

@@ -339,6 +339,8 @@ namespace M8 {
 
             mScenesAdded = new List<Scene>();
             mScenesToAdd = new Queue<string>();
+
+            mScenesToRemove = new Queue<Scene>();
         }
 
         IEnumerator DoLoadScene(string toScene, LoadSceneMode mode, bool unloadCurrent) {
@@ -384,6 +386,12 @@ namespace M8 {
             //load
             if(doLoad) {
                 var sync = UnitySceneManager.LoadSceneAsync(toScene, mode);
+
+                //something went wrong
+                if(sync == null) {
+                    isLoading = false;
+                    yield break;
+                }
 
                 while(!sync.isDone)
                     yield return null;
