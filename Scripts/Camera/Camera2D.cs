@@ -65,7 +65,7 @@ namespace M8 {
             }
         }
 
-        public new Camera camera { get { return mCamera; } }
+        public Camera unityCamera { get { return mCamera; } }
 
         public Rect screenExtent { get { return mScreenExtent; } }
         public Rect fixedScreenExtent { get { return mFixedScreenExtent; } }

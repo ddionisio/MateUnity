@@ -31,8 +31,8 @@ namespace M8 {
         private Rigidbody mBody;
         private Collider mColl;
 
-        public new Rigidbody rigidbody { get { return mBody; } }
-        public new Collider collider { get { return mColl; } }
+        public Rigidbody body { get { return mBody; } }
+        public Collider coll { get { return mColl; } }
 
         public bool gravityLocked { get { return mGravityLocked; } set { mGravityLocked = value; } }
         public float startGravity { get { return mStartGravity; } }

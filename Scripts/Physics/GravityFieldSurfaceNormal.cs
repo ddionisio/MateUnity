@@ -41,7 +41,7 @@ namespace M8 {
             DirInfo info = null;
             mCurDirs.TryGetValue(entity, out info);
 
-            Vector3 entPos = entity.collider ? entity.collider.bounds.center : entity.transform.position;
+            Vector3 entPos = entity.coll ? entity.coll.bounds.center : entity.transform.position;
             Vector3 entUp = entity.up;
 
             Vector3 dir = inverse ? entPos - mCenter : mCenter - entPos;
