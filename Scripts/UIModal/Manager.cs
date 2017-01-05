@@ -100,25 +100,25 @@ namespace M8.UIModal {
                         var comp = comps[i];
 
                         var push = comp as Interface.IPush;
-                        if(comp != null) IPushes.Add(push);
+                        if(push != null) IPushes.Add(push);
 
                         var pop = comp as Interface.IPop;
-                        if(comp != null) IPops.Add(pop);
+                        if(pop != null) IPops.Add(pop);
 
                         var open = comp as Interface.IOpen;
-                        if(comp != null) IOpens.Add(open);
+                        if(open != null) IOpens.Add(open);
 
                         var opening = comp as Interface.IOpening;
-                        if(comp != null) IOpenings.Add(opening);
+                        if(opening != null) IOpenings.Add(opening);
 
                         var close = comp as Interface.IClose;
-                        if(comp != null) ICloses.Add(close);
+                        if(close != null) ICloses.Add(close);
 
                         var closing = comp as Interface.IClosing;
-                        if(comp != null) IClosings.Add(closing);
+                        if(closing != null) IClosings.Add(closing);
 
                         var active = comp as Interface.IActive;
-                        if(comp != null) IActives.Add(active);
+                        if(active != null) IActives.Add(active);
                     }
 
                     mIPushes = IPushes.ToArray();

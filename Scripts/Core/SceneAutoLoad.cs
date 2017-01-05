@@ -13,12 +13,18 @@ namespace M8 {
 
         [SerializeField]
         float _delay = 0f;
+
+        [SerializeField]
+        bool _destroyAfter;
         
         IEnumerator Start() {
             if(_delay > 0f)
                 yield return new WaitForSeconds(_delay);
 
             SceneManager.instance.LoadScene(_scene.name);
+
+            if(_destroyAfter)
+                Destroy(gameObject);
         }
     }
 }

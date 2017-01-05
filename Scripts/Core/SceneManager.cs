@@ -36,6 +36,11 @@ namespace M8 {
         public event OnSceneBoolCallback pauseCallback;
 
         /// <summary>
+        /// Called just before the transition to change scene, useful for things like locking input, cancelling processes, etc.
+        /// </summary>
+        public event OnSceneCallback sceneChangeStartCallback;
+
+        /// <summary>
         /// Called after transition (e.g. load screen, save states); and before unloading current scene, and then load new scene.
         /// </summary>
         public event OnSceneStringCallback sceneChangeCallback;
@@ -84,6 +89,8 @@ namespace M8 {
         
         private Transform mHolder; //for use with storing game objects to be transferred to other scenes
 
+        private int mPauseCounter;
+
         public Mode mode {
             get { return _mode; }
             set {
@@ -96,7 +103,7 @@ namespace M8 {
             }
         }
         
-        public bool isPaused { get; private set; }
+        public bool isPaused { get { return mPauseCounter > 0; } }
 
         public int curLevel { get; private set; }
 
@@ -253,9 +260,11 @@ namespace M8 {
         }
 
         public void Pause() {
-            if(!isPaused) {
-                isPaused = true;
+            bool wasPaused = isPaused;
 
+            mPauseCounter++;
+
+            if(!wasPaused) {
                 if(Time.timeScale != 0.0f) {
                     mPrevTimeScale = Time.timeScale;
                     Time.timeScale = 0.0f;
@@ -266,9 +275,11 @@ namespace M8 {
         }
 
         public void Resume() {
-            if(isPaused) {
-                isPaused = false;
+            bool wasPaused = isPaused;
 
+            mPauseCounter--;
+
+            if(wasPaused) {
                 Time.timeScale = mPrevTimeScale;
 
                 if(pauseCallback != null) pauseCallback(isPaused);
@@ -323,14 +334,20 @@ namespace M8 {
         public void RemoveTransition(ITransition trans) {
             mTransitions.Remove(trans);
         }
-        
+
+        protected override void OnInstanceDeinit() {
+            //if we are destroying SceneManager for some reason
+            if(isPaused)
+                Time.timeScale = mPrevTimeScale;
+        }
+
         protected override void OnInstanceInit() {
             mRootScene = mCurScene = UnitySceneManager.GetActiveScene();
             //mIsFullscreen = Screen.fullScreen;
 
             mPrevTimeScale = Time.timeScale;
 
-            isPaused = false;
+            mPauseCounter = 0;
 
             mTransitions = new List<ITransition>();
                         
@@ -348,6 +365,10 @@ namespace M8 {
 
             //make sure the scene is not paused
             Resume();
+
+            //about to change scene
+            if(sceneChangeStartCallback != null)
+                sceneChangeStartCallback();
 
             //play out transitions
             for(int i = 0; i < mTransitions.Count; i++)

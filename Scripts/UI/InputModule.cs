@@ -45,6 +45,10 @@ namespace M8.UI {
         [SerializeField]
         private bool m_AllowActivationOnMobileDevice;
 
+        private int mLockInputCounter;
+
+        public static InputModule instance { get; set; }
+
         public bool allowActivationOnMobileDevice {
             get { return m_AllowActivationOnMobileDevice; }
             set { m_AllowActivationOnMobileDevice = value; }
@@ -84,6 +88,16 @@ namespace M8.UI {
         public int cancelButton {
             get { return m_CancelButton; }
             set { m_CancelButton = value; }
+        }
+
+        public bool lockInput {
+            get { return mLockInputCounter > 0; }
+            set {
+                if(value)
+                    mLockInputCounter++;
+                else
+                    mLockInputCounter--;
+            }
         }
 
         public override void UpdateModule() {
@@ -132,6 +146,9 @@ namespace M8.UI {
         }
 
         public override void Process() {
+            if(lockInput)
+                return;
+
             bool usedEvent = SendUpdateEventToSelectedObject();
 
             if(eventSystem.sendNavigationEvents) {
@@ -143,6 +160,20 @@ namespace M8.UI {
             }
 
             ProcessMouseEvent();
+        }
+
+        protected override void OnDestroy() {
+            base.OnDestroy();
+
+            if(instance == this)
+                instance = null;
+        }
+
+        protected override void Awake() {
+            base.Awake();
+
+            if(instance == null)
+                instance = this;
         }
 
         /// <summary>
