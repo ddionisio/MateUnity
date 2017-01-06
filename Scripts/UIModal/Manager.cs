@@ -78,7 +78,7 @@ namespace M8.UIModal {
                 if(isPrefab) {
                     Vector3 p = _ui.transform.localPosition;
                     mUI = (Controller)Object.Instantiate(_ui);
-                    mUI.transform.parent = instantiateTo;
+                    mUI.transform.SetParent(instantiateTo, false);
                     mUI.transform.localPosition = p;
                     mUI.transform.localScale = Vector3.one;
                 }

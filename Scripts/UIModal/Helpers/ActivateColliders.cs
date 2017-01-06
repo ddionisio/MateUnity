@@ -4,7 +4,7 @@ namespace M8.UIModal.Helpers {
     /// <summary>
     /// Add this along UIController to enable/disable colliders during activate
     /// </summary>
-    [AddComponentMenu("M8/UI Modal/Controller/ActivateColliders")]
+    [AddComponentMenu("M8/UI Modal/Controller Helpers/ActivateColliders")]
     [RequireComponent(typeof(Controller))]
     public class ActivateColliders : MonoBehaviour {
         private Controller mCtrl;

@@ -120,6 +120,8 @@ public class UIModalManagerInspector : Editor {
             System.Array.Resize(ref input.uis, input.uis.Length + 1);
             UIModalManager.UIData newDat = new UIModalManager.UIData();
             newDat.e_ui = mNewUI;
+            newDat.name = mNewUI.name;
+            newDat.isPrefab = PrefabUtility.GetPrefabType(mNewUI) == PrefabType.Prefab;
             input.uis[input.uis.Length - 1] = newDat;
             mNewUI = null;
         }

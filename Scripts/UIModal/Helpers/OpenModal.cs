@@ -6,7 +6,7 @@ namespace M8.UI.Modal.Helpers {
     /// <summary>
     /// Simple behaviour to open a modal via Execute, useful for UI, or some timeline editor
     /// </summary>
-    [AddComponentMenu("M8/UI Modal/Controller/OpenModal")]
+    [AddComponentMenu("M8/UI Modal/Helpers/OpenModal")]
     public class OpenModal : MonoBehaviour {
         public string modalRef;
         public bool closeIfOpened;

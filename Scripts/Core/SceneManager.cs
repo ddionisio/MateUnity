@@ -318,15 +318,17 @@ namespace M8 {
         public void AddTransition(ITransition trans) {
             //only add if it doesn't exist
             if(!mTransitions.Contains(trans)) {
-                if(mTransitions.Count > 0) {
-                    for(int i = mTransitions.Count - 1; i >= 0; i--) {
-                        if(mTransitions[i].priority >= trans.priority) {
-                            mTransitions.Insert(i, trans);
-                            break;
-                        }
+                bool isAdded = false;
+
+                for(int i = 0; i < mTransitions.Count; i++) {
+                    if(trans.priority > mTransitions[i].priority) {
+                        mTransitions.Insert(i, trans);
+                        isAdded = true;
+                        break;
                     }
                 }
-                else
+
+                if(!isAdded)
                     mTransitions.Add(trans);
             }
         }

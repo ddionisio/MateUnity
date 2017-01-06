@@ -6,7 +6,7 @@ namespace M8.UIModal.Helpers {
     /// <summary>
     /// Add this along UIController to set given 'select' as selected in Unity's EventSystem
     /// </summary>
-    [AddComponentMenu("M8/UI Modal/Controller/ActivateSelect")]
+    [AddComponentMenu("M8/UI Modal/Controller Helpers/ActivateSelect")]
     [RequireComponent(typeof(Controller))]
     public class ActivateSelect : MonoBehaviour {
         public GameObject select;
