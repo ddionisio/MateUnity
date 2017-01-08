@@ -324,18 +324,18 @@ namespace M8 {
         }
 
         public Transform Spawn(string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
-            return Spawn(type, name, toParent, position, null, parms);
+            return _Spawn(type, name, toParent, position, null, parms);
         }
 
         public Transform Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot, GenericParams parms) {
-            return Spawn(type, name, toParent, position, rot, parms);
+            return _Spawn(type, name, toParent, position, rot, parms);
         }
 
         public Transform Spawn(string type, string name, Transform toParent, GenericParams parms) {
-            return Spawn(type, name, toParent, null, null, parms);
+            return _Spawn(type, name, toParent, null, null, parms);
         }
 
-        public Transform Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot, GenericParams parms) {
+        Transform _Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot, GenericParams parms) {
             Transform entityRet = null;
 
             FactoryData dat;

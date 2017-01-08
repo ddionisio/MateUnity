@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace M8 {
     /// <summary>
     /// Simple caching to minimize allocation, when order of items does not matter.
     /// </summary>
-    public class CacheList<T> : IEnumerable {
+    public class CacheList<T> : IEnumerable<T> {
         private T[] mItems;
         private int mCount;
 
@@ -28,17 +29,21 @@ namespace M8 {
             mCount = 0;
             mItems = new T[capacity];
         }
-
-        public IEnumerator GetEnumerator() {
+        
+        public IEnumerator<T> GetEnumerator() {
             for(int i = 0; i < mCount; i++)
                 yield return mItems[i];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
 
         /// <summary>
         /// Double the amount of capacity
         /// </summary>
         public void Expand() {
-            System.Array.Resize(ref mItems, mItems.Length*2);
+            Array.Resize(ref mItems, mItems.Length*2);
         }
 
         /// <summary>
@@ -48,7 +53,7 @@ namespace M8 {
             if(amount <= 0)
                 throw new ArgumentException(string.Format("Invalid amount ({0})"+amount));
 
-            System.Array.Resize(ref mItems, mItems.Length + amount);
+            Array.Resize(ref mItems, mItems.Length + amount);
         }
 
         public void Add(T item) {
