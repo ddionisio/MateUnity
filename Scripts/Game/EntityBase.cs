@@ -67,7 +67,7 @@ namespace M8 {
         private SceneSerializer mSerializer = null;
 
         public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position, GenericParams parms) where T : EntityBase {
-            Transform spawned = PoolController.Spawn(spawnGroup, typeName, typeName, null, position, parms);
+            Transform spawned = PoolController.SpawnFromGroup(spawnGroup, typeName, typeName, null, position, parms);
             T ent = spawned != null ? spawned.GetComponent<T>() : null;
 
             return ent;
@@ -156,7 +156,7 @@ namespace M8 {
             transform.parent = PoolManager.Pools[poolData.group].group;
             PoolManager.Pools[poolData.group].Despawn(transform);
 #else
-                PoolController.ReleaseByGroup(poolData.group, transform);
+                PoolController.ReleaseFromGroup(poolData.group, transform);
 #endif
             }
             else {

@@ -150,7 +150,7 @@ namespace M8 {
         /// <summary>
         /// type is based on the name of the prefab
         /// </summary>
-        public static Transform Spawn(string group, string type, string name, Transform toParent, GenericParams parms) {
+        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 return pc.Spawn(type, name, toParent, parms);
@@ -160,7 +160,7 @@ namespace M8 {
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation, GenericParams parms) {
+        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 return pc.Spawn(type, name, toParent, position, rotation, parms);
@@ -170,7 +170,7 @@ namespace M8 {
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
+        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 return pc.Spawn(type, name, toParent, position, parms);
@@ -180,7 +180,7 @@ namespace M8 {
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation, GenericParams parms) {
+        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 Transform t = pc.Spawn(type, name, toParent, position, rotation, parms);
@@ -194,7 +194,7 @@ namespace M8 {
             }
         }
 
-        public static Transform Spawn(string group, string type, string name, Transform toParent, Vector2 position, GenericParams parms) {
+        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector2 position, GenericParams parms) {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 Transform t = pc.Spawn(type, name, toParent, position, parms);
@@ -237,14 +237,14 @@ namespace M8 {
                 entity.SetActive(false);
         }
 
-        public static void ReleaseByGroup(string group, Transform entity) {
+        public static void ReleaseFromGroup(string group, Transform entity) {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 pc.Release(entity);
             }
         }
 
-        public static void Expand(string group, string type, int amount) {
+        public static void ExpandGroup(string group, string type, int amount) {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 pc.Expand(type, amount);
