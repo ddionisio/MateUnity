@@ -6,11 +6,17 @@ using System.Collections.Generic;
 namespace M8 {
     [CustomEditor(typeof(StatsController))]
     public class StatsControllerInspector : Editor {
+        public struct State {
+            public bool isExpanded;
+        }
 
         private bool mIsEditMode;
         private List<int> mCheckedIds;
+        private State[] mEditStates;
 
         private Vector2 mScroll;
+
+        private GUIStyle mFoldoutStyle;
 
         public override void OnInspectorGUI() {
             var statsCtrl = (StatsController)target;
@@ -35,7 +41,7 @@ namespace M8 {
                     else
                         name = "<Unknown> ID: "+stat.id;
 
-                    string valStr = string.Format("{0}/{1}", stat.currentValue, stat.value);
+                    string valStr = string.Format("{0}/{1}", stat.currentValue, stat.valueMax);
 
                     GUILayout.BeginHorizontal(GUI.skin.box);
 
@@ -45,7 +51,7 @@ namespace M8 {
                 }
             }
             else {
-                if(mIsEditMode) {
+                if(mIsEditMode) {                    
                     foreach(var statData in StatsTemplateConfig.stats) {
                         int idIndex = mCheckedIds.IndexOf(statData.id);
 
@@ -69,11 +75,17 @@ namespace M8 {
                     }
                 }
                 else {
+                    if(mEditStates == null || mEditStates.Length != statsItems.arraySize)
+                        mEditStates = new State[statsItems.arraySize];
+
                     for(int i = 0; i < statsItems.arraySize; i++) {
+                        var editState = mEditStates[i];
+
                         var idValue = statsItems.GetArrayElementAtIndex(i).FindPropertyRelative("_id").intValue;
 
-                        var val = statsItems.GetArrayElementAtIndex(i).FindPropertyRelative("_value");
-                        var clamp = statsItems.GetArrayElementAtIndex(i).FindPropertyRelative("_clamp");
+                        var valMin = statsItems.GetArrayElementAtIndex(i).FindPropertyRelative("_valueMin");
+                        var valMax = statsItems.GetArrayElementAtIndex(i).FindPropertyRelative("_valueMax");
+                        var valDefault = statsItems.GetArrayElementAtIndex(i).FindPropertyRelative("_valueDefault");
                         
                         //grab name
                         string name;
@@ -84,15 +96,48 @@ namespace M8 {
                         else
                             name = "<Unknown> ID: "+idValue;
 
-                        GUILayout.BeginHorizontal(GUI.skin.box);
+                        if(mFoldoutStyle == null) {
+                            mFoldoutStyle = new GUIStyle(EditorStyles.foldout);
+                            mFoldoutStyle.fontStyle = FontStyle.Bold;
+                        }
                         
-                        EditorGUILayout.PropertyField(val, new GUIContent(name));
+                        if(editState.isExpanded) {
+                            editState.isExpanded = EditorGUILayout.Foldout(editState.isExpanded, new GUIContent(name), true, mFoldoutStyle);
 
-                        GUILayout.FlexibleSpace();
-                        
-                        EditorGUILayout.PropertyField(clamp, new GUIContent("Clamped"));
+                            GUILayout.BeginVertical(GUI.skin.box);
 
-                        GUILayout.EndHorizontal();
+                            EditorGUILayout.PropertyField(valMin, new GUIContent("Min"));
+
+                            EditorGUILayout.PropertyField(valMax, new GUIContent("Max"));
+
+                            if(valMin.floatValue > valMax.floatValue) {
+                                valDefault.floatValue = valMax.floatValue = valMin.floatValue;
+                            }
+                            else if(valMax.floatValue < valMin.floatValue) {
+                                valDefault.floatValue = valMin.floatValue = valMax.floatValue;
+                            }
+                            else if(valMin.floatValue < valMax.floatValue) {
+                                EditorExt.Utility.PropertyFieldFloatSliderLayout(valDefault, valMin.floatValue, valMax.floatValue, new GUIContent("Default"));
+                            }
+
+                            GUILayout.EndVertical();
+                        }
+                        else {
+                            GUILayout.BeginHorizontal(GUI.skin.box);
+
+                            string str;
+
+                            if(valMin.floatValue == valMax.floatValue)
+                                str = string.Format("{0} [{1}]", name, valMax.floatValue);
+                            else
+                                str = string.Format("{0} [{1}, {2}] Default: {3}", name, valMin.floatValue, valMax.floatValue, valDefault.floatValue);
+
+                            editState.isExpanded = EditorGUILayout.Foldout(editState.isExpanded, new GUIContent(str), true, mFoldoutStyle);
+
+                            GUILayout.EndHorizontal();
+                        }
+
+                        mEditStates[i] = editState;
                     }
 
                     serializedObject.ApplyModifiedProperties();
@@ -132,6 +177,8 @@ namespace M8 {
                     Undo.RecordObject(target, "Save Stat Settings For " + target.name);
 
                     statsCtrl.Override(newStats.ToArray());
+
+                    mEditStates = new State[newStats.Count];
                 }
 
                 GUILayout.Space(16f);
@@ -145,9 +192,9 @@ namespace M8 {
                 GUILayout.EndHorizontal();
             }
             else {
-                GUI.enabled = lastEnabled && !Application.isPlaying;
+                GUI.enabled = lastEnabled && !Application.isPlaying && StatsTemplateConfig.stats != null;
                 
-                if(GUILayout.Button("Settings")) {
+                if(GUILayout.Button("Settings")) {                    
                     mIsEditMode = true;
 
                     //setup checked list

@@ -31,25 +31,31 @@ namespace M8 {
         int _id;
 
         [SerializeField]
-        float _value;
+        float _valueMin;
 
         [SerializeField]
-        bool _clamp;
-
+        float _valueMax;
+        
+        [SerializeField]
+        float _valueDefault;
+        
         public int id { get { return _id; } }
 
-        public float value { get { return _value; } }
-        public int valueI { get { return Mathf.RoundToInt(value); } }
+        public float valueMin { get { return _valueMin; } }
+        public int valueMinI { get { return Mathf.RoundToInt(_valueMin); } }
+
+        public float valueMax { get { return _valueMax; } }
+        public int valueMaxI { get { return Mathf.RoundToInt(_valueMax); } }
 
         public float currentValue {
             get { return mCurVal; }
             set {
                 if(mCurVal != value) {
                     var prevVal = mCurVal;
-                    mCurVal = _clamp ? Mathf.Clamp(value, 0f, _value) : value;
+                    mCurVal = Mathf.Clamp(value, _valueMin, _valueMax);
 
                     if(changeCallback != null)
-                        changeCallback(this, mCurVal - prevVal);
+                        changeCallback(this, prevVal);
                 }
             }
         }
@@ -59,25 +65,20 @@ namespace M8 {
             set { currentValue = value; }
         }
         
-        public event System.Action<StatItem, float> changeCallback; //float delta
+        public event System.Action<StatItem, float> changeCallback; //float prev
         public event System.Action<StatItem> resetCallback;
 
         private float mCurVal;
                 
         public StatItem(int aId) {
             _id = aId;
-            _value = 0f;
-            _clamp = true;
+            _valueMin = 0f;
+            _valueMax = 0f;            
+            _valueDefault = 0f;
         }
-
-        public StatItem(int aId, float aValue, bool aClamp) {
-            _id = aId;
-            _value = aValue;
-            _clamp = aClamp;
-        }
-
+        
         public void Reset() {
-            mCurVal = _value;
+            mCurVal = _valueDefault;
 
             if(resetCallback != null)
                 resetCallback(this);

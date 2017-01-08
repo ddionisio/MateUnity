@@ -497,5 +497,30 @@ namespace M8.EditorExt {
 
             ProjectWindowUtil.CreateAsset(asset, string.Format("{0}{1}.asset", dir, typeof(T).Name));
         }
+
+        // A slider function that takes a SerializedProperty
+        public static void PropertyFieldFloatSlider(Rect position, SerializedProperty property, float leftValue, float rightValue, GUIContent label = null) {
+            if(label == null)
+                label = new GUIContent(property.name);
+
+            label = EditorGUI.BeginProperty(position, label, property);
+
+            EditorGUI.BeginChangeCheck();
+            var newValue = EditorGUI.Slider(position, label, property.floatValue, leftValue, rightValue);
+            // Only assign the value back if it was actually changed by the user.
+            // Otherwise a single value will be assigned to all objects when multi-object editing,
+            // even when the user didn't touch the control.
+            if(EditorGUI.EndChangeCheck())
+                property.floatValue = newValue;
+
+            EditorGUI.EndProperty();
+        }
+
+        // A slider function that takes a SerializedProperty
+        public static void PropertyFieldFloatSliderLayout(SerializedProperty property, float leftValue, float rightValue, GUIContent label = null) {
+            var position = EditorGUILayout.GetControlRect();
+
+            PropertyFieldFloatSlider(position, property, leftValue, rightValue, label);
+        }
     }
 }
