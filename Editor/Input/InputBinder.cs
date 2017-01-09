@@ -65,6 +65,21 @@ namespace M8.EditorExt {
             return selectedValue;
         }
 
+        public static int GUISelectInputActionPopup(Rect position, int selectedValue) {
+            if(actions != null && actions.Count > 0) {
+                return EditorGUI.IntPopup(position, selectedValue, mActionEditNames, mActionEditVals);
+            }
+            else {
+                //let user know they need to configure input actions
+                if(GUI.Button(position, "[Edit Input Actions]")) {
+                    mActionFoldout = true;
+                    EditorWindow.GetWindow(typeof(InputBinder));
+                }
+            }
+
+            return selectedValue;
+        }
+
         private static void GetInputActions(TextAsset cfg) {
             if(cfg != null) {
                 mActions = InputManager.ActionList.FromJSON(cfg.text);
