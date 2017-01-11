@@ -17,5 +17,20 @@ namespace M8 {
             for(int i = 0; i < args.Length; i++)
                 Add(args[i].key, args[i].value);
         }
+
+        public new object this[string key] {
+            get {
+                object val;
+                TryGetValue(key, out val);
+                return val;
+            }
+
+            set {
+                if(ContainsKey(key))
+                    base[key] = value;
+                else
+                    Add(key, value);
+            }
+        }
     }
 }
