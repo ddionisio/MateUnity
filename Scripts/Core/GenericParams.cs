@@ -32,5 +32,20 @@ namespace M8 {
                     Add(key, value);
             }
         }
+
+        public T GetValue<T>(string key) {
+            return (T)this[key];
+        }
+
+        public bool TryGetValue<T>(string key, out T val) {
+            object valObj;
+            if(TryGetValue(key, out valObj)) {
+                val = (T)valObj;
+                return true;
+            }
+            
+            val = default(T);
+            return false;
+        }
     }
 }
