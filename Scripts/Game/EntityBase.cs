@@ -9,6 +9,8 @@ Basic Framework would be something like this:
 
     protected override void OnSpawned(M8.GenericParams parms) {
         //populate data/state for ai, player control, etc.
+
+        //start ai, player control, etc
     }
 
     protected override void OnDestroy() {
@@ -16,18 +18,14 @@ Basic Framework would be something like this:
 
         base.OnDestroy();
     }
-
-    protected override void SpawnStart() {
-         //start ai, player control, etc
-    }
-
+    
     protected override void Awake() {
         base.Awake();
 
         //initialize data/variables
     }
 
-    // Use this for initialization
+    // Use this for one-time initialization
     protected override void Start() {
         base.Start();
 
@@ -42,9 +40,7 @@ namespace M8 {
 
         public delegate void OnGenericCall(EntityBase ent);
         public delegate void OnSetBool(EntityBase ent, bool b);
-
-        public float spawnDelay = 0.0f;
-
+        
         /// <summary>
         /// if we want FSM/other stuff to activate on start (when placing entities on scene).
         /// Set this to true if the entity is not gonna be spawned via Pool
@@ -59,10 +55,9 @@ namespace M8 {
 
         private int mState = StateInvalid;
         private int mPrevState = StateInvalid;
-
-        private bool mDoSpawnOnWake = false;
-
-        private byte mStartedCounter = 0;
+        
+        private bool mIsSpawned = false;
+        private GenericParams mSpawnParams; //when spawn hasn't happened because of activator
 
         private SceneSerializer mSerializer = null;
 
@@ -97,8 +92,8 @@ namespace M8 {
         public string spawnGroup { get { return poolData == null ? "" : poolData.group; } }
 
         ///<summary>entity is instantiated with activator set to disable on start, call spawn after activator sends a wakeup call.</summary>
-        public bool doSpawnOnWake {
-            get { return mDoSpawnOnWake; }
+        public bool isSpawned {
+            get { return mIsSpawned; }
         }
 
         public int state {
@@ -132,21 +127,11 @@ namespace M8 {
                 return poolData.claimed;
             }
         }
-
+        
         public SceneSerializer serializer {
             get { return mSerializer; }
         }
-
-        /// <summary>
-        /// Manually perform start if it hasn't fully started yet.
-        /// </summary>
-        public virtual void Activate() {
-            if(mStartedCounter < 2) {
-                StopAllCoroutines();
-                StartCoroutine(DoSpawn());
-            }
-        }
-
+        
         /// <summary>
         /// Explicit call to remove entity.
         /// </summary>
@@ -179,13 +164,8 @@ namespace M8 {
             if(!gameObject.activeInHierarchy)
                 return;
 
-            if(activateOnStart && mStartedCounter == 1) { //we didn't get a chance to start properly before being inactivated
-                StartCoroutine(DoSpawn());
-            }
-            else if(mDoSpawnOnWake) { //if we haven't properly spawned yet, do so now
-                mDoSpawnOnWake = false;
-                StartCoroutine(DoSpawn());
-            }
+            if(!mIsSpawned) //we didn't get a chance to start properly before being inactivated
+                DoSpawn();
         }
 
         protected virtual void ActivatorSleep() {
@@ -203,9 +183,8 @@ namespace M8 {
 
         protected virtual void OnEnable() {
             //we didn't get a chance to start properly before being inactivated
-            if((activator == null || activator.isActive) && activateOnStart && mStartedCounter == 1) {
-                StartCoroutine(DoSpawn());
-            }
+            if((activator == null || activator.isActive) && !mIsSpawned)
+                DoSpawn();
         }
 
         protected virtual void Awake() {
@@ -224,42 +203,33 @@ namespace M8 {
 
         // Use this for initialization
         protected virtual void Start() {
-            mStartedCounter = 1;
-
             //for when putting entities on scene, skip the spawning state
-            if(activateOnStart) {
-                StartCoroutine(DoSpawn());
+            if(activateOnStart && !mIsSpawned) {
+                DoSpawn();
             }
         }
 
         protected virtual void StateChanged() {
         }
-
-        protected virtual void SpawnStart() {
-        }
-
+        
         //////////internal
 
         /// <summary>
-        /// Spawn this entity, resets stats, set action to spawning, then later calls OnEntitySpawnFinish.
-        /// NOTE: calls after an update to ensure Awake and Start is called.
+        /// Spawn this entity, resets stats, set action to start, etc.
         /// </summary>
         protected virtual void OnSpawned(GenericParams parms) {
         }
         
-        IEnumerator DoSpawn() {
-            if(spawnDelay > 0.0f)
-                yield return new WaitForSeconds(spawnDelay);
-            else
-                yield return null;
+        void DoSpawn() {
+            mIsSpawned = true;
 
-            SpawnStart();
+            OnSpawned(mSpawnParams);
+
+            mSpawnParams = null;
 
             if(spawnCallback != null) {
                 spawnCallback(this);
             }
-
-            mStartedCounter = 2;
         }
 
         void IPoolSpawn.OnSpawned(GenericParams parms) {
@@ -268,23 +238,20 @@ namespace M8 {
 
             mState = mPrevState = StateInvalid; //avoid invalid updates
 
-            OnSpawned(parms);
-
+            mSpawnParams = parms;
+            
             //allow activator to start and check if we need to spawn now or later
             //ensure start is called before spawning if we are freshly allocated from entity manager
             if(activator != null) {
                 activator.Start();
 
-                if(activator.deactivateOnStart) {
-                    mDoSpawnOnWake = true; //do it later when we wake up
-                }
-                else {
-                    StartCoroutine(DoSpawn());
+                //do it later when we wake up
+                if(!activator.deactivateOnStart) {
+                    DoSpawn();
                 }
             }
-            else {
-                StartCoroutine(DoSpawn());
-            }
+            else
+                DoSpawn();
         }
 
         void IPoolDespawn.OnDespawned() {
@@ -298,7 +265,8 @@ namespace M8 {
                 releaseCallback(this);
             }
 
-            mDoSpawnOnWake = false;
+            mIsSpawned = false;
+            mSpawnParams = null;
 
             StopAllCoroutines();
         }
