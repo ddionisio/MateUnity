@@ -364,10 +364,7 @@ namespace M8 {
 
         IEnumerator DoLoadScene(string toScene, LoadSceneMode mode, bool unloadCurrent) {
             isLoading = true;
-
-            //make sure the scene is not paused
-            Resume();
-
+            
             //about to change scene
             if(sceneChangeStartCallback != null)
                 sceneChangeStartCallback();
