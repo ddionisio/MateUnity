@@ -3,22 +3,28 @@ using System.Collections.Generic;
 
 namespace M8 {
     public abstract class Sensor2D<T> : MonoBehaviour where T : Component {
+        public int cacheCapacity = 16;
+
         protected abstract bool UnitVerify(T unit);
         protected abstract void UnitAdded(T unit);
         protected abstract void UnitRemoved(T unit);
 
         protected Collider2D mCollider;
 
-        private HashSet<T> mUnits = new HashSet<T>();
+        private CacheList<T> mUnits;
 
-        public HashSet<T> items {
+        public CacheList<T> items {
             get {
                 return mUnits;
             }
         }
 
         public void CleanUp() {
-            mUnits.RemoveWhere(IsUnitInvalid);
+            mUnits.RemoveAll(IsUnitInvalid);
+        }
+
+        protected virtual bool ColliderVerify(Collider2D other) {
+            return true;
         }
 
         protected virtual void OnEnable() {
@@ -31,23 +37,35 @@ namespace M8 {
 
         protected virtual void Awake() {
             mCollider = GetComponent<Collider2D>();
+
+            mUnits = new CacheList<T>(cacheCapacity);
         }
 
         void OnTriggerEnter2D(Collider2D other) {
             CleanUp();
-            T unit = other.GetComponent<T>();
-            if(unit != null && UnitVerify(unit)) {
-                if(mUnits.Add(unit)) {
+
+            if(mUnits.IsFull) {
+                Debug.LogWarning(name+": Unit Capacity is full.");
+                return;
+            }
+
+            if(ColliderVerify(other)) {
+                T unit = other.GetComponent<T>();
+                if(unit != null && UnitVerify(unit) && !mUnits.Exists(unit)) {
+                    mUnits.Add(unit);
                     UnitAdded(unit);
                 }
             }
         }
 
-        void OnTriggerExit2D(Collider2D other) {
-            CleanUp();
-            T unit = other.GetComponent<T>();
-            if(unit != null && mUnits.Remove(unit)) {
-                UnitRemoved(unit);
+        void OnTriggerExit2D(Collider2D other) {            
+            if(ColliderVerify(other)) {
+                CleanUp();
+
+                T unit = other.GetComponent<T>();
+                if(unit != null && mUnits.Remove(unit)) {
+                    UnitRemoved(unit);
+                }
             }
         }
 
