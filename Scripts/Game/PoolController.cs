@@ -118,6 +118,9 @@ namespace M8 {
 
         private Dictionary<string, FactoryData> mFactory;
 
+        private event System.Action<PoolDataController> spawnCallback;
+        private event System.Action<PoolDataController> despawnCallback;
+
         /// <summary>
         /// Create a new pool. If given group already exists, then it will return that.
         /// Remember to add new types into this pool.
@@ -150,64 +153,79 @@ namespace M8 {
         /// <summary>
         /// type is based on the name of the prefab
         /// </summary>
-        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, GenericParams parms) {
+        public static PoolDataController SpawnFromGroup(string group, string type, string name, Transform toParent, GenericParams parms) {
             PoolController pc = GetPool(group);
-            if(pc != null) {
-                return pc.Spawn(type, name, toParent, parms);
-            }
-            else {
-                return null;
-            }
+            if(pc != null)
+                return pc._Spawn(type, name, toParent, null, null, parms);
+
+            return null;
         }
 
-        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation, GenericParams parms) {
+        public static PoolDataController SpawnFromGroup(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation, GenericParams parms) {
             PoolController pc = GetPool(group);
-            if(pc != null) {
-                return pc.Spawn(type, name, toParent, position, rotation, parms);
-            }
-            else {
-                return null;
-            }
+            if(pc != null)
+                return pc._Spawn(type, name, toParent, position, rotation, parms);
+
+            return null;
         }
 
-        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
+        public static PoolDataController SpawnFromGroup(string group, string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
             PoolController pc = GetPool(group);
-            if(pc != null) {
-                return pc.Spawn(type, name, toParent, position, parms);
-            }
-            else {
-                return null;
-            }
+            if(pc != null)
+                return pc._Spawn(type, name, toParent, position, null, parms);
+
+            return null;
         }
 
-        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation, GenericParams parms) {
+        public static PoolDataController SpawnFromGroup(string group, string type, string name, Transform toParent, Vector2 position, Quaternion rotation, GenericParams parms) {
             PoolController pc = GetPool(group);
-            if(pc != null) {
-                Transform t = pc.Spawn(type, name, toParent, position, rotation, parms);
-                Vector3 p = t.localPosition;
-                p.z = 0.0f;
-                t.localPosition = p;
-                return t;
-            }
-            else {
-                return null;
-            }
+            if(pc != null)
+                return pc._Spawn(type, name, toParent, new Vector3(position.x, position.y, 0f), rotation, parms);
+
+            return null;
         }
 
-        public static Transform SpawnFromGroup(string group, string type, string name, Transform toParent, Vector2 position, GenericParams parms) {
+        public static PoolDataController SpawnFromGroup(string group, string type, string name, Transform toParent, Vector2 position, GenericParams parms) {
             PoolController pc = GetPool(group);
-            if(pc != null) {
-                Transform t = pc.Spawn(type, name, toParent, position, parms);
-                Vector3 p = t.localPosition;
-                p.z = 0.0f;
-                t.localPosition = p;
-                return t;
-            }
-            else {
-                return null;
-            }
+            if(pc != null)
+                return pc._Spawn(type, name, toParent, new Vector3(position.x, position.y, 0f), null, parms);
+
+            return null;
         }
 
+        public static T SpawnFromGroup<T>(string group, string type, string name, Transform toParent, GenericParams parms) {
+            PoolController pc = GetPool(group);
+            if(pc != null) {
+                var spawned = pc._Spawn(type, name, toParent, null, null, parms);
+                if(spawned)
+                    return spawned.GetComponent<T>();
+            }
+
+            return default(T);
+        }
+
+        public static T SpawnFromGroup<T>(string group, string type, string name, Transform toParent, Vector3 position, Quaternion rotation, GenericParams parms) {
+            PoolController pc = GetPool(group);
+            if(pc != null) {
+                var spawned = pc._Spawn(type, name, toParent, position, rotation, parms);
+                if(spawned)
+                    return spawned.GetComponent<T>();
+            }
+
+            return default(T);
+        }
+
+        public static T SpawnFromGroup<T>(string group, string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
+            PoolController pc = GetPool(group);
+            if(pc != null) {
+                var spawned = pc._Spawn(type, name, toParent, position, null, parms);
+                if(spawned)
+                    return spawned.GetComponent<T>();
+            }
+
+            return default(T);
+        }
+        
         public static void ReleaseAuto(Transform entity) {
             //NOTE: don't really need to destroy
             PoolDataController pdc = entity.GetComponent<PoolDataController>();
@@ -323,31 +341,52 @@ namespace M8 {
             }
         }
 
-        public Transform Spawn(string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
+        public PoolDataController Spawn(string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
             return _Spawn(type, name, toParent, position, null, parms);
         }
 
-        public Transform Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot, GenericParams parms) {
+        public PoolDataController Spawn(string type, string name, Transform toParent, Vector3 position, Quaternion rot, GenericParams parms) {
             return _Spawn(type, name, toParent, position, rot, parms);
         }
 
-        public Transform Spawn(string type, string name, Transform toParent, GenericParams parms) {
+        public PoolDataController Spawn(string type, string name, Transform toParent, GenericParams parms) {
             return _Spawn(type, name, toParent, null, null, parms);
         }
 
-        Transform _Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot, GenericParams parms) {
-            Transform entityRet = null;
+        public T Spawn<T>(string type, string name, Transform toParent, Vector3 position, GenericParams parms) {
+            var spawned = _Spawn(type, name, toParent, position, null, parms);
+            return spawned ? spawned.GetComponent<T>() : default(T);
+        }
+
+        public T Spawn<T>(string type, string name, Transform toParent, Vector3 position, Quaternion rot, GenericParams parms) {
+            var spawned = _Spawn(type, name, toParent, position, rot, parms);
+            return spawned ? spawned.GetComponent<T>() : default(T);
+        }
+
+        public T Spawn<T>(string type, string name, Transform toParent, GenericParams parms) {
+            var spawned = _Spawn(type, name, toParent, null, null, parms);
+            return spawned ? spawned.GetComponent<T>() : default(T);
+        }
+
+        PoolDataController _Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot, GenericParams parms) {
+            PoolDataController entityRet = null;
 
             FactoryData dat;
             if(mFactory.TryGetValue(type, out dat)) {
                 var pdc = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
 
                 if(pdc != null) {
-                    entityRet = pdc.transform;
-                    if(position.HasValue) entityRet.position = position.Value;
-                    if(rot.HasValue) entityRet.rotation = rot.Value;
+                    entityRet = pdc;
+
+                    var t = entityRet.transform;
+
+                    if(position.HasValue) t.position = position.Value;
+                    if(rot.HasValue) t.rotation = rot.Value;
 
                     pdc.Spawn(parms);
+
+                    if(spawnCallback != null)
+                        spawnCallback(pdc);
                 }
                 else {
                     Debug.LogWarning("Failed to allocate type: " + type + " for: " + name);
@@ -369,11 +408,15 @@ namespace M8 {
         }
 
         public void Release(PoolDataController pdc) {
-            pdc.Despawn();
-
             FactoryData dat;
-            if(mFactory.TryGetValue(pdc.factoryKey, out dat))
+            if(mFactory.TryGetValue(pdc.factoryKey, out dat)) {
+                if(despawnCallback != null)
+                    despawnCallback(pdc);
+
+                pdc.Despawn();
+
                 dat.Release(pdc);
+            }
             else
                 Debug.LogWarning("Unable to find type: "+pdc.factoryKey+" in "+group+", failed to release.");
         }
@@ -387,6 +430,9 @@ namespace M8 {
 
                 for(int i = 0; i < factory.actives.Count; i++) {
                     PoolDataController pdc = factory.actives[i];
+
+                    if(despawnCallback != null)
+                        despawnCallback(pdc);
 
                     pdc.Despawn();
 
@@ -405,6 +451,9 @@ namespace M8 {
             if(mFactory.TryGetValue(type, out factory)) {
                 for(int i = 0; i < factory.actives.Count; i++) {
                     PoolDataController pdc = factory.actives[i];
+
+                    if(despawnCallback != null)
+                        despawnCallback(pdc);
 
                     pdc.Despawn();
 

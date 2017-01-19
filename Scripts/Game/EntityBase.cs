@@ -60,14 +60,7 @@ namespace M8 {
         private GenericParams mSpawnParams; //when spawn hasn't happened because of activator
 
         private SceneSerializer mSerializer = null;
-
-        public static T Spawn<T>(string spawnGroup, string typeName, Vector3 position, GenericParams parms) where T : EntityBase {
-            Transform spawned = PoolController.SpawnFromGroup(spawnGroup, typeName, typeName, null, position, parms);
-            T ent = spawned != null ? spawned.GetComponent<T>() : null;
-
-            return ent;
-        }
-
+        
         private PoolDataController mPoolData;
         protected PoolDataController poolData {
             get {

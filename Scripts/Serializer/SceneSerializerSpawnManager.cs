@@ -33,9 +33,9 @@ namespace M8 {
             }
 
             public void Spawn() {
-                Transform t = PoolController.SpawnFromGroup(grp, type, type + id, null, pos, rot, null);
+                var spawned = PoolController.SpawnFromGroup(grp, type, type + id, null, pos, rot, null);
 
-                SceneSerializer ss = t.GetComponent<SceneSerializer>();
+                SceneSerializer ss = spawned.GetComponent<SceneSerializer>();
                 ss.__SetID(id);
             }
         }
