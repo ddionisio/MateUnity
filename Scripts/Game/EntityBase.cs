@@ -139,7 +139,7 @@ namespace M8 {
             }
             else {
                 //just disable the object, really no need to destroy
-                OnDespawned();
+                _OnDespawned();
                 gameObject.SetActive(false);
                 /*
                 if(gameObject.activeInHierarchy)
@@ -248,6 +248,10 @@ namespace M8 {
         }
 
         void IPoolDespawn.OnDespawned() {
+            _OnDespawned();
+        }
+
+        void _OnDespawned() {
             OnDespawned();
 
             if(activator != null && activator.defaultParent == transform) {
