@@ -57,6 +57,7 @@ namespace M8 {
         private int mPrevState = StateInvalid;
         
         private bool mIsSpawned = false;
+        private bool mIsStarted = false;
         private GenericParams mSpawnParams; //when spawn hasn't happened because of activator
 
         private SceneSerializer mSerializer = null;
@@ -158,7 +159,7 @@ namespace M8 {
                 return;
 
             if(!mIsSpawned) //we didn't get a chance to start properly before being inactivated
-                DoSpawn();
+                ExecuteSpawn();
         }
 
         protected virtual void ActivatorSleep() {
@@ -176,8 +177,8 @@ namespace M8 {
 
         protected virtual void OnEnable() {
             //we didn't get a chance to start properly before being inactivated
-            if((activator == null || activator.isActive) && !mIsSpawned)
-                DoSpawn();
+            if(mIsStarted && (activator == null || activator.isActive) && !mIsSpawned)
+                ExecuteSpawn();
         }
 
         protected virtual void Awake() {
@@ -196,9 +197,11 @@ namespace M8 {
 
         // Use this for initialization
         protected virtual void Start() {
+            mIsStarted = true;
+
             //for when putting entities on scene, skip the spawning state
-            if(activateOnStart && !mIsSpawned) {
-                DoSpawn();
+            if(activateOnStart) {
+                Spawn(mSpawnParams);
             }
         }
 
@@ -213,7 +216,37 @@ namespace M8 {
         protected virtual void OnSpawned(GenericParams parms) {
         }
         
-        void DoSpawn() {
+        /// <summary>
+        /// Call this if you want to manually "spawn" an entity on scene (make sure to set activateOnStart=false), will not do anything if Spawn has already been called
+        /// </summary>
+        public void Spawn(GenericParams parms) {
+            if(mIsSpawned)
+                return;
+
+            // initialize data
+            if(mPoolData == null)
+                mPoolData = GetComponent<PoolDataController>();
+
+            mState = mPrevState = StateInvalid; //avoid invalid updates
+            
+            mSpawnParams = parms;
+            //
+            
+            //allow activator to start and check if we need to spawn now or later
+            //ensure start is called before spawning if we are freshly allocated from entity manager
+            if(activator != null) {
+                activator.Start();
+
+                //do it later when we wake up
+                if(!activator.deactivateOnStart) {
+                    ExecuteSpawn();
+                }
+            }
+            else
+                ExecuteSpawn();
+        }
+
+        void ExecuteSpawn() {
             mIsSpawned = true;
 
             OnSpawned(mSpawnParams);
@@ -226,25 +259,7 @@ namespace M8 {
         }
 
         void IPoolSpawn.OnSpawned(GenericParams parms) {
-            if(mPoolData == null)
-                mPoolData = GetComponent<PoolDataController>();
-
-            mState = mPrevState = StateInvalid; //avoid invalid updates
-
-            mSpawnParams = parms;
-            
-            //allow activator to start and check if we need to spawn now or later
-            //ensure start is called before spawning if we are freshly allocated from entity manager
-            if(activator != null) {
-                activator.Start();
-
-                //do it later when we wake up
-                if(!activator.deactivateOnStart) {
-                    DoSpawn();
-                }
-            }
-            else
-                DoSpawn();
+            Spawn(parms);
         }
 
         void IPoolDespawn.OnDespawned() {

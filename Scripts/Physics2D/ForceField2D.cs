@@ -30,12 +30,27 @@ namespace M8 {
         public float drag = 0.0f;
         [SerializeField]
         float _updateDelay = 0.2f;
+        [SerializeField]
+        string[] _tagFilters;
         private bool mModeRunning = false;
         private YieldInstruction mWait;
         private Vector2 mCenterLocal;
         private HashSet<Rigidbody2D> mBodies = new HashSet<Rigidbody2D>();
 
         void OnTriggerEnter2D(Collider2D t) {
+            if(_tagFilters.Length > 0) {
+                bool tagMatched = false;
+                for(int i = 0; i < _tagFilters.Length; i++) {
+                    if(t.CompareTag(_tagFilters[i])) {
+                        tagMatched = true;
+                        break;
+                    }
+                }
+
+                if(!tagMatched)
+                    return;
+            }
+
             Rigidbody2D body = t.attachedRigidbody;
             if(body != null && !mBodies.Contains(body)) {
                 if(impulse != 0.0f) {

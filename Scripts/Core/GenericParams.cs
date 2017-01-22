@@ -21,7 +21,7 @@ namespace M8 {
         public new object this[string key] {
             get {
                 object val;
-                TryGetValue(key, out val);
+                base.TryGetValue(key, out val);
                 return val;
             }
 
@@ -39,7 +39,7 @@ namespace M8 {
 
         public bool TryGetValue<T>(string key, out T val) {
             object valObj;
-            if(TryGetValue(key, out valObj)) {
+            if(base.TryGetValue(key, out valObj)) {
                 val = (T)valObj;
                 return true;
             }
