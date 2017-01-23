@@ -94,7 +94,7 @@ namespace M8 {
                 mInstance = this as T;
                 OnInstanceInit();
             }
-            else
+            else if(mInstance != this)
                 DestroyImmediate(gameObject);
         }
     }

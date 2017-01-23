@@ -114,13 +114,13 @@ namespace M8 {
         [SerializeField]
         Transform poolHolder;
 
+        public event System.Action<PoolDataController> spawnCallback;
+        public event System.Action<PoolDataController> despawnCallback;
+
         private static Dictionary<string, PoolController> mControllers;
 
         private Dictionary<string, FactoryData> mFactory;
-
-        private event System.Action<PoolDataController> spawnCallback;
-        private event System.Action<PoolDataController> despawnCallback;
-
+                
         /// <summary>
         /// Create a new pool. If given group already exists, then it will return that.
         /// Remember to add new types into this pool.
@@ -259,6 +259,13 @@ namespace M8 {
             PoolController pc = GetPool(group);
             if(pc != null) {
                 pc.Release(entity);
+            }
+        }
+
+        public static void ReleaseFromGroup(string group, PoolDataController pdc) {
+            PoolController pc = GetPool(group);
+            if(pc != null) {
+                pc.Release(pdc);
             }
         }
 

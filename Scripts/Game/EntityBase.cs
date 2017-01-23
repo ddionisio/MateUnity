@@ -135,7 +135,7 @@ namespace M8 {
             transform.parent = PoolManager.Pools[poolData.group].group;
             PoolManager.Pools[poolData.group].Despawn(transform);
 #else
-                PoolController.ReleaseFromGroup(poolData.group, transform);
+                PoolController.ReleaseFromGroup(poolData.group, poolData);
 #endif
             }
             else {
@@ -149,6 +149,19 @@ namespace M8 {
                     Destroy(gameObject);
                 }*/
             }
+        }
+
+        /// <summary>
+        /// Force change to the same state, will also set prevState to the current state
+        /// </summary>
+        public void RestartState() {
+            mPrevState = mState;
+
+            if(setStateCallback != null) {
+                setStateCallback(this);
+            }
+
+            StateChanged();
         }
 
         protected virtual void OnDespawned() {
