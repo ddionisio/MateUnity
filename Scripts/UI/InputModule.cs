@@ -116,6 +116,10 @@ namespace M8.UI {
                     mLockInputCounter--;
             }
         }
+
+        public PointerEventData LastPointerEventData(int id) {
+            return GetLastPointerEventData(id);
+        }
         ///////////////
 
         public override void UpdateModule() {
