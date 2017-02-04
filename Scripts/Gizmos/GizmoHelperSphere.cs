@@ -19,6 +19,13 @@ namespace M8 {
                     radius = sc.radius;
                     ofs += sc.center;
                 }
+                else {
+                    CircleCollider2D sc2D = GetComponent<CircleCollider2D>();
+                    if(sc2D != null) {
+                        radius = sc2D.radius;
+                        ofs += new Vector3(sc2D.offset.x, sc2D.offset.y);
+                    }
+                }
             }
 
             ofs = transform.rotation * ofs;

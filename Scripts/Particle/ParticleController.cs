@@ -15,7 +15,15 @@ namespace M8 {
         private ParticleSystem mPS;
 
         public void Play(bool withChildren) {
-            mPS.Play(withChildren);
+            if(!mPS.isPlaying)
+                mPS.Play(withChildren);
+        }
+
+        public void PlayLoop(bool withChildren) {
+            SetLoop(true);
+
+            if(!mPS.isPlaying)
+                mPS.Play(withChildren);
         }
 
         public void Stop() {
