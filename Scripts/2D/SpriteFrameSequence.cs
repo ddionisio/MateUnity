@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
-    [AddComponentMenu("M8/Sprite/FrameRandom")]
-    public class SpriteFrameRandom : MonoBehaviour {
+    [AddComponentMenu("M8/Sprite/FrameSequence")]
+    public class SpriteFrameSequence : MonoBehaviour {
+        public enum Mode {
+            Loop,
+            SeeSaw
+        }
+                
         public SpriteRenderer sprite;
+
+        public Mode mode;
 
         public Sprite[] frames;
 
         public float startDelay; //pause at start in seconds
-        public float nextDelayMin = 0.4f; //time it takes to go to next frame
-        public float nextDelayMax = 1.0f; //time it takes to go to next frame
+        public float nextDelay;
 
         public bool playOnStart;
 
@@ -60,9 +66,28 @@ namespace M8 {
             if(startDelay > 0f)
                 yield return new WaitForSeconds(startDelay);
 
+            var wait = new WaitForSeconds(nextDelay);
+
+            int mCurInd = 0;
+
             while(true) {
-                sprite.sprite = frames[Random.Range(0, frames.Length)];
-                yield return new WaitForSeconds(Random.Range(nextDelayMin, nextDelayMax));
+                for(mCurInd = 0; mCurInd < frames.Length; mCurInd++) {
+                    sprite.sprite = frames[mCurInd];
+                    yield return wait;
+                }
+
+                switch(mode) {
+                    case Mode.SeeSaw:
+                        //sequence backwards
+                        for(mCurInd = frames.Length - 2; mCurInd > 0; mCurInd--) {
+                            sprite.sprite = frames[mCurInd];
+                            yield return wait;
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
             }
         }
     }
