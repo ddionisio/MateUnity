@@ -15,6 +15,8 @@ namespace M8 {
 
         public Dir dir;
         public float ofs;
+        public float unit = 1f;
+        public float size = 1f;
 
         public bool anchorColliderCenter = true;
         public bool colliderCenter = true;
@@ -60,17 +62,17 @@ namespace M8 {
                     switch(dir) {
                         case Dir.Up:
                             transform.up = reverse ? -d : d;
-                            s.y = len + ofs;
+                            s.y = ((len + ofs)*unit)/size;
                             break;
 
                         case Dir.Right:
                             transform.right = reverse ? -d : d;
-                            s.x = len + ofs;
+                            s.x = ((len + ofs)*unit)/size;
                             break;
 
                         case Dir.Forward:
                             transform.forward = reverse ? -d : d;
-                            s.z = len + ofs;
+                            s.z = ((len + ofs)*unit)/size;
                             break;
                     }
 
