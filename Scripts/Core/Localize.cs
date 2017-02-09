@@ -187,6 +187,10 @@ namespace M8 {
             get { return tables.Length; }
         }
 
+        public static string Get(string id) {
+            return instance.GetText(id);
+        }
+
         public bool LoadLanguage(string language, string json) {
             int languageInd = GetLanguageIndex(language);
             if(languageInd == -1) {
