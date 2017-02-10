@@ -291,6 +291,7 @@ namespace M8 {
             }
 
             mIsSpawned = false;
+            mIsStarted = false;
             mSpawnParams = null;
 
             StopAllCoroutines();
