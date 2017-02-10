@@ -12,7 +12,7 @@ namespace M8.UI.Modal.Helpers {
         public bool closeIfOpened;
 
         public void Execute() {
-            if(UIModal.Manager.instance.isBusy)
+            if(UIModal.Manager.instance.isBusy || SceneManager.instance.isLoading)
                 return;
 
             if(UIModal.Manager.instance.ModalIsInStack(modalRef)) {

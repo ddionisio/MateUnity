@@ -351,7 +351,9 @@ namespace M8.UIModal {
 
             while(mCommands.Count > 0) {
                 var command = mCommands.Dequeue();
-                
+
+                bool openCurrent = false;
+
                 switch(command.type) {
                     case UICommandType.Push:
                         var pushUID = command.uid;
@@ -373,6 +375,7 @@ namespace M8.UIModal {
                         break;                                            
                     case UICommandType.PopTo:
                         int popToLastStack = mModalStack.Count;
+                        openCurrent = false;
 
                         while(mModalStack.Count > 0) {
                             if(mModalStack.Peek() == command.uid)
@@ -380,15 +383,25 @@ namespace M8.UIModal {
 
                             var uid = mModalStack.Pop();
 
+                            if(uid.exclusive)
+                                openCurrent = true;
+
                             yield return DoPop(uid);
                         }
 
-                        if(popToLastStack != mModalStack.Count) //make sure there are actual pops
-                            yield return DoOpenCurrent();
+                        if(openCurrent) {
+                            if(popToLastStack != mModalStack.Count) //make sure there are actual pops
+                                yield return DoOpenCurrent();
+                        }
                         break;
                     case UICommandType.PopToInclusive:
+                        openCurrent = false;
+
                         while(mModalStack.Count > 0) {
                             var uid = mModalStack.Pop();
+
+                            if(uid.exclusive)
+                                openCurrent = true;
 
                             yield return DoPop(uid);
 
@@ -396,7 +409,8 @@ namespace M8.UIModal {
                                 break;
                         }
 
-                        yield return DoOpenCurrent();
+                        if(openCurrent)
+                            yield return DoOpenCurrent();
                         break;
                     case UICommandType.PopAll:
                         while(mModalStack.Count > 0) {
@@ -407,9 +421,11 @@ namespace M8.UIModal {
                     case UICommandType.Pop:
                         if(mModalStack.Count > 0) {
                             var uid = mModalStack.Pop();
+                            openCurrent = uid.exclusive;
                             yield return DoPop(uid);
 
-                            yield return DoOpenCurrent();
+                            if(openCurrent)
+                                yield return DoOpenCurrent();
                         }
                         break;
                 }

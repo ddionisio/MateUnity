@@ -28,7 +28,7 @@ namespace M8.UIModal {
 
         //don't call these, only uimodalmanager
 
-        void Interface.IActive.SetActive(bool aActive) {
+        public virtual void SetActive(bool aActive) {
             if(mActive != aActive) {
                 mActive = aActive;
 
