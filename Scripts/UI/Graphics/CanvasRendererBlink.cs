@@ -6,7 +6,6 @@ namespace M8.UI.Graphics {
     [AddComponentMenu("M8/UI/Graphics/CanvasRendererBlink")]
     public class CanvasRendererBlink : MonoBehaviour {
         public CanvasRenderer target;
-        public bool defaultEnabled = true;
         public float delay;
         public bool useRealtime = true;
 
@@ -15,18 +14,14 @@ namespace M8.UI.Graphics {
         private bool mIsMod = false;
 
         void OnEnable() {
+            target.cull = false;
+            mIsMod = true;
             mLastTime = useRealtime ? Time.realtimeSinceStartup : Time.time;
         }
-
-        void OnDisable() {
-            target.cull = defaultEnabled;
-        }
-
+        
         void Awake() {
             if(target == null)
                 target = GetComponent<CanvasRenderer>();
-
-            target.cull = defaultEnabled;
         }
 
         void Update() {
@@ -39,9 +34,9 @@ namespace M8.UI.Graphics {
 
         void DoBlink() {
             if(mIsMod)
-                target.cull = !defaultEnabled;
+                target.cull = true;
             else
-                target.cull = defaultEnabled;
+                target.cull = false;
 
             mIsMod = !mIsMod;
         }

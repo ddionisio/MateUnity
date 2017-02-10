@@ -22,6 +22,10 @@ namespace M8.UIModal {
         
         private bool mActive;
 
+        public void Close() {
+            Manager.instance.ModalCloseUpTo(name, true);
+        }
+
         //don't call these, only uimodalmanager
 
         void Interface.IActive.SetActive(bool aActive) {

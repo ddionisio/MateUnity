@@ -265,6 +265,64 @@ namespace M8 {
             return mEditItemBaseKeyTexts[selectInd];
         }
 
+        public static string DrawSelector(Rect position, string key) {
+            //load localize if not yet set
+            if(!mLocalize) {
+                mLocalize = LoadLocalizeObjectFromPath();
+
+                if(mLocalize) {
+                    if(mLocalizeTable == null) { //need to load base
+                        SetLocalize(mLocalize, false);
+                    }
+                }
+                else { //no localize setup
+                    if(GUI.Button(position, "Configure Localization"))
+                        Open(null);
+                    
+                    return "";
+                }
+            }
+
+            //generate base data
+            if(mEditItemBaseKeyTexts == null) {
+                mEditItemBase = new Item { header = new ItemHeader { text = mLocalizeTable[0].file, language = 0, isPlatform = false } };
+                LoadItem(mEditItemBase);
+            }
+
+            //get current index
+            int selectInd = 0;
+            if(mEditItemBaseKeyTexts != null) {
+                for(int i = 0; i < mEditItemBaseKeyTexts.Length; i++) {
+                    if(mEditItemBaseKeyTexts[i] == key) {
+                        selectInd = i;
+                        break;
+                    }
+                }
+                
+                const float editSize = 20f;
+                const float editSpace = 4f;
+
+                var popUpPos = new Rect(position.x, position.y, position.width - editSize - editSpace, position.height);
+                var editPos = new Rect(position.x + position.width - editSize, position.y, editSize, position.height);
+
+                selectInd = EditorGUI.IntPopup(popUpPos, selectInd, mEditItemBaseKeyTexts, mEditItemBaseKeyInds);
+
+                if(GUI.Button(editPos, new GUIContent("E", "Configure localization."), EditorStyles.toolbarButton)) {
+                    Open(null);
+
+                    mEditItemBaseKeyInd = selectInd;
+                }
+            }
+            else {
+                if(GUI.Button(position, "Configure Localization"))
+                    Open(null);
+
+                return "";
+            }
+
+            return mEditItemBaseKeyTexts[selectInd];
+        }
+
         public static string GetBaseValue(string key) {
             if(!mLocalize) {
                 mLocalize = LoadLocalizeObjectFromPath();
