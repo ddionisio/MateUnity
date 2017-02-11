@@ -71,7 +71,7 @@ namespace M8 {
 
                         GUILayout.EndVertical();
 
-                        if(delSubKey != -1 && EditorGUI.EndChangeCheck()) {
+                        if(delSubKey == -1 && EditorGUI.EndChangeCheck()) {
                             Undo.RecordObject(target, "SceneState - Edit ["+data.globalStartData[j].name+"]");
 
                             data.globalStartData[j] = initDat;
