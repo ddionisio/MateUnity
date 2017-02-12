@@ -482,6 +482,18 @@ namespace M8 {
             return 0;
         }
 
+        /// <summary>
+        /// Note: please treat this list as a read-only
+        /// </summary>
+        public List<PoolDataController> GetActiveList(string type) {
+            FactoryData factory;
+            if(mFactory.TryGetValue(type, out factory)) {
+                return factory.actives;
+            }
+
+            return null;
+        }
+
         public int CapacityCount(string type) {
             FactoryData dat;
             if(mFactory.TryGetValue(type, out dat)) {

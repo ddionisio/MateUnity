@@ -279,7 +279,7 @@ namespace M8 {
 
             mPauseCounter--;
 
-            if(wasPaused) {
+            if(wasPaused && mPauseCounter <= 0) {
                 Time.timeScale = mPrevTimeScale;
 
                 if(pauseCallback != null) pauseCallback(isPaused);
