@@ -254,6 +254,10 @@ namespace M8 {
             return ret.text;
         }
 
+        public bool Exists(string key) {
+            return tables[mCurIndex].entries.ContainsKey(key);
+        }
+
         public void Refresh() {
             if(localizeCallback != null)
                 localizeCallback();

@@ -22,5 +22,9 @@ namespace M8 {
             
             return path.Substring(startInd, endInd - startInd);
         }
+
+        public void Load() {
+            SceneManager.instance.LoadScene(name);
+        }
     }
 }
