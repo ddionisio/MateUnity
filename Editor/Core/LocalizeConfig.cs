@@ -233,7 +233,7 @@ namespace M8 {
             }
 
             //get current index
-                int selectInd = 0;
+            int selectInd = -1;
             if(mEditItemBaseKeyTexts != null) {
                 for(int i = 0; i < mEditItemBaseKeyTexts.Length; i++) {
                     if(mEditItemBaseKeyTexts[i] == key) {
@@ -245,12 +245,16 @@ namespace M8 {
                 //selection
                 GUILayout.BeginHorizontal();
 
-                selectInd = EditorGUILayout.IntPopup(selectInd, mEditItemBaseKeyTexts, mEditItemBaseKeyInds);
+                var editItemBaseKeyTexts = new List<string>(mEditItemBaseKeyTexts.Length + 1);
+                editItemBaseKeyTexts.Add("-None-");
+                editItemBaseKeyTexts.AddRange(mEditItemBaseKeyTexts);
+
+                selectInd = EditorGUILayout.IntPopup(selectInd + 1, editItemBaseKeyTexts.ToArray(), mEditItemBaseKeyInds) - 1;
 
                 if(EditorExt.Utility.DrawSimpleButton("E", "Configure localization.")) {
                     Open(null);
 
-                    mEditItemBaseKeyInd = selectInd;
+                    mEditItemBaseKeyInd = selectInd >= 0 ? selectInd : 0;
                 }
 
                 GUILayout.EndHorizontal();
@@ -262,7 +266,7 @@ namespace M8 {
                 return "";
             }
 
-            return mEditItemBaseKeyTexts[selectInd];
+            return selectInd == -1 ? "" : mEditItemBaseKeyTexts[selectInd];
         }
 
         public static string DrawSelector(Rect position, string key) {
@@ -290,7 +294,7 @@ namespace M8 {
             }
 
             //get current index
-            int selectInd = 0;
+            int selectInd = -1;
             if(mEditItemBaseKeyTexts != null) {
                 for(int i = 0; i < mEditItemBaseKeyTexts.Length; i++) {
                     if(mEditItemBaseKeyTexts[i] == key) {
@@ -305,12 +309,16 @@ namespace M8 {
                 var popUpPos = new Rect(position.x, position.y, position.width - editSize - editSpace, position.height);
                 var editPos = new Rect(position.x + position.width - editSize, position.y, editSize, position.height);
 
-                selectInd = EditorGUI.IntPopup(popUpPos, selectInd, mEditItemBaseKeyTexts, mEditItemBaseKeyInds);
+                var editItemBaseKeyTexts = new List<string>(mEditItemBaseKeyTexts.Length + 1);
+                editItemBaseKeyTexts.Add("-None-");
+                editItemBaseKeyTexts.AddRange(mEditItemBaseKeyTexts);
+
+                selectInd = EditorGUI.IntPopup(popUpPos, selectInd + 1, editItemBaseKeyTexts.ToArray(), mEditItemBaseKeyInds) - 1;
 
                 if(GUI.Button(editPos, new GUIContent("E", "Configure localization."), EditorStyles.toolbarButton)) {
                     Open(null);
 
-                    mEditItemBaseKeyInd = selectInd;
+                    mEditItemBaseKeyInd = selectInd >= 0 ? selectInd : 0;
                 }
             }
             else {
@@ -320,7 +328,7 @@ namespace M8 {
                 return "";
             }
 
-            return mEditItemBaseKeyTexts[selectInd];
+            return selectInd == -1 ? "" : mEditItemBaseKeyTexts[selectInd];
         }
 
         public static string GetBaseValue(string key) {
