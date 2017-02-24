@@ -22,7 +22,7 @@ namespace M8.UI {
                 var textUI = dat.GetComponent<UnityEngine.UI.Text>();
                 if(textUI) {
                     textUI.text = LocalizeConfig.GetBaseValue(dat.key);
-                    Repaint();
+                    EditorUtility.SetDirty(textUI);
                 }
             }
         }

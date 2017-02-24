@@ -322,12 +322,13 @@ namespace M8 {
         void GenerateEntries(bool isBase) {
             switch(mode) {
                 case Mode.CustomLoader:
-                    int ind = isBase ? 0 : mCurIndex;
-
                     mEntriesBase = null;
                     mEntries = new Dictionary<string, Data>();
 
-                    loader.Load(ind, mEntries);
+                    if(isBase)
+                        loader.LoadBase(mEntries);
+                    else
+                        loader.Load(mCurIndex, mEntries);
                     break;
 
                 default:
