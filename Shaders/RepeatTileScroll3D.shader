@@ -52,7 +52,7 @@ Shader "M8/RepeatTileScroll3D"
 			{
 				Output o;
 				
-				o.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+				o.vertex = UnityObjectToClipPos(IN.vertex);
 				o.color = IN.color;
 				
 				o.texcoord = IN.texcoord;

@@ -47,7 +47,7 @@ Shader "M8/2D/RepeatTile"
 			{
 				Output o;
 				
-				o.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+				o.vertex = UnityObjectToClipPos(IN.vertex);
 				o.color = IN.color;
 				
 				o.texcoord = IN.texcoord;

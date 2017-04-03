@@ -33,7 +33,7 @@ Shader "M8/ProBuilder/Unlit Solid Vertex Color Transparency" {
 		v2f_vct vert_vct(vin_vct v)
 		{
 			v2f_vct o;
-			o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
+			o.vertex = UnityObjectToClipPos(v.vertex);
 			o.color = v.color;
 			return o;
 		}

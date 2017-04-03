@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
 Shader "Hidden/CrossHatch"
 {
 	Properties {
@@ -60,7 +58,7 @@ Shader "Hidden/CrossHatch"
 			Pix vtx(Vert v) {
 				Pix o;
 																								
-				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.pos = UnityObjectToClipPos(v.vertex);
 				o.texCoord = v.texCoord;
 				o.normal = normalize(v.normal).xyz;
 				

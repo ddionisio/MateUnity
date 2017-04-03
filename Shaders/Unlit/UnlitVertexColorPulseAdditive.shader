@@ -38,7 +38,7 @@ Shader "M8/Unlit/Vertex Color Pulse Additive" {
 		v2f_vct vert_vct(vin_vct v)
 		{
 			v2f_vct o;
-			o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
+			o.vertex = UnityObjectToClipPos(v.vertex);
             float t = sin(_Time.y*_Speed);
 			o.color = v.color*lerp(_Color, _Color2, t*t)*_ColorMod;
 			return o;

@@ -57,7 +57,7 @@ Shader "M8/Sprite/SolidTextureScroll2"
 			v2f vert(appdata_t IN)
 			{
 				v2f OUT;
-				OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.texcoord = IN.texcoord + _Params.xy*_Time.y + half2(_Params.z*_CosTime.z, _Params.w*_SinTime.z);
 				OUT.texcoord2 = IN.texcoord + _Params.xy*_Time.z + half2(_Params.z*_CosTime.w, _Params.w*_SinTime.w);
 				OUT.color = IN.color * _Color;

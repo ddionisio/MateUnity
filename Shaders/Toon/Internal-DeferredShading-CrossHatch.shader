@@ -225,7 +225,7 @@ half4 CalculateLight (unity_v2f_deferred i)
 unity_v2f_deferred vert_deferred_hatch (float4 vertex : POSITION, float3 normal : NORMAL)
 {
 	unity_v2f_deferred o;
-	o.pos = mul(UNITY_MATRIX_MVP, vertex);
+	o.pos = UnityObjectToClipPos(vertex);
 	o.uv = ComputeScreenPos (o.pos);
 	o.ray = mul (UNITY_MATRIX_MV, vertex).xyz * float3(-1,-1,1);
 	
@@ -283,7 +283,7 @@ struct v2f {
 v2f vert (float4 vertex : POSITION, float2 texcoord : TEXCOORD0)
 {
 	v2f o;
-	o.vertex = mul(UNITY_MATRIX_MVP, vertex);
+	o.vertex = UnityObjectToClipPos(vertex);
 	o.texcoord = texcoord.xy;
 	return o;
 }

@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
-//Only use for sprites
+﻿//Only use for sprites
 //override sprite with given texture
 Shader "M8/Sprite/SolidTextureWorld"
 {
@@ -57,7 +55,7 @@ Shader "M8/Sprite/SolidTextureWorld"
 			v2f vert(appdata_t IN)
 			{
 				v2f OUT;
-				OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.texcoord = IN.texcoord;
 				OUT.worldcoord = mul(unity_ObjectToWorld, IN.vertex);
 				OUT.color = IN.color * _Color;

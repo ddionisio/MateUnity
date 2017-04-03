@@ -35,7 +35,7 @@ Shader "M8/ProBuilder/Unlit Vertex Color Outline" {
 		v2f_vct vert_vct(vin_vct v)
 		{
 			v2f_vct o;
-			o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
+			o.vertex = UnityObjectToClipPos(v.vertex);
 			o.color = v.color;
 			o.texcoord = v.texcoord;
 			return o;
@@ -74,8 +74,8 @@ Shader "M8/ProBuilder/Unlit Vertex Color Outline" {
 
          v2f vert(appdata v) { 
             v2f o; 
-            o.pos = mul(UNITY_MATRIX_MVP, v.vertex); 
-            float3 norm = mul ((float3x3)UNITY_MATRIX_MV, v.normal); 
+            o.pos = UnityObjectToClipPos(v.vertex); 
+            float3 norm = UnityObjectToViewPos(v.normal);
             norm.x *= UNITY_MATRIX_P[0][0]; 
             norm.y *= UNITY_MATRIX_P[1][1]; 
             o.pos.xy += norm.xy * o.pos.z * _Outline;

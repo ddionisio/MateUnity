@@ -47,7 +47,7 @@ Shader "M8/Unlit/TextureAdditiveScroll"
 			{
 				Output o;
 				
-				o.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+				o.vertex = UnityObjectToClipPos(IN.vertex);
 				
 				o.texcoord = TRANSFORM_TEX(IN.texcoord, _MainTex);
 				

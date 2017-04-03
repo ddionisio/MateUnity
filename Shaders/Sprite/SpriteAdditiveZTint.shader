@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
-
-//Only use for sprites
+﻿//Only use for sprites
 Shader "M8/Sprite/AdditiveZTint"
 {
 	Properties
@@ -60,7 +58,7 @@ Shader "M8/Sprite/AdditiveZTint"
 			v2f vert(appdata_t IN)
 			{
 				v2f OUT;
-				OUT.vertex = mul(UNITY_MATRIX_MVP, IN.vertex);
+				OUT.vertex = UnityObjectToClipPos(IN.vertex);
 				OUT.texcoord = IN.texcoord;
 				OUT.color = IN.color * _Color;
 				#ifdef PIXELSNAP_ON

@@ -30,7 +30,7 @@ Shader "M8/SolidColorNoLight" {
 			v2f_vct vert_vct(vin_vct v)
 			{
 				v2f_vct o;
-				o.vertex = mul(UNITY_MATRIX_MVP, v.vertex);
+				o.vertex = UnityObjectToClipPos(v.vertex);
 				return o;
 			}
 
