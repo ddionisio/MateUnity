@@ -3,51 +3,44 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace M8 {
+    public struct LocalizeData {
+        public delegate string ParameterCallback(string paramKey);
+
+        public string text;
+        public string[] param;
+
+        public LocalizeData(string aText, string[] aParam) {
+            text = aText;
+            param = aParam;
+        }
+
+        public string ApplyParams(Dictionary<string, ParameterCallback> paramCallbacks) {
+            if(param != null && param.Length > 0) {
+                //convert parameters
+                string[] textParams = new string[param.Length];
+                for(int i = 0; i < param.Length; i++) {
+                    ParameterCallback cb;
+                    if(paramCallbacks.TryGetValue(param[i], out cb))
+                        textParams[i] = cb(param[i]);
+                }
+
+                return string.Format(text, textParams);
+            }
+
+            return text;
+        }
+    }
+
     [PrefabCore]
     [AddComponentMenu("")]
     public abstract class Localize : SingletonBehaviour<Localize> {
-
-        public delegate string ParameterCallback(string paramKey);
         public delegate void LocalizeCallback();
-        
-        [System.Serializable]
-        public class Entry {
-            public string key;
-            public string text = "";
-            public string[] param = null; //set this to null if you want to reference param from base
-        }
-        
-        public struct Data {
-            public string text;
-            public string[] param;
-
-            public Data(string aText, string[] aParam) {
-                text = aText;
-                param = aParam;
-            }
-
-            public string ApplyParams(Dictionary<string, ParameterCallback> paramCallbacks) {
-                if(param != null && param.Length > 0) {
-                    //convert parameters
-                    string[] textParams = new string[param.Length];
-                    for(int i = 0; i < param.Length; i++) {
-                        ParameterCallback cb;
-                        if(paramCallbacks.TryGetValue(param[i], out cb))
-                            textParams[i] = cb(param[i]);
-                    }
-
-                    return string.Format(text, textParams);
-                }
-
-                return text;
-            }
-        }
-        
+                
         public event LocalizeCallback localizeCallback;
 
         private int mCurIndex;
         
-        private Dictionary<string, ParameterCallback> mParams;
+        private Dictionary<string, LocalizeData.ParameterCallback> mParams;
 
         public string this[string index] {
             get {
@@ -97,9 +90,9 @@ namespace M8 {
         /// <summary>
         /// Register during Awake such that GetText will be able to fill params correctly
         /// </summary>
-        public void RegisterParam(string paramKey, ParameterCallback cb) {
+        public void RegisterParam(string paramKey, LocalizeData.ParameterCallback cb) {
             if(mParams == null)
-                mParams = new Dictionary<string, ParameterCallback>();
+                mParams = new Dictionary<string, LocalizeData.ParameterCallback>();
 
             if(mParams.ContainsKey(paramKey))
                 mParams[paramKey] = cb;
@@ -111,7 +104,7 @@ namespace M8 {
         /// Only call this after Load.
         /// </summary>
         public string GetText(string key) {
-            Data ret;
+            LocalizeData ret;
 
             if(!TryGetData(key, out ret)) {
                 Debug.LogWarning("Key not found: " + key);
@@ -142,6 +135,6 @@ namespace M8 {
 
         protected abstract void HandleLanguageChanged();
 
-        protected abstract bool TryGetData(string key, out Data data);
+        protected abstract bool TryGetData(string key, out LocalizeData data);
     }
 }

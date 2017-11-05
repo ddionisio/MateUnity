@@ -12,12 +12,12 @@ namespace M8 {
         /// <summary>
         /// Populate output with the root language (default)
         /// </summary>
-        public abstract void LoadBase(Dictionary<string, Localize.Data> output);
+        public abstract void LoadBase(Dictionary<string, LocalizeData> output);
 
         /// <summary>
         /// Populate output based on given language index
         /// </summary>
-        public abstract void Load(int languageIndex, Dictionary<string, Localize.Data> output);
+        public abstract void Load(int languageIndex, Dictionary<string, LocalizeData> output);
 
         public abstract string[] GetKeys();
     }

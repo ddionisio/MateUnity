@@ -6,11 +6,17 @@ using System;
 namespace M8 {
     [PrefabCore]
     [AddComponentMenu("M8/Core/Localize (Loader)")]
-    public class LocalizeFromLoader : Localize {        
+    public class LocalizeFromLoader : Localize {
+        public static new LocalizeFromLoader instance {
+            get {
+                return (LocalizeFromLoader)Localize.instance;
+            }
+        }
+
         [SerializeField]
         LocalizeLoaderBase loader;
         
-        private Dictionary<string, Data> mEntries;
+        private Dictionary<string, LocalizeData> mEntries;
         
         public override string[] languages {
             get {
@@ -52,7 +58,7 @@ namespace M8 {
             GenerateEntries(true);
         }
                 
-        protected override bool TryGetData(string key, out Data data) {
+        protected override bool TryGetData(string key, out LocalizeData data) {
             return mEntries.TryGetValue(key, out data);
         }
 
@@ -61,7 +67,7 @@ namespace M8 {
         }
 
         void GenerateEntries(bool isBase) {
-            mEntries = new Dictionary<string, Data>();
+            mEntries = new Dictionary<string, LocalizeData>();
 
             if(isBase)
                 loader.LoadBase(mEntries);

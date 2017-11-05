@@ -6,7 +6,20 @@ using System;
 namespace M8 {
     [PrefabCore]
     [AddComponentMenu("M8/Core/Localize (TextAsset)")]
-    public class LocalizeFromTextAsset : Localize {        
+    public class LocalizeFromTextAsset : Localize {
+        public static new LocalizeFromTextAsset instance {
+            get {
+                return (LocalizeFromTextAsset)Localize.instance;
+            }
+        }
+
+        [System.Serializable]
+        public class Entry {
+            public string key;
+            public string text = "";
+            public string[] param = null; //set this to null if you want to reference param from base
+        }
+
         [System.Serializable]
         public struct EntryList {
             [SerializeField]
@@ -39,33 +52,33 @@ namespace M8 {
                 mJson = json;
             }
 
-            public Dictionary<string, Data> Generate(Dictionary<string, Data> baseTable) {
+            public Dictionary<string, LocalizeData> Generate(Dictionary<string, LocalizeData> baseTable) {
                 if(!string.IsNullOrEmpty(mJson))
                     return Generate(mJson, baseTable);
                 else if(file)
                     return Generate(file.text, baseTable);
 
-                return new Dictionary<string, Data>();
+                return new Dictionary<string, LocalizeData>();
             }
 
-            public Dictionary<string, Data> Generate(string json, Dictionary<string, Data> baseTable) {
+            public Dictionary<string, LocalizeData> Generate(string json, Dictionary<string, LocalizeData> baseTable) {
                 List<Entry> tableEntries = EntryList.FromJSON(json);
 
-                var entries = new Dictionary<string, Data>(tableEntries.Count);
+                var entries = new Dictionary<string, LocalizeData>(tableEntries.Count);
 
                 foreach(Entry entry in tableEntries) {
                     string[] parms = null;
 
                     //if no params, grab from base
                     if(entry.param == null && baseTable != null) {
-                        Data dat;
+                        LocalizeData dat;
                         if(baseTable.TryGetValue(entry.key, out dat))
                             parms = dat.param;
                     }
                     else
                         parms = entry.param;
 
-                    entries.Add(entry.key, new Data(entry.text, parms));
+                    entries.Add(entry.key, new LocalizeData(entry.text, parms));
                 }
 
                 //append platform specific entries
@@ -83,7 +96,7 @@ namespace M8 {
                         List<Entry> platformEntries = EntryList.FromJSON(platform.file.text);
 
                         foreach(Entry platformEntry in platformEntries) {
-                            Data dat;
+                            LocalizeData dat;
                             if(entries.TryGetValue(platformEntry.key, out dat)) {
                                 dat.text = platformEntry.text;
                                 if(platformEntry.param != null)
@@ -92,7 +105,7 @@ namespace M8 {
                                 entries[platformEntry.key] = dat;
                             }
                             else
-                                entries.Add(platformEntry.key, new Data(platformEntry.text, platformEntry.param));
+                                entries.Add(platformEntry.key, new LocalizeData(platformEntry.text, platformEntry.param));
                         }
                     }
                 }
@@ -104,8 +117,8 @@ namespace M8 {
         [SerializeField]
         TableData[] tables; //table info for each language, first element is the root
         
-        private Dictionary<string, Data> mEntriesBase; //loaded from first table data
-        private Dictionary<string, Data> mEntries;
+        private Dictionary<string, LocalizeData> mEntriesBase; //loaded from first table data
+        private Dictionary<string, LocalizeData> mEntries;
         
         public override string[] languages {
             get {
@@ -181,7 +194,7 @@ namespace M8 {
             GenerateEntries(true);
         }
 
-        protected override bool TryGetData(string key, out Data data) {
+        protected override bool TryGetData(string key, out LocalizeData data) {
             if(!mEntries.TryGetValue(key, out data)) {
                 if(mEntries == mEntriesBase || mEntriesBase == null || !mEntriesBase.TryGetValue(key, out data)) {
                     return false;
@@ -200,7 +213,7 @@ namespace M8 {
                 if(tables.Length > 0)
                     mEntriesBase = tables[0].Generate(null);
                 else
-                    mEntriesBase = new Dictionary<string, Data>();
+                    mEntriesBase = new Dictionary<string, LocalizeData>();
 
                 if(mEntries == null)
                     mEntries = mEntriesBase;

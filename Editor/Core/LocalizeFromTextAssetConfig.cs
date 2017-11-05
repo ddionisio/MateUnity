@@ -412,7 +412,7 @@ namespace M8 {
             string textData = item.header.text.text;
             if(!string.IsNullOrEmpty(textData)) {
                 try {
-                    List<Localize.Entry> tableEntries = LocalizeFromTextAsset.EntryList.FromJSON(textData);
+                    List<LocalizeFromTextAsset.Entry> tableEntries = LocalizeFromTextAsset.EntryList.FromJSON(textData);
                     foreach(var entry in tableEntries)
                         item.items.Add(entry.key, new Data { value=entry.text, param=entry.param, paramIsRef=entry.param==null });
                 }
@@ -691,12 +691,12 @@ namespace M8 {
         void SaveItem(Item item) {
             if(item.header.text) {
                 //generate entries
-                List<Localize.Entry> tableEntries = new List<Localize.Entry>();
+                List<LocalizeFromTextAsset.Entry> tableEntries = new List<LocalizeFromTextAsset.Entry>();
 
                 foreach(var pair in item.items) {
                     //if text is empty, do not save if we are not base or platform specific
                     if((item.header.language == 0 && !item.header.isPlatform) || !string.IsNullOrEmpty(pair.Value.value)) {
-                        Localize.Entry entry = new Localize.Entry { key=pair.Key, text=pair.Value.value, param=item != mEditItemBase && pair.Value.paramIsRef ? null : pair.Value.param };
+                        LocalizeFromTextAsset.Entry entry = new LocalizeFromTextAsset.Entry { key=pair.Key, text=pair.Value.value, param=item != mEditItemBase && pair.Value.paramIsRef ? null : pair.Value.param };
                         tableEntries.Add(entry);
                     }
                 }
