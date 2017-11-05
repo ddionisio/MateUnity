@@ -9,6 +9,7 @@ namespace M8.UI.Texts {
         /// <summary>
         /// Localization key.
         /// </summary>
+        [Localize]
         public string key;
 
         private bool mStarted = false;

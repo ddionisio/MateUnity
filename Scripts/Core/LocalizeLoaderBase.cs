@@ -18,5 +18,7 @@ namespace M8 {
         /// Populate output based on given language index
         /// </summary>
         public abstract void Load(int languageIndex, Dictionary<string, Localize.Data> output);
+
+        public abstract string[] GetKeys();
     }
 }
