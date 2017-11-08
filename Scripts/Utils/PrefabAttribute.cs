@@ -24,9 +24,9 @@ namespace M8 {
             if(!go) {
                 var resGO = Resources.Load<GameObject>(path);
                 if(resGO) {
-                    go = UnityEngine.Object.Instantiate(resGO) as GameObject;
-                    go.name = path;
-
+                    //we need to create a buffer GameObject to prevent instantiating more than once in one frame
+                    var root = new GameObject(path);
+                    go = UnityEngine.Object.Instantiate(resGO, Vector3.zero, Quaternion.identity, root.transform);
                 }
                 else
                     Debug.LogError("Could not find Prefab \"" + path + "\" on Resources.");
