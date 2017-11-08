@@ -17,6 +17,13 @@ namespace M8 {
 
                 return mItems[ind];
             }
+
+            set {
+                if(ind >= mCount)
+                    throw new IndexOutOfRangeException();
+
+                mItems[ind] = value;
+            }
         }
 
         public int Count { get { return mCount; } }
@@ -93,6 +100,15 @@ namespace M8 {
             }
 
             return false;
+        }
+
+        public void RemoveAt(int ind) {
+            if(ind >= mCount)
+                throw new IndexOutOfRangeException();
+
+            mItems[ind] = mItems[mCount - 1];
+            mCount--;
+            mItems[mCount] = default(T);
         }
 
         public int RemoveAll(Predicate<T> match) {
