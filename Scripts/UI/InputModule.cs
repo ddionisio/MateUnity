@@ -15,6 +15,8 @@ namespace M8.UI {
         private Vector2 m_LastMousePosition;
         private Vector2 m_MousePosition;
 
+        private GameObject m_CurrentFocusedGameObject;
+
         protected InputModule() {
         }
 
@@ -117,12 +119,34 @@ namespace M8.UI {
             }
         }
 
+        public GameObject currentFocusedGameObject {
+            get { return m_CurrentFocusedGameObject; }
+        }
+
         public PointerEventData LastPointerEventData(int id) {
             return GetLastPointerEventData(id);
         }
         ///////////////
 
+        private bool ShouldIgnoreEventsOnNoFocus() {
+            switch(SystemInfo.operatingSystemFamily) {
+                case OperatingSystemFamily.Windows:
+                case OperatingSystemFamily.Linux:
+                case OperatingSystemFamily.MacOSX:
+#if UNITY_EDITOR
+                    if(UnityEditor.EditorApplication.isRemoteConnected)
+                        return false;
+#endif
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public override void UpdateModule() {
+            if(!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+                return;
+
             m_LastMousePosition = m_MousePosition;
             m_MousePosition = input.mousePosition;
         }
@@ -152,6 +176,9 @@ namespace M8.UI {
         }
 
         public override void ActivateModule() {
+            if(!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+                return;
+
             base.ActivateModule();
             m_MousePosition = input.mousePosition;
             m_LastMousePosition = input.mousePosition;
@@ -169,6 +196,9 @@ namespace M8.UI {
         }
 
         public override void Process() {
+            if(!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+                return;
+
             if(lockInput)
                 return;
 
@@ -296,11 +326,6 @@ namespace M8.UI {
                 pointerEvent.dragging = false;
                 pointerEvent.pointerDrag = null;
 
-                if(pointerEvent.pointerDrag != null)
-                    ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
-
-                pointerEvent.pointerDrag = null;
-
                 // send exit events as we need to simulate this on touch up on touch device
                 ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
                 pointerEvent.pointerEnter = null;
@@ -397,11 +422,7 @@ namespace M8.UI {
         protected void ProcessMouseEvent() {
             ProcessMouseEvent(0);
         }
-
-        protected virtual bool ForceAutoSelect() {
-            return false;
-        }
-
+        
         /// <summary>
         /// Process all mouse events.
         /// </summary>
@@ -409,8 +430,7 @@ namespace M8.UI {
             var mouseData = GetMousePointerEventData(id);
             var leftButtonData = mouseData.GetButtonState(PointerEventData.InputButton.Left).eventData;
 
-            if(ForceAutoSelect())
-                eventSystem.SetSelectedGameObject(leftButtonData.buttonData.pointerCurrentRaycast.gameObject, leftButtonData.buttonData);
+            m_CurrentFocusedGameObject = leftButtonData.buttonData.pointerCurrentRaycast.gameObject;
 
             // Process the first mouse button fully
             ProcessMousePress(leftButtonData);
@@ -531,6 +551,10 @@ namespace M8.UI {
                     HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                 }
             }
+        }
+
+        protected GameObject GetCurrentFocusedGameObject() {
+            return m_CurrentFocusedGameObject;
         }
 
         ///////////////
