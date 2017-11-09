@@ -65,7 +65,14 @@ namespace M8 {
             }
         }
 
-        public Camera unityCamera { get { return mCamera; } }
+        public Camera unityCamera {
+            get {
+                if(!mCamera)
+                    mCamera = GetComponent<Camera>();
+
+                return mCamera;
+            }
+        }
 
         public Rect screenExtent { get { return mScreenExtent; } }
         public Rect fixedScreenExtent { get { return mFixedScreenExtent; } }
@@ -106,9 +113,7 @@ namespace M8 {
         }
 
         void Awake() {
-            mCamera = GetComponent<Camera>();
-
-            if(!mCamera.orthographic)
+            if(unityCamera && !unityCamera.orthographic)
                 mCamera.transparencySortMode = transparencySortMode;
         }
 
