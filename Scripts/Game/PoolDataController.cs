@@ -14,7 +14,7 @@ namespace M8 {
         private IPoolSpawn[] mISpawns;
         private IPoolDespawn[] mIDespawns;
 
-        public static PoolDataController Generate(Transform template, string group, Transform parent) {
+        public static PoolDataController Generate(string factoryKey, Transform template, string group, Transform parent) {
             Transform t = Instantiate<Transform>(template);
             t.name = template.name;
 
@@ -28,7 +28,7 @@ namespace M8 {
             }
 
             pdc.group = group;
-            pdc.factoryKey = template.name;
+            pdc.factoryKey = !string.IsNullOrEmpty(factoryKey) ? factoryKey : template.name;
             pdc.claimed = true;
 
             return pdc;

@@ -7,6 +7,7 @@ namespace M8 {
     public class PoolController : MonoBehaviour {
         [System.Serializable]
         public class FactoryData {
+            public string name;
             public Transform template = null;
 
             public int startCapacity = 0;
@@ -53,7 +54,7 @@ namespace M8 {
                 }
 
                 for(int i = 0; i < num; i++) {
-                    var pdc = PoolDataController.Generate(template, group, mInactiveHolder);
+                    var pdc = PoolDataController.Generate(name, template, group, mInactiveHolder);
                     mAvailable.Add(pdc);
                 }
             }
@@ -107,6 +108,9 @@ namespace M8 {
                     Destroy(mActives[i].gameObject);
                 for(int i = 0; i < mAvailable.Count; i++)
                     Destroy(mAvailable[i].gameObject);
+
+                mActives.Clear();
+                mAvailable.Clear();
 
                 mInactiveHolder = null;
             }
@@ -334,6 +338,7 @@ namespace M8 {
                 poolHolder = transform;
 
             FactoryData newData = new FactoryData();
+            newData.name = typeName;
             newData.template = template;
             newData.startCapacity = startCapacity;
             newData.maxCapacity = maxCapacity;
@@ -489,6 +494,9 @@ namespace M8 {
         }
 
         public void Release(PoolDataController pdc) {
+            if(pdc.claimed) //already claimed
+                return;
+
             FactoryData dat;
             if(mFactory.TryGetValue(pdc.factoryKey, out dat)) {
                 if(despawnCallback != null)
