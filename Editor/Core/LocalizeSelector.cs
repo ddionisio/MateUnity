@@ -18,6 +18,8 @@ namespace M8 {
             }
         }
 
+        public static bool localizeExists { get { return mLocalize != null; } }
+
         public static LocalizeSelector Open() {
             return EditorWindow.GetWindow(typeof(LocalizeSelector)) as LocalizeSelector;
         }

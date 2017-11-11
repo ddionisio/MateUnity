@@ -190,6 +190,15 @@ namespace M8 {
             return new string[0];
         }
 
+        public override void Unload() {
+            mEntries = null;
+            mEntriesBase = null;
+        }
+
+        public override bool IsLanguageFile(string filepath) {
+            throw new NotImplementedException();
+        }
+
         protected override void OnInstanceInit() {
             GenerateEntries(true);
         }

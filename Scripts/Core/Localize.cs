@@ -133,6 +133,16 @@ namespace M8 {
 
         public abstract string[] GetKeys();
 
+        /// <summary>
+        /// This is mostly used by editor, clear out data
+        /// </summary>
+        public abstract void Unload();
+
+        /// <summary>
+        /// Check if given file path is used by this localizer.  This is mostly used by editor.
+        /// </summary>
+        public abstract bool IsLanguageFile(string filepath);
+
         protected abstract void HandleLanguageChanged();
 
         protected abstract bool TryGetData(string key, out LocalizeData data);
