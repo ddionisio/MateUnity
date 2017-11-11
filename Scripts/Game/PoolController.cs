@@ -14,8 +14,8 @@ namespace M8 {
 
             public Transform defaultParent = null;
 
-            private List<PoolDataController> mActives;
-            private List<PoolDataController> mAvailable;
+            private CacheList<PoolDataController> mActives;
+            private CacheList<PoolDataController> mAvailable;
 
             private Transform mInactiveHolder;
 
@@ -28,23 +28,29 @@ namespace M8 {
 
             public int activeCount { get { return mActives.Count; } }
 
-            public List<PoolDataController> actives { get { return mActives; } }
+            public CacheList<PoolDataController> actives { get { return mActives; } }
 
             public void Init(string group, Transform inactiveHolder) {
                 this.mInactiveHolder = inactiveHolder;
 
                 mNameHolder = 0;
 
-                mActives = new List<PoolDataController>(maxCapacity);
-                mAvailable = new List<PoolDataController>(maxCapacity);
+                mActives = new CacheList<PoolDataController>(maxCapacity);
+                mAvailable = new CacheList<PoolDataController>(maxCapacity);
                 Expand(group, startCapacity);
             }
 
             public void Expand(string group, int num) {
                 mCapacity += num;
 
-                if(mCapacity > maxCapacity)
+                if(mCapacity > maxCapacity) {
+                    int diff = mCapacity - maxCapacity;
+
                     maxCapacity = mCapacity;
+
+                    mActives.Expand(diff);
+                    mAvailable.Expand(diff);
+                }
 
                 for(int i = 0; i < num; i++) {
                     var pdc = PoolDataController.Generate(template, group, mInactiveHolder);
@@ -70,7 +76,7 @@ namespace M8 {
 
             public PoolDataController Allocate(string group, string name, Transform parent) {
                 if(mAvailable.Count == 0) {
-                    if(mActives.Count + 1 > maxCapacity) {
+                    if(mActives.IsFull) {
                         Debug.LogWarning(template.name + " is expanding beyond max capacity: " + maxCapacity);
 
                         Expand(group, maxCapacity);
@@ -97,10 +103,10 @@ namespace M8 {
             }
 
             public void DeInit() {
-                foreach(PoolDataController pdc in mActives)
-                    Destroy(pdc.gameObject);
-                foreach(PoolDataController pdc in mAvailable)
-                    Destroy(pdc.gameObject);
+                for(int i = 0; i < mActives.Count; i++)
+                    Destroy(mActives[i].gameObject);
+                for(int i = 0; i < mAvailable.Count; i++)
+                    Destroy(mAvailable[i].gameObject);
 
                 mInactiveHolder = null;
             }
@@ -125,12 +131,22 @@ namespace M8 {
         /// Create a new pool. If given group already exists, then it will return that.
         /// Remember to add new types into this pool.
         /// </summary>
-        public static PoolController CreatePool(string group) {
+        public static PoolController CreatePool(string group) {            
+            return CreatePool(group, null);
+        }
+
+        /// <summary>
+        /// Create a new pool. If given group already exists, then it will return that.
+        /// Remember to add new types into this pool.
+        /// </summary>
+        public static PoolController CreatePool(string group, Transform parent) {
             PoolController pc;
             if(mControllers == null || !mControllers.TryGetValue(group, out pc)) {
                 GameObject go = new GameObject(group);
                 pc = go.AddComponent<PoolController>();
 
+                if(parent)
+                    go.transform.SetParent(parent);
                 //Debug.Log ( "Creating group " + group);
             }
 
@@ -302,8 +318,16 @@ namespace M8 {
         /// Add a new type into this pool.  The type name is based on template's name.  If template
         /// already exists (via name), then type will not be added.  Returns true if successfully added.
         /// </summary>
-        public bool AddType(Transform template, int startCapacity, int maxCapacity, Transform defaultParent = null) {
-            if(mFactory.ContainsKey(template.name))
+        public bool AddType(Transform template, int startCapacity, int maxCapacity, Transform defaultParent = null) {            
+            return AddType(template.name, template, startCapacity, maxCapacity, defaultParent);
+        }
+
+        /// <summary>
+        /// Add a new type into this pool.  If template already exists (via name), then type will not be added.  
+        /// Returns true if successfully added.
+        /// </summary>
+        public bool AddType(string typeName, Transform template, int startCapacity, int maxCapacity, Transform defaultParent = null) {
+            if(mFactory.ContainsKey(typeName))
                 return false;
 
             if(poolHolder == null) //default holder to self
@@ -317,7 +341,7 @@ namespace M8 {
 
             newData.Init(group, poolHolder);
 
-            mFactory.Add(template.name, newData);
+            mFactory.Add(typeName, newData);
 
             return true;
         }
@@ -375,11 +399,53 @@ namespace M8 {
             return spawned ? spawned.GetComponent<T>() : default(T);
         }
 
+        public PoolDataController Spawn(string name, Transform toParent, Vector3 position, GenericParams parms) {
+            return _Spawn(null, name, toParent, position, null, parms);
+        }
+
+        public PoolDataController Spawn(string name, Transform toParent, Vector3 position, Quaternion rot, GenericParams parms) {
+            return _Spawn(null, name, toParent, position, rot, parms);
+        }
+
+        public PoolDataController Spawn(string name, Transform toParent, GenericParams parms) {
+            return _Spawn(null, name, toParent, null, null, parms);
+        }
+
+        public T Spawn<T>(string name, Transform toParent, Vector3 position, GenericParams parms) {
+            var spawned = _Spawn(null, name, toParent, position, null, parms);
+            return spawned ? spawned.GetComponent<T>() : default(T);
+        }
+
+        public T Spawn<T>(string name, Transform toParent, Vector3 position, Quaternion rot, GenericParams parms) {
+            var spawned = _Spawn(null, name, toParent, position, rot, parms);
+            return spawned ? spawned.GetComponent<T>() : default(T);
+        }
+
+        public T Spawn<T>(string name, Transform toParent, GenericParams parms) {
+            var spawned = _Spawn(null, name, toParent, null, null, parms);
+            return spawned ? spawned.GetComponent<T>() : default(T);
+        }
+
         PoolDataController _Spawn(string type, string name, Transform toParent, Vector3? position, Quaternion? rot, GenericParams parms) {
             PoolDataController entityRet = null;
 
-            FactoryData dat;
-            if(mFactory.TryGetValue(type, out dat)) {
+            FactoryData dat = null;
+
+            if(string.IsNullOrEmpty(type)) {
+                //this should only be used if there's just one type
+                if(factory != null && factory.Length > 0)
+                    dat = mFactory[factory[0].template.name];
+                else if(mFactory.Count > 0) {
+                    foreach(var pair in mFactory) {
+                        dat = pair.Value;
+                        break;
+                    }
+                }
+            }
+            else
+                mFactory.TryGetValue(type, out dat);
+
+            if(dat != null) {
                 var pdc = dat.Allocate(group, name, toParent == null ? dat.defaultParent == null ? transform : null : toParent);
 
                 if(pdc != null) {
@@ -404,6 +470,14 @@ namespace M8 {
             }
 
             return entityRet;
+        }
+
+        public void Release(GameObject entity) {
+            PoolDataController pdc = entity.GetComponent<PoolDataController>();
+            if(pdc)
+                Release(pdc);
+            else //not in the pool, just kill it
+                Object.Destroy(entity);
         }
 
         public void Release(Transform entity) {
@@ -485,7 +559,7 @@ namespace M8 {
         /// <summary>
         /// Note: please treat this list as a read-only
         /// </summary>
-        public List<PoolDataController> GetActiveList(string type) {
+        public CacheList<PoolDataController> GetActiveList(string type) {
             FactoryData factory;
             if(mFactory.TryGetValue(type, out factory)) {
                 return factory.actives;
