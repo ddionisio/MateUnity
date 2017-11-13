@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace M8 {
     [System.Serializable]
@@ -25,6 +26,10 @@ namespace M8 {
 
         public void Load() {
             SceneManager.instance.LoadScene(name);
+        }
+
+        public bool IsEqual(Scene s) {
+            return name == s.name && path == s.path;
         }
     }
 }

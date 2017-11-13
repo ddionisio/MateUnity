@@ -60,6 +60,10 @@ namespace M8 {
         /// </summary>
         public event OnSceneDataCallback sceneRemovedCallback;
 
+        [Tooltip("Set this to ensure the root is the given defaultRoot, rather than grabbing from current scene on instantiation (useful for playing levels directly in Editor)")]
+        [SerializeField]
+        SceneAssetPath rootScene;
+
         [Tooltip("Use additive if you want to start the game with a root scene, and having one scene to append/replace as you load new scene.")]
         [SerializeField]
         Mode _mode = Mode.Additive;
@@ -72,7 +76,7 @@ namespace M8 {
         bool stackEnable = false; //TODO: refactor how stacking works
         
         private Scene mCurScene;
-        private Scene mRootScene; //used for additive mode
+        private Scene mFirstSceneLoaded; //used for additive mode, if rootScene is null
         
         private Stack<string> mSceneStack;
 
@@ -143,7 +147,8 @@ namespace M8 {
         /// Load back root.  This can be used to reset the entire game.
         /// </summary>
         public void LoadRoot() {
-            LoadScene(mRootScene.name);
+            string rootSceneName = GetRootSceneName();
+            LoadScene(rootSceneName);
         }
         
         public void Reload() {
@@ -344,7 +349,8 @@ namespace M8 {
         }
 
         protected override void OnInstanceInit() {
-            mRootScene = mCurScene = UnitySceneManager.GetActiveScene();
+            mFirstSceneLoaded = mCurScene = UnitySceneManager.GetActiveScene();
+            
             //mIsFullscreen = Screen.fullScreen;
 
             mPrevTimeScale = Time.timeScale;
@@ -390,9 +396,12 @@ namespace M8 {
 
             bool doLoad = true;
 
+            bool isCurSceneRoot = IsRootScene(mCurScene);
+            
             if(mode == LoadSceneMode.Additive) {
+                //unload current scene if it's not the root
                 //Debug.Log("unload: "+mCurScene);
-                if(unloadCurrent && mCurScene != mRootScene) {
+                if(unloadCurrent && !isCurSceneRoot) {
                     var sync = UnitySceneManager.UnloadSceneAsync(mCurScene);
 
                     while(!sync.isDone)
@@ -470,6 +479,20 @@ namespace M8 {
             }
 
             mSceneRemoveRout = null;
+        }
+
+        private string GetRootSceneName() {
+            if(!string.IsNullOrEmpty(rootScene.name))
+                return rootScene.name;
+
+            return mFirstSceneLoaded.name;
+        }
+
+        private bool IsRootScene(Scene s) {
+            if(!string.IsNullOrEmpty(rootScene.name))
+                return rootScene.IsEqual(s);
+
+            return mFirstSceneLoaded == s;
         }
 
         private void SceneStackPush(string scene, string nextScene) {
