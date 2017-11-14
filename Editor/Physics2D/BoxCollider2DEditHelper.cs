@@ -20,33 +20,13 @@ namespace M8 {
                 return;
 
             var meshFilter = go.GetComponent<MeshFilter>();
-            if(!meshFilter)
+            if(!meshFilter || !meshFilter.sharedMesh)
                 return;
-
-            var vertices = meshFilter.sharedMesh.vertices;
-            if(vertices == null || vertices.Length == 0)
-                return;
-
-            //get the min and max x/y of vertices
-            Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
-            Vector2 max = new Vector2(float.MinValue, float.MinValue);
-
-            for(int i = 0; i < vertices.Length; i++) {
-                Vector2 vert = vertices[i];
-
-                if(vert.x < min.x)
-                    min.x = vert.x;
-                if(vert.x > max.x)
-                    max.x = vert.x;
-
-                if(vert.y < min.y)
-                    min.y = vert.y;
-                if(vert.y > max.y)
-                    max.y = vert.y;
-            }
-
-            boxColl.size = max - min;
-            boxColl.offset = Vector2.Lerp(min, max, 0.5f);
+            
+            var meshBounds = meshFilter.sharedMesh.bounds;
+            
+            boxColl.size = meshBounds.max - meshBounds.min;
+            boxColl.offset = Vector2.Lerp(meshBounds.min, meshBounds.max, 0.5f);
         }
     }
 }

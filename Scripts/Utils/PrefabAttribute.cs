@@ -26,6 +26,8 @@ namespace M8 {
                 if(resGO) {
                     //we need to create a buffer GameObject to prevent instantiating more than once in one frame
                     var root = new GameObject(path);
+                    UnityEngine.Object.DontDestroyOnLoad(root);
+
                     go = UnityEngine.Object.Instantiate(resGO, Vector3.zero, Quaternion.identity, root.transform);
                 }
                 else

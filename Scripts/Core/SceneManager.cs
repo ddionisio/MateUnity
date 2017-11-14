@@ -62,7 +62,7 @@ namespace M8 {
 
         [Tooltip("Set this to ensure the root is the given defaultRoot, rather than grabbing from current scene on instantiation (useful for playing levels directly in Editor)")]
         [SerializeField]
-        SceneAssetPath rootScene;
+        SceneAssetPath _rootScene;
 
         [Tooltip("Use additive if you want to start the game with a root scene, and having one scene to append/replace as you load new scene.")]
         [SerializeField]
@@ -76,7 +76,7 @@ namespace M8 {
         bool stackEnable = false; //TODO: refactor how stacking works
         
         private Scene mCurScene;
-        private Scene mFirstSceneLoaded; //used for additive mode, if rootScene is null
+        private SceneAssetPath mFirstSceneLoaded; //used for additive mode, if rootScene is null
         
         private Stack<string> mSceneStack;
 
@@ -106,6 +106,8 @@ namespace M8 {
                 _mode = value;
             }
         }
+
+        public SceneAssetPath rootScene { get { return _rootScene; } }
         
         public bool isPaused { get { return mPauseCounter > 0; } }
 
@@ -147,7 +149,7 @@ namespace M8 {
         /// Load back root.  This can be used to reset the entire game.
         /// </summary>
         public void LoadRoot() {
-            string rootSceneName = GetRootSceneName();
+            string rootSceneName = _rootScene.name;
             LoadScene(rootSceneName);
         }
         
@@ -349,7 +351,11 @@ namespace M8 {
         }
 
         protected override void OnInstanceInit() {
-            mFirstSceneLoaded = mCurScene = UnitySceneManager.GetActiveScene();
+            mCurScene = UnitySceneManager.GetActiveScene();
+            mFirstSceneLoaded = new SceneAssetPath(mCurScene);
+
+            if(!_rootScene.isValid)
+                _rootScene = mFirstSceneLoaded;
             
             //mIsFullscreen = Screen.fullScreen;
 
@@ -395,21 +401,28 @@ namespace M8 {
                 sceneChangeCallback(toScene);
 
             bool doLoad = true;
-
-            bool isCurSceneRoot = IsRootScene(mCurScene);
             
             if(mode == LoadSceneMode.Additive) {
-                //unload current scene if it's not the root
-                //Debug.Log("unload: "+mCurScene);
-                if(unloadCurrent && !isCurSceneRoot) {
-                    var sync = UnitySceneManager.UnloadSceneAsync(mCurScene);
+                bool isCurSceneRoot = _rootScene == mCurScene;
 
-                    while(!sync.isDone)
-                        yield return null;
+                //special case if we are loading the same scene we first instantiated, but is not the root
+                if(!isCurSceneRoot && mFirstSceneLoaded == mCurScene) {
+                    mode = LoadSceneMode.Single;
                 }
-                
-                //load only if it doesn't exist
-                doLoad = !UnitySceneManager.GetSceneByName(toScene).IsValid();
+                else {
+                    //unload current scene if it's not the root
+                    //Debug.Log("unload: "+mCurScene);
+                    if(unloadCurrent && !isCurSceneRoot) {
+                        var sync = UnitySceneManager.UnloadSceneAsync(mCurScene);
+                        if(sync != null) {
+                            while(!sync.isDone)
+                                yield return null;
+                        }
+                    }
+
+                    //load only if it doesn't exist
+                    doLoad = !UnitySceneManager.GetSceneByName(toScene).IsValid();
+                }
             }
 
             //load
@@ -480,21 +493,7 @@ namespace M8 {
 
             mSceneRemoveRout = null;
         }
-
-        private string GetRootSceneName() {
-            if(!string.IsNullOrEmpty(rootScene.name))
-                return rootScene.name;
-
-            return mFirstSceneLoaded.name;
-        }
-
-        private bool IsRootScene(Scene s) {
-            if(!string.IsNullOrEmpty(rootScene.name))
-                return rootScene.IsEqual(s);
-
-            return mFirstSceneLoaded == s;
-        }
-
+        
         private void SceneStackPush(string scene, string nextScene) {
             if(stackEnable && scene != nextScene) {
                 if(mSceneStack.Count == stackCapacity) {
