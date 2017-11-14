@@ -35,6 +35,10 @@ namespace M8 {
             if(!meshFilter)
                 return;
 
+            Reconstruct(polygonColl, meshFilter);
+        }
+
+        public static void Reconstruct(PolygonCollider2D polygonColl, MeshFilter meshFilter) {
             var vertices = meshFilter.sharedMesh.vertices;
 
             //grab edges
@@ -57,7 +61,7 @@ namespace M8 {
                     }
                 }
             }
-            
+
             foreach(Edge edge in edgesToRemove)
                 edges.Remove(edge);
 

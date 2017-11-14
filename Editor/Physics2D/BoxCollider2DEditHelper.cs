@@ -22,9 +22,13 @@ namespace M8 {
             var meshFilter = go.GetComponent<MeshFilter>();
             if(!meshFilter || !meshFilter.sharedMesh)
                 return;
-            
+
+            Reconstruct(boxColl, meshFilter);
+        }
+
+        public static void Reconstruct(BoxCollider2D boxColl, MeshFilter meshFilter) {
             var meshBounds = meshFilter.sharedMesh.bounds;
-            
+
             boxColl.size = meshBounds.max - meshBounds.min;
             boxColl.offset = Vector2.Lerp(meshBounds.min, meshBounds.max, 0.5f);
         }
