@@ -88,6 +88,21 @@ namespace M8 {
             return default(T);
         }
 
+        /// <summary>
+        /// Remove and return the last available item
+        /// </summary>
+        public T RemoveLast() {
+            if(mCount > 0) {
+                T ret = mItems[mCount - 1];
+                mItems[mCount - 1] = default(T);
+                mCount--;
+
+                return ret;
+            }
+
+            return default(T);
+        }
+
         public bool Remove(T item) {
             for(int i = 0; i < mCount; i++) {
                 if(mItems[i].Equals(item)) {
@@ -140,6 +155,14 @@ namespace M8 {
             }
 
             return false;
+        }
+
+        public void Sort(IComparer<T> comparer) {
+            Array.Sort(mItems, 0, mCount, comparer);
+        }
+
+        public void Sort() {
+            Array.Sort(mItems, 0, mCount);
         }
     }
 }
