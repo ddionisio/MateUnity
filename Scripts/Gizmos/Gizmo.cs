@@ -37,6 +37,56 @@ namespace M8 {
             Gizmos.DrawRay(pos + direction, left * arrowHeadLength);
         }
 
+        public static void ArrowLine(Vector3 start, Vector3 end, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f) {
+            Gizmos.DrawLine(start, end);
+
+            Vector3 dir = (end - start).normalized;
+
+            Vector3 right = Quaternion.LookRotation(dir) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
+            Vector3 left = Quaternion.LookRotation(dir) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
+            Gizmos.DrawRay(end, right * arrowHeadLength);
+            Gizmos.DrawRay(end, left * arrowHeadLength);
+        }
+
+        public static void ArrowLine(Vector3 start, Vector3 end, Color color, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f) {
+            Gizmos.color = color;
+
+            Gizmos.DrawLine(start, end);
+
+            Vector3 dir = (end - start).normalized;
+
+            Vector3 right = Quaternion.LookRotation(dir) * Quaternion.Euler(0, 180 + arrowHeadAngle, 0) * new Vector3(0, 0, 1);
+            Vector3 left = Quaternion.LookRotation(dir) * Quaternion.Euler(0, 180 - arrowHeadAngle, 0) * new Vector3(0, 0, 1);
+            Gizmos.DrawRay(end, right * arrowHeadLength);
+            Gizmos.DrawRay(end, left * arrowHeadLength);
+        }
+
+        public static void ArrowLine2D(Vector2 start, Vector2 end, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f) {
+            Gizmos.DrawLine(start, end);
+
+            Vector2 dir = (end - start).normalized;
+
+            Vector2 right = MathUtil.Rotate(dir, 180f - arrowHeadAngle);
+            Vector2 left = MathUtil.Rotate(dir, -180f + arrowHeadAngle);
+            
+            Gizmos.DrawRay(end, right * arrowHeadLength);
+            Gizmos.DrawRay(end, left * arrowHeadLength);
+        }
+
+        public static void ArrowLine2D(Vector3 start, Vector3 end, Color color, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f) {
+            Gizmos.color = color;
+
+            Gizmos.DrawLine(start, end);
+
+            Vector2 dir = (end - start).normalized;
+
+            Vector2 right = MathUtil.Rotate(dir, 180f - arrowHeadAngle);
+            Vector2 left = MathUtil.Rotate(dir, -180f + arrowHeadAngle);
+
+            Gizmos.DrawRay(end, right * arrowHeadLength);
+            Gizmos.DrawRay(end, left * arrowHeadLength);
+        }
+
         public static void DrawWireCube(Vector3 position, Vector3 size) {
             var half = size / 2;
             // draw front
