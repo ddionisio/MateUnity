@@ -9,15 +9,18 @@ namespace M8 {
         public float pulsePerSecond;
         public Color startColor;
         public Color endColor = Color.white;
+        public bool isRealTime;
 
         private float mCurPulseTime = 0;
         private bool mStarted = false;
+        private float mLastTime;
 
         private Color mDefaultColor;
 
         void OnEnable() {
             if(mStarted) {
                 mCurPulseTime = 0;
+                mLastTime = isRealTime ? Time.realtimeSinceStartup : Time.time;
                 sprite.color = startColor;
             }
         }
@@ -43,7 +46,11 @@ namespace M8 {
 
         // Update is called once per frame
         void Update() {
-            mCurPulseTime += Time.deltaTime;
+            float time = isRealTime ? Time.realtimeSinceStartup : Time.time;
+            float delta = time - mLastTime;
+            mLastTime = time;
+
+            mCurPulseTime += delta;
 
             float t = Mathf.Sin(Mathf.PI*mCurPulseTime*pulsePerSecond);
             t *= t;
