@@ -19,9 +19,13 @@ namespace M8 {
 
         public float delay;
 
+        public bool useRealTime;
+
         public Color[] colors;
 
         private float mCurTime = 0;
+        private float mLastTime;
+
         private bool mStarted = false;
         private bool mActive = false;
         private bool mReverse = false;
@@ -36,6 +40,8 @@ namespace M8 {
                 mReverse = false;
                 mCurTime = 0;
                 sprite.color = colors[0];
+
+                mLastTime = useRealTime ? Time.realtimeSinceStartup : Time.time;
             }
         }
 
@@ -50,12 +56,18 @@ namespace M8 {
             mActive = true;
             mReverse = false;
             sprite.color = colors[0];
+
+            mLastTime = useRealTime ? Time.realtimeSinceStartup : Time.time;
         }
 
         // Update is called once per frame
         void Update() {
             if(mActive) {
-                mCurTime = mCurTime + (mReverse ? -Time.deltaTime : Time.deltaTime);
+                float time = useRealTime ? Time.realtimeSinceStartup : Time.time;
+                float delta = time - mLastTime;
+                mLastTime = time;
+
+                mCurTime = mCurTime + (mReverse ? -delta : delta);
 
                 switch(type) {
                     case Type.Once:
