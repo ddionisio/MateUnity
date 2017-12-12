@@ -11,6 +11,8 @@ namespace M8 {
             RealTime
         }
 
+        public Transform target;
+
         public Vector3 rotatePerSecond;
         public bool local = true;
         public UpdateType updateType = UpdateType.Update;
@@ -38,18 +40,20 @@ namespace M8 {
 
             if(resetOnDisable) {
                 if(local)
-                    transform.localEulerAngles = mEulerAnglesDefault;
+                    target.localEulerAngles = mEulerAnglesDefault;
                 else
-                    transform.eulerAngles = mEulerAnglesDefault;
+                    target.eulerAngles = mEulerAnglesDefault;
             }
         }
 
         // Use this for initialization
         void Awake() {
-            mBody = GetComponent<Rigidbody>();
-            mEulerAnglesOrig = transform.eulerAngles;
+            if(!target) target = transform;
 
-            mEulerAnglesDefault = local ? transform.localEulerAngles : mEulerAnglesOrig;
+            mBody = target.GetComponent<Rigidbody>();
+            mEulerAnglesOrig = target.eulerAngles;
+
+            mEulerAnglesDefault = local ? target.localEulerAngles : mEulerAnglesOrig;
         }
 
         void RefreshLastTime() {
@@ -75,11 +79,11 @@ namespace M8 {
                 mLastTime = time;
 
                 if(local) {
-                    transform.localEulerAngles = transform.localEulerAngles + (rotatePerSecond * mSpeedScale * dt);
+                    target.localEulerAngles = target.localEulerAngles + (rotatePerSecond * mSpeedScale * dt);
                 }
                 else {
                     mEulerAnglesOrig += rotatePerSecond * mSpeedScale * dt;
-                    transform.eulerAngles = mEulerAnglesOrig;
+                    target.eulerAngles = mEulerAnglesOrig;
                 }
             }
         }
@@ -91,11 +95,11 @@ namespace M8 {
                 mLastTime = time;
 
                 if(local) {
-                    transform.localEulerAngles = transform.localEulerAngles + (rotatePerSecond * mSpeedScale * dt);
+                    target.localEulerAngles = target.localEulerAngles + (rotatePerSecond * mSpeedScale * dt);
                 }
                 else {
                     mEulerAnglesOrig += rotatePerSecond * mSpeedScale * dt;
-                    transform.eulerAngles = mEulerAnglesOrig;
+                    target.eulerAngles = mEulerAnglesOrig;
                 }
             }
             else if(updateType == UpdateType.RigidBody && mBody) {
@@ -104,7 +108,7 @@ namespace M8 {
                 mLastTime = time;
 
                 if(local) {
-                    Vector3 eulers = transform.eulerAngles;
+                    Vector3 eulers = target.eulerAngles;
                     mBody.MoveRotation(Quaternion.Euler(eulers + (rotatePerSecond * mSpeedScale * dt)));
                 }
                 else {
