@@ -10,10 +10,18 @@ namespace M8 {
         [SerializeField]
         int _sortingOrder;
 
+        private Renderer mRenderer;
+
+        public void Apply() {
+            if(!mRenderer)
+                mRenderer = GetComponent<Renderer>();
+
+            mRenderer.sortingLayerName = _sortingLayerName;
+            mRenderer.sortingOrder = _sortingOrder;
+        }
+
         void Awake() {
-            Renderer r = GetComponent<Renderer>();
-            r.sortingLayerName = _sortingLayerName;
-            r.sortingOrder = _sortingOrder;
+            Apply();
         }
     }
 }

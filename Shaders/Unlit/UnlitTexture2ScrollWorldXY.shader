@@ -61,11 +61,11 @@ Shader "M8/Unlit/Texture 2 Scroll World XY" {
 
 		v2f_vct vert_vct(vin_vct v)
 		{
+			float4 wVtx = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0));
+		
 			v2f_vct o;
-			o.vertex = UnityObjectToClipPos(v.vertex);
+			o.vertex = mul(UNITY_MATRIX_VP, wVtx);
 
-            float2 wVtx = mul(unity_ObjectToWorld, v.vertex.xy);
-			
 			o.texcoord = wVtx.xy * scale;
 			o.texcoord.x += speedX * _Time.y;
 			o.texcoord.y += speedY * _Time.y;
