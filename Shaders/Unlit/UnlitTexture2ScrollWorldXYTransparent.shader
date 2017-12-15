@@ -1,4 +1,6 @@
-Shader "M8/Unlit/Texture 2 Scroll" {
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+Shader "M8/Unlit/Texture 2 Scroll World XY Transparent" {
   Properties {
     _MainTex ("Texture", 2D) = "white" {}
 	_MainTex2 ("Texture2", 2D) = "white" {}
@@ -30,7 +32,9 @@ Shader "M8/Unlit/Texture 2 Scroll" {
 		#include "UnityCG.cginc"
 
 		sampler2D _MainTex;
+        float4 _MainTex_ST;
         sampler2D _MainTex2;
+        float4 _MainTex2_ST;
 		
 		float speedX;
 		float speedY;
@@ -44,7 +48,6 @@ Shader "M8/Unlit/Texture 2 Scroll" {
 		struct vin_vct 
 		{
 			float4 vertex : POSITION;
-			float2 texcoord : TEXCOORD0;
 		};
 
 		struct v2f_vct
@@ -56,14 +59,16 @@ Shader "M8/Unlit/Texture 2 Scroll" {
 
 		v2f_vct vert_vct(vin_vct v)
 		{
+			float4 wVtx = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0));
+		
 			v2f_vct o;
-			o.vertex = UnityObjectToClipPos(v.vertex);
-			
-			o.texcoord = v.texcoord;
+			o.vertex = mul(UNITY_MATRIX_VP, wVtx);
+
+			o.texcoord = TRANSFORM_TEX(wVtx.xy, _MainTex);
 			o.texcoord.x += speedX * _Time.y;
 			o.texcoord.y += speedY * _Time.y;
 
-            o.texcoord2 = v.texcoord;
+            o.texcoord2 = TRANSFORM_TEX(wVtx.xy, _MainTex2);
             o.texcoord2.x += speedX2 * _Time.y;
             o.texcoord2.y += speedY2 * _Time.y;
 
