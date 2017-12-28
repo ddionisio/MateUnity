@@ -14,12 +14,17 @@ namespace M8 {
         public float nextDelayMax = 1.0f; //time it takes to go to next frame
 
         public bool playOnStart;
+        public bool useShuffle;
 
         private bool mActive;
         private Coroutine mRout;
 
         public void Play() {
             mActive = true;
+
+            if(useShuffle)
+                ArrayUtil.Shuffle(frames);
+
             if(mRout == null)
                 mRout = StartCoroutine(DoPlay());
         }
@@ -60,9 +65,41 @@ namespace M8 {
             if(startDelay > 0f)
                 yield return new WaitForSeconds(startDelay);
 
-            while(true) {
-                sprite.sprite = frames[Random.Range(0, frames.Length)];
-                yield return new WaitForSeconds(Random.Range(nextDelayMin, nextDelayMax));
+            if(nextDelayMin == nextDelayMax) {
+                if(useShuffle) {
+                    while(true) {
+                        for(int i = 0; i < frames.Length; i++) {
+                            sprite.sprite = frames[i];
+                            yield return new WaitForSeconds(nextDelayMin);
+                        }
+
+                        ArrayUtil.Shuffle(frames);
+                    }
+                }
+                else {
+                    while(true) {
+                        sprite.sprite = frames[Random.Range(0, frames.Length)];
+                        yield return new WaitForSeconds(nextDelayMin);
+                    }
+                }
+            }
+            else {
+                if(useShuffle) {
+                    while(true) {
+                        for(int i = 0; i < frames.Length; i++) {
+                            sprite.sprite = frames[i];
+                            yield return new WaitForSeconds(Random.Range(nextDelayMin, nextDelayMax));
+                        }
+
+                        ArrayUtil.Shuffle(frames);
+                    }
+                }
+                else {
+                    while(true) {
+                        sprite.sprite = frames[Random.Range(0, frames.Length)];
+                        yield return new WaitForSeconds(Random.Range(nextDelayMin, nextDelayMax));
+                    }
+                }
             }
         }
     }
