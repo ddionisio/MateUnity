@@ -13,8 +13,8 @@ namespace M8 {
             var isLocal = EditorGUILayout.Toggle("local", data.isLocal);
             var persistent = EditorGUILayout.Toggle("persistent", data.persistent);
 
-            var positionFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumMaskField("position", data.positionFlags);
-            var rotationFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumMaskField("rotation", data.rotationFlags);
+            var positionFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumFlagsField("position", data.positionFlags);
+            var rotationFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumFlagsField("rotation", data.rotationFlags);
 
             if(EditorGUI.EndChangeCheck()) {
                 Undo.RecordObject(target, "Change Scene Serializer");
