@@ -32,6 +32,10 @@ namespace M8 {
             public CacheList<PoolDataController> actives { get { return mActives; } }
 
             public void Init(string group, Transform inactiveHolder) {
+                if(string.IsNullOrEmpty(name) && template) {
+                    name = template.name;
+                }
+
                 this.mInactiveHolder = inactiveHolder;
 
                 mNameHolder = 0;
