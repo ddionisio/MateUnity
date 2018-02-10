@@ -60,8 +60,22 @@ namespace M8 {
 
             const float padding = 4.0f;
 
-            EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("template"));
+            var nameProp = item.FindPropertyRelative("name");
+
+            EditorGUI.PropertyField(itemPos, nameProp);
             itemPos.y += itemPos.height + padding;
+
+            var templateProp = item.FindPropertyRelative("template");
+            var lastTemplateObj = templateProp.objectReferenceValue;
+                        
+            EditorGUI.PropertyField(itemPos, templateProp);
+            itemPos.y += itemPos.height + padding;
+
+            //set name to template object if it's empty
+            var curTemplateObj = templateProp.objectReferenceValue;
+            if(curTemplateObj != lastTemplateObj && curTemplateObj && string.IsNullOrEmpty(nameProp.stringValue)) {
+                nameProp.stringValue = templateProp.objectReferenceValue.name;
+            }
 
             EditorGUI.PropertyField(itemPos, item.FindPropertyRelative("startCapacity"));
             itemPos.y += itemPos.height + padding;
@@ -74,14 +88,15 @@ namespace M8 {
 
             itemPos.y += padding;
 
-            Rect copyPos = itemPos; copyPos.height = 20.0f; copyPos.width = rect.width*0.3f; copyPos.x = rect.x + rect.width*0.5f - rect.width*0.3f - 4.0f;
+            /*Rect copyPos = itemPos; copyPos.height = 20.0f; copyPos.width = rect.width*0.3f; copyPos.x = rect.x + rect.width*0.5f - rect.width*0.3f - 4.0f;
             if(GUI.Button(copyPos, "Copy Name")) {
                 Transform t = item.FindPropertyRelative("template").objectReferenceValue as Transform;
                 if(t)
                     EditorGUIUtility.systemCopyBuffer = t.name;
-            }
+            }*/
 
-            Rect dupPos = itemPos; dupPos.height = 20.0f; dupPos.width = rect.width*0.3f; dupPos.x = rect.x + rect.width*0.5f + 4.0f;
+            //Rect dupPos = itemPos; dupPos.height = 20.0f; dupPos.width = rect.width*0.3f; dupPos.x = rect.x + rect.width*0.5f + 4.0f;
+            Rect dupPos = itemPos; dupPos.height = 20.0f; dupPos.width = rect.width; dupPos.x = rect.x;
             if(GUI.Button(dupPos, "Duplicate")) {
                 mFactory.serializedProperty.InsertArrayElementAtIndex(index);
                 SerializedProperty newItem = mFactory.serializedProperty.GetArrayElementAtIndex(index);

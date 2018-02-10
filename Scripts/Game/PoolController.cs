@@ -632,7 +632,7 @@ namespace M8 {
                     foreach(FactoryData factoryData in factory) {
                         factoryData.Init(group, poolHolder);
 
-                        mFactory.Add(factoryData.template.name, factoryData);
+                        mFactory.Add(factoryData.name, factoryData);
                     }
                 }
                 else
