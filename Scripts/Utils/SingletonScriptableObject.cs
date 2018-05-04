@@ -16,12 +16,33 @@ namespace M8 {
             }
         }
 
+        public static void Unload() {
+            if(isInstantiated) {
+                Resources.UnloadAsset(mInstance);
+                isInstantiated = false;
+            }
+        }
+
         private static void Instantiate() {
             var type = typeof(T);
-            var attribute = Attribute.GetCustomAttribute(type, typeof(ResourcePathAttribute)) as ResourcePathAttribute;
-            if(attribute != null) {
-                var path = attribute.path;
 
+            //first, see if we can get a path
+            string path = null;
+
+            var resPathAttr = Attribute.GetCustomAttribute(type, typeof(ResourcePathAttribute)) as ResourcePathAttribute;
+            if(resPathAttr != null) {
+                path = resPathAttr.path;
+            }
+            else {
+                //try unity's
+                //NOTE: this will assume it is in the Resources folder, not in any of its sub folders.
+                var createAssetMenuAttr = Attribute.GetCustomAttribute(type, typeof(CreateAssetMenuAttribute)) as CreateAssetMenuAttribute;
+                if(createAssetMenuAttr != null) {
+                    path = createAssetMenuAttr.fileName;
+                }
+            }
+
+            if(!string.IsNullOrEmpty(path)) {
                 mInstance = Resources.Load<T>(path);
 
                 if(!mInstance) {
@@ -29,17 +50,19 @@ namespace M8 {
                 }
             }
             else {
-                //manually grab/generate
+                //manually grab
                 var objects = Resources.FindObjectsOfTypeAll<T>();
                 if(objects.Length > 0) {
                     mInstance = objects[0];
 
                     if(objects.Length > 1) {
-                        Debug.LogWarning("There is more than one of ScriptableObject: \"" + type + "\". Using: "+mInstance.name);
+                        Debug.LogWarning("There is more than one of ScriptableObject: \"" + type + "\". Using first one: "+mInstance.name);
                     }
                 }
                 else {
-                    Debug.LogError("Unable to find any ScriptableObject of type: " + type);
+                    //create from memory
+                    mInstance = ScriptableObject.CreateInstance<T>();
+                    mInstance.hideFlags = HideFlags.DontSave;
                 }
             }
 
@@ -52,5 +75,9 @@ namespace M8 {
         /// This is called on the first access to "instance" during runtime.
         /// </summary>
         protected virtual void OnInstanceInit() { }
+
+        protected virtual void OnDestroy() {
+            isInstantiated = false;
+        }
     }
 }
