@@ -63,18 +63,27 @@ namespace M8 {
                 }
             }
 
-            /// <summary>
-            /// Only ReleaseAll and ReleaseAllByType should set removeFromActive to false
-            /// </summary>
-            public void Release(PoolDataController pdc, bool removeFromActive = true) {
+            public void Release(PoolDataController pdc) {
                 pdc.gameObject.SetActive(false);
 
                 Transform t = pdc.transform;
 
                 t.SetParent(mInactiveHolder, false);
+                                
+                mAvailable.Add(pdc);
 
-                if(removeFromActive)
-                    mActives.Remove(pdc);
+                mActives.Remove(pdc);
+            }
+
+            /// <summary>
+            /// Only ReleaseAll and ReleaseAllByType should call this
+            /// </summary>
+            public void ReleaseIgnoreActiveList(PoolDataController pdc) {
+                pdc.gameObject.SetActive(false);
+
+                Transform t = pdc.transform;
+
+                t.SetParent(mInactiveHolder, false);
 
                 mAvailable.Add(pdc);
             }
@@ -529,7 +538,7 @@ namespace M8 {
 
                     pdc.Despawn();
 
-                    factory.Release(pdc, false);
+                    factory.ReleaseIgnoreActiveList(pdc);
                 }
 
                 factory.actives.Clear();
@@ -550,7 +559,7 @@ namespace M8 {
 
                     pdc.Despawn();
 
-                    factory.Release(pdc, false);
+                    factory.ReleaseIgnoreActiveList(pdc);
                 }
 
                 factory.actives.Clear();
