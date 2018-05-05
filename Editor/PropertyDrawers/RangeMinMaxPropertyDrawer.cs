@@ -6,7 +6,7 @@ using UnityEditor;
 
 namespace M8 {
     [CustomPropertyDrawer(typeof(RangeMinMaxAttribute))]
-    public class RangeLimitAttributeDrawer : PropertyDrawer {
+    public class RangeMinMaxPropertyDrawer : PropertyDrawer {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);
 
