@@ -8,7 +8,7 @@ namespace M8 {
     /// </summary>
     public abstract class SignalValue<T> : ScriptableObject {
         [SerializeField]
-        T _initialValue;
+        T _initialValue = default(T);
         [SerializeField]
         bool _ignoreChanged;
 
@@ -18,11 +18,18 @@ namespace M8 {
         public event System.Action<T, T> callback;
 
         public T curValue {
-            get { return mCurValue; }
+            get {
+                if(!mIsCurValueInitialized) {
+                    mCurValue = _initialValue;
+                    mIsCurValueInitialized = true;
+                }
+
+                return mCurValue;
+            }
 
             set {
                 if(_ignoreChanged || IsChanged(value)) {
-                    var prevVal = mCurValue;
+                    var prevVal = curValue;
 
                     ProcessValue(value);
 
@@ -35,13 +42,16 @@ namespace M8 {
         }
 
         private T mCurValue;
+        private bool mIsCurValueInitialized;
 
         /// <summary>
         /// Call this to force invoke current value
         /// </summary>
         public void Invoke() {
-            if(callback != null)
-                callback(mCurValue, mCurValue);
+            if(callback != null) {
+                var val = curValue;
+                callback(val, val);
+            }
         }
 
         /// <summary>
@@ -55,7 +65,7 @@ namespace M8 {
         /// Called to check if new value is a change to current value.
         /// </summary>
         protected virtual bool IsChanged(T newValue) {
-            return !mCurValue.Equals(newValue);
+            return !curValue.Equals(newValue);
         }
     }
 }
