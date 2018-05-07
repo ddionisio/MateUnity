@@ -52,6 +52,10 @@ namespace M8 {
             claimed = true;
         }
 
+        public void Release() {
+            PoolController.ReleaseAuto(this);
+        }
+
         private void InitInterfaces() {
             if(mIsInterfacesInit)
                 return;

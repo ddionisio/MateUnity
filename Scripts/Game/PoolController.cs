@@ -262,13 +262,8 @@ namespace M8 {
         public static void ReleaseAuto(Transform entity) {
             //NOTE: don't really need to destroy
             PoolDataController pdc = entity.GetComponent<PoolDataController>();
-            if(pdc != null) {
-                PoolController pc = GetPool(pdc.group);
-                if(pc != null)
-                    pc.Release(pdc);
-                else
-                    entity.gameObject.SetActive(false);
-            }
+            if(pdc != null)
+                ReleaseAuto(pdc);
             else
                 entity.gameObject.SetActive(false);
             //Object.Destroy(entity.gameObject);
@@ -277,15 +272,18 @@ namespace M8 {
         public static void ReleaseAuto(GameObject entity) {
             //NOTE: don't really need to destroy
             PoolDataController pdc = entity.GetComponent<PoolDataController>();
-            if(pdc != null) {
-                PoolController pc = GetPool(pdc.group);
-                if(pc != null)
-                    pc.Release(pdc);
-                else
-                    entity.SetActive(false);
-            }
+            if(pdc != null)
+                ReleaseAuto(pdc);
             else
                 entity.SetActive(false);
+        }
+
+        public static void ReleaseAuto(PoolDataController poolCtrl) {
+            PoolController pc = GetPool(poolCtrl.group);
+            if(pc != null)
+                pc.Release(poolCtrl);
+            else
+                poolCtrl.gameObject.SetActive(false);
         }
 
         public static void ReleaseFromGroup(string group, Transform entity) {
