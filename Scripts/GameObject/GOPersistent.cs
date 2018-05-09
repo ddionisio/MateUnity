@@ -8,7 +8,7 @@ namespace M8 {
         bool _dontDestroyOnLoad = true;
 
         void Awake() {
-            if(_dontDestroyOnLoad)
+            if(_dontDestroyOnLoad && transform.parent == null)
                 DontDestroyOnLoad(gameObject);
         }
     }
