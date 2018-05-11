@@ -56,11 +56,15 @@ namespace M8 {
             return s == 0 ? Side.None : s < 0 ? Side.Right : Side.Left;
         }
 
-        public static Vector2 Rotate(Vector2 v, float r) {
-            float c = Mathf.Cos(r);
-            float s = Mathf.Sin(r);
+        public static Vector2 Rotate(Vector2 v, float radians) {
+            float c = Mathf.Cos(radians);
+            float s = Mathf.Sin(radians);
 
             return new Vector2(v.x * c + v.y * s, -v.x * s + v.y * c);
+        }
+
+        public static Vector2 RotateAngle(Vector2 v, float angle) {
+            return Rotate(v, angle * Mathf.Deg2Rad);
         }
 
         public static float Cross(Vector2 v1, Vector2 v2) {
