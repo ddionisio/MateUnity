@@ -59,7 +59,7 @@ namespace M8 {
         /// Called after a scene has unloaded via UnloadAddedScene
         /// </summary>
         public event OnSceneDataCallback sceneRemovedCallback;
-
+                
         [Tooltip("Set this to ensure the root is the given defaultRoot, rather than grabbing from current scene on instantiation (useful for playing levels directly in Editor)")]
         [SerializeField]
         SceneAssetPath _rootScene;
@@ -74,7 +74,15 @@ namespace M8 {
         
         [SerializeField]
         bool stackEnable = false; //TODO: refactor how stacking works
-        
+
+        [Tooltip("Set this to true to use timeScale via SceneManager")]
+        public bool isTimeScaleOverride;
+
+        /// <summary>
+        /// Use this as time scale if "isTimeScaleOverride" is true
+        /// </summary>
+        public float timeScale { get { return mTimeScale; } set { mTimeScale = value; } }
+
         private Scene mCurScene;
         private SceneAssetPath mFirstSceneLoaded; //used for additive mode, if rootScene is null
         
@@ -89,7 +97,7 @@ namespace M8 {
         private Queue<Scene> mScenesToRemove; //scenes to remove via UnloadAddedScene
         private Coroutine mSceneRemoveRout;
 
-        private float mPrevTimeScale;
+        private float mTimeScale = 1.0f;
         
         private Transform mHolder; //for use with storing game objects to be transferred to other scenes
 
@@ -273,7 +281,10 @@ namespace M8 {
 
             if(!wasPaused) {
                 if(Time.timeScale != 0.0f) {
-                    mPrevTimeScale = Time.timeScale;
+                    //store current Unity time scale if not using override
+                    if(!isTimeScaleOverride)
+                        mTimeScale = Time.timeScale;
+
                     Time.timeScale = 0.0f;
                 }
 
@@ -287,7 +298,7 @@ namespace M8 {
             mPauseCounter--;
 
             if(wasPaused && mPauseCounter <= 0) {
-                Time.timeScale = mPrevTimeScale;
+                Time.timeScale = mTimeScale;
 
                 if(pauseCallback != null) pauseCallback(isPaused);
             }
@@ -347,7 +358,7 @@ namespace M8 {
         protected override void OnInstanceDeinit() {
             //if we are destroying SceneManager for some reason
             if(isPaused)
-                Time.timeScale = mPrevTimeScale;
+                Time.timeScale = mTimeScale;
         }
 
         protected override void OnInstanceInit() {
@@ -356,10 +367,8 @@ namespace M8 {
 
             if(!_rootScene.isValid)
                 _rootScene = mFirstSceneLoaded;
-            
-            //mIsFullscreen = Screen.fullScreen;
 
-            mPrevTimeScale = Time.timeScale;
+            //mIsFullscreen = Screen.fullScreen;
 
             mPauseCounter = 0;
 
