@@ -12,6 +12,11 @@ namespace M8.UI.Texts {
         [Localize]
         public string key;
 
+        /// <summary>
+        /// If set to true, only apply if key is available
+        /// </summary>
+        public bool isKeyExclusive;
+
         private bool mStarted = false;
         private object[] mParams = null;
 
@@ -46,17 +51,26 @@ namespace M8.UI.Texts {
         /// <summary>
         /// Force-localize the widget.
         /// </summary>
-        public void Apply() {
-            // If no localization key has been specified, use the label's text as the key
-            if(string.IsNullOrEmpty(key)) key = mUIText.text;
+        public void Apply() {            
+            if(isKeyExclusive) {
+                //ensure key exists
+                if(!string.IsNullOrEmpty(key) && Localize.instance.Exists(key))
+                    mUIText.text = Localize.instance.GetText(key);
+                else
+                    mUIText.text = "";
+            }
+            else {
+                // If no localization key has been specified, use the label's text as the key
+                if(string.IsNullOrEmpty(key)) key = mUIText.text;
 
-            // If we still don't have a key, use the widget's name
-            string val = string.IsNullOrEmpty(key) ? Localize.instance.GetText(name) : Localize.instance.GetText(key);
+                // If we still don't have a key, use the widget's name
+                string val = string.IsNullOrEmpty(key) ? Localize.instance.GetText(name) : Localize.instance.GetText(key);
 
-            if(mParams != null)
-                val = string.Format(val, mParams);
+                if(mParams != null)
+                    val = string.Format(val, mParams);
 
-            mUIText.text = val;
+                mUIText.text = val;
+            }
         }
     }
 }
