@@ -35,10 +35,6 @@ namespace M8.UI.Texts {
         void OnEnable() { Localize.instance.localizeCallback += Apply; if(mStarted) Apply(); }
         void OnDisable() { if(Localize.instance) Localize.instance.localizeCallback -= Apply; }
 
-        void Awake() {
-            mUIText = GetComponent<Text>();
-        }
-
         /// <summary>
         /// Localize the widget on start.
         /// </summary>
@@ -51,7 +47,10 @@ namespace M8.UI.Texts {
         /// <summary>
         /// Force-localize the widget.
         /// </summary>
-        public void Apply() {            
+        public void Apply() {
+            if(mUIText == null)
+                mUIText = GetComponent<Text>();
+
             if(isKeyExclusive) {
                 //ensure key exists
                 if(!string.IsNullOrEmpty(key) && Localize.instance.Exists(key))
