@@ -13,6 +13,7 @@ namespace M8.UI.Graphics {
         public bool resetOnStop = false;
         public bool autoPlay = true;
         public bool autoSize = true;
+        public bool shuffleOnPlay = false;
 
         private int mCurFrame;
         private float mFrameCounter;
@@ -20,7 +21,12 @@ namespace M8.UI.Graphics {
         private bool mPlaying;
 
         public void Play() {
-            mPlaying = true;
+            if(!mPlaying) {
+                mPlaying = true;
+
+                if(shuffleOnPlay)
+                    M8.ArrayUtil.Shuffle(frames);
+            }
         }
 
         public void Pause() {
