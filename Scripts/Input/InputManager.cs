@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace M8 {
-    //generalized input handling, useful for porting to non-unity conventions (e.g. Ouya)
+    //generalized input handling, useful for porting to non-unity conventions
     [PrefabCore]
     [AddComponentMenu("M8/Core/InputManager")]
     public class InputManager : SingletonBehaviour<InputManager> {
@@ -44,7 +44,7 @@ namespace M8 {
 
             public string input = ""; //for use with unity's input
             public KeyCode code = KeyCode.None; //unity
-            public InputKeyMap map = InputKeyMap.None; //for external (like ouya!)
+            public InputKeyMap map = InputKeyMap.None; //for external
 
             public bool invert; //for axis, flip sign
 
