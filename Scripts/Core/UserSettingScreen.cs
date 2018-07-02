@@ -69,9 +69,7 @@ namespace M8 {
 				Screen.SetResolution(mScreenWidth, mScreenHeight, mFullscreen, mScreenRefreshRate);
         }
 
-        protected override void OnInstanceInit() {
-            base.OnInstanceInit();
-
+        public override void Load() {
             mScreenWidth = userData.GetInt(screenWidthKey, defaultWidth);
             mScreenHeight = userData.GetInt(screenHeightKey, defaultHeight);
             mScreenRefreshRate = userData.GetInt(screenRefreshRateKey, defaultRefreshRate);

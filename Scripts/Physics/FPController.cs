@@ -32,18 +32,14 @@ namespace M8 {
         public float ladderOrientSpeed = 270.0f;
         public float ladderDrag = 15.0f;
         public float ladderJumpForce = 30.0f;
+        
+        public InputAction moveInputX;
+        public InputAction moveInputY;
+        public InputAction lookInputX;
+        public InputAction lookInputY;
 
-        public int player = 0;
-        public int moveInputX = InputManager.ActionInvalid;
-        public int moveInputY = InputManager.ActionInvalid;
-        public int lookInputX = InputManager.ActionInvalid;
-        public int lookInputY = InputManager.ActionInvalid;
-        public int jumpInput = InputManager.ActionInvalid;
-
-        public bool startInputEnabled = false;
-
-        private bool mInputEnabled = false;
-
+        public bool inputEnabled = true;
+        
         private bool mJump = false;
         private float mJumpLastTime = 0.0f;
 
@@ -58,26 +54,7 @@ namespace M8 {
         private bool mEyeLocked = true;
         private bool mEyeOrienting = false;
         private Vector3 mEyeOrientVel;
-
-        public bool inputEnabled {
-            get { return mInputEnabled; }
-            set {
-                if(mInputEnabled != value) {
-                    mInputEnabled = value;
-
-                    InputManager input = InputManager.instance;
-                    if(input != null) {
-                        if(mInputEnabled) {
-                            input.AddButtonCall(player, jumpInput, OnInputJump);
-                        }
-                        else {
-                            input.RemoveButtonCall(player, jumpInput, OnInputJump);
-                        }
-                    }
-                }
-            }
-        }
-
+        
         public bool isOnLadder { get { return mLadderCounter > 0; } }
 
         public Transform eye {
@@ -192,38 +169,23 @@ namespace M8 {
                     mBody.useGravity = mLadderLastGravity;
             }
         }
-
-        protected override void OnDestroy() {
-            inputEnabled = false;
-
-            base.OnDestroy();
-        }
-
+        
         protected override void OnDisable() {
             base.OnDisable();
 
             mEyeOrienting = false;
             mLookCurRot = 0.0f;
         }
-
-        // Use this for initialization
-        void Start() {
-            inputEnabled = startInputEnabled;
-        }
-
+        
         // Update is called once per frame
         protected override void FixedUpdate() {
             Quaternion dirRot = dirHolder.rotation;
 
-            if(mInputEnabled) {
-                InputManager input = InputManager.instance;
-
+            if(inputEnabled) {
                 float moveX, moveY;
 
                 if(moveNormalized) {
-                    Vector2 moveVec = new Vector2(
-                        moveInputX != InputManager.ActionInvalid ? input.GetAxis(player, moveInputX) : 0.0f,
-                        moveInputY != InputManager.ActionInvalid ? input.GetAxis(player, moveInputY) : 0.0f);
+                    Vector2 moveVec = new Vector2(moveInputX ? moveInputX.GetAxis() : 0f, moveInputY ? moveInputY.GetAxis() : 0f);
 
                     moveVec.Normalize();
 
@@ -232,8 +194,8 @@ namespace M8 {
 
                 }
                 else {
-                    moveX = moveInputX != InputManager.ActionInvalid ? input.GetAxis(player, moveInputX) : 0.0f;
-                    moveY = moveInputY != InputManager.ActionInvalid ? input.GetAxis(player, moveInputY) : 0.0f;
+                    moveX = moveInputX ? moveInputX.GetAxis() : 0f;
+                    moveY = moveInputY ? moveInputY.GetAxis() : 0f;
                 }
 
                 //movement
@@ -255,8 +217,8 @@ namespace M8 {
 
                 //look
                 if(mEyeLocked && !mEyeOrienting) {
-                    mLookCurInputAxis.x = lookInputX != InputManager.ActionInvalid ? input.GetAxis(player, lookInputX) : 0.0f;
-                    mLookCurInputAxis.y = lookInputY != InputManager.ActionInvalid ? input.GetAxis(player, lookInputY) : 0.0f;
+                    mLookCurInputAxis.x = lookInputX ? lookInputX.GetAxis() : 0.0f;
+                    mLookCurInputAxis.y = lookInputY ? lookInputY.GetAxis() : 0.0f;
 
                     //horizontal
                     if(mLookCurInputAxis.x != 0.0f) {
@@ -333,66 +295,70 @@ namespace M8 {
                 mBody.drag = ladderDrag;
         }
 
-        void OnInputJump(InputManager.Info dat) {
-            //jumpWall
-            if(dat.state == InputManager.State.Pressed) {
+        /// <summary>
+        /// Call this when Jump button is pressed.
+        /// </summary>
+        public void JumpBegin() {
+            if(isUnderWater || isOnLadder) {
+                mJump = true;
+            }
+            else if(jumpWall && collisionFlags == CollisionFlags.Sides) {
+                bool found = false;
+                CollideInfo inf = new CollideInfo();
+
+                for(int i = 0; i < mCollCount; i++) {
+                    CollideInfo cInf = mColls[i];
+                    if(cInf.flag == CollisionFlags.Sides) {
+                        if(Vector3.Angle(dirHolder.forward, cInf.normal) > 120.0f) {
+                            inf = cInf;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(found) {
+                    Vector3 jumpDir = inf.normal + dirHolder.up;
+
+                    if(jumpImpulse > 0.0f) {
+                        ClearCollFlags();
+                        mBody.drag = airDrag;
+                        mBody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
+                    }
+
+                    mJump = true;
+                    mJumpLastTime = Time.fixedTime;
+
+                    float a = M8.MathUtil.AngleForwardAxisDir(dirHolder.worldToLocalMatrix, Vector3.forward, inf.normal);
+                    dirHolder.rotation *= Quaternion.AngleAxis(a, Vector3.up);
+                    EyeOrient();
+                    //TurnTo(inf.normal);
+                }
+            }
+            else if(!mJump) {
                 if(isUnderWater || isOnLadder) {
                     mJump = true;
                 }
-                else if(jumpWall && collisionFlags == CollisionFlags.Sides) {
-                    bool found = false;
-                    CollideInfo inf = new CollideInfo();
-
-                    for(int i = 0; i < mCollCount; i++) {
-                        CollideInfo cInf = mColls[i];
-                        if(cInf.flag == CollisionFlags.Sides) {
-                            if(Vector3.Angle(dirHolder.forward, cInf.normal) > 120.0f) {
-                                inf = cInf;
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if(found) {
-                        Vector3 jumpDir = inf.normal + dirHolder.up;
-
+                else if(!isSlopSlide) {
+                    if(isGrounded) {
                         if(jumpImpulse > 0.0f) {
                             ClearCollFlags();
                             mBody.drag = airDrag;
-                            mBody.AddForce(jumpDir * jumpImpulse, ForceMode.Impulse);
+                            mBody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
                         }
 
                         mJump = true;
                         mJumpLastTime = Time.fixedTime;
-
-                        float a = M8.MathUtil.AngleForwardAxisDir(dirHolder.worldToLocalMatrix, Vector3.forward, inf.normal);
-                        dirHolder.rotation *= Quaternion.AngleAxis(a, Vector3.up);
-                        EyeOrient();
-                        //TurnTo(inf.normal);
-                    }
-                }
-                else if(!mJump) {
-                    if(isUnderWater || isOnLadder) {
-                        mJump = true;
-                    }
-                    else if(!isSlopSlide) {
-                        if(isGrounded) {
-                            if(jumpImpulse > 0.0f) {
-                                ClearCollFlags();
-                                mBody.drag = airDrag;
-                                mBody.AddForce(dirHolder.up * jumpImpulse, ForceMode.Impulse);
-                            }
-
-                            mJump = true;
-                            mJumpLastTime = Time.fixedTime;
-                        }
                     }
                 }
             }
-            else if(dat.state == InputManager.State.Released) {
-                mJump = false;
-            }
+        }
+
+        /// <summary>
+        /// Call this on jump button released.
+        /// </summary>
+        public void JumpEnd() {
+            mJump = false;
         }
 
         void EyeOrient() {

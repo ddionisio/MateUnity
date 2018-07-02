@@ -25,10 +25,7 @@ namespace M8 {
             }
         }
 
-        protected override void OnInstanceInit() {
-            base.OnInstanceInit();
-
-            //load settings
+        public override void Load() {
             int langInd = userData.GetInt(languageKey);
             Localize.instance.languageIndex = langInd;
         }

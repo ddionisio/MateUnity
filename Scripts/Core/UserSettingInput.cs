@@ -10,192 +10,121 @@ namespace M8 {
     [PrefabCore]
     [AddComponentMenu("M8/Core/UserSettingInput")]
     public class UserSettingInput : UserSetting<UserSettingInput> {
-        [System.Flags]
-        public enum Flags : ushort {
-            Binds = 0x1,
-            Sensitivity = 0x2,
+        [System.Serializable]
+        public struct ActionData {
+            public string name;
 
-            All = 0xffff
-        }
+            public InputAction action;
 
-        /// <summary>
-        /// Revert to input's config (if deleteSettings = true), otherwise reload from current settings
-        /// </summary>
-        public void Revert(Flags flags, bool deleteSettings) {
-            InputManager input = InputManager.instance;
-
-            bool isBinds = (flags & Flags.Binds) != 0;
+            public int bindIndexOffset;
+            public int bindIndexCount;
             
-            if(isBinds)
-                input.RevertBinds();
+            private string[] mKeyBindInputs;
+            private string[] mKeyBindCodes;
 
-            if(deleteSettings) {
-                int actCount = input.actionCount;
-                for(int act = 0; act < actCount; act++) {
-                    InputManager.BindData bindDat = input.GetBindData(act);
-                    if(bindDat == null)
-                        continue;
+            public void Init(string header) {
+                if(string.IsNullOrEmpty(name))
+                    name = action.name;
 
-                    for(int player = 0; player < bindDat.players.Length; player++) {
-                        InputManager.PlayerData pd = bindDat.players[player];
-                        if(pd == null)
-                            continue;
+                string headerKey = GetKey(header, name);
+                
+                mKeyBindInputs = new string[bindIndexCount];
+                mKeyBindCodes = new string[bindIndexCount];
 
-                        //binds
-                        if(isBinds) {
-                            for(int index = 0; index < pd.keys.Length; index++) {
-                                string usdKey = _BaseKey(act, player, index);
-                                _DeleteBindPlayerPrefs(usdKey);
-                            }
-                        }
+                for(int i = 0; i < bindIndexCount; i++) {
+                    var bindHeader = GetKey(headerKey, i.ToString());
 
-                        //other settings
-                        var bindKey = _BaseKey(act, player);
-
-                        //sensitivity
-                        if((flags & Flags.Sensitivity) != 0)
-                            userData.Delete(bindKey + "_s");
-                    }
+                    mKeyBindInputs[i] = GetKey(bindHeader, "input");
+                    mKeyBindCodes[i] = GetKey(bindHeader, "code");
                 }
             }
-            else { //reload from settings
-                Load(flags);
-            }
-        }
+            
+            public void Load(UserData userData) {
+                //make sure Init is called first
+                                
+                var _binds = action.binds;
+                for(int i = 0; i < bindIndexCount; i++) {
+                    action.ResetBind(i + bindIndexOffset);
 
-        /// <summary>
-        /// Call this once you are done modifying key binds, note: this will not necessarily save to persistent data,
-        /// call Save() to do actual saving
-        /// </summary>
-        public void Apply(Flags flags) {
-            InputManager input = InputManager.instance;
+                    var input = userData.GetString(mKeyBindInputs[i], "");
+                    var code = userData.GetInt(mKeyBindCodes[i], InputAction.keyCodeNone);
 
-            int actCount = input.actionCount;
-            for(int act = 0; act < actCount; act++) {
-                InputManager.BindData bindDat = input.GetBindData(act);
-                if(bindDat == null)
-                    continue;
-
-                for(int player = 0; player < bindDat.players.Length; player++) {
-                    InputManager.PlayerData pd = bindDat.players[player];
-                    if(pd == null)
-                        continue;
-
-                    //binds
-                    if((flags & Flags.Binds) != 0) {
-                        for(int index = 0; index < pd.keys.Length; index++) {
-                            string usdKey = _BaseKey(act, player, index);
-
-                            InputManager.Key key = pd.keys[index];
-                            if(key.isValid) {
-                                if(key.IsDirty()) {
-                                    //for previous bind if type is changed
-                                    _DeleteBindPlayerPrefs(usdKey);
-
-                                    if(!string.IsNullOrEmpty(key.input)) {
-                                        userData.SetString(usdKey + "_k", key.input);
-                                    }
-                                    else {
-                                        //pack data
-                                        if(key.code != KeyCode.None)
-                                            userData.SetInt(usdKey + "_k", key._CreateKeyCodeDataPak());
-                                        else if(key.map != InputKeyMap.None)
-                                            userData.SetInt(usdKey + "_m", key._CreateMapDataPak());
-                                    }
-
-                                    key.SetDirty(false);
-                                }
-                            }
-                            else {
-                                _DeleteBindPlayerPrefs(usdKey);
-                                userData.SetString(usdKey + "_d", "-");
-                            }
-                        }
-                    }
-
-                    //other settings
-                    var bindKey = _BaseKey(act, player);
-
-                    //sensitivity
-                    if((flags & Flags.Sensitivity) != 0)
-                        userData.SetFloat(bindKey + "_s", pd.sensitivity);
+                    if(!string.IsNullOrEmpty(input))
+                        _binds[i + bindIndexOffset].SetAsInput(input);
+                    else if(code != InputAction.keyCodeNone)
+                        _binds[i + bindIndexOffset].SetAsKey(code);
                 }
             }
-        }
 
-        private void Load(Flags flags) {
-            InputManager input = InputManager.instance;
+            public void Apply(UserData userData) {
+                //make sure Init is called first
 
-            int actCount = input.actionCount;
-            for(int act = 0; act < actCount; act++) {
-                InputManager.BindData bindDat = input.GetBindData(act);
-                if(bindDat == null)
-                    continue;
+                var _binds = action.binds;
+                for(int i = 0; i < bindIndexCount; i++) {
+                    var bind = _binds[i + bindIndexOffset];
 
-                //load keys
-                for(int player = 0; player < bindDat.players.Length; player++) {
-                    InputManager.PlayerData pd = bindDat.players[player];
-                    if(pd == null)
-                        continue;
-
-                    //binds
-                    if((flags & Flags.Binds) != 0) {
-                        for(int index = 0; index < pd.keys.Length; index++) {
-                            string usdKey = _BaseKey(act, player, index);
-
-                            if(userData.HasKey(usdKey + "_i")) {
-                                if(pd.keys[index] == null)
-                                    pd.keys[index] = new InputManager.Key();
-
-                                pd.keys[index].SetAsInput(userData.GetString(usdKey + "_i"));
-                            }
-                            else if(userData.HasKey(usdKey + "_k")) {
-                                if(pd.keys[index] == null)
-                                    pd.keys[index] = new InputManager.Key();
-
-                                pd.keys[index]._SetAsKey((uint)userData.GetInt(usdKey + "_k"));
-                            }
-                            else if(userData.HasKey(usdKey + "_m")) {
-                                if(pd.keys[index] == null)
-                                    pd.keys[index] = new InputManager.Key();
-
-                                pd.keys[index]._SetAsMap((uint)userData.GetInt(usdKey + "_m"));
-                            }
-                            else if(userData.HasKey(usdKey + "_d"))
-                                pd.keys[index].ResetKeys();
-                        }
-                    }
-
-                    //load other settings
-                    string bindKey = _BaseKey(act, player);
-
-                    //sensitivity
-                    if((flags & Flags.Sensitivity) != 0 && userData.HasKey(bindKey + "_s"))
-                        pd.sensitivity = userData.GetFloat(bindKey + "_s", 1.0f);
+                    if(!string.IsNullOrEmpty(bind.input))
+                        userData.SetString(mKeyBindInputs[i], bind.input);
+                    else if(bind.code != InputAction.keyCodeNone)
+                        userData.SetInt(mKeyBindInputs[i], bind.code);
                 }
             }
-        }
-        
-        string _BaseKey(int action, int player) {
-            return string.Format("bind_{0}_{1}", action, player);
+
+            public void ResetToDefault(UserData userData) {
+                //make sure Init is called first
+                //this will delete entries in userData
+
+                var _binds = action.binds;
+                for(int i = 0; i < bindIndexCount; i++) {
+                    action.ResetBind(i + bindIndexOffset);
+
+                    userData.Delete(mKeyBindInputs[i]);
+                    userData.Delete(mKeyBindCodes[i]);
+                }
+            }
+
+            private string GetKey(string header, params string[] items) {
+                var sb = new System.Text.StringBuilder();
+
+                if(!string.IsNullOrEmpty(header))
+                    sb.Append(header);
+
+                for(int i = 0; i < items.Length; i++) {
+                    if(sb.Length > 0)
+                        sb.Append('/');
+
+                    sb.Append(items[i]);
+                }
+
+                return sb.ToString();
+            }
         }
 
-        string _BaseKey(int action, int player, int index) {
-            return string.Format("bind_{0}_{1}_{2}", action, player, index);
+        public ActionData[] actions;
+        public string header = "input";
+
+        public override void Load() {
+            for(int i = 0; i < actions.Length; i++)
+                actions[i].Load(userData);
         }
 
-        void _DeleteBindPlayerPrefs(string baseKey) {
-            userData.Delete(baseKey + "_i");
-            userData.Delete(baseKey + "_k");
-            userData.Delete(baseKey + "_m");
-            userData.Delete(baseKey + "_d");
+        public void RevertToDefault() {
+            for(int i = 0; i < actions.Length; i++)
+                actions[i].ResetToDefault(userData);
+        }
+
+        public override void Save() {
+            for(int i = 0; i < actions.Length; i++)
+                actions[i].Apply(userData);
+
+            base.Save();
         }
 
         protected override void OnInstanceInit() {
-            base.OnInstanceInit();
+            for(int i = 0; i < actions.Length; i++)
+                actions[i].Init(header);
 
-            //load user config binds
-            Load(Flags.All);
+            base.OnInstanceInit();
         }
     }
 }

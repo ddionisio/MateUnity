@@ -24,11 +24,10 @@ namespace M8 {
 
         public bool moveXCircular = true; //if true, X movement is relative to the circumference of the origin
 
-        public int player = 0;
-        public int moveInputX = InputManager.ActionInvalid;
-        public int moveInputY = InputManager.ActionInvalid;
-        public int lookInputPitch = InputManager.ActionInvalid;
-        public int lookInputYaw = InputManager.ActionInvalid;
+        public InputAction moveInputX;
+        public InputAction moveInputY;
+        public InputAction lookInputPitch;
+        public InputAction lookInputYaw;
 
         public bool startInputEnabled = false;
 
@@ -110,23 +109,21 @@ namespace M8 {
             //determine dir rotation
 
             if(mInputEnabled) {
-                InputManager input = InputManager.instance;
-
                 float moveX, moveY;
 
-                moveX = moveInputX != InputManager.ActionInvalid ? input.GetAxis(player, moveInputX) : 0.0f;
-                moveY = moveInputY != InputManager.ActionInvalid ? input.GetAxis(player, moveInputY) : 0.0f;
+                moveX = moveInputX ? moveInputX.GetAxis() : 0.0f;
+                moveY = moveInputY ? moveInputY.GetAxis() : 0.0f;
 
                 if(!isSlopSlide) {
                     moveForward = moveY;
                     moveSide = moveX;
                 }
 
-                lookYaw = lookInputYaw != InputManager.ActionInvalid ? input.GetAxis(player, lookInputYaw)*lookYawSpeed : 0.0f;
+                lookYaw = lookInputYaw ? lookInputYaw.GetAxis()*lookYawSpeed : 0.0f;
                 if(lookYawInvert)
                     lookYaw *= -1;
 
-                lookPitch = lookInputPitch != InputManager.ActionInvalid ? input.GetAxis(player, lookInputPitch)*lookPitchSpeed : 0.0f;
+                lookPitch = lookInputPitch ? lookInputPitch.GetAxis()*lookPitchSpeed : 0.0f;
                 if(lookPitchInvert)
                     lookPitch *= -1;
 

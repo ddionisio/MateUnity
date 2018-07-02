@@ -24,29 +24,25 @@ namespace M8.UI {
         private int m_playerIndex;
         
         [SerializeField]
-        [InputAction]
-        private int m_HorizontalAxis = InputManager.ActionInvalid;
+        private InputAction m_HorizontalAxis;
 
         /// <summary>
         /// Name of the vertical axis for movement (if axis events are used).
         /// </summary>
         [SerializeField]
-        [InputAction]
-        private int m_VerticalAxis = InputManager.ActionInvalid;
+        private InputAction m_VerticalAxis;
 
         /// <summary>
         /// Name of the submit button.
         /// </summary>
         [SerializeField]
-        [InputAction]
-        private int m_SubmitButton = InputManager.ActionInvalid;
+        private InputAction m_SubmitButton;
 
         /// <summary>
         /// Name of the submit button.
         /// </summary>
         [SerializeField]
-        [InputAction]
-        private int m_CancelButton = InputManager.ActionInvalid;
+        private InputAction m_CancelButton;
 
         [SerializeField]
         private float m_InputActionsPerSecond = 10;
@@ -80,7 +76,7 @@ namespace M8.UI {
         /// <summary>
         /// Name of the horizontal axis for movement (if axis events are used).
         /// </summary>
-        public int horizontalAxis {
+        public InputAction horizontalAxis {
             get { return m_HorizontalAxis; }
             set { m_HorizontalAxis = value; }
         }
@@ -88,17 +84,17 @@ namespace M8.UI {
         /// <summary>
         /// Name of the vertical axis for movement (if axis events are used).
         /// </summary>
-        public int verticalAxis {
+        public InputAction verticalAxis {
             get { return m_VerticalAxis; }
             set { m_VerticalAxis = value; }
         }
 
-        public int submitButton {
+        public InputAction submitButton {
             get { return m_SubmitButton; }
             set { m_SubmitButton = value; }
         }
 
-        public int cancelButton {
+        public InputAction cancelButton {
             get { return m_CancelButton; }
             set { m_CancelButton = value; }
         }
@@ -159,13 +155,11 @@ namespace M8.UI {
             if(!base.ShouldActivateModule())
                 return false;
 
-            InputManager inputMgr = InputManager.instance;
-
             var shouldActivate = m_ForceModuleActive;
-            shouldActivate |= inputMgr.IsPressed(m_playerIndex, m_SubmitButton);
-            shouldActivate |= inputMgr.IsPressed(m_playerIndex, m_CancelButton);
-            shouldActivate |= !Mathf.Approximately(inputMgr.GetAxis(m_playerIndex, m_HorizontalAxis), 0.0f);
-            shouldActivate |= !Mathf.Approximately(inputMgr.GetAxis(m_playerIndex, m_VerticalAxis), 0.0f);
+            if(m_SubmitButton) shouldActivate |= m_SubmitButton.IsPressed();
+            if(m_CancelButton) shouldActivate |= m_CancelButton.IsPressed();
+            if(m_HorizontalAxis) shouldActivate |= !Mathf.Approximately(m_HorizontalAxis.GetAxis(), 0.0f);
+            if(m_VerticalAxis) shouldActivate |= !Mathf.Approximately(m_VerticalAxis.GetAxis(), 0.0f);
             shouldActivate |= (m_MousePosition - m_LastMousePosition).sqrMagnitude > 0.0f;
             shouldActivate |= input.GetMouseButtonDown(0);
             
@@ -339,36 +333,20 @@ namespace M8.UI {
             if(eventSystem.currentSelectedGameObject == null)
                 return false;
 
-            InputManager inputMgr = InputManager.instance;
-
             var data = GetBaseEventData();
-            if(inputMgr.IsPressed(m_playerIndex, m_SubmitButton))
+            if(m_SubmitButton && m_SubmitButton.IsPressed())
                 ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
 
-            if(inputMgr.IsPressed(m_playerIndex, m_CancelButton))
+            if(m_CancelButton && m_CancelButton.IsPressed())
                 ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
             return data.used;
         }
 
         private Vector2 GetRawMoveVector() {
-            InputManager inputMgr = InputManager.instance;
-
             Vector2 move = Vector2.zero;
-            move.x = inputMgr.GetAxis(m_playerIndex, m_HorizontalAxis);
-            move.y = inputMgr.GetAxis(m_playerIndex, m_VerticalAxis);
+            if(m_HorizontalAxis) move.x = Mathf.Sign(m_HorizontalAxis.GetAxis());
+            if(m_VerticalAxis) move.y = Mathf.Sign(m_VerticalAxis.GetAxis());
 
-            if(inputMgr.IsDown(m_playerIndex, m_HorizontalAxis)) {
-                if(move.x < 0)
-                    move.x = -1f;
-                if(move.x > 0)
-                    move.x = 1f;
-            }
-            if(inputMgr.IsDown(m_playerIndex, m_VerticalAxis)) {
-                if(move.y < 0)
-                    move.y = -1f;
-                if(move.y > 0)
-                    move.y = 1f;
-            }
             return move;
         }
 
@@ -383,11 +361,9 @@ namespace M8.UI {
                 m_ConsecutiveMoveCount = 0;
                 return false;
             }
-
-            InputManager inputMgr = InputManager.instance;
-
+            
             // If user pressed key again, always allow event
-            bool allow = inputMgr.IsDown(m_playerIndex, m_HorizontalAxis) || inputMgr.IsDown(m_playerIndex, m_VerticalAxis);
+            bool allow = (m_HorizontalAxis && m_HorizontalAxis.IsDown()) || (m_VerticalAxis && m_VerticalAxis.IsDown());
             bool similarDir = (Vector2.Dot(movement, m_LastMoveVector) > 0);
             if(!allow) {
                 // Otherwise, user held down key or axis.

@@ -59,10 +59,7 @@ namespace M8 {
             }
         }
 
-        protected override void OnInstanceInit() {
-            base.OnInstanceInit();
-
-            //load settings
+        public override void Load() {
             mVolume = userData.GetFloat(volumeKey, 1.0f);
 
             mSoundVolume = userData.GetFloat(soundKey, volumeDefault);
