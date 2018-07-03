@@ -11,7 +11,6 @@ namespace M8 {
             EditorGUI.BeginChangeCheck();
 
             var isLocal = EditorGUILayout.Toggle("local", data.isLocal);
-            var persistent = EditorGUILayout.Toggle("persistent", data.persistent);
 
             var positionFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumFlagsField("position", data.positionFlags);
             var rotationFlags = (SceneSerializerTransform.Axis)EditorGUILayout.EnumFlagsField("rotation", data.rotationFlags);
@@ -20,7 +19,6 @@ namespace M8 {
                 Undo.RecordObject(target, "Change Scene Serializer");
 
                 data.isLocal = isLocal;
-                data.persistent = persistent;
 
                 data.positionFlags = positionFlags;
                 data.rotationFlags = rotationFlags;

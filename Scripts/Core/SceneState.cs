@@ -8,6 +8,9 @@ namespace M8 {
     public class SceneState : SingletonBehaviour<SceneState> {
         public const string DataFormat = "{0}:{1}";
 
+        public UserData userData;
+        public bool autoSave = true; //save userData when scene changing, application exit
+
         public int localStateCache = 0;
 
         public delegate void StateCallback(string name, StateValue val);
@@ -159,11 +162,14 @@ namespace M8 {
                 public Dictionary<string, StateValue> states;
             }
 
+            private UserData mUserData;
+
             private List<CacheData> mCache;
 
             public string prefix { get { return mPrefix; } }
 
-            public Table(string prefix, InitData[] startData, int cacheCount = 0) {
+            public Table(UserData userData, string prefix, InitData[] startData, int cacheCount = 0) {
+                mUserData = userData;
                 mStates = new Dictionary<string, StateValue>();
 
                 if(cacheCount > 0)
@@ -195,7 +201,7 @@ namespace M8 {
                         if(mCache.Count == mCache.Capacity)
                             mCache.RemoveAt(0);
 
-                        mCache.Add(new CacheData() { prefix=mPrefix, states=new Dictionary<string, StateValue>(mStates) });
+                        mCache.Add(new CacheData() { prefix = mPrefix, states = new Dictionary<string, StateValue>(mStates) });
                     }
 
                     //if new prefix exists, use its values
@@ -220,9 +226,6 @@ namespace M8 {
             public void Reset() {
                 Clear(false);
 
-                //TODO: currently only grab from main userdata
-                UserData ud = UserData.main;
-
                 if(mStartData != null) {
                     for(int i = 0; i < mStartData.Length; i++) {
                         InitData dat = mStartData[i];
@@ -230,7 +233,7 @@ namespace M8 {
                             string key = string.Format(DataFormat, mPrefix, dat.name);
 
                             //check from userdata first, if invalid, then use init data
-                            StateValue s = new StateValue(ud, key);
+                            StateValue s = new StateValue(mUserData, key);
                             if(s.type == Type.Invalid)
                                 s = dat.stateValue;
 
@@ -258,7 +261,7 @@ namespace M8 {
                 return GetEnumerator();
             }
 
-            public void RefreshFromUserData(UserData ud) {
+            public void Refresh() {
                 string[] keys = new string[mStates.Count];
                 mStates.Keys.CopyTo(keys, 0);
 
@@ -266,7 +269,7 @@ namespace M8 {
                     string key = keys[i];
 
                     //set only if valid
-                    StateValue val = new StateValue(ud, string.Format(DataFormat, mPrefix, key));
+                    StateValue val = new StateValue(mUserData, string.Format(DataFormat, mPrefix, key));
                     if(val.type != Type.Invalid)
                         mStates[key] = val;
                 }
@@ -275,7 +278,7 @@ namespace M8 {
             public bool Contains(string name) {
                 if(!mStates.ContainsKey(name)) {
                     //try user data
-                    return UserData.main.HasKey(string.Format(DataFormat, mPrefix, name));
+                    return mUserData.HasKey(string.Format(DataFormat, mPrefix, name));
                 }
 
                 return true;
@@ -292,7 +295,7 @@ namespace M8 {
                 mStates.Remove(name);
 
                 if(persistent)
-                    UserData.main.Delete(string.Format(DataFormat, mPrefix, name));
+                    mUserData.Delete(string.Format(DataFormat, mPrefix, name));
             }
 
             /// <summary>
@@ -311,7 +314,7 @@ namespace M8 {
             /// </summary>
             public void ClearUserData() {
                 foreach(var pair in mStates)
-                    UserData.main.Delete(string.Format(DataFormat, mPrefix, pair.Key));
+                    mUserData.Delete(string.Format(DataFormat, mPrefix, pair.Key));
             }
 
             public StateValue GetValueRaw(string name) {
@@ -320,7 +323,7 @@ namespace M8 {
                     if(!mStates.TryGetValue(name, out v)) {
                         //try user data; if valid, add to states
                         string key = string.Format(DataFormat, mPrefix, name);
-                        v = new StateValue(UserData.main, key);
+                        v = new StateValue(mUserData, key);
                         if(v.type != Type.Invalid) {
                             mStates.Add(name, v);
                             return v;
@@ -330,14 +333,14 @@ namespace M8 {
                     return v;
                 }
 
-                return new StateValue() { type=Type.Invalid };
+                return new StateValue() { type = Type.Invalid };
             }
 
             public Type GetValueType(string name) {
                 if(mStates != null) {
                     StateValue v;
                     if(!mStates.TryGetValue(name, out v)) {
-                        System.Type t = UserData.main.GetType(string.Format(DataFormat, mPrefix, name));
+                        System.Type t = mUserData.GetType(string.Format(DataFormat, mPrefix, name));
                         if(t == typeof(int))
                             return Type.Integer;
                         else if(t == typeof(float))
@@ -357,7 +360,7 @@ namespace M8 {
                 if(!mStates.TryGetValue(name, out v)) {
                     //try user data; if valid, add to states
                     string key = string.Format(DataFormat, mPrefix, name);
-                    v = new StateValue(UserData.main, key);
+                    v = new StateValue(mUserData, key);
                     if(v.type == Type.Integer) {
                         mStates.Add(name, v);
                         return v.ival;
@@ -394,7 +397,7 @@ namespace M8 {
                 if(isValueSet) {
                     if(persistent) {
                         string key = string.Format(DataFormat, mPrefix, name);
-                        UserData.main.SetInt(key, val);
+                        mUserData.SetInt(key, val);
                     }
 
                     if(onValueChange != null) {
@@ -410,27 +413,27 @@ namespace M8 {
                         string key = string.Format(DataFormat, mPrefix, name);
                         switch(curVal.type) {
                             case Type.Integer:
-                                UserData.main.SetInt(key, curVal.ival);
+                                mUserData.SetInt(key, curVal.ival);
                                 break;
                             case Type.Float:
-                                UserData.main.SetFloat(key, curVal.fval);
+                                mUserData.SetFloat(key, curVal.fval);
                                 break;
                             case Type.String:
-                                UserData.main.SetString(key, curVal.sval);
+                                mUserData.SetString(key, curVal.sval);
                                 break;
                         }
                     }
                 }
                 else {
                     string key = string.Format(DataFormat, mPrefix, name);
-                    UserData.main.Delete(key);
+                    mUserData.Delete(key);
                 }
             }
 
             public bool CheckFlag(string name, int bit) {
                 return CheckFlagMask(name, 1u << bit);
             }
-            
+
             public bool CheckFlagMask(string name, uint mask) {
                 uint flags = (uint)GetValue(name);
 
@@ -454,7 +457,7 @@ namespace M8 {
                 if(!mStates.TryGetValue(name, out v)) {
                     //try user data; if valid, add to states
                     string key = string.Format(DataFormat, mPrefix, name);
-                    v = new StateValue(UserData.main, key);
+                    v = new StateValue(mUserData, key);
                     if(v.type == Type.Float) {
                         mStates.Add(name, v);
                         return v.fval;
@@ -491,7 +494,7 @@ namespace M8 {
                 if(isValueSet) {
                     if(persistent) {
                         string key = string.Format(DataFormat, mPrefix, name);
-                        UserData.main.SetFloat(key, val);
+                        mUserData.SetFloat(key, val);
                     }
 
                     if(onValueChange != null) {
@@ -506,7 +509,7 @@ namespace M8 {
                 if(!mStates.TryGetValue(name, out v)) {
                     //try user data; if valid, add to states
                     string key = string.Format(DataFormat, mPrefix, name);
-                    v = new StateValue(UserData.main, key);
+                    v = new StateValue(mUserData, key);
                     if(v.type == Type.String) {
                         mStates.Add(name, v);
                         return v.sval;
@@ -543,7 +546,7 @@ namespace M8 {
                 if(isValueSet) {
                     if(persistent) {
                         string key = string.Format(DataFormat, mPrefix, name);
-                        UserData.main.SetString(key, val);
+                        mUserData.SetString(key, val);
                     }
 
                     if(onValueChange != null) {
@@ -593,9 +596,10 @@ namespace M8 {
         public Table local { get { return mLocal; } }
 
         protected override void OnInstanceInit() {
-            UserData.main.actCallback += OnUserDataAction;
-
-            SceneManager.instance.sceneChangePostCallback += OnScenePostLoaded;
+            if(!userData) {
+                Debug.LogWarning("No userData available. No data is generated.");
+                return;
+            }
 
             mStartData = new Dictionary<string, InitData[]>(startData.Length);
             foreach(InitSceneData sdat in startData) {
@@ -603,36 +607,55 @@ namespace M8 {
                     mStartData.Add(sdat.scene, sdat.data);
             }
 
+            if(!userData.isLoaded) //need to load data to generate the initial state
+                userData.Load();
+
             InitLocalData(SceneManager.instance.curScene);
             InitGlobalData();
+
+            SceneManager.instance.sceneChangeCallback += OnSceneChange;
+            SceneManager.instance.sceneChangePostCallback += OnScenePostLoaded;
+
+            userData.loadedCallback += OnUserDataLoaded;
         }
 
         protected override void OnInstanceDeinit() {
-            if(SceneManager.instance)
+            if(userData)
+                userData.loadedCallback -= OnUserDataLoaded;
+
+            if(SceneManager.isInstantiated) {
+                SceneManager.instance.sceneChangeCallback -= OnSceneChange;
                 SceneManager.instance.sceneChangePostCallback -= OnScenePostLoaded;
+            }
+        }
+
+        void OnApplicationQuit() {
+            if(autoSave && userData)
+                userData.Save();
+        }
+
+        void OnSceneChange(string toScene) {
+            if(autoSave && userData)
+                userData.Save();
         }
 
         void OnScenePostLoaded() {
             InitLocalData(SceneManager.instance.curScene);
         }
 
-        void OnUserDataAction(UserData ud, UserData.Action act) {
-            switch(act) {
-                case UserData.Action.Load:
-                    //update global states
-                    mGlobal.RefreshFromUserData(ud);
+        void OnUserDataLoaded() {
+            //update global states
+            mGlobal.Refresh();
 
-                    //update local states
-                    mLocal.RefreshFromUserData(ud);
-                    break;
-            }
+            //update local states
+            mLocal.Refresh();
         }
 
         void InitGlobalData() {
             if(mGlobal != null)
                 mGlobal.Init("g", globalStartData);
             else
-                mGlobal = new Table("g", globalStartData);
+                mGlobal = new Table(userData, "g", globalStartData);
         }
 
         void InitLocalData(UnityEngine.SceneManagement.Scene scene) {
@@ -648,7 +671,7 @@ namespace M8 {
                     mLocal.Init(sceneName, dats);
             }
             else
-                mLocal = new Table(sceneName, dats, localStateCache);
+                mLocal = new Table(userData, sceneName, dats, localStateCache);
         }
     }
 }

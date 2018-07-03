@@ -30,6 +30,12 @@ namespace M8 {
             SceneState data = target as SceneState;
 
             if(!Application.isPlaying) {
+                var newUserData = EditorGUILayout.ObjectField("User Data", data.userData, typeof(UserData), false) as UserData;
+                if(data.userData != newUserData) {
+                    Undo.RecordObject(data, "Change User Data");
+                    data.userData = newUserData;
+                }
+
                 //Globals 
                 initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
 

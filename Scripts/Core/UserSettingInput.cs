@@ -19,8 +19,7 @@ namespace M8 {
             public int bindIndexOffset;
             public int bindIndexCount;
             
-            private string[] mKeyBindInputs;
-            private string[] mKeyBindCodes;
+            private string[] mKeyBinds;
 
             public void Init(string header) {
                 if(string.IsNullOrEmpty(name))
@@ -28,14 +27,12 @@ namespace M8 {
 
                 string headerKey = GetKey(header, name);
                 
-                mKeyBindInputs = new string[bindIndexCount];
-                mKeyBindCodes = new string[bindIndexCount];
+                mKeyBinds = new string[bindIndexCount];
 
                 for(int i = 0; i < bindIndexCount; i++) {
                     var bindHeader = GetKey(headerKey, i.ToString());
 
-                    mKeyBindInputs[i] = GetKey(bindHeader, "input");
-                    mKeyBindCodes[i] = GetKey(bindHeader, "code");
+                    mKeyBinds[i] = GetKey(bindHeader, "k");
                 }
             }
             
@@ -46,8 +43,8 @@ namespace M8 {
                 for(int i = 0; i < bindIndexCount; i++) {
                     action.ResetBind(i + bindIndexOffset);
 
-                    var input = userData.GetString(mKeyBindInputs[i], "");
-                    var code = userData.GetInt(mKeyBindCodes[i], InputAction.keyCodeNone);
+                    var input = userData.GetString(mKeyBinds[i], "");
+                    var code = userData.GetInt(mKeyBinds[i], InputAction.keyCodeNone);
 
                     if(!string.IsNullOrEmpty(input))
                         _binds[i + bindIndexOffset].SetAsInput(input);
@@ -64,9 +61,11 @@ namespace M8 {
                     var bind = _binds[i + bindIndexOffset];
 
                     if(!string.IsNullOrEmpty(bind.input))
-                        userData.SetString(mKeyBindInputs[i], bind.input);
+                        userData.SetString(mKeyBinds[i], bind.input);
                     else if(bind.code != InputAction.keyCodeNone)
-                        userData.SetInt(mKeyBindInputs[i], bind.code);
+                        userData.SetInt(mKeyBinds[i], bind.code);
+                    else
+                        userData.Delete(mKeyBinds[i]);
                 }
             }
 
@@ -78,8 +77,7 @@ namespace M8 {
                 for(int i = 0; i < bindIndexCount; i++) {
                     action.ResetBind(i + bindIndexOffset);
 
-                    userData.Delete(mKeyBindInputs[i]);
-                    userData.Delete(mKeyBindCodes[i]);
+                    userData.Delete(mKeyBinds[i]);
                 }
             }
 

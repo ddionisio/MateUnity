@@ -7,71 +7,31 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
 namespace M8 {
-    [PrefabCore]
-    [AddComponentMenu("")]
-    public abstract class UserData : MonoBehaviour, System.Collections.IEnumerable {
-        public enum Action {
-            Load,
-            Save
-        }
-
+    public abstract class UserData : ScriptableObject, System.Collections.IEnumerable {
+        
         [System.Serializable]
         public struct Data {
             public string name;
             public object obj;
         }
 
-        public delegate void OnAction(UserData ud, Action act);
+        public bool isLoaded { get { return mValues != null; } }
+        public int valueCount { get { return mValues != null ? mValues.Count : 0; } }
 
-        public string id; //set if you want to grab this via Get
+        /// <summary>
+        /// Called before values are saved
+        /// </summary>
+        public event Action saveCallback;
 
-        [SerializeField]
-        bool _main = false; //set to true if you want this userdata to be UserData.main
-
-        public bool loadOnStart = true;
-        public bool autoSave = true;
-
-        public event OnAction actCallback;
+        /// <summary>
+        /// Called after values are loaded
+        /// </summary>
+        public event Action loadedCallback;
 
         private Dictionary<string, object> mValues = null;
 
         private Dictionary<string, object> mValuesSnapshot = null;
-
-        private static UserData mMain = null;
-        private static Dictionary<string, UserData> mInstances = new Dictionary<string, UserData>();
-        private static bool mMainExists = false;
-        private static bool mMainPrefabCoreCheck = false;
-
-        /// <summary>
-        /// This is the UserData used by SceneState, Serializers, etc.  Make sure one of the UserData is set as 'main'=true
-        /// </summary>
-        public static UserData main { 
-            get {
-                if(!mMainExists) {
-                    if(!mMainPrefabCoreCheck) { //instantiate core if we haven't yet, this will only happen once in runtime
-                        mMainPrefabCoreCheck = true;
-
-                        //instantiating the gameobject ought to fill in the main UserData via Awake if there is any.
-                        var attribute = Attribute.GetCustomAttribute(typeof(UserData), typeof(PrefabCoreAttribute)) as PrefabCoreAttribute;
-                        if(attribute != null)
-                            attribute.InstantiateGameObject();
-                    }
-                }
-
-                return mMain; 
-            } 
-        }
-
-        public static UserData GetInstance(string aId) {
-            UserData ret;
-            mInstances.TryGetValue(aId, out ret);
-            return ret;
-        }
-
-        public bool started { get; private set; }
-
-        public int valueCount { get { return mValues != null ? mValues.Count : 0; } }
-                
+                                
         public string[] GetKeys(System.Predicate<KeyValuePair<string, object>> predicate) {
             List<string> items = new List<string>(mValues.Count);
             foreach(KeyValuePair<string, object> pair in mValues) {
@@ -95,8 +55,8 @@ namespace M8 {
             if(mValuesSnapshot != null) {
                 mValues = new Dictionary<string, object>(mValuesSnapshot);
 
-                if(actCallback != null)
-                    actCallback(this, Action.Load);
+                if(loadedCallback != null)
+                    loadedCallback();
             }
         }
 
@@ -128,15 +88,15 @@ namespace M8 {
                     mValues.Add(datum.name, datum.obj);
                 }
 
-                if(actCallback != null)
-                    actCallback(this, Action.Load);
+                if(loadedCallback != null)
+                    loadedCallback();
             }
         }
 
-        public void Save() {
+        public virtual void Save() {
             if(mValues != null) {
-                if(actCallback != null)
-                    actCallback(this, Action.Save);
+                if(saveCallback != null)
+                    saveCallback();
 
                 List<Data> dat = new List<Data>(mValues.Count);
                 foreach(KeyValuePair<string, object> pair in mValues)
@@ -145,9 +105,8 @@ namespace M8 {
             }
         }
 
-        public void Delete() {
-            if(mValues != null)
-                mValues.Clear();
+        public void Unload() {
+            mValues = null;
             DeleteRawData();
         }
 
@@ -221,13 +180,31 @@ namespace M8 {
         }
 
         public void DeleteAllByNameContain(string nameContains) {
-            if(mValues != null) {
-                //ew
-                foreach(string key in new List<string>(mValues.Keys)) {
-                    if(key.Contains(nameContains))
-                        mValues.Remove(key);
-                }
+            if(mValues == null)
+                return;
+
+            var deleteKeys = new List<string>();
+            foreach(var pair in mValues) {
+                if(pair.Key.Contains(nameContains))
+                    deleteKeys.Add(pair.Key);
             }
+
+            for(int i = 0; i < deleteKeys.Count; i++)
+                mValues.Remove(deleteKeys[i]);
+        }
+
+        public void DeleteByNamePredicate(Predicate<string> predicate) {
+            if(mValues == null)
+                return;
+
+            var deleteKeys = new List<string>();
+            foreach(var pair in mValues) {
+                if(predicate(pair.Key))
+                    deleteKeys.Add(pair.Key);
+            }
+
+            for(int i = 0; i < deleteKeys.Count; i++)
+                mValues.Remove(deleteKeys[i]);
         }
 
         public void Delete(string name) {
@@ -238,10 +215,6 @@ namespace M8 {
         ////////////////////////////////////////////
         // Implements
         ////////////////////////////////////////////
-
-        protected virtual void LoadOnStart() {
-            Load();
-        }
 
         protected abstract byte[] LoadRawData();
 
@@ -267,7 +240,7 @@ namespace M8 {
             SaveRawData(ms.GetBuffer());
         }
 
-        void OnApplicationQuit() {
+        /*void OnApplicationQuit() {
             if(autoSave)
                 Save();
         }
@@ -275,9 +248,9 @@ namespace M8 {
         void SceneChange(string toScene) {
             if(autoSave)
                 Save();
-        }
+        }*/
 
-        void OnDestroy() {
+        /*void OnDestroy() {
             if(mMain == this) {
                 mMain = null;
                 mMainExists = false;
@@ -288,9 +261,9 @@ namespace M8 {
 
             if(SceneManager.instance)
                 SceneManager.instance.sceneChangeCallback -= SceneChange;
-        }
+        }*/
 
-        void Awake() {
+        /*void Awake() {
             if(_main) {
                 mMain = this;
                 mMainExists = true;
@@ -307,10 +280,6 @@ namespace M8 {
 
             if(loadOnStart)
                 LoadOnStart();
-        }
-
-        void Start() {
-            started = true;
-        }
+        }*/
     }
 }

@@ -6,18 +6,11 @@ namespace M8 {
     /// <summary>
     /// Use this to serialize game object on scene with int/float values such that they persist when loading scene or saved in file
     /// Also includes a persistent id that can be guaranteed to be the same when scene is loaded.
-    /// NOTE: This requires SceneState
     /// </summary>
     [AddComponentMenu("M8/Serializer/Object")]
     public class SceneSerializer : MonoBehaviour {
         public const int invalidID = 0;
-        public const string removeKey = "_del";
-
-        [SerializeField]
-        [HideInInspector]
-        private int _id = invalidID;
-
-        private static Dictionary<int, SceneSerializer> mRefs = null;
+        private const string removeKey = "_del";
 
         /// <summary>
         /// Get the serialized id
@@ -28,6 +21,27 @@ namespace M8 {
             }
         }
 
+        public bool isLoaded {
+            get {
+                return _userData && _userData.isLoaded;
+            }
+        }
+
+        public event System.Action loadedCallback;
+        public event System.Action saveCallback;
+
+        [SerializeField]
+        [HideInInspector]
+        int _id = invalidID;
+
+        [SerializeField]
+        UserData _userData;
+
+        private static Dictionary<int, SceneSerializer> mRefs = null;
+
+        private string mKeyHeader;
+        private Dictionary<string, string> mVarKeyCache = new Dictionary<string, string>();
+                
         /// <summary>
         /// This is only used by the editor!
         /// </summary>
@@ -62,86 +76,98 @@ namespace M8 {
             return ret;
         }
 
-        public static void DeleteValues(int sid) {
-            SceneState.instance.local.DeleteValuesByNameContain(GetVarKey(sid), true);
-        }
+        string GetHeaderKey() {
+            //setup key header based on which scene this object belongs to
+            if(string.IsNullOrEmpty(mKeyHeader)) {
+                var scene = gameObject.scene;
 
-        static string GetVarKey(int sid) {
-            return "o" + sid.ToString();
+                var sb = new System.Text.StringBuilder();
+                sb.Append(scene.name).Append("o").Append(_id);
+
+                mKeyHeader = sb.ToString();
+
+                mVarKeyCache.Clear();
+            }
+
+            return mKeyHeader;
         }
 
         string GetVarKey(string name) {
-            return GetVarKey(id) + name;
+            string varKey;
+
+            if(!mVarKeyCache.TryGetValue(name, out varKey)) {
+                varKey = GetHeaderKey() + name;
+                mVarKeyCache.Add(name, varKey);
+            }
+
+            return varKey;
         }
 
-        public bool HasValue(string name) {
-            return SceneState.instance.local.Contains(GetVarKey(name));
+        public bool Contains(string name) {
+            return _userData.HasKey(GetVarKey(name));
         }
 
-        public void DeleteValue(string name, bool persistent) {
+        public void DeleteValue(string name) {
             if(_id != invalidID)
-                SceneState.instance.local.DeleteValue(GetVarKey(name), persistent);
+                _userData.Delete(GetVarKey(name));
         }
 
-        public SceneState.Type GetValueType(string name) {
-            if(_id == invalidID)
-                return SceneState.Type.Invalid;
-            return SceneState.instance.local.GetValueType(GetVarKey(name));
-        }
-
-        public int GetValue(string name, int defaultVal = 0) {
+        public int GetInt(string name, int defaultVal = 0) {
             if(_id == invalidID)
                 return defaultVal;
 
-            return SceneState.instance.local.GetValue(GetVarKey(name), defaultVal);
+            return _userData.GetInt(GetVarKey(name), defaultVal);
         }
 
-        public void SetValue(string name, int val, bool persistent) {
+        public void SetInt(string name, int val) {
             if(_id != invalidID)
-                SceneState.instance.local.SetValue(GetVarKey(name), val, persistent);
-        }
-
-        public bool CheckFlag(string name, int bit) {
-            if(_id == invalidID)
-                return false;
-
-            return SceneState.instance.local.CheckFlagMask(GetVarKey(name), 1u << bit);
+                _userData.SetInt(GetVarKey(name), val);
         }
 
         public bool CheckFlagMask(string name, uint mask) {
             if(_id == invalidID)
                 return false;
 
-            return SceneState.instance.local.CheckFlagMask(GetVarKey(name), mask);
+            uint flags = (uint)GetInt(name, 0);
+
+            return (flags & mask) != 0;
         }
 
-        public void SetFlag(string name, int bit, bool state, bool persistent) {
-            if(_id != invalidID)
-                SceneState.instance.local.SetFlag(GetVarKey(name), bit, state, persistent);
+        public void SetFlagMask(string name, uint mask, bool state) {
+            if(_id != invalidID) {
+                uint flags = (uint)GetInt(name, 0);
+
+                if(state)
+                    flags |= mask;
+                else
+                    flags &= ~mask;
+
+                SetInt(name, (int)flags);
+            }
         }
 
-        public float GetValueFloat(string name, float defaultVal = 0.0f) {
+        public float GetFloat(string name, float defaultVal = 0.0f) {
             if(_id == invalidID)
                 return defaultVal;
 
-            return SceneState.instance.local.GetValueFloat(GetVarKey(name), defaultVal);
+            return _userData.GetFloat(GetVarKey(name), defaultVal);
         }
 
-        public void SetValueFloat(string name, float val, bool persistent) {
+        public void SetFloat(string name, float val) {
             if(_id != invalidID)
-                SceneState.instance.local.SetValueFloat(GetVarKey(name), val, persistent);
+                _userData.SetFloat(GetVarKey(name), val);
         }
 
-        public string GetValueString(string name, string defaultVal = "") {
+        public string GetString(string name, string defaultVal = "") {
             if(_id == invalidID)
                 return defaultVal;
 
-            return SceneState.instance.local.GetValueString(GetVarKey(name), defaultVal);
+            return _userData.GetString(GetVarKey(name), defaultVal);
         }
 
-        public void SetValueString(string name, string val, bool persistent) {
+        public void SetString(string name, string val) {
             if(_id != invalidID)
-                SceneState.instance.local.SetValueString(GetVarKey(name), val, persistent);
+                _userData.SetString(GetVarKey(name), val);
         }
 
         /// <summary>
@@ -149,7 +175,8 @@ namespace M8 {
         /// </summary>
         public void DeleteAllValues() {
             if(_id != invalidID) {
-                DeleteValues(_id);
+                var headerKey = GetHeaderKey();
+                _userData.DeleteByNamePredicate((key) => key.IndexOf(headerKey) != -1);
             }
             else {
                 Debug.LogWarning("Invalid id for "+name+", nothing to delete.");
@@ -162,13 +189,13 @@ namespace M8 {
         public virtual void MarkRemove() {
             if(_id != invalidID) {
                 DeleteAllValues();
-                SetValue(removeKey, 1, true);
+                SetInt(removeKey, 1);
             }
         }
 
         protected virtual void Init() {
             //check if this object has been marked as remove, then delete it right away
-            if(GetValue(removeKey, 0) == 1) {
+            if(_userData.isLoaded && GetInt(removeKey, 0) == 1) {
                 DestroyImmediate(gameObject);
                 return;
             }
@@ -178,27 +205,37 @@ namespace M8 {
 
             if(_id != invalidID) {
                 mRefs[_id] = this;
-                if(UserData.main)
-                    UserData.main.actCallback += OnUserDataAction;
+
+                _userData.loadedCallback += OnUserDataLoaded;
+                _userData.saveCallback += OnUserDataSave;
             }
         }
 
-        protected virtual void Deinit() {
+        private void Deinit() {
             if(_id != invalidID) {
                 if(mRefs != null)
                     mRefs.Remove(_id);
                 _id = invalidID;
-                if(UserData.main)
-                    UserData.main.actCallback -= OnUserDataAction;
+
+                _userData.loadedCallback -= OnUserDataLoaded;
+                _userData.saveCallback -= OnUserDataSave;
             }
         }
 
-        protected virtual void OnUserDataAction(UserData ud, UserData.Action act) {
-            if(act == UserData.Action.Load) {
-                //check to see if we are suppose to be removed
-                if(GetValue(removeKey) == 1)
-                    DestroyImmediate(gameObject);
+        private void OnUserDataLoaded() {
+            //check to see if we are suppose to be removed
+            if(GetInt(removeKey) == 1) {
+                DestroyImmediate(gameObject);
+                return;
             }
+
+            if(loadedCallback != null)
+                loadedCallback();
+        }
+
+        private void OnUserDataSave() {
+            if(saveCallback != null)
+                saveCallback();
         }
 
         void OnDestroy() {
@@ -210,3 +247,4 @@ namespace M8 {
         }
     }
 }
+ 

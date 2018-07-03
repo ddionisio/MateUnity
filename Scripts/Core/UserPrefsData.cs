@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace M8 {
-    [AddComponentMenu("M8/Core/UserPrefsData")]
+    [CreateAssetMenu(fileName = "userDataPref", menuName = "M8/UserData/From Prefs")]
     public class UserPrefsData : UserData {
         [SerializeField]
         string _prefKey = "ud";
@@ -11,7 +11,7 @@ namespace M8 {
             get { return _prefKey; }
             set {
                 if(_prefKey != value) {
-                    Delete();
+                    Unload();
                     _prefKey = value;
                     Load();
                 }
