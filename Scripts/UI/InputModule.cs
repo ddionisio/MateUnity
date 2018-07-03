@@ -20,9 +20,6 @@ namespace M8.UI {
         protected InputModule() {
         }
 
-        [SerializeField]        
-        private int m_playerIndex;
-        
         [SerializeField]
         private InputAction m_HorizontalAxis;
 
@@ -66,11 +63,6 @@ namespace M8.UI {
         public float repeatDelay {
             get { return m_RepeatDelay; }
             set { m_RepeatDelay = value; }
-        }
-
-        public int playerIndex {
-            get { return m_playerIndex; }
-            set { m_playerIndex = value; }
         }
 
         /// <summary>
