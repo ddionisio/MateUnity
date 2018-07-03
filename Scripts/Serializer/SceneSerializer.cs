@@ -182,6 +182,14 @@ namespace M8 {
                 Debug.LogWarning("Invalid id for "+name+", nothing to delete.");
             }
         }
+        
+        public void Load() {
+            _userData.Load();
+        }
+
+        public void Save() {
+            _userData.Save();
+        }
 
         /// <summary>
         /// Call this to remove the object from scene when loaded.

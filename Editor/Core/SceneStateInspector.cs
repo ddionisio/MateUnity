@@ -36,6 +36,12 @@ namespace M8 {
                     data.userData = newUserData;
                 }
 
+                var newUserDataAutoSave = EditorGUILayout.Toggle("Auto Save", data.autoSave);
+                if(data.autoSave != newUserDataAutoSave) {
+                    Undo.RecordObject(data, "Change Auto Save");
+                    data.autoSave = newUserDataAutoSave;
+                }
+
                 //Globals 
                 initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
 

@@ -21,7 +21,7 @@ namespace M8 {
         }
 
         [System.Serializable]
-        public struct Key {
+        public class Key {
             public string input; //for use with unity's input or external string
             public int code; //can be KeyCode or some other external id, 0 is considered None/Invalid
 
@@ -65,6 +65,13 @@ namespace M8 {
 
                 return ret;
             }
+
+            public void CopyTo(Key other) {
+                other.input = input;
+                other.code = code;
+                other.invert = invert;
+                other.axis = axis;
+            }
         }
 
         //axis info
@@ -75,26 +82,30 @@ namespace M8 {
         
         public Key[] binds {
             get {
-                if(mIsBindsDirty) {
-                    if(mBinds == null || mBinds.Length != defaultBinds.Length)
-                        mBinds = new Key[defaultBinds.Length];
-
-                    System.Array.Copy(defaultBinds, mBinds, defaultBinds.Length);
-                }
+                if(mBinds == null)
+                    ResetBinds();
 
                 return mBinds;
             }
         }
         
         private Key[] mBinds;
-        private bool mIsBindsDirty = true;
         
         public void ResetBinds() {
-            mIsBindsDirty = true;
+            if(mBinds == null || mBinds.Length != defaultBinds.Length)
+                mBinds = new Key[defaultBinds.Length];
+
+            for(int i = 0; i < defaultBinds.Length; i++) {
+                if(mBinds[i] == null)
+                    mBinds[i] = new Key();
+
+                defaultBinds[i].CopyTo(mBinds[i]);
+            }
         }
 
         public void ResetBind(int bindIndex) {
-            binds[bindIndex] = defaultBinds[bindIndex];
+            if(mBinds != null)
+                defaultBinds[bindIndex].CopyTo(mBinds[bindIndex]);
         }
         
         public float GetAxis() {

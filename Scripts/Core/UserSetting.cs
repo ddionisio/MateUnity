@@ -22,6 +22,9 @@ namespace M8 {
             if(userData == null)
                 userData = GetComponent<UserData>();
 
+            if(!userData.isLoaded)
+                userData.Load();
+
             if(_loadOnInstance)
                 Load();
         }
