@@ -16,6 +16,40 @@ namespace M8 {
             }
         }
 
+        /// <summary>
+        /// Grab path via Attribute: ResourcePathAttribute or CreateAssetMenuAttribute.fileName (assumes it exists in root Resources folder)
+        /// </summary>
+        public static string resourcePath {
+            get {
+                var type = typeof(T);
+                string path = "";
+
+                var resPathAttr = Attribute.GetCustomAttribute(type, typeof(ResourcePathAttribute)) as ResourcePathAttribute;
+                if(resPathAttr != null) {
+                    path = resPathAttr.path;
+                }
+                else {
+                    //try unity's
+                    //NOTE: this will assume it is in the Resources folder, not in any of its sub folders.
+                    var createAssetMenuAttr = Attribute.GetCustomAttribute(type, typeof(CreateAssetMenuAttribute)) as CreateAssetMenuAttribute;
+                    if(createAssetMenuAttr != null) {
+                        path = createAssetMenuAttr.fileName;
+                    }
+                }
+
+                return path;
+            }
+        }
+
+        /// <summary>
+        /// Get absolute path based on resourcePath, assumes root Resources directory is "Assets/Resources" with extension ".asset"
+        /// </summary>
+        public static string assetPath {
+            get {
+                return string.Format("Assets/Resources/{0}.asset", resourcePath);
+            }
+        }
+
         public static void Unload() {
             if(isInstantiated) {
                 Resources.UnloadAsset(mInstance);
@@ -27,20 +61,7 @@ namespace M8 {
             var type = typeof(T);
 
             //first, see if we can get a path
-            string path = null;
-
-            var resPathAttr = Attribute.GetCustomAttribute(type, typeof(ResourcePathAttribute)) as ResourcePathAttribute;
-            if(resPathAttr != null) {
-                path = resPathAttr.path;
-            }
-            else {
-                //try unity's
-                //NOTE: this will assume it is in the Resources folder, not in any of its sub folders.
-                var createAssetMenuAttr = Attribute.GetCustomAttribute(type, typeof(CreateAssetMenuAttribute)) as CreateAssetMenuAttribute;
-                if(createAssetMenuAttr != null) {
-                    path = createAssetMenuAttr.fileName;
-                }
-            }
+            string path = resourcePath;
 
             if(!string.IsNullOrEmpty(path)) {
                 mInstance = Resources.Load<T>(path);

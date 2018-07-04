@@ -4,15 +4,11 @@ using System.Collections.Generic;
 using System;
 
 namespace M8 {
-    [PrefabCore]
-    [AddComponentMenu("M8/Core/Localize (TextAsset)")]
-    public class LocalizeFromTextAsset : Localize {
-        public static new LocalizeFromTextAsset instance {
-            get {
-                return (LocalizeFromTextAsset)Localize.instance;
-            }
-        }
-
+    /// <summary>
+    /// Grab localize data via TextAsset from Unity in JSON format
+    /// </summary>
+    [CreateAssetMenu(fileName = "localize", menuName = "M8/Localize/From TextAsset")]
+    public class LocalizeFromTextAsset : Localize {        
         [System.Serializable]
         public class Entry {
             public string key;
@@ -175,8 +171,45 @@ namespace M8 {
         public override bool Exists(string key) {
             return mEntries.ContainsKey(key);
         }
+                
+        public override bool IsLanguageFile(string filepath) {
+            if(tables == null)
+                return false;
 
-        public override string[] GetKeys() {
+            for(int i = 0; i < tables.Length; i++) {
+                //check via file's name
+                if(tables[i].file && filepath.Contains(tables[i].file.name)) {
+                    return true;
+                }
+
+                if(tables[i].platforms != null) {
+                    //check via file's name
+                    for(int j = 0; j < tables[i].platforms.Length; j++) {
+                        if(tables[i].platforms[j].file && filepath.Contains(tables[i].platforms[j].file.name)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+                
+        protected override bool TryGetData(string key, out LocalizeData data) {
+            if(!mEntries.TryGetValue(key, out data)) {
+                if(mEntries == mEntriesBase || mEntriesBase == null || !mEntriesBase.TryGetValue(key, out data)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        protected override void HandleLanguageChanged() {
+            GenerateEntries(false);
+        }
+
+        protected override string[] HandleGetKeys() {
             if(mEntriesBase == null)
                 GenerateEntries(true);
 
@@ -190,31 +223,8 @@ namespace M8 {
             return new string[0];
         }
 
-        public override void Unload() {
-            mEntries = null;
-            mEntriesBase = null;
-        }
-
-        public override bool IsLanguageFile(string filepath) {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnInstanceInit() {
+        protected override void HandleLoad() {
             GenerateEntries(true);
-        }
-
-        protected override bool TryGetData(string key, out LocalizeData data) {
-            if(!mEntries.TryGetValue(key, out data)) {
-                if(mEntries == mEntriesBase || mEntriesBase == null || !mEntriesBase.TryGetValue(key, out data)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        protected override void HandleLanguageChanged() {
-            GenerateEntries(false);
         }
 
         void GenerateEntries(bool isBase) {

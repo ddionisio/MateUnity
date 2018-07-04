@@ -8,8 +8,8 @@ namespace M8 {
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths) {            
             for(int i = 0; i < importedAssets.Length; i++) {
                 //check localize selector
-                if(LocalizeSelector.localizeExists && LocalizeSelector.localize.IsLanguageFile(importedAssets[i]))
-                    LocalizeSelector.localize.Unload();
+                if(Localize.isInstantiated && Localize.instance.IsLanguageFile(importedAssets[i]))
+                    Localize.instance.Load();
             }
         }
     }

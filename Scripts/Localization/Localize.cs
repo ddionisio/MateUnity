@@ -31,9 +31,8 @@ namespace M8 {
         }
     }
 
-    [PrefabCore]
-    [AddComponentMenu("")]
-    public abstract class Localize : SingletonBehaviour<Localize> {
+    [ResourcePath("localize")]
+    public abstract class Localize : SingletonScriptableObject<Localize> {
         public delegate void LocalizeCallback();
                 
         public event LocalizeCallback localizeCallback;
@@ -41,6 +40,9 @@ namespace M8 {
         private int mCurIndex;
         
         private Dictionary<string, LocalizeData.ParameterCallback> mParams;
+
+        private string[] mKeysCache;
+        private bool mIsKeysCacheFirstKeyCustom; //if true, first element is a custom key name (pretty much just used by Editor)
 
         public string this[string index] {
             get {
@@ -131,12 +133,43 @@ namespace M8 {
 
         public abstract bool Exists(string key);
 
-        public abstract string[] GetKeys();
+        /// <summary>
+        /// Grab a list of keys
+        /// </summary>
+        public string[] GetKeys() {
+            if(mIsKeysCacheFirstKeyCustom || mKeysCache == null) {
+                mKeysCache = HandleGetKeys();
+                mIsKeysCacheFirstKeyCustom = false;
+            }
+
+            return mKeysCache;
+        }
 
         /// <summary>
-        /// This is mostly used by editor, clear out data
+        /// Use by Editor, keys[0] = firstElementName
         /// </summary>
-        public abstract void Unload();
+        public string[] GetKeysCustom(string firstElementName) {
+            if(!mIsKeysCacheFirstKeyCustom || mKeysCache == null) {
+                var keys = HandleGetKeys();
+
+                var keyList = new List<string>(keys.Length + 1);
+                keyList.Add(firstElementName);
+                keyList.AddRange(keys);
+
+                mKeysCache = keyList.ToArray();
+            }
+
+            return mKeysCache;
+        }
+
+        /// <summary>
+        /// Load up the data, also called during access to Localize.instance; also use for reload.
+        /// </summary>
+        public void Load() {
+            mKeysCache = null; //allow keys to be refresh when grabbed later
+
+            HandleLoad();
+        }
 
         /// <summary>
         /// Check if given file path is used by this localizer.  This is mostly used by editor.
@@ -145,6 +178,14 @@ namespace M8 {
 
         protected abstract void HandleLanguageChanged();
 
+        protected abstract string[] HandleGetKeys();
+
+        protected abstract void HandleLoad();
+
         protected abstract bool TryGetData(string key, out LocalizeData data);
+
+        protected override void OnInstanceInit() {
+            Load();
+        }
     }
 }

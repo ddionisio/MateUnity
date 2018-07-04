@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace M8 {
     [CreateAssetMenu(fileName = "inputAction", menuName = "M8/Input Action")]
-    public class InputAction : ScriptableObject {
+    public class InputAction : ScriptableObject, ISerializationCallbackReceiver {
         public const int keyCodeNone = 0;
 
         public enum ButtonAxis {
@@ -82,8 +82,8 @@ namespace M8 {
         
         public Key[] binds {
             get {
-                if(mBinds == null)
-                    ResetBinds();
+                if(mBinds == null || mBinds.Length != defaultBinds.Length)
+                    InitBinds();
 
                 return mBinds;
             }
@@ -92,20 +92,21 @@ namespace M8 {
         private Key[] mBinds;
         
         public void ResetBinds() {
-            if(mBinds == null || mBinds.Length != defaultBinds.Length)
-                mBinds = new Key[defaultBinds.Length];
+            if(mBinds == null || mBinds.Length != defaultBinds.Length) {
+                InitBinds();
+            }
+            else {
+                for(int i = 0; i < defaultBinds.Length; i++) {
+                    if(mBinds[i] == null)
+                        mBinds[i] = new Key();
 
-            for(int i = 0; i < defaultBinds.Length; i++) {
-                if(mBinds[i] == null)
-                    mBinds[i] = new Key();
-
-                defaultBinds[i].CopyTo(mBinds[i]);
+                    defaultBinds[i].CopyTo(mBinds[i]);
+                }
             }
         }
 
         public void ResetBind(int bindIndex) {
-            if(mBinds != null)
-                defaultBinds[bindIndex].CopyTo(mBinds[bindIndex]);
+            defaultBinds[bindIndex].CopyTo(binds[bindIndex]);
         }
         
         public float GetAxis() {
@@ -251,6 +252,26 @@ namespace M8 {
                 return Input.GetButtonUp(key.input);
             else
                 return Input.GetKeyUp((KeyCode)key.code);
+        }
+
+        private void InitBinds() {
+            mBinds = new Key[defaultBinds.Length];
+
+            for(int i = 0; i < defaultBinds.Length; i++) {
+                if(mBinds[i] == null)
+                    mBinds[i] = new Key();
+
+                defaultBinds[i].CopyTo(mBinds[i]);
+            }
+        }
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize() {
+
+        }
+
+        void ISerializationCallbackReceiver.OnAfterDeserialize() {
+            //initialize mBinds to defaultBinds
+            InitBinds();
         }
     }
 }

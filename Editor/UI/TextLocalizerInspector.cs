@@ -11,15 +11,19 @@ namespace M8.UI {
             EditorExt.Utility.DrawSeparator();
 
             //preview (for now, just base)
+            GUI.enabled = LocalizeEdit.isLocalizeFileExists;
+
             if(GUILayout.Button("Preview")) {
                 var dat = target as Texts.Localizer;
 
                 var textUI = dat.GetComponent<UnityEngine.UI.Text>();
                 if(textUI) {
-                    textUI.text = LocalizeFromTextAssetConfig.GetBaseValue(dat.key);
+                    textUI.text = Localize.Get(dat.key);
                     EditorUtility.SetDirty(textUI);
                 }
             }
+
+            GUI.enabled = true;
         }
     }
 }

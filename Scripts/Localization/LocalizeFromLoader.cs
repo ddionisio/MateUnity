@@ -46,32 +46,28 @@ namespace M8 {
         public override bool Exists(string key) {
             return mEntries.ContainsKey(key);
         }
-
-        public override string[] GetKeys() {
-            if(loader)
-                return loader.GetKeys();
-
-            return new string[0];
-        }
-
-        public override void Unload() {
-            mEntries = null;
-        }
-
+                
         public override bool IsLanguageFile(string filepath) {
             throw new NotImplementedException();
         }
-
-        protected override void OnInstanceInit() {
-            GenerateEntries(true);
-        }
-                
+                                
         protected override bool TryGetData(string key, out LocalizeData data) {
             return mEntries.TryGetValue(key, out data);
         }
 
         protected override void HandleLanguageChanged() {
             GenerateEntries(false);
+        }
+
+        protected override string[] HandleGetKeys() {
+            if(loader)
+                return loader.GetKeys();
+
+            return new string[0];
+        }
+
+        protected override void HandleLoad() {
+            GenerateEntries(true);
         }
 
         void GenerateEntries(bool isBase) {
