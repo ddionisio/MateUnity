@@ -74,7 +74,7 @@ namespace M8 {
 
         public override bool Exists(string key) {
             if(mEntries == null)
-                GenerateEntries(baseTableIndex);
+                GenerateEntries(currentTableIndex);
 
             return mEntries.ContainsKey(key);
         }
@@ -83,15 +83,21 @@ namespace M8 {
             return false;
         }
 
+        protected int currentTableIndex {
+            get {
+                return mLanguageTableIndices[languageIndex];
+            }
+        }
+
         protected override bool TryGetData(string key, out LocalizeData data) {
             if(mEntries == null)
-                GenerateEntries(baseTableIndex);
+                GenerateEntries(currentTableIndex);
 
             return mEntries.TryGetValue(key, out data);
         }
 
         protected override void HandleLanguageChanged() {
-            int tableIndex = mLanguageTableIndices[languageIndex];
+            int tableIndex = currentTableIndex;
 
             //check to see if there is a platform specific, check via platform's table dependency
             var curPlatform = Application.platform;
@@ -115,7 +121,7 @@ namespace M8 {
             if(tables == null || tables.Length == 0)
                 return new string[0];
 
-            var table = tables[baseTableIndex];
+            var table = tables[currentTableIndex];
 
             var keys = new string[table.entries.Length];
             for(int i = 0; i < keys.Length; i++)
@@ -126,7 +132,7 @@ namespace M8 {
 
         protected override void HandleLoad() {
             //load base entries
-            GenerateEntries(baseTableIndex);
+            GenerateEntries(currentTableIndex);
         }
 
         private Dictionary<string, LocalizeData> GenerateEntryDict(TableData table) {
@@ -184,13 +190,18 @@ namespace M8 {
 
             mPlatformTableIndices = new Dictionary<RuntimePlatform, List<int>>();
 
+            int baseLanguageIndex = 0;
+
             for(int i = 0; i < tables.Length; i++) {
                 var table = tables[i];
 
                 switch(table.entryType) {
                     case TableEntryType.Language:
+                        if(baseTableIndex == i)
+                            baseLanguageIndex = languageTableNameList.Count;
+
                         languageTableNameList.Add(table.name);
-                        languageTableIndexList.Add(i);
+                        languageTableIndexList.Add(i);                        
                         break;
                     case TableEntryType.Platform:
                         List<int> tableIndexList;
@@ -206,6 +217,8 @@ namespace M8 {
 
             mLanguageTableNames = languageTableNameList.ToArray();
             mLanguageTableIndices = languageTableIndexList.ToArray();
+
+            SetLanguageIndex(baseLanguageIndex);
         }
     }
 }

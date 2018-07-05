@@ -172,6 +172,13 @@ namespace M8 {
         }
 
         /// <summary>
+        /// Internal use for initializing language index
+        /// </summary>
+        protected void SetLanguageIndex(int index) {
+            mCurIndex = index;
+        }
+
+        /// <summary>
         /// Check if given file path is used by this localizer.  This is mostly used by editor.
         /// </summary>
         public abstract bool IsLanguageFile(string filepath);
