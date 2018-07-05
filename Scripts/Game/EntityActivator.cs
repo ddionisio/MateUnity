@@ -8,27 +8,29 @@ namespace M8 {
     ///make sure to have this as a child,
     ///destroy it if we are currently active
     ///</summary>
-    [AddComponentMenu("M8/Entity/EntityActivator")]
+    [AddComponentMenu("M8/Entity/Activator")]
     public class EntityActivator : MonoBehaviour {
+        public const string activatorGOName = "__entityActivatorHolder";
         //public const string ActivatorHolderTag = "ActivatorHolder"; //make sure this is in the scene root
-
-        public delegate void Callback();
 
         public bool deactivateOnStart = true;
         public float deactivateDelay = 2.0f;
 
-        public event Callback awakeCallback;
-        public event Callback sleepCallback;
+        public Signal signalAwake;
+        public Signal signalSleep;
 
-        protected const string InActiveDelayInvoke = "InActiveDelay";
-
-        private static GameObject mActivatorGO;
+        public event System.Action awakeCallback;
+        public event System.Action sleepCallback;
 
         private bool mIsActive = true;
 
-        private Transform mDefaultParent; //the parent when we are instantiated
-        private Transform mActivatorHolder = null;
+        private Transform mDefaultParent; //the parent when we are instantiated        
         private Vector3 mLocalPos;
+
+        private Coroutine mDeactivateRout;
+        private bool mIsStarted;
+
+        private static Transform mActivatorHolder = null;
 
         /// <summary>
         /// If true, then we are currently waiting for trigger. If false, then parent should be inactive
@@ -40,31 +42,59 @@ namespace M8 {
         //TODO: need something for this
         public virtual bool isVisible { get { return true; } }
 
-        public void ForceActivate() {
-            DoActive();
-        }
+        /// <summary>
+        /// This is usually called via derivatives of this class such as Trigger during Entered
+        /// </summary>
+        public void Activate() {
+            if(!mIsActive) {
+                //put ourself back in parent
+                mDefaultParent.gameObject.SetActive(true);
+                SetParent(mDefaultParent);
 
-        public void ForceInactive(bool notifySleep) {
-            CancelInvoke(InActiveDelayInvoke);
-            DoInActive(notifySleep);
+                mIsActive = true;
+
+                //yield return new WaitForFixedUpdate();
+
+                if(awakeCallback != null)
+                    awakeCallback();
+
+                if(signalAwake)
+                    signalAwake.Invoke();
+            }
+            else
+                StopDeactivateRout();
         }
 
         /// <summary>
-        /// Initialize, call this when you are about to be re-added to the scene
+        /// This is usually called via derivatives of this class such as Trigger during Exited
+        /// </summary>
+        public void Deactivate() {
+            if(mIsActive) {
+                if(deactivateDelay > 0.0f) {
+                    if(mDeactivateRout == null)
+                        mDeactivateRout = StartCoroutine(DoInActiveDelay());
+                }
+                else {
+                    InActive(true);
+                }
+            }
+        }
+
+        public void ForceDeactivate(bool notifySleep) {
+            StopDeactivateRout();
+            InActive(notifySleep);
+        }
+
+        /// <summary>
+        /// Call this if you need to deactivate early before this Activator starts (only if deactivateOnStart is true)
         /// </summary>
         public virtual void Start() {
-            //if(mActivatorGO == null) {
-            //mActivatorGO = GameObject.FindGameObjectWithTag(ActivatorHolderTag);
-            if(mActivatorGO == null) {
-                mActivatorGO = new GameObject("_activate");
-                //mActivatorGO.tag = ActivatorHolderTag;
-            }
-            //}
+            if(!mIsStarted) {
+                if(deactivateOnStart) {
+                    InActive(false);
+                }
 
-            mActivatorHolder = mActivatorGO.transform;
-
-            if(deactivateOnStart) {
-                DoInActive(false);
+                mIsStarted = true;
             }
         }
 
@@ -80,17 +110,30 @@ namespace M8 {
                 //put back to parent
                 SetParent(mDefaultParent);
             }
-
-            //StopCoroutine("DoActive");
-            CancelInvoke(InActiveDelayInvoke);
+            
+            StopDeactivateRout();
             mIsActive = true;
         }
 
+        protected virtual void OnDisable() {
+            StopDeactivateRout();
+        }
+
         protected virtual void Awake() {
+            if(!mActivatorHolder) {
+                var go = GameObject.Find(activatorGOName);
+                if(!go) {
+                    go = new GameObject(activatorGOName);
+                    DontDestroyOnLoad(go);
+                }
+
+                mActivatorHolder = go.transform;
+            }
+
             mDefaultParent = transform.parent;
             mLocalPos = transform.localPosition;
         }
-
+                
         protected virtual void SetParent(Transform toParent) {
             if(toParent != mDefaultParent) {
                 Vector3 pos = transform.position;
@@ -104,54 +147,13 @@ namespace M8 {
             }
         }
 
-        void OnDestroy() {
-            awakeCallback = null;
-            sleepCallback = null;
+        IEnumerator DoInActiveDelay() {
+            yield return new WaitForSeconds(deactivateDelay);
+
+            InActive(true);
         }
 
-        void OnTriggerEnter(Collider c) {
-            //StartCoroutine("DoActive");
-            DoActive();
-        }
-
-        void OnTriggerExit(Collider c) {
-            if(mIsActive) {
-                if(deactivateDelay > 0.0f) {
-                    if(!IsInvoking(InActiveDelayInvoke))
-                        Invoke(InActiveDelayInvoke, deactivateDelay);
-                }
-                else {
-                    DoInActive(true);
-                }
-            }
-        }
-
-        /*IEnumerator*/
-        protected void DoActive() {
-            if(!mIsActive) {
-                //put ourself back in parent
-                mDefaultParent.gameObject.SetActive(true);
-                SetParent(mDefaultParent);
-
-                mIsActive = true;
-
-                //yield return new WaitForFixedUpdate();
-
-                if(awakeCallback != null) {
-                    awakeCallback();
-                }
-            }
-            else
-                CancelInvoke(InActiveDelayInvoke);
-
-            //yield break;
-        }
-
-        void InActiveDelay() {
-            DoInActive(true);
-        }
-
-        protected void DoInActive(bool notifySleep) {
+        protected void InActive(bool notifySleep) {
             if(mIsActive) {
                 //StopCoroutine("DoActive");
 
@@ -167,9 +169,18 @@ namespace M8 {
 
                 mIsActive = false;
 
-                if(notifySleep && sleepCallback != null) {
+                if(sleepCallback != null)
                     sleepCallback();
-                }
+
+                if(signalSleep)
+                    signalSleep.Invoke();
+            }
+        }
+
+        private void StopDeactivateRout() {
+            if(mDeactivateRout != null) {
+                StopCoroutine(mDeactivateRout);
+                mDeactivateRout = null;
             }
         }
     }
