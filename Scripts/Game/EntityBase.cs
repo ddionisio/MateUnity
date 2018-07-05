@@ -36,10 +36,7 @@ Basic Framework would be something like this:
 namespace M8 {
     [AddComponentMenu("M8/Entity/EntityBase")]
     public class EntityBase : MonoBehaviour, IPoolSpawn, IPoolDespawn {
-        public const int StateInvalid = -1;
-
         public delegate void OnGenericCall(EntityBase ent);
-        public delegate void OnSetBool(EntityBase ent, bool b);
         
         /// <summary>
         /// if we want FSM/other stuff to activate on start (when placing entities on scene).
@@ -49,12 +46,16 @@ namespace M8 {
 
         public EntityActivator activator;
 
+        public SignalEntity signalStateChanged; //equivalent to setStateCallback
+        public SignalEntity signalSpawned; //equivalent to spawnCallback
+        public SignalEntity signalReleased; //equivalent to releaseCallback
+
         public event OnGenericCall setStateCallback;
         public event OnGenericCall spawnCallback; //called after a slight delay during OnSpawned (at least after one fixed-update)
         public event OnGenericCall releaseCallback;
 
-        private int mState = StateInvalid;
-        private int mPrevState = StateInvalid;
+        private EntityState mState = null;
+        private EntityState mPrevState = null;
         
         private bool mIsSpawned = false;
         private bool mIsStarted = false;
@@ -90,26 +91,28 @@ namespace M8 {
             get { return mIsSpawned; }
         }
 
-        public int state {
+        public EntityState state {
             get { return mState; }
 
             set {
                 if(mState != value) {
-                    if(mState != StateInvalid)
+                    if(mState != null)
                         mPrevState = mState;
 
                     mState = value;
-
-                    if(setStateCallback != null) {
-                        setStateCallback(this);
-                    }
-
+                                        
                     StateChanged();
+
+                    if(setStateCallback != null)
+                        setStateCallback(this);
+
+                    if(signalStateChanged)
+                        signalStateChanged.Invoke(this);
                 }
             }
         }
 
-        public int prevState {
+        public EntityState prevState {
             get { return mPrevState; }
         }
 
@@ -156,12 +159,14 @@ namespace M8 {
         /// </summary>
         public void RestartState() {
             mPrevState = mState;
-
-            if(setStateCallback != null) {
-                setStateCallback(this);
-            }
-
+                        
             StateChanged();
+
+            if(setStateCallback != null)
+                setStateCallback(this);
+
+            if(signalStateChanged)
+                signalStateChanged.Invoke(this);
         }
 
         protected virtual void OnDespawned() {
@@ -240,7 +245,7 @@ namespace M8 {
             if(mPoolData == null)
                 mPoolData = GetComponent<PoolDataController>();
 
-            mState = mPrevState = StateInvalid; //avoid invalid updates
+            mState = mPrevState = null; //avoid invalid updates
             
             mSpawnParams = parms;
             //
@@ -269,6 +274,9 @@ namespace M8 {
             if(spawnCallback != null) {
                 spawnCallback(this);
             }
+
+            if(signalSpawned)
+                signalSpawned.Invoke(this);
         }
 
         void IPoolSpawn.OnSpawned(GenericParams parms) {
@@ -280,16 +288,18 @@ namespace M8 {
         }
 
         void _OnDespawned() {
+            if(signalReleased)
+                signalReleased.Invoke(this);
+
+            if(releaseCallback != null)
+                releaseCallback(this);
+
             OnDespawned();
 
             if(activator != null && activator.defaultParent == transform) {
                 activator.Release(false);
             }
-
-            if(releaseCallback != null) {
-                releaseCallback(this);
-            }
-
+                        
             mIsSpawned = false;
             mIsStarted = false;
             mSpawnParams = null;
