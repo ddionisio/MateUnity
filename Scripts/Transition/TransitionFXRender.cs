@@ -2,19 +2,19 @@
 using System.Collections.Generic;
 
 namespace M8 {
-    [AddComponentMenu("M8/Screen Transition/Render")]
+    [AddComponentMenu("M8/TransitionFX/Render")]
     [RequireComponent(typeof(Camera))]
-    public class ScreenTransRender : MonoBehaviour {
-        private List<ScreenTrans> mRenderTransList;
+    public class TransitionFXRender : MonoBehaviour {
+        private List<TransitionFX> mRenderTransList;
 
-        public void AddRender(ScreenTrans trans) {
+        public void AddRender(TransitionFX trans) {
             if(!mRenderTransList.Contains(trans))
                 mRenderTransList.Add(trans);
 
             enabled = true;
         }
 
-        public void RemoveRender(ScreenTrans trans) {
+        public void RemoveRender(TransitionFX trans) {
             mRenderTransList.Remove(trans);
 
             if(mRenderTransList.Count == 0)
@@ -22,7 +22,7 @@ namespace M8 {
         }
         
         void Awake() {
-            mRenderTransList = new List<ScreenTrans>();
+            mRenderTransList = new List<TransitionFX>();
         }
         
         void OnRenderImage(RenderTexture source, RenderTexture destination) {

@@ -15,11 +15,18 @@ namespace M8 {
 
         public interface ITransition {
             /// <summary>
-            /// Higher priority executes first.
+            /// Higher priority value executes first.
             /// </summary>
             int priority { get; }
 
+            /// <summary>
+            /// Current scene exiting "out"
+            /// </summary>
             IEnumerator Out();
+
+            /// <summary>
+            /// Next scene entering "in"
+            /// </summary>
             IEnumerator In();            
         }
 

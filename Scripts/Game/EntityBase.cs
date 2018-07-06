@@ -134,23 +134,12 @@ namespace M8 {
         /// </summary>
         public virtual void Release() {
             if(poolData != null) {
-#if POOLMANAGER
-            transform.parent = PoolManager.Pools[poolData.group].group;
-            PoolManager.Pools[poolData.group].Despawn(transform);
-#else
                 PoolController.ReleaseFromGroup(poolData.group, poolData);
-#endif
             }
             else {
                 //just disable the object, really no need to destroy
                 _OnDespawned();
                 gameObject.SetActive(false);
-                /*
-                if(gameObject.activeInHierarchy)
-                    StartCoroutine(DestroyDelay());
-                else {
-                    Destroy(gameObject);
-                }*/
             }
         }
 
