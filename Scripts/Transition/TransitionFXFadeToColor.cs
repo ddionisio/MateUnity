@@ -5,7 +5,7 @@ namespace M8 {
     /// <summary>
     /// Transition from source to solid color
     /// </summary>
-    [AddComponentMenu("M8/TransitionFX/Type - Fade To Color")]
+    [CreateAssetMenu(fileName = "fadeToColor", menuName = "M8/TransitionFX/Fade To Color")]
     public class TransitionFXFadeToColor : TransitionFX {
         public Color color = Color.black;
 

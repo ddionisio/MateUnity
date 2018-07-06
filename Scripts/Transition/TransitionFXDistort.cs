@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace M8 {
-    [AddComponentMenu("M8/TransitionFX/Type - Distort")]
+    [CreateAssetMenu(fileName = "distort", menuName = "M8/TransitionFX/Distort")]
     public class TransitionFXDistort : TransitionFX {
         public SourceType source = SourceType.CameraSnapShot;
         public Texture sourceTexture; //if source = SourceType.Texture
@@ -10,7 +10,6 @@ namespace M8 {
         public Texture distortTexture;
         public float distortTime = 0.35f; //[0, 2]
         public AnimationCurve distortMag;
-        public bool distortMagNormalized;
 
         public Vector2 force = new Vector2(0.2f, 0.2f); //[0, 2]
 
@@ -30,7 +29,7 @@ namespace M8 {
         protected override void OnUpdate() {
             material.SetFloat("_t", curCurveValue);
 
-            material.SetFloat("_distortT", distortMag.Evaluate(distortMagNormalized ? curTimeNormalized : curTime));
+            material.SetFloat("_distortT", distortMag.Evaluate(curT));
         }
     }
 }

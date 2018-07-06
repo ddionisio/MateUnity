@@ -5,7 +5,7 @@ namespace M8 {
     /// <summary>
     /// Transition from source to destination
     /// </summary>
-    [AddComponentMenu("M8/TransitionFX/Type - Cross Fade")]
+    [CreateAssetMenu(fileName = "crossFade", menuName = "M8/TransitionFX/Cross Fade")]
     public class TransitionFXCrossFade : TransitionFX {
         public SourceType source = SourceType.CameraSnapShot;
         public Texture sourceTexture; //if source = SourceType.Texture

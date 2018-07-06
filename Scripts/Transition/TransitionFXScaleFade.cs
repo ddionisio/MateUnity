@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace M8 {
-    [AddComponentMenu("M8/TransitionFX/Type - Scale Fade")]
+    [CreateAssetMenu(fileName = "scaleFade", menuName = "M8/TransitionFX/Scale Fade")]
     public class TransitionFXScaleFade : TransitionFX {
         public SourceType source = SourceType.CameraSnapShot;
         public Texture sourceTexture; //if source = SourceType.Texture
@@ -11,7 +11,6 @@ namespace M8 {
 
         public AnimationCurve scaleCurveX;
         public AnimationCurve scaleCurveY;
-        public bool scaleCurveNormalized;
 
         public Anchor anchor = Anchor.Center;
 
@@ -29,10 +28,9 @@ namespace M8 {
 
         protected override void OnUpdate() {
             material.SetFloat("_t", curCurveValue);
-
-            float t = scaleCurveNormalized ? curTimeNormalized : curTime;
-            mParam.z = scaleCurveX.Evaluate(t);
-            mParam.w = scaleCurveY.Evaluate(t);
+            
+            mParam.z = scaleCurveX.Evaluate(curT);
+            mParam.w = scaleCurveY.Evaluate(curT);
 
             material.SetVector("_Params", mParam);
         }

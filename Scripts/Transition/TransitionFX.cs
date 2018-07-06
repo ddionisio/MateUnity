@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace M8 {
     [AddComponentMenu("")]
-    public abstract class TransitionFX : MonoBehaviour {
+    public abstract class TransitionFX : ScriptableObject {
         public enum SourceType {
             CameraSnapShot,
             Texture
@@ -34,38 +34,43 @@ namespace M8 {
 
         public Shader shader;
 
-        public float delay = 1.0f;
+        /// <summary>
+        /// Ensure curve value (y-axis) is within [0, 1]
+        /// </summary>
         public AnimationCurve curve = new AnimationCurve();
-        public bool curveNormalized; //if true, curve is based on 0-1 within delay
 
         public CameraType cameraType = CameraType.Main;
         public Camera cameraTarget;
 
         public ToType target = ToType.Camera;
         public Texture targetTexture; //for ToType.Texture
-                
-        private float mCurTime;
+        
         private Material mMat;
 
         private RenderTexture mRenderTexture;
         private Vector2 mRenderTextureScreenSize;
-
-        private Coroutine mPlayRout;
-
+        
         private bool mIsRenderActive;
         private TransitionFXRender mTransRender;
 
-        public float curTime { get { return mCurTime; } }
-        public float curTimeNormalized { get { return mCurTime/delay; } }
+        /// <summary>
+        /// value: [0, 1]
+        /// </summary>
+        public float curT { get; private set; }
 
         /// <summary>
-        /// Returns current curve value based on current time
+        /// Returns current curve value based on curT
         /// </summary>
-        public float curCurveValue { get { return curve.Evaluate(curveNormalized ? curTimeNormalized : curTime); } }
+        public float curCurveValue { get { return curve.Evaluate(curT); } }
 
-        public bool isPrepared { get; private set; }
-        public bool isPlaying { get { return mPlayRout != null; } }
+        /// <summary>
+        /// true once Update has been called once, false after End is called
+        /// </summary>
+        public bool isStarted { get; private set; }
 
+        /// <summary>
+        /// true once Update has been called once, false after End is called.
+        /// </summary>
         public bool isRenderActive {
             get { return mIsRenderActive; }
 
@@ -77,10 +82,16 @@ namespace M8 {
                         if(mTransRender)
                             mTransRender.AddRender(this);
                     }
+
+                    UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
                 }
-                else if(mTransRender) {
-                    mTransRender.RemoveRender(this);
-                    mTransRender = null;
+                else {
+                    UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+
+                    if(mTransRender) {
+                        mTransRender.RemoveRender(this);
+                        mTransRender = null;
+                    }
                 }
             }
         }
@@ -138,43 +149,47 @@ namespace M8 {
         }
 
         /// <summary>
-        /// Certain transitions need to prepare before Play can be called (e.g. cross fade)
+        /// Apply t [0, 1] to curT
+        /// Call this to start/update rendering. Note: you will need to call End to stop rendering.
+        /// This sets isStarted and isRenderActive to true
         /// </summary>
-        public void Prepare() {
-            if(!isPrepared) {
-                mCurTime = 0f;
+        public void UpdateTime(float t) {
+            curT = Mathf.Clamp01(t);
 
+            if(!isStarted) {
                 OnPrepare();
-                OnUpdate(); //do one update
 
-                isPrepared = true;
+                isStarted = true;
+                isRenderActive = true;
             }
-        }
-        
-        /// <summary>
-        /// Call this to start rendering. Note: will continue to render after duration, you will need to call End to stop rendering.
-        /// </summary>
-        public void Play() {
-            if(mPlayRout != null)
-                StopCoroutine(mPlayRout);
 
-            mPlayRout = StartCoroutine(DoPlay());
+            if(!mTransRender) //nothing to render
+                return;
+
+            OnUpdate();
         }
 
         /// <summary>
-        /// Call this to stop rendering.  Note: make sure to call this after Play
+        /// Call this to stop rendering, will release render texture.  Note: make sure to call this after Play
         /// </summary>
         public void End() {
-            mCurTime = delay;
-            isPrepared = false;
+            curT = 1f;
+            isStarted = false;
+            isRenderActive = false;
+            
+            if(mRenderTexture) {
+                DestroyImmediate(mRenderTexture);
+                mRenderTexture = null;
+            }
+        }
+
+        public void Deinit() {
             isRenderActive = false;
 
-            if(mPlayRout != null) {
-                StopCoroutine(mPlayRout);
-                mPlayRout = null;
+            if(mMat) {
+                DestroyImmediate(mMat);
+                mMat = null;
             }
-
-            OnFinish();
 
             if(mRenderTexture) {
                 DestroyImmediate(mRenderTexture);
@@ -296,21 +311,6 @@ namespace M8 {
             return ret;
         }
 
-        protected virtual void OnDisable() {
-            End();
-        }
-
-        protected virtual void Awake() {
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
-        }
-
-        protected virtual void OnDestroy() {
-            if(mMat)
-                DestroyImmediate(mMat);
-
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
-
         #region internal
 
         void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode) {
@@ -327,30 +327,7 @@ namespace M8 {
                 }
             }
         }
-
-        IEnumerator DoPlay() {
-            Prepare();
-
-            isRenderActive = true;
-
-            if(!mTransRender) {
-                End();
-                yield break;
-            }
-            
-            var wait = new WaitForEndOfFrame();
-
-            while(mCurTime < delay) {
-                yield return wait;
-
-                mCurTime = Mathf.Min(mCurTime + Time.smoothDeltaTime, delay);
-
-                OnUpdate();
-            }
-
-            mPlayRout = null;
-        }
-
+        
         TransitionFXRender GetPlayer() {
             Camera cam = GetCameraTarget();
             if(cam) {
@@ -406,10 +383,7 @@ namespace M8 {
 
         protected virtual void OnUpdate() {
         }
-
-        protected virtual void OnFinish() {
-        }
-
+        
         public virtual void OnRenderImage(Texture source, RenderTexture destination) {
             if(mMat) //_MainTex = target
                 Graphics.Blit(target == ToType.Camera ? source : targetTexture, destination, mMat);

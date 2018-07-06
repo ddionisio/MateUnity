@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace M8 {
-    [AddComponentMenu("M8/TransitionFX/Type - Slide Fade")]
+    [CreateAssetMenu(fileName = "slideFade", menuName = "M8/TransitionFX/Slide Fade")]
     public class TransitionFXSlideFade : TransitionFX {
         public SourceType source = SourceType.CameraSnapShot;
         public Texture sourceTexture; //if source = SourceType.Texture
@@ -10,7 +10,6 @@ namespace M8 {
         public Texture alphaMask;
 
         public AnimationCurve slideCurve;
-        public bool slideCurveNormalized;
 
         public Anchor anchor = Anchor.Left;
 
@@ -29,7 +28,7 @@ namespace M8 {
         protected override void OnUpdate() {
             material.SetFloat("_t", curCurveValue);
 
-            Vector2 scroll = GetUVScroll(anchor, slideCurve.Evaluate(slideCurveNormalized ? curTimeNormalized : curTime));
+            Vector2 scroll = GetUVScroll(anchor, slideCurve.Evaluate(curT));
 
             material.SetVector("_Scroll", scroll);
         }

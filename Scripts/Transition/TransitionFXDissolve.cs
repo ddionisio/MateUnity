@@ -2,14 +2,13 @@
 using System.Collections;
 
 namespace M8 {
-    [AddComponentMenu("M8/TransitionFX/Type - Dissolve")]
+    [CreateAssetMenu(fileName = "dissolve", menuName = "M8/TransitionFX/Dissolve")]
     public class TransitionFXDissolve : TransitionFX {
         public SourceType source = SourceType.CameraSnapShot;
         public Texture sourceTexture; //if source = SourceType.Texture
 
         public Texture dissolveTexture;
         public AnimationCurve dissolvePower;
-        public bool dissolvePowerNormalized;
 
         public Texture emissionTexture;
         public float emissionThickness = 0.03f; //[0, 0.1 max?]
@@ -29,7 +28,7 @@ namespace M8 {
         protected override void OnUpdate() {
             material.SetFloat("_t", curCurveValue);
 
-            mParam.x = dissolvePower.Evaluate(dissolvePowerNormalized ? curTimeNormalized : curTime);
+            mParam.x = dissolvePower.Evaluate(curT);
             material.SetVector("_Params", mParam);
         }
     }
