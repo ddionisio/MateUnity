@@ -207,7 +207,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76ba0e40b706bdc4d90447f86c5277f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  transitionOut: {fileID: 0}
-  transitionIn: {fileID: 0}
+  transitionOut: {fileID: 11400000, guid: 850188d97c718f543bc53400d6007fbf, type: 2}
+  transitionIn: {fileID: 11400000, guid: 1d9807bac71bf8544aa06f0877124ad0, type: 2}
   delay: 0.333
   isTimeScaled: 0
