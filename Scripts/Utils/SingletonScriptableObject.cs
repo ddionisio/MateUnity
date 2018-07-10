@@ -46,7 +46,11 @@ namespace M8 {
         /// </summary>
         public static string assetPath {
             get {
-                return string.Format("Assets/Resources/{0}.asset", resourcePath);
+                var path = resourcePath;
+                if(string.IsNullOrEmpty(path))
+                    return "";
+
+                return string.Format("Assets/Resources/{0}.asset", path);
             }
         }
 

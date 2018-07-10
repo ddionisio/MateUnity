@@ -181,14 +181,14 @@ namespace M8 {
         /// <summary>
         /// Check if given file path is used by this localizer.  This is mostly used by editor.
         /// </summary>
-        public abstract bool IsLanguageFile(string filepath);
+        public virtual bool IsLanguageFile(string filepath) { return false; }
 
         protected abstract void HandleLanguageChanged();
 
         protected abstract string[] HandleGetKeys();
 
         protected abstract void HandleLoad();
-
+                
         protected abstract bool TryGetData(string key, out LocalizeData data);
 
         protected override void OnInstanceInit() {

@@ -32,12 +32,9 @@ namespace M8 {
 
             public Entry[] entries;
         }
-
-        [SerializeField]
-        TableData[] tables;
-
-        [SerializeField]
-        int baseTableIndex;
+        
+        public TableData[] tables;
+        public int baseTableIndex;
 
         //populated through deserialization
         private string[] mLanguageTableNames;
@@ -77,10 +74,6 @@ namespace M8 {
                 GenerateEntries(currentTableIndex);
 
             return mEntries.ContainsKey(key);
-        }
-
-        public override bool IsLanguageFile(string filepath) {            
-            return false;
         }
 
         protected int currentTableIndex {
@@ -219,6 +212,8 @@ namespace M8 {
             mLanguageTableIndices = languageTableIndexList.ToArray();
 
             SetLanguageIndex(baseLanguageIndex);
+
+            mEntries = null;
         }
     }
 }

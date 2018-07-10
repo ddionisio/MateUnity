@@ -50,10 +50,6 @@ namespace M8 {
             return mEntries.ContainsKey(key);
         }
 
-        public override bool IsLanguageFile(string filepath) {
-            return false;
-        }
-
         protected override void HandleLanguageChanged() { }
 
         protected override string[] HandleGetKeys() {
