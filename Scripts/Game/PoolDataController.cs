@@ -14,17 +14,17 @@ namespace M8 {
         private IPoolSpawn[] mISpawns;
         private IPoolDespawn[] mIDespawns;
 
-        public static PoolDataController Generate(string factoryKey, Transform template, string group, Transform parent) {
-            Transform t = Instantiate<Transform>(template);
-            t.name = template.name;
+        public static PoolDataController Generate(string factoryKey, GameObject template, string group, Transform parent) {
+            var go = Instantiate(template);
+            go.name = template.name;
 
-            t.gameObject.SetActive(false);
+            go.SetActive(false);
 
-            t.SetParent(parent, false);
+            go.transform.SetParent(parent, false);
 
-            PoolDataController pdc = t.GetComponent<PoolDataController>();
+            PoolDataController pdc = go.GetComponent<PoolDataController>();
             if(pdc == null) {
-                pdc = t.gameObject.AddComponent<PoolDataController>();
+                pdc = go.AddComponent<PoolDataController>();
             }
 
             pdc.group = group;

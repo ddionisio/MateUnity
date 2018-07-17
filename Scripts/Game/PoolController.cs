@@ -8,7 +8,7 @@ namespace M8 {
         [System.Serializable]
         public class FactoryData {
             public string name;
-            public Transform template = null;
+            public GameObject template = null;
 
             public int startCapacity = 0;
             public int maxCapacity = 0;
@@ -333,7 +333,7 @@ namespace M8 {
         /// Add a new type into this pool.  The type name is based on template's name.  If template
         /// already exists (via name), then type will not be added.  Returns true if successfully added.
         /// </summary>
-        public bool AddType(Transform template, int startCapacity, int maxCapacity, Transform defaultParent = null) {            
+        public bool AddType(GameObject template, int startCapacity, int maxCapacity, Transform defaultParent = null) {            
             return AddType(template.name, template, startCapacity, maxCapacity, defaultParent);
         }
 
@@ -341,7 +341,7 @@ namespace M8 {
         /// Add a new type into this pool.  If template already exists (via name), then type will not be added.  
         /// Returns true if successfully added.
         /// </summary>
-        public bool AddType(string typeName, Transform template, int startCapacity, int maxCapacity, Transform defaultParent = null) {
+        public bool AddType(string typeName, GameObject template, int startCapacity, int maxCapacity, Transform defaultParent = null) {
             if(mFactory.ContainsKey(typeName))
                 return false;
 
