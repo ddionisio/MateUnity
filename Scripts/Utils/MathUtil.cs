@@ -138,6 +138,18 @@ namespace M8 {
             return ret;
         }
 
+        public static Vector2 Bezier(Vector2 p0, Vector2 p1, Vector2 p2, float t) {
+            if(t == 0f) return p0;
+            if(t == 1f) return p2;
+
+            float tInv = (1 - t);
+            float a = tInv * tInv;
+            float b = 2 * tInv * t;
+            float c = t * t;
+
+            return new Vector2(a * p0.x + b * p1.x + c * p2.x, a * p0.y + b * p1.y + c * p2.y);
+        }
+
         //-------------- 3D --------------
 
         public static bool CompareApprox(Vector3 v1, Vector3 v2, float approx) {
