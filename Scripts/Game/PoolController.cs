@@ -627,6 +627,13 @@ namespace M8 {
             if(string.IsNullOrEmpty(group))
                 group = name;
 
+            if(poolHolder == null) {//create default holder
+                var holderGO = new GameObject("holder");
+                holderGO.SetActive(false);
+                poolHolder = holderGO.transform;
+                poolHolder.SetParent(transform);
+            }
+
             if(mControllers == null) {
                 mControllers = new Dictionary<string, PoolController>();
             }
@@ -636,9 +643,6 @@ namespace M8 {
                                 
                 //generate cache and such
                 if(factory != null) {
-                    if(poolHolder == null) //default holder to self
-                        poolHolder = transform;
-
                     mFactory = new Dictionary<string, FactoryData>(factory.Length);
                     foreach(FactoryData factoryData in factory) {
                         factoryData.Init(group, poolHolder);

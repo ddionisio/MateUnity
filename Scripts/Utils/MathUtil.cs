@@ -9,6 +9,7 @@ namespace M8 {
         }
 
         public const float TwoPI = 2.0f * Mathf.PI;
+        public const float HalfPI = 0.5f * Mathf.PI;
                 
         //------------- Interpolates ---------------
 
