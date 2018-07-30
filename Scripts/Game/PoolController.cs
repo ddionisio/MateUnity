@@ -378,6 +378,10 @@ namespace M8 {
             return pdc && pdc.group == group && mFactory.ContainsKey(pdc.factoryKey) ? pdc.factoryKey : "";
         }
 
+        public bool IsFactoryTypeExists(string factoryKey) {
+            return mFactory.ContainsKey(factoryKey);
+        }
+
         public Transform GetDefaultParent(string type) {
             FactoryData dat;
             if(mFactory.TryGetValue(type, out dat)) {
