@@ -46,10 +46,6 @@ namespace M8 {
 
         public EntityActivator activator;
 
-        public SignalEntity signalStateChanged; //equivalent to setStateCallback
-        public SignalEntity signalSpawned; //equivalent to spawnCallback
-        public SignalEntity signalReleased; //equivalent to releaseCallback
-
         public event OnGenericCall setStateCallback;
         public event OnGenericCall spawnCallback; //called after a slight delay during OnSpawned (at least after one fixed-update)
         public event OnGenericCall releaseCallback;
@@ -105,9 +101,6 @@ namespace M8 {
 
                     if(setStateCallback != null)
                         setStateCallback(this);
-
-                    if(signalStateChanged)
-                        signalStateChanged.Invoke(this);
                 }
             }
         }
@@ -152,10 +145,7 @@ namespace M8 {
             StateChanged();
 
             if(setStateCallback != null)
-                setStateCallback(this);
-
-            if(signalStateChanged)
-                signalStateChanged.Invoke(this);
+                setStateCallback(this);            
         }
 
         protected virtual void OnDespawned() {
@@ -263,9 +253,6 @@ namespace M8 {
             if(spawnCallback != null) {
                 spawnCallback(this);
             }
-
-            if(signalSpawned)
-                signalSpawned.Invoke(this);
         }
 
         void IPoolSpawn.OnSpawned(GenericParams parms) {
@@ -277,9 +264,6 @@ namespace M8 {
         }
 
         void _OnDespawned() {
-            if(signalReleased)
-                signalReleased.Invoke(this);
-
             if(releaseCallback != null)
                 releaseCallback(this);
 
