@@ -210,7 +210,11 @@ namespace M8.UIModal {
         public void ModalReplace(string modal, params GenericParamArg[] parms) {
             ModalReplace(modal, new GenericParams(parms));
         }
-                
+
+        public void ModalOpen(string modal) {
+            ModalOpen(modal, null);
+        }
+
         public void ModalOpen(string modal, GenericParams parms) {
             var uid = ModalGetData(modal);
             if(uid == null) {
@@ -223,10 +227,6 @@ namespace M8.UIModal {
 
             if(!mTaskActive)
                 StartCoroutine(DoTask());
-        }
-
-        public void ModalOpen(string modal, params GenericParamArg[] parms) {
-            ModalOpen(modal, new GenericParams(parms));
         }
 
         public void ModalCloseTop() {

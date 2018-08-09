@@ -10,11 +10,13 @@ namespace M8.UIModal {
         public const string messageDialogRef = "message";
 
         public static void CharacterDialog(string text, string aName = null, string portraitSpriteRef = null, string[] choices = null) {
-            Manager.instance.ModalOpen(characterDialogRef, 
+            var parms = new GenericParams(
                 new GenericParamArg(CharacterDialogBase.paramText, text),
                 new GenericParamArg(CharacterDialogBase.paramName, aName),
                 new GenericParamArg(CharacterDialogBase.paramSpriteRef, portraitSpriteRef),
                 new GenericParamArg(CharacterDialogBase.paramChoiceArray, choices));
+
+            Manager.instance.ModalOpen(characterDialogRef, parms);
         }
 
         public static void Confirm(ConfirmDialogBase.OnConfirm aCallback) {
