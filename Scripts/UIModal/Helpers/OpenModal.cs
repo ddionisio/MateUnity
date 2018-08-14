@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace M8.UI.Modal.Helpers {
+namespace M8.UIModal.Helpers {
     /// <summary>
     /// Simple behaviour to open a modal via Execute, useful for UI, or some timeline editor
     /// </summary>
@@ -12,15 +12,15 @@ namespace M8.UI.Modal.Helpers {
         public bool closeIfOpened;
 
         public void Execute() {
-            if(UIModal.Manager.instance.isBusy || SceneManager.instance.isLoading)
+            if(Manager.instance.isBusy || SceneManager.instance.isLoading)
                 return;
 
-            if(UIModal.Manager.instance.ModalIsInStack(modalRef)) {
+            if(Manager.instance.ModalIsInStack(modalRef)) {
                 if(closeIfOpened)
-                    UIModal.Manager.instance.ModalCloseUpTo(modalRef, true);
+                    Manager.instance.ModalCloseUpTo(modalRef, true);
             }
             else
-                UIModal.Manager.instance.ModalOpen(modalRef);
+                Manager.instance.ModalOpen(modalRef);
         }
     }
 }

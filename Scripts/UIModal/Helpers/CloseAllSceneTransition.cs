@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace M8.UI.Modal.Helpers {
+namespace M8.UIModal.Helpers {
     [AddComponentMenu("M8/UI Modal/Helpers/CloseAllSceneTransition")]
     public class CloseAllSceneTransition : MonoBehaviour, SceneManager.ITransition {
         int SceneManager.ITransition.priority {
@@ -26,9 +26,9 @@ namespace M8.UI.Modal.Helpers {
         }
 
         IEnumerator SceneManager.ITransition.Out() {
-            UIModal.Manager.instance.ModalCloseAll();
+            Manager.instance.ModalCloseAll();
 
-            while(UIModal.Manager.instance.isBusy)
+            while(Manager.instance.isBusy)
                 yield return null;
         }
     }
