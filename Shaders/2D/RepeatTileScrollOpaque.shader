@@ -1,0 +1,97 @@
+//only for 2D stuff
+Shader "M8/2D/RepeatTileScrollOpaque" 
+{
+	Properties 
+	{
+	    _MainTex ("Base (RGB)", 2D) = "white" {}
+		modColor ("Mod Color", Color) = (1.0, 1.0, 1.0, 1.0)
+		speedX ("Speed X", Float) = 1
+		speedY ("Speed Y", Float) = 1
+		tileX ("Tile X", Float) = 1
+		tileY ("Tile Y", Float) = 1
+	}
+	
+	SubShader
+	{
+		Tags {"IgnoreProjector"="True" "RenderType"="Opaque"}
+		ZWrite Off Lighting Off Cull Off Fog { Mode Off }
+		LOD 110
+		
+		Pass
+		{
+			CGPROGRAM
+			#include "UnityCG.cginc"
+			
+			#pragma vertex vtx
+			#pragma fragment frag 
+			#pragma fragmentoption ARB_precision_hint_fastest
+			
+			struct Input {
+				float4 vertex : POSITION;
+				float3 color : COLOR;
+				float2 texcoord : TEXCOORD0;
+			};
+			
+			struct Output {
+				float4 vertex : POSITION;
+				fixed3 color : COLOR;
+				float2 texcoord : TEXCOORD0;
+			};
+			
+			sampler2D _MainTex;
+
+			float4 modColor;
+			
+			float speedX;
+			float speedY;
+			
+			float tileX;
+			float tileY;
+			
+			Output vtx(Input IN)
+			{
+				Output o;
+				
+				o.vertex = UnityObjectToClipPos(IN.vertex);
+				o.color = IN.color;
+				
+				o.texcoord = IN.texcoord;
+				o.texcoord.x *= tileX;
+				o.texcoord.y *= tileY;
+				
+				o.texcoord.x += speedX * _Time.y;
+				o.texcoord.y += speedY * _Time.y;
+				
+				return o;
+			}
+			
+			fixed3 frag(Output i) : COLOR
+			{
+				fixed3 col = tex2D(_MainTex, i.texcoord).rgb * i.color.rgb * modColor.rgb;
+				return col;
+			}
+			
+			ENDCG
+		}
+	}
+	
+	SubShader 
+	{
+		Tags {"IgnoreProjector"="True" "RenderType"="Opaque"}
+		ZWrite Off Cull Off Fog { Mode Off } 
+		LOD 100
+		
+		BindChannels 
+		{
+			Bind "Vertex", vertex
+			Bind "TexCoord", texcoord
+			Bind "Color", color
+		}
+
+		Pass 
+		{
+			Lighting Off
+			SetTexture [_MainTex] { combine texture * primary } 
+		}
+	}
+}
