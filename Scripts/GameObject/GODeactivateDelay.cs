@@ -7,6 +7,7 @@ namespace M8 {
         public delegate void OnDeactivate();
 
         public GameObject target;
+        public bool defaultActive = true;
         public bool resetActive;
 
         public float delay = 1.0f;
@@ -26,6 +27,13 @@ namespace M8 {
 
         void OnDisable() {
             CancelInvoke();
+        }
+
+        void Awake() {
+            if(!target)
+                target = gameObject;
+
+            target.SetActive(defaultActive);
         }
 
         void OnDeactive() {
