@@ -170,11 +170,8 @@ namespace M8 {
                     object[] objParms;
                     if(ConsoleParam.Parse(command.parms, parmLine, out objParms))
                         command.Execute(objParms);
-                    else {
-                        var sb = new System.Text.StringBuilder();
-                        sb.Append("Error parsing params.").Append('\n').Append(command.logHint);
-                        Log(LogType.Log, tagCommand, sb.ToString());
-                    }
+                    else
+                        Log(LogType.Log, tagCommand, command.logHint);
                 }
             }
             else

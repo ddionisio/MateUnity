@@ -16,6 +16,7 @@ namespace M8 {
         Vector2,
         Vector3,
         Vector4,
+        Color,
         String,
         Char,
         Boolean,
@@ -50,6 +51,8 @@ namespace M8 {
                     consoleParmType = ConsoleParamType.Vector3;
                 else if(parmType == typeof(Vector4))
                     consoleParmType = ConsoleParamType.Vector4;
+                else if(parmType == typeof(Color))
+                    consoleParmType = ConsoleParamType.Color;
                 else if(parmType == typeof(string))
                     consoleParmType = ConsoleParamType.String;
                 else if(parmType == typeof(char))
@@ -66,6 +69,7 @@ namespace M8 {
         public static bool Parse(ConsoleParamType[] parmTypes, string line, out object[] output) {
             var parmStrings = Split(line);
             if(parmStrings.Length < parmTypes.Length) {
+                Debug.LogWarningFormat("Error Parsing [Param count: {0}]: \"{1}\"", parmStrings.Length, line);
                 output = null;
                 return false;
             }
@@ -177,6 +181,37 @@ namespace M8 {
                                 output[i] = Vector4.zero;
                         }
                         break;
+                    case ConsoleParamType.Color: {
+                            var elems = parmString.Split(',');
+                            if(elems.Length >= 4) {
+                                float r, g, b, a;
+
+                                float.TryParse(elems[0].Trim(), out r);
+                                float.TryParse(elems[1].Trim(), out g);
+                                float.TryParse(elems[2].Trim(), out b);
+                                float.TryParse(elems[3].Trim(), out a);
+
+                                output[i] = new Color(r, g, b, a);
+                            }
+                            else if(elems.Length >= 3) {
+                                float r, g, b;
+
+                                float.TryParse(elems[0].Trim(), out r);
+                                float.TryParse(elems[1].Trim(), out g);
+                                float.TryParse(elems[2].Trim(), out b);
+
+                                output[i] = new Color(r, g, b, 1f);
+                            }
+                            else {
+                                //try hex
+                                if(parmString.StartsWith("0x", System.StringComparison.CurrentCultureIgnoreCase) || parmString.StartsWith("&H", System.StringComparison.CurrentCultureIgnoreCase)) {
+                                    uint var;
+                                    uint.TryParse(parmString.Substring(2), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out var);
+                                    output[i] = new Color(((var & 0xff000000)>>24)/255f, ((var & 0x00ff0000) >> 16) / 255f, ((var & 0x0000ff00) >> 8) / 255f, (var & 0x000000ff) / 255f);
+                                }
+                            }
+                        }
+                        break;
                     case ConsoleParamType.String:
                         output[i] = parmString;
                         break;
@@ -228,7 +263,8 @@ namespace M8 {
                 char c = line[i];
 
                 if(c == '\\') {
-                    isEscapeFound = !isEscapeFound;
+                    isEscapeFound = true;
+                    continue;
                 }
                 else if(isEncloseFound) {
                     if(!isEscapeFound && IsEncloseEndMatch(line[startInd], c)) {
@@ -239,6 +275,7 @@ namespace M8 {
                             strList.Add("");
 
                         startInd = -1;
+                        isEncloseFound = false;
                     }
                 }
                 else if(IsEncloseStart(c)) {
@@ -257,6 +294,13 @@ namespace M8 {
                 }
                 else if(startInd == -1)
                     startInd = i;
+
+                isEscapeFound = false;
+            }
+
+            //add last element
+            if(startInd != -1 && startInd < line.Length) {
+                strList.Add(line.Substring(startInd, line.Length - startInd));
             }
 
             return strList.ToArray();
