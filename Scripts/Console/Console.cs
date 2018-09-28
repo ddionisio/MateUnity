@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEngine;
 
 namespace M8 {
-    [CreateAssetMenu(fileName = "console", menuName = "Console")]
+    [CreateAssetMenu(fileName = "console", menuName = "M8/Console")]
     public class Console : ScriptableObject, ILogger {
         public const string tagCommand = "command";
 
@@ -14,9 +14,15 @@ namespace M8 {
             public string text;
         }
 
-        [Header("Config")]        
-        public string[] tags; //add tags to allow Console to only include specific commands
-        public int maxLine = 512;
+        [Header("Config")]
+        public string[] tagCommandFilters; //add tags to allow Console to only include specific commands
+        public int maxLog = 256;
+        public bool defaultUnityLogEnabled = true;
+        public bool defaultLogEnabled = true;
+        public LogType[] defaultLogTypeFilters = new LogType[] { LogType.Assert, LogType.Error, LogType.Exception, LogType.Log, LogType.Warning };
+
+        [Header("Signals")]
+        public SignalConsole signalRefresh;
 
         public bool unityLogEnabled {
             get { return mIsUnityLogEnabled; }
@@ -42,6 +48,12 @@ namespace M8 {
                 }
             }
         }
+
+        public List<LogItem> logs {
+            get { return mLogs; }
+        }
+
+        public event System.Action refreshCallback;
 
         LogType ILogger.filterLogType { get; set; }
         ILogHandler ILogger.logHandler { get; set; }
@@ -112,21 +124,64 @@ namespace M8 {
 
         private Dictionary<string, Command> mCommands = new Dictionary<string, Command>();
         private List<LogItem> mLogs = new List<LogItem>();
+        private CacheList<LogType> mLogTypeFilters;
 
         public bool CompareTag(string tag) {
-            if(tags == null || tags.Length == 0)
+            if(tagCommandFilters == null || tagCommandFilters.Length == 0)
                 return true;
 
-            for(int i = 0; i < tags.Length; i++) {
-                if(tags[i] == tag)
+            for(int i = 0; i < tagCommandFilters.Length; i++) {
+                if(tagCommandFilters[i] == tag)
                     return true;
             }
 
             return false;
         }
 
-        public void Refresh() {
+        public void SetLogFilter(LogType logType, bool active) {
+            bool isChanged = false;
 
+            if(active) {
+                bool isFound = false;
+                for(int i = 0; i < mLogTypeFilters.Count; i++) {
+                    if(mLogTypeFilters[i] == logType) {
+                        isFound = true;
+                        break;
+                    }
+                }
+                if(!isFound) {
+                    mLogTypeFilters.Add(logType);
+                    isChanged = true;
+                }
+            }
+            else
+                isChanged = mLogTypeFilters.Remove(logType);
+
+            if(isChanged)
+                Refresh();
+        }
+
+        public void Refresh() {
+            //clean up logs based on filters
+            var newLogs = new List<LogItem>();
+
+            for(int i = 0; i < mLogs.Count; i++) {
+                var log = mLogs[i];
+
+                if(log.tag != tagCommand) {
+                    if(!mIsLogEnabled)
+                        continue;
+
+                    if(!IsLogTypeAllowed(log.type))
+                        continue;
+                }
+
+                newLogs.Add(log);
+            }
+
+            mLogs = newLogs;
+
+            RefreshInvoke();
         }
 
         public void AddCommand(MethodInfo method) {
@@ -146,6 +201,9 @@ namespace M8 {
         }
 
         public void Execute(string line) {
+            if(string.IsNullOrEmpty(line))
+                return;
+
             string commandName;
             string parmLine = "";
 
@@ -175,27 +233,34 @@ namespace M8 {
                 }
             }
             else
-                Log(LogType.Log, tagCommand, "Unknown Command: " + command);
+                Log(LogType.Log, tagCommand, "Unknown Command: " + commandName);
         }
 
         public bool IsLogTypeAllowed(LogType logType) {
-            return true;
+            return mLogTypeFilters.Exists(logType);
+        }
+
+        public void Clear() {
+            mLogs.Clear();
+            RefreshInvoke();
         }
 
         public void Log(LogType logType, string tag, object message) {
-            if(!mIsLogEnabled)
-                return;
+            if(tag != tagCommand) {
+                if(!mIsLogEnabled)
+                    return;
+
+                if(!IsLogTypeAllowed(logType))
+                    return;
+            }
 
             //check if we need to remove last item
-            if(mLogs.Count == maxLine) {
+            if(mLogs.Count == maxLog)
                 mLogs.RemoveAt(0);
-
-                //callback
-            }
 
             mLogs.Add(new LogItem() { type = logType, tag = tag, text = message != null ? message.ToString() : "" });
 
-            //callback
+            RefreshInvoke();
         }
 
         public void Log(LogType logType, string tag, object message, Object context) {
@@ -260,8 +325,15 @@ namespace M8 {
         }
 
         void OnEnable() {
+            mIsLogEnabled = defaultLogEnabled;
+
+            mIsUnityLogEnabled = defaultUnityLogEnabled;
             if(mIsUnityLogEnabled)
                 Application.logMessageReceived += OnUnityLog;
+
+            mLogTypeFilters = new CacheList<LogType>(System.Enum.GetValues(typeof(LogType)).Length);
+            for(int i = 0; i < defaultLogTypeFilters.Length; i++)
+                SetLogFilter(defaultLogTypeFilters[i], true);
 
             //fill in commands from ConsoleClassRegisterAttribute
             RegisterCommandsFromClasses();
@@ -273,6 +345,8 @@ namespace M8 {
 
             mCommands.Clear();
             mLogs.Clear();
+
+            refreshCallback = null;
         }
 
         void OnUnityLog(string logString, string stackTrace, LogType type) {
@@ -287,10 +361,18 @@ namespace M8 {
             return comm;
         }
 
+        private void RefreshInvoke() {
+            if(signalRefresh)
+                signalRefresh.Invoke(this);
+
+            if(refreshCallback != null)
+                refreshCallback();
+        }
+
         private void RegisterCommandsFromClasses() {
             foreach(var assembly in System.AppDomain.CurrentDomain.GetAssemblies()) {
                 foreach(var type in assembly.GetTypes()) {
-                    var registerAttr = System.Attribute.GetCustomAttribute(type, typeof(ConsoleClassRegisterAttribute), true) as ConsoleClassRegisterAttribute;
+                    var registerAttr = System.Attribute.GetCustomAttribute(type, typeof(ConsoleCommandClassAttribute), true) as ConsoleCommandClassAttribute;
                     if(registerAttr != null) {
                         //check tag filter
                         if(!string.IsNullOrEmpty(registerAttr.tag) && !CompareTag(registerAttr.tag))

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: consoleUI
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 2
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_AndroidETC2FallbackOverride: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 4ecceabcb5c1c26498b5a66e611cacd3, type: 3}
+    bindAsDefault: 1
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300002, guid: fd59599461920194398cccf41b514e24, type: 3}
+  - {fileID: 21300000, guid: fd59599461920194398cccf41b514e24, type: 3}
+  - {fileID: 21300000, guid: a62ae3869970fc7498aff03e00205fa6, type: 3}
+  - {fileID: 21300000, guid: 9bc2cd9ff7c7bec4592ec099e569f5af, type: 3}
+  - {fileID: 21300000, guid: ebeb4aeffeac73744a079ad8bc408843, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - blank_border
+  - blank
+  - iconError
+  - iconInfo
+  - iconWarning
+  m_Tag: consoleUI
+  m_IsVariant: 0

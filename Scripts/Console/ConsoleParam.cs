@@ -82,8 +82,10 @@ namespace M8 {
                 switch(parmTypes[i]) {
                     case ConsoleParamType.Integer: {
                             int var;
-                            if(!int.TryParse(parmString, out var))
+                            if(!int.TryParse(parmString, out var)) {
+                                Debug.LogWarning("Error parsing: " + parmString);
                                 return false;
+                            }
 
                             output[i] = var;
                         }
@@ -97,12 +99,19 @@ namespace M8 {
                                 uint.TryParse(parmString.Substring(2), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out var);
                                 output[i] = var;
                             }
+                            else {
+                                Debug.LogWarning("Error parsing: " + parmString);
+                                return false;
+                            }
                         }
                         break;
                     case ConsoleParamType.Long: {
                             long var;
-                            if(!long.TryParse(parmString, out var))
+                            if(!long.TryParse(parmString, out var)) {
+                                Debug.LogWarning("Error parsing: " + parmString);
                                 return false;
+                            }
+
                             output[i] = var;
                         }
                         break;
@@ -115,20 +124,28 @@ namespace M8 {
                                 ulong.TryParse(parmString.Substring(2), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out var);
                                 output[i] = var;
                             }
+                            else {
+                                Debug.LogWarning("Error parsing: " + parmString);
+                                return false;
+                            }
                         }
                         break;
                     case ConsoleParamType.Float: {
                             float var;
-                            if(!float.TryParse(parmString, out var))
+                            if(!float.TryParse(parmString, out var)) {
+                                Debug.LogWarning("Error parsing: " + parmString);
                                 return false;
+                            }
 
                             output[i] = var;
                         }
                         break;
                     case ConsoleParamType.Double: {
                             double var;
-                            if(!double.TryParse(parmString, out var))
+                            if(!double.TryParse(parmString, out var)) {
+                                Debug.LogWarning("Error parsing: " + parmString);
                                 return false;
+                            }
 
                             output[i] = var;
                         }
@@ -144,8 +161,10 @@ namespace M8 {
 
                                 output[i] = new Vector2(x, y);
                             }
-                            else
+                            else {
+                                Debug.LogWarning("Error parsing: " + parmString);
                                 output[i] = Vector2.zero;
+                            }
                         }
                         break;
                     case ConsoleParamType.Vector3: {
@@ -160,8 +179,10 @@ namespace M8 {
 
                                 output[i] = new Vector3(x, y, z);
                             }
-                            else
+                            else {
+                                Debug.LogWarning("Error parsing: " + parmString);
                                 output[i] = Vector3.zero;
+                            }
                         }
                         break;
                     case ConsoleParamType.Vector4: {
@@ -177,8 +198,10 @@ namespace M8 {
 
                                 output[i] = new Vector4(x, y, z, w);
                             }
-                            else
+                            else {
+                                Debug.LogWarning("Error parsing: " + parmString);
                                 output[i] = Vector4.zero;
+                            }
                         }
                         break;
                     case ConsoleParamType.Color: {
@@ -207,7 +230,11 @@ namespace M8 {
                                 if(parmString.StartsWith("0x", System.StringComparison.CurrentCultureIgnoreCase) || parmString.StartsWith("&H", System.StringComparison.CurrentCultureIgnoreCase)) {
                                     uint var;
                                     uint.TryParse(parmString.Substring(2), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out var);
-                                    output[i] = new Color(((var & 0xff000000)>>24)/255f, ((var & 0x00ff0000) >> 16) / 255f, ((var & 0x0000ff00) >> 8) / 255f, (var & 0x000000ff) / 255f);
+                                    output[i] = new Color(((var & 0xff000000) >> 24) / 255f, ((var & 0x00ff0000) >> 16) / 255f, ((var & 0x0000ff00) >> 8) / 255f, (var & 0x000000ff) / 255f);
+                                }
+                                else {
+                                    Debug.LogWarning("Error parsing: " + parmString);
+                                    output[i] = 0;
                                 }
                             }
                         }
