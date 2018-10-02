@@ -10,7 +10,7 @@ namespace M8.UI {
         void OnDestroy() {
             if(SceneManager.instance) {
                 SceneManager.instance.sceneChangeStartCallback -= OnSceneChangeStart;
-                SceneManager.instance.sceneChangePostCallback -= OnSceneChangePost;
+                SceneManager.instance.sceneChangeEndCallback -= OnSceneChangeEnd;
             }
 
             if(mIsLocked && InputModule.instance)
@@ -19,7 +19,7 @@ namespace M8.UI {
 
         void Awake() {
             SceneManager.instance.sceneChangeStartCallback += OnSceneChangeStart;
-            SceneManager.instance.sceneChangePostCallback += OnSceneChangePost;
+            SceneManager.instance.sceneChangeEndCallback += OnSceneChangeEnd;
         }
 
         void OnSceneChangeStart() {
@@ -27,7 +27,7 @@ namespace M8.UI {
             InputModule.instance.lockInput = true;
         }
 
-        void OnSceneChangePost() {
+        void OnSceneChangeEnd() {
             mIsLocked = false;
             InputModule.instance.lockInput = false;
         }

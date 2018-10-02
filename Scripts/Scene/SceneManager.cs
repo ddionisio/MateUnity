@@ -58,6 +58,11 @@ namespace M8 {
         public event OnSceneCallback sceneChangePostCallback;
 
         /// <summary>
+        /// Called after new scene is loaded, after transition in
+        /// </summary>
+        public event OnSceneCallback sceneChangeEndCallback;
+
+        /// <summary>
         /// Called after a new scene is added via AddScene
         /// </summary>
         public event OnSceneDataCallback sceneAddedCallback;
@@ -469,6 +474,9 @@ namespace M8 {
                 yield return mTransitions[i].In();
 
             isLoading = false;
+
+            if(sceneChangeEndCallback != null)
+                sceneChangeEndCallback();
         }
 
         IEnumerator DoAddScene() {
