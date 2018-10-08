@@ -136,6 +136,10 @@ namespace M8 {
             }
         }
 
+        public void SetState(EntityState state) {
+            this.state = state;
+        }
+
         /// <summary>
         /// Force change to the same state, will also set prevState to the current state
         /// </summary>
