@@ -11,7 +11,7 @@ namespace M8 {
         [SerializeField]
         SignalEntity _signal;
         [SerializeField]
-        UnityEvent<EntityBase> _event;
+        EntityUnityEvent _event;
 
         void OnDestroy() {
             if(_target)
