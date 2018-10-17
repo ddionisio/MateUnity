@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.Events;
 
 namespace M8 {
-    [AddComponentMenu("M8/Entity/Signal State Change")]
-    public class EntitySignalStateChange : MonoBehaviour {
+    [AddComponentMenu("M8/Entity/Signal State Changed")]
+    public class EntitySignalStateChanged : MonoBehaviour {
         [SerializeField]
         EntityBase _target;
         [SerializeField]
