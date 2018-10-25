@@ -6,6 +6,11 @@ using UnityEditor;
 namespace M8.UI.Layouts {
     [CustomEditor(typeof(LayoutAnchorStretch))]
     public class LayoutAnchorStretchInspector : Editor {
+
+        void OnEnable() {
+            ((LayoutAnchorStretch)target).Apply();
+        }
+
         public override void OnInspectorGUI() {
             base.OnInspectorGUI();
 
