@@ -8,7 +8,7 @@ namespace M8 {
     public class Signal : ScriptableObject {
         public event System.Action callback;
 
-        public void Invoke() {
+        public virtual void Invoke() {
             if(callback != null)
                 callback();
         }

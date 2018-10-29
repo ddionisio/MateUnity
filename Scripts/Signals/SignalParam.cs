@@ -9,7 +9,7 @@ namespace M8 {
     public abstract class SignalParam<T> : ScriptableObject {
         public event System.Action<T> callback;
 
-        public void Invoke(T parm) {
+        public virtual void Invoke(T parm) {
             if(callback != null)
                 callback(parm);
         }
@@ -21,7 +21,7 @@ namespace M8 {
     public abstract class SignalParam<T1, T2> : ScriptableObject {
         public event System.Action<T1, T2> callback;
 
-        public void Invoke(T1 parm1, T2 parm2) {
+        public virtual void Invoke(T1 parm1, T2 parm2) {
             if(callback != null)
                 callback(parm1, parm2);
         }
@@ -33,7 +33,7 @@ namespace M8 {
     public abstract class SignalParam<T1, T2, T3> : ScriptableObject {
         public event System.Action<T1, T2, T3> callback;
 
-        public void Invoke(T1 parm1, T2 parm2, T3 parm3) {
+        public virtual void Invoke(T1 parm1, T2 parm2, T3 parm3) {
             if(callback != null)
                 callback(parm1, parm2, parm3);
         }
@@ -45,7 +45,7 @@ namespace M8 {
     public abstract class SignalParam<T1, T2, T3, T4> : ScriptableObject {
         public event System.Action<T1, T2, T3, T4> callback;
 
-        public void Invoke(T1 parm1, T2 parm2, T3 parm3, T4 parm4) {
+        public virtual void Invoke(T1 parm1, T2 parm2, T3 parm3, T4 parm4) {
             if(callback != null)
                 callback(parm1, parm2, parm3, parm4);
         }
