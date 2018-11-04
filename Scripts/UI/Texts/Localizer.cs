@@ -17,17 +17,17 @@ namespace M8.UI.Texts {
         /// </summary>
         public bool isKeyExclusive;
 
-        private bool mStarted = false;
-        private object[] mParams = null;
-
-        private Text mUIText;
-
         /// <summary>
         /// Set the parameters of the text for use with string format. If this is not null, string.Format is used.
         /// Make sure to call Localize again after changes to params
         /// </summary>
         public object[] parameters { get { return mParams; } set { mParams = value; } }
 
+        public Text uiText { get; private set; }
+
+        private bool mStarted = false;
+        private object[] mParams = null;
+        
         /// <summary>
         /// Localize the widget on enable, but only if it has been started already.
         /// </summary>
@@ -48,19 +48,19 @@ namespace M8.UI.Texts {
         /// Force-localize the widget.
         /// </summary>
         public void Apply() {
-            if(mUIText == null)
-                mUIText = GetComponent<Text>();
+            if(uiText == null)
+                uiText = GetComponent<Text>();
 
             if(isKeyExclusive) {
                 //ensure key exists
                 if(!string.IsNullOrEmpty(key) && Localize.instance.Exists(key))
-                    mUIText.text = Localize.instance.GetText(key);
+                    ApplyToLabel(Localize.instance.GetText(key));
                 else
-                    mUIText.text = "";
+                    uiText.text = "";
             }
             else {
                 // If no localization key has been specified, use the label's text as the key
-                if(string.IsNullOrEmpty(key)) key = mUIText.text;
+                if(string.IsNullOrEmpty(key)) key = uiText.text;
 
                 // If we still don't have a key, use the widget's name
                 string val = string.IsNullOrEmpty(key) ? Localize.instance.GetText(name) : Localize.instance.GetText(key);
@@ -68,8 +68,12 @@ namespace M8.UI.Texts {
                 if(mParams != null)
                     val = string.Format(val, mParams);
 
-                mUIText.text = val;
+                ApplyToLabel(val);
             }
+        }
+
+        protected virtual void ApplyToLabel(string text) {
+            uiText.text = text;
         }
     }
 }

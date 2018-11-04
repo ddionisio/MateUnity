@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections;
 
 namespace M8.UI {
-    [CustomEditor(typeof(Texts.Localizer))]
+    [CustomEditor(typeof(Texts.Localizer), true)]
     public class TextLocalizerInspector : Editor {
         public override void OnInspectorGUI() {
             base.OnInspectorGUI();
@@ -18,7 +18,7 @@ namespace M8.UI {
 
                 var textUI = dat.GetComponent<UnityEngine.UI.Text>();
                 if(textUI) {
-                    textUI.text = Localize.Get(dat.key);
+                    dat.Apply();
                     EditorUtility.SetDirty(textUI);
                 }
             }
