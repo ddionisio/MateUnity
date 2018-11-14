@@ -18,14 +18,22 @@ namespace M8.UI.Graphics {
         public Type type = Type.Multiply;
         public bool initOnAwake = true;
 
+        public Color applyColor;
+
         private Graphic[] mGraphics;
         private Color[] mGraphicDefaultColors;
 
         private bool mIsApplied;
 
+        public void ApplyColor() {
+            ApplyColor(applyColor);
+        }
+
         public void ApplyColor(Color color) {
             if(mGraphics == null)
                 Init();
+
+            applyColor = color;
 
             switch(type) {
                 case Type.Override:
