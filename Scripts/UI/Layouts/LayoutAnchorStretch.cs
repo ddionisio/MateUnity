@@ -24,6 +24,9 @@ namespace M8.UI.Layouts {
         private Quaternion mTargetLastRotate;
         
         public void Apply() {
+            if(!target)
+                return;
+
             source.pivot = target.pivot;            
             source.anchorMin = new Vector2(0.5f, 0.5f);
             source.anchorMax = new Vector2(0.5f, 0.5f);
