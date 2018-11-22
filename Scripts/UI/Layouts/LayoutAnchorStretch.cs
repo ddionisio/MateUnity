@@ -24,7 +24,7 @@ namespace M8.UI.Layouts {
         private Quaternion mTargetLastRotate;
         
         public void Apply() {
-            if(!target)
+            if(!source || !target)
                 return;
 
             source.pivot = target.pivot;            
@@ -51,13 +51,17 @@ namespace M8.UI.Layouts {
             mTargetLastSizeDelta = target.sizeDelta;
         }
 
+        void OnEnable() {
+            Apply();
+        }
+
         void Awake() {
             if(!source)
                 source = transform as RectTransform;
         }
 
         void Update() {
-            if(!source || !target)
+            if(!target)
                 return;
 
             if(mTargetLastSizeDelta != target.sizeDelta || mTargetLastPos != target.position || mTargetLastRotate != target.rotation)
