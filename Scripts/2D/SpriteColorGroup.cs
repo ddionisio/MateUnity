@@ -31,7 +31,7 @@ namespace M8 {
         private Color mColor = Color.white;
 
         public void ApplyColor(Color color) {
-            if(spriteRenders == null || spriteRenders.Length == 0)
+            if(spriteRenders == null || spriteRenders.Length == 0 || (mGraphicDefaultColors != null && spriteRenders.Length != mGraphicDefaultColors.Length))
                 Init();
             else if(mGraphicDefaultColors == null)
                 InitDefaultData();

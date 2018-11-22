@@ -9,7 +9,7 @@ namespace M8 {
     [RequireComponent(typeof(Renderer))]
     public class RendererAutoTileScale : MonoBehaviour {
         public float pixelPerUnit = 32.0f;
-
+                
         [SerializeField]
         bool _flipX = false;
 
@@ -21,6 +21,11 @@ namespace M8 {
 
         [SerializeField]
         bool _applyY = true;
+
+        public bool flipX { get { return _flipX; } set { _flipX = value; } }
+        public bool flipY { get { return _flipY; } set { _flipY = value; } }
+        public bool applyX { get { return _applyX; } set { _applyX = value; } }
+        public bool applyY { get { return _applyY; } set { _applyY = value; } }
 
         private Transform mTrans = null;
         private Material mMat = null;
