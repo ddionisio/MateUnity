@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿using UnityEngine.Events;
 using System.Collections.Generic;
 
 namespace M8 {
@@ -47,5 +47,9 @@ namespace M8 {
             val = default(T);
             return false;
         }
+    }
+
+    [System.Serializable]
+    public class UnityEventGenericParams : UnityEvent<GenericParams> {
     }
 }
