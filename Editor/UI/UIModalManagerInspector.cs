@@ -75,7 +75,7 @@ public class UIModalManagerInspector : Editor {
             if(uiCtrl) {
                 _name = uiCtrl.name;
 
-                _isPrefab = PrefabUtility.GetPrefabType(uiCtrl) == PrefabType.Prefab;
+                _isPrefab = !uiCtrl.gameObject.scene.IsValid();
                 if(_isPrefab) {
                     _instantiateTo = EditorGUILayout.ObjectField("instantiateTo", _instantiateTo, typeof(Transform), true) as Transform;                    
                 }
@@ -121,7 +121,7 @@ public class UIModalManagerInspector : Editor {
             UIModalManager.UIData newDat = new UIModalManager.UIData();
             newDat.e_ui = mNewUI;
             newDat.name = mNewUI.name;
-            newDat.isPrefab = PrefabUtility.GetPrefabType(mNewUI) == PrefabType.Prefab;
+            newDat.isPrefab = !mNewUI.gameObject.scene.IsValid();
             input.uis[input.uis.Length - 1] = newDat;
             mNewUI = null;
         }

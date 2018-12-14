@@ -122,17 +122,14 @@ namespace M8.EditorExt {
             GUI.enabled = prevEnabled
                 && mPrefab != null
                 && Selection.activeGameObject != null
-                && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.Prefab
-                && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.ModelPrefab
-                && (PrefabUtility.GetPrefabType(mPrefab) == PrefabType.Prefab
-                    || PrefabUtility.GetPrefabType(mPrefab) == PrefabType.ModelPrefab);
+                && Selection.activeGameObject.scene.IsValid()
+                && PrefabUtility.GetPrefabAssetType(mPrefab) != PrefabAssetType.NotAPrefab;
 
             mPlaceUnderSelection = GUILayout.Toggle(mPlaceUnderSelection, "Place under selection.");
             
             GUI.enabled = prevEnabled
                 && mPrefab != null
-                && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.Prefab
-                && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.ModelPrefab;
+                && PrefabUtility.GetPrefabAssetType(mPrefab) == PrefabAssetType.NotAPrefab;
 
             mUpdateOriginal = GUILayout.Toggle(mUpdateOriginal, "Update object.");
 
@@ -231,8 +228,7 @@ namespace M8.EditorExt {
                 Transform newT;
 
                 if(mUpdateOriginal
-                    && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.Prefab
-                    && PrefabUtility.GetPrefabType(mPrefab) != PrefabType.ModelPrefab) {
+                    && PrefabUtility.GetPrefabAssetType(mPrefab) == PrefabAssetType.NotAPrefab) {
                     newGo = mPrefab;
                     newT = newGo.transform;
                 }
@@ -244,8 +240,7 @@ namespace M8.EditorExt {
 
                     newT.parent = mPlaceUnderSelection 
                         && Selection.activeGameObject != null 
-                        && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.Prefab
-                        && PrefabUtility.GetPrefabType(Selection.activeGameObject) != PrefabType.ModelPrefab 
+                        && PrefabUtility.GetPrefabAssetType(Selection.activeGameObject) == PrefabAssetType.NotAPrefab
                             ? Selection.activeGameObject.transform : null;
                                         
                     mDupCounter++;

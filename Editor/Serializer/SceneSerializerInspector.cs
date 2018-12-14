@@ -11,7 +11,7 @@ namespace M8 {
         private static string mRefScene = "";
 
         public override void OnInspectorGUI() {
-            SceneSerializer data = target as SceneSerializer;
+            var data = target as SceneSerializer;
 
             //this shouldn't be in a prefab...
 
@@ -20,10 +20,9 @@ namespace M8 {
             }
             else if(targets != null && targets.Length > 1) {
                 foreach(Object obj in targets) {
-                    PrefabType prefabType = PrefabUtility.GetPrefabType(obj);
-                    if(prefabType == PrefabType.Prefab || prefabType == PrefabType.ModelPrefab) {
+                    var sceneSerializer = obj as SceneSerializer;
+                    if(sceneSerializer == null || !sceneSerializer.gameObject.scene.IsValid())
                         continue;
-                    }
 
                     CheckID(obj);
                 }
@@ -31,8 +30,7 @@ namespace M8 {
                 EditorGUILayout.LabelField("id", "--");
             }
             else {
-                PrefabType prefabType = PrefabUtility.GetPrefabType(target);
-                if(prefabType == PrefabType.Prefab || prefabType == PrefabType.ModelPrefab) {
+                if(!data.gameObject.scene.IsValid()) {
                     EditorGUILayout.LabelField("id", "??");
                     return;
                 }
