@@ -50,8 +50,8 @@ namespace M8 {
         public event OnGenericCall spawnCallback; //called after a slight delay during OnSpawned (at least after one fixed-update)
         public event OnGenericCall releaseCallback;
 
-        private EntityState mState = null;
-        private EntityState mPrevState = null;
+        private State mState = null;
+        private State mPrevState = null;
         
         private bool mIsSpawned = false;
         private bool mIsStarted = false;
@@ -87,7 +87,7 @@ namespace M8 {
             get { return mIsSpawned; }
         }
 
-        public EntityState state {
+        public State state {
             get { return mState; }
 
             set {
@@ -105,7 +105,7 @@ namespace M8 {
             }
         }
 
-        public EntityState prevState {
+        public State prevState {
             get { return mPrevState; }
         }
 
@@ -136,7 +136,7 @@ namespace M8 {
             }
         }
 
-        public void SetState(EntityState state) {
+        public void SetState(State state) {
             this.state = state;
         }
 

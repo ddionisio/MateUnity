@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 
 namespace M8 {
@@ -12,16 +13,17 @@ namespace M8 {
             status = Status.Loading;
 
             //TODO: add version and crc
-            using(WWW web = WWW.LoadFromCacheOrDownload(rootPath, 1)) {
-                yield return web;
+            var request = UnityWebRequestAssetBundle.GetAssetBundle(rootPath);
 
-                error = web.error;
-                if(!string.IsNullOrEmpty(error))
-                    status = Status.Error;
-                else {
-                    mAssetBundle = web.assetBundle;
-                    status = Status.Loaded;
-                }
+            yield return request.SendWebRequest();
+
+            if(request.isNetworkError) {
+                error = request.error;
+                status = Status.Error;
+            }
+            else {
+                mAssetBundle = DownloadHandlerAssetBundle.GetContent(request);
+                status = Status.Loaded;
             }
         }
 
