@@ -8,8 +8,9 @@ namespace M8 {
         
         public string factoryKey { get; private set; }
         
+        public bool isSpawned { get { return !claimed; } }
         public bool claimed { get; private set; }
-                
+
         private bool mIsInterfacesInit;
         private IPoolSpawn[] mISpawns;
         private IPoolDespawn[] mIDespawns;

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 namespace M8 {
-    [AddComponentMenu("M8/Game/PoolSpawnEvent")]
+    [AddComponentMenu("M8/Game/Pool Spawn Event")]
     public class PoolSpawnEvent : MonoBehaviour, IPoolSpawn {
         public UnityEventGenericParams spawnCallback;
 

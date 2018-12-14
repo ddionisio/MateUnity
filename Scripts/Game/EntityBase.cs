@@ -44,7 +44,7 @@ namespace M8 {
         /// </summary>
         public bool activateOnStart = false;
 
-        public EntityActivator activator;
+        public Activator activator;
 
         public event OnGenericCall setStateCallback;
         public event OnGenericCall spawnCallback; //called after a slight delay during OnSpawned (at least after one fixed-update)
@@ -188,11 +188,11 @@ namespace M8 {
             mSerializer = GetComponent<SceneSerializer>();
 
             if(activator == null)
-                activator = GetComponentInChildren<EntityActivator>();
+                activator = GetComponentInChildren<Activator>();
 
             if(activator != null) {
-                activator.awakeCallback += ActivatorWakeUp;
-                activator.sleepCallback += ActivatorSleep;
+                activator.awakeEvent.AddListener(ActivatorWakeUp);
+                activator.sleepEvent.AddListener(ActivatorSleep);
             }
         }
 
@@ -236,10 +236,10 @@ namespace M8 {
             //allow activator to start and check if we need to spawn now or later
             //ensure start is called before spawning if we are freshly allocated from entity manager
             if(activator != null) {
-                activator.Start();
+                activator.ForceDeactivate(false);
 
                 //do it later when we wake up
-                if(!activator.deactivateOnStart) {
+                if(!activator.deactivateOnEnable) {
                     ExecuteSpawn();
                 }
             }
