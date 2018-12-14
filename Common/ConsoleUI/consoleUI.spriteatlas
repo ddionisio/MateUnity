@@ -4,7 +4,8 @@
 SpriteAtlas:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: consoleUI
   m_EditorData:
     serializedVersion: 2
@@ -41,6 +42,7 @@ SpriteAtlas:
     variantMultiplier: 1
     packables:
     - {fileID: 102900000, guid: 4ecceabcb5c1c26498b5a66e611cacd3, type: 3}
+    totalSpriteSurfaceArea: 2466
     bindAsDefault: 1
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
