@@ -102,6 +102,24 @@ namespace M8 {
             return false;
         }
 
+        public static bool Contains(string[] src, int startIndex, int count, string itm) {
+            if(src != null) {
+                for(int i = 0; i < count; i++)
+                    if(src[i + startIndex] == itm)
+                        return true;
+            }
+            return false;
+        }
+
+        public static bool Contains<T>(T[] src, int startIndex, int count, T itm) where T : UnityEngine.Object {
+            if(src != null) {
+                for(int i = 0; i < count; i++)
+                    if(src[i + startIndex] == itm)
+                        return true;
+            }
+            return false;
+        }
+
         public static int[] GenerateIndexArray(Array array) {
             int[] indices = new int[array.Length];
             for(int i = 0; i < indices.Length; i++)

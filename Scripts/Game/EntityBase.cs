@@ -167,10 +167,6 @@ namespace M8 {
         }
 
         protected virtual void OnDestroy() {
-            if(activator != null && activator.defaultParent == transform) {
-                activator.Release(true);
-            }
-
             setStateCallback = null;
             spawnCallback = null;
             releaseCallback = null;
@@ -272,11 +268,7 @@ namespace M8 {
                 releaseCallback(this);
 
             OnDespawned();
-
-            if(activator != null && activator.defaultParent == transform) {
-                activator.Release(false);
-            }
-                        
+            
             mIsSpawned = false;
             mIsStarted = false;
             mSpawnParams = null;

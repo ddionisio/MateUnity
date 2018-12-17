@@ -10,7 +10,7 @@ namespace M8 {
     ///destroy it if we are currently active
     ///</summary>
     [AddComponentMenu("M8/Game/Activator")]
-    public class Activator : MonoBehaviour {
+    public class Activator : MonoBehaviour, IPoolDespawn {
         public const string activatorGOName = "__activatorHolder";
         //public const string ActivatorHolderTag = "ActivatorHolder"; //make sure this is in the scene root
 
@@ -44,6 +44,11 @@ namespace M8 {
         /// </summary>
         public void Activate() {
             if(!mIsActive) {
+                if(!mDefaultParent) { //parent was destroyed at some point
+                    Destroy(gameObject);
+                    return;
+                }
+
                 //put ourself back in parent
                 mDefaultParent.gameObject.SetActive(true);
                 SetParent(mDefaultParent);
@@ -78,23 +83,6 @@ namespace M8 {
             InActive(notifySleep);
         }
                 
-        /// <summary>
-        /// Call this when you are about to be released or destroyed. If destroy = true, then destroy this object
-        /// </summary>
-        public virtual void Release(bool destroy) {
-            //put ourself back in parent
-            if(destroy) {
-                Object.Destroy(gameObject);
-            }
-            else {
-                //put back to parent
-                SetParent(mDefaultParent);
-            }
-            
-            StopDeactivateRout();
-            mIsActive = true;
-        }
-
         protected virtual void OnEnable() {
             if(deactivateOnEnable) {
                 InActive(false);
@@ -119,7 +107,7 @@ namespace M8 {
             mDefaultParent = transform.parent;
             mLocalPos = transform.localPosition;
         }
-                
+        
         protected virtual void SetParent(Transform toParent) {
             if(toParent != mDefaultParent) {
                 Vector3 pos = transform.position;
@@ -134,13 +122,41 @@ namespace M8 {
         }
 
         IEnumerator DoInActiveDelay() {
-            yield return new WaitForSeconds(deactivateDelay);
+            float curTime = 0f;
+            while(curTime < deactivateDelay) {
+                yield return null;
+                curTime += Time.deltaTime;
+
+                if(!mDefaultParent) { //parent lost?
+                    Destroy(gameObject);
+                    yield break;
+                }
+            }
 
             InActive(true);
+
+            //check if parent is still alive
+            while(mDefaultParent) {
+                if(mDefaultParent.gameObject.activeSelf) { //parent got activated manually
+                    Activate();
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            Destroy(gameObject);
+
+            mDeactivateRout = null;
         }
 
         protected void InActive(bool notifySleep) {
             if(mIsActive) {
+                if(!mDefaultParent) { //parent was destroyed at some point
+                    Destroy(gameObject);
+                    return;
+                }
+
                 //StopCoroutine("DoActive");
 
                 //remove from parent
@@ -165,6 +181,14 @@ namespace M8 {
                 StopCoroutine(mDeactivateRout);
                 mDeactivateRout = null;
             }
+        }
+
+        void IPoolDespawn.OnDespawned() {
+            //put back to parent
+            SetParent(mDefaultParent);
+
+            StopDeactivateRout();
+            mIsActive = true;
         }
     }
 }

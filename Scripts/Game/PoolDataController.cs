@@ -8,9 +8,10 @@ namespace M8 {
         
         public string factoryKey { get; private set; }
         
-        public bool isSpawned { get { return !claimed; } }
-        public bool claimed { get; private set; }
+        public bool isSpawned { get { return mIsSpawned; } }
+        public bool claimed { get { return !mIsSpawned; } }
 
+        private bool mIsSpawned = false;
         private bool mIsInterfacesInit;
         private IPoolSpawn[] mISpawns;
         private IPoolDespawn[] mIDespawns;
@@ -30,13 +31,13 @@ namespace M8 {
 
             pdc.group = group;
             pdc.factoryKey = !string.IsNullOrEmpty(factoryKey) ? factoryKey : template.name;
-            pdc.claimed = true;
+            pdc.mIsSpawned = false;
 
             return pdc;
         }
         
         public void Spawn(GenericParams parms) {
-            claimed = false;
+            mIsSpawned = true;
 
             InitInterfaces();
                         
@@ -50,7 +51,7 @@ namespace M8 {
             for(int i = 0; i < mIDespawns.Length; i++)
                 mIDespawns[i].OnDespawned();
 
-            claimed = true;
+            mIsSpawned = false;
         }
 
         public void Release() {
