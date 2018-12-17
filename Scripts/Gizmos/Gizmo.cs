@@ -87,44 +87,50 @@ namespace M8 {
             Gizmos.DrawRay(end, left * arrowHeadLength);
         }
 
-        public static void DrawWireCube(Vector3 position, Vector3 size) {
-            var half = size / 2;
-            // draw front
-            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, half.z), position + new Vector3(half.x, -half.y, half.z));
-            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, half.z), position + new Vector3(-half.x, half.y, half.z));
-            Gizmos.DrawLine(position + new Vector3(half.x, half.y, half.z), position + new Vector3(half.x, -half.y, half.z));
-            Gizmos.DrawLine(position + new Vector3(half.x, half.y, half.z), position + new Vector3(-half.x, half.y, half.z));
-            // draw back
-            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, -half.z), position + new Vector3(half.x, -half.y, -half.z));
-            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, -half.z), position + new Vector3(-half.x, half.y, -half.z));
-            Gizmos.DrawLine(position + new Vector3(half.x, half.y, -half.z), position + new Vector3(half.x, -half.y, -half.z));
-            Gizmos.DrawLine(position + new Vector3(half.x, half.y, -half.z), position + new Vector3(-half.x, half.y, -half.z));
-            // draw corners
-            Gizmos.DrawLine(position + new Vector3(-half.x, -half.y, -half.z), position + new Vector3(-half.x, -half.y, half.z));
-            Gizmos.DrawLine(position + new Vector3(half.x, -half.y, -half.z), position + new Vector3(half.x, -half.y, half.z));
-            Gizmos.DrawLine(position + new Vector3(-half.x, half.y, -half.z), position + new Vector3(-half.x, half.y, half.z));
-            Gizmos.DrawLine(position + new Vector3(half.x, half.y, -half.z), position + new Vector3(half.x, half.y, half.z));
+        public static void DrawWireRect(Vector3 position, float rotation, Vector2 extent) {
+            var rot = Quaternion.Euler(0f, 0f, rotation);
+            Gizmos.DrawLine(position + rot * new Vector3(-extent.x, -extent.y, 0f), position + rot * new Vector3(extent.x, -extent.y, 0f));
+            Gizmos.DrawLine(position + rot * new Vector3(-extent.x, -extent.y, 0f), position + rot * new Vector3(-extent.x, extent.y, 0f));
+            Gizmos.DrawLine(position + rot * new Vector3(extent.x, extent.y, 0f), position + rot * new Vector3(extent.x, -extent.y, 0f));
+            Gizmos.DrawLine(position + rot * new Vector3(extent.x, extent.y, 0f), position + rot * new Vector3(-extent.x, extent.y, 0f));
         }
 
-        public static void DrawWireCube(Transform t, Vector3 center, Vector3 size) {
+        public static void DrawWireCube(Vector3 position, Quaternion rotation, Vector3 extent) {
+            // draw front
+            Gizmos.DrawLine(position + rotation * new Vector3(-extent.x, -extent.y, extent.z), position + rotation * new Vector3(extent.x, -extent.y, extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(-extent.x, -extent.y, extent.z), position + rotation * new Vector3(-extent.x, extent.y, extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(extent.x, extent.y, extent.z), position + rotation * new Vector3(extent.x, -extent.y, extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(extent.x, extent.y, extent.z), position + rotation * new Vector3(-extent.x, extent.y, extent.z));
+            // draw back
+            Gizmos.DrawLine(position + rotation * new Vector3(-extent.x, -extent.y, -extent.z), position + rotation * new Vector3(extent.x, -extent.y, -extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(-extent.x, -extent.y, -extent.z), position + rotation * new Vector3(-extent.x, extent.y, -extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(extent.x, extent.y, -extent.z), position + rotation * new Vector3(extent.x, -extent.y, -extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(extent.x, extent.y, -extent.z), position + rotation * new Vector3(-extent.x, extent.y, -extent.z));
+            // draw corners
+            Gizmos.DrawLine(position + rotation * new Vector3(-extent.x, -extent.y, -extent.z), position + rotation * new Vector3(-extent.x, -extent.y, extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(extent.x, -extent.y, -extent.z), position + rotation * new Vector3(extent.x, -extent.y, extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(-extent.x, extent.y, -extent.z), position + rotation * new Vector3(-extent.x, extent.y, extent.z));
+            Gizmos.DrawLine(position + rotation * new Vector3(extent.x, extent.y, -extent.z), position + rotation * new Vector3(extent.x, extent.y, extent.z));
+        }
+
+        public static void DrawWireCube(Transform t, Vector3 center, Vector3 extent) {
             Matrix4x4 mtx = t.localToWorldMatrix;
 
-            var half = size / 2;
             // draw front
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, -extent.y, extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(extent.x, -extent.y, extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, -extent.y, extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(extent.x, -extent.y, extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, extent.z)));
             // draw back
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, -half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, -half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, -half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, -half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, -extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(extent.x, -extent.y, -extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, -extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, -extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(extent.x, -extent.y, -extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, -extent.z)));
             // draw corners
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, -half.y, half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, -half.y, half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(-half.x, half.y, half.z)));
-            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, -half.z)), mtx.MultiplyPoint3x4(center + new Vector3(half.x, half.y, half.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, -extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, -extent.y, extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(extent.x, -extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(extent.x, -extent.y, extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, extent.z)));
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, extent.z)));
         }
     }
 }

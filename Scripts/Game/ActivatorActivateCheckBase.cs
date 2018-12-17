@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
-    public abstract class ActivatorActivateRadiusCheckBase<T> : MonoBehaviour where T:Component {
-        public LayerMask layerMask;
-        public float radius;
+    public abstract class ActivatorActivateCheckBase<T> : MonoBehaviour where T:Component {
+        public LayerMask layerMask;        
         public float delay = 0.3f;
         public int capacity = 8;
 
@@ -85,13 +84,6 @@ namespace M8 {
             }
             else
                 mCurTime += Time.deltaTime;
-        }
-
-        void OnDrawGizmos() {
-            if(radius > 0f) {
-                Gizmos.color = Color.green;
-                Gizmos.DrawWireSphere(transform.position, radius);
-            }
         }
     }
 }
