@@ -451,6 +451,17 @@ namespace M8 {
                 SetValue(name, (int)flags, persistent);
             }
 
+            public void SetFlagMask(string name, uint mask, bool state, bool persistent) {
+                uint flags = (uint)GetValue(name);
+
+                if(state)
+                    flags |= mask;
+                else
+                    flags &= ~mask;
+
+                SetValue(name, (int)flags, persistent);
+            }
+
             public float GetValueFloat(string name, float defaultVal = 0.0f) {
                 StateValue v;
                 //try local
