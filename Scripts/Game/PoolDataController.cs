@@ -14,6 +14,7 @@ namespace M8 {
         private bool mIsSpawned = false;
         private bool mIsInterfacesInit;
         private IPoolSpawn[] mISpawns;
+        private IPoolSpawnComplete[] mISpawnCompletes;
         private IPoolDespawn[] mIDespawns;
 
         public static PoolDataController Generate(string factoryKey, GameObject template, string group, Transform parent) {
@@ -43,6 +44,9 @@ namespace M8 {
                         
             for(int i = 0; i < mISpawns.Length; i++)
                 mISpawns[i].OnSpawned(parms);
+
+            for(int i = 0; i < mISpawnCompletes.Length; i++)
+                mISpawnCompletes[i].OnSpawnComplete();
         }
 
         public void Despawn() {
@@ -65,6 +69,7 @@ namespace M8 {
             var comps = GetComponentsInChildren<MonoBehaviour>(true);
 
             var ISpawns = new List<IPoolSpawn>();
+            var ISpawnCompletes = new List<IPoolSpawnComplete>();
             var IDespawns = new List<IPoolDespawn>();
 
             for(int i = 0; i < comps.Length; i++) {
@@ -73,11 +78,15 @@ namespace M8 {
                 var spawn = comp as IPoolSpawn;
                 if(spawn != null) ISpawns.Add(spawn);
 
+                var spawnComplete = comp as IPoolSpawnComplete;
+                if(spawnComplete != null) ISpawnCompletes.Add(spawnComplete);
+
                 var despawn = comp as IPoolDespawn;
                 if(despawn != null) IDespawns.Add(despawn);
             }
 
             mISpawns = ISpawns.ToArray();
+            mISpawnCompletes = ISpawnCompletes.ToArray();
             mIDespawns = IDespawns.ToArray();
 
             mIsInterfacesInit = true;
