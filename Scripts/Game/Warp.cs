@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections;
 
 namespace M8 {
-    public class EntityWarp : MonoBehaviour {
+    [AddComponentMenu("M8/Game/Warp")]
+    public class Warp : MonoBehaviour {
         public const int maxCheckCount = 20;
 
         public delegate void Callback(bool success);
