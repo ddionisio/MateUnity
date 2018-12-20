@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace M8.UIModal.Helpers {
+namespace M8 {
     /// <summary>
     /// Add this to a modal object to pause the game on Push, then unpause on Pop
     /// </summary>
-    [AddComponentMenu("M8/UI Modal/Helpers/Pause On Push")]
-    public class PauseOnPush : MonoBehaviour, Interface.IPush, Interface.IPop {
+    [AddComponentMenu("M8/Modal/Helpers/Pause On Push")]
+    public class ModalPause : MonoBehaviour, IModalPush, IModalPop {
 
         private bool mIsPaused;
 
@@ -24,12 +24,16 @@ namespace M8.UIModal.Helpers {
             }
         }
 
-        void Interface.IPush.Push(GenericParams parms) {
+        void IModalPush.Push(GenericParams parms) {
             Pause(true);
         }
 
-        void Interface.IPop.Pop() {
+        void IModalPop.Pop() {
             Pause(false);
+        }
+
+        void OnDestroy() {
+            Pause(false); //fail-safe
         }
     }
 }

@@ -8,7 +8,7 @@ namespace M8 {
     /// </summary>
     [AddComponentMenu("M8/Game/State Controller Spawn")]
     public class StateControllerSpawn : MonoBehaviour, IPoolSpawn, IPoolSpawnComplete, IPoolDespawn {
-        public const string parmState = "stateCtrlSpawnState"; //use this to override spawnState
+        public const string parmState = "stateOnSpawn"; //use this to override spawnState
 
         public StateController controller;
 

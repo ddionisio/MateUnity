@@ -3,9 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace M8.UIModal.Helpers {
-    [AddComponentMenu("M8/UI Modal/Helpers/CloseAllSceneTransition")]
-    public class CloseAllSceneTransition : MonoBehaviour, SceneManager.ITransition {
+namespace M8 {
+    /// <summary>
+    /// Close all modals in ModalManager.main during scene manager transition out
+    /// </summary>
+    [AddComponentMenu("M8/Modal/Helpers/Scene Transition Out Close All")]
+    public class ModalSceneTransitionOutCloseAll : MonoBehaviour, SceneManager.ITransition {
         int SceneManager.ITransition.priority {
             get {
                 return 1000; //make sure we close first before fullscreen transition
@@ -13,7 +16,7 @@ namespace M8.UIModal.Helpers {
         }
 
         void OnDestroy() {
-            if(SceneManager.instance)
+            if(SceneManager.isInstantiated)
                 SceneManager.instance.RemoveTransition(this);
         }
 
@@ -26,9 +29,9 @@ namespace M8.UIModal.Helpers {
         }
 
         IEnumerator SceneManager.ITransition.Out() {
-            Manager.instance.ModalCloseAll();
+            ModalManager.main.CloseAll();
 
-            while(Manager.instance.isBusy)
+            while(ModalManager.main.isBusy)
                 yield return null;
         }
     }
