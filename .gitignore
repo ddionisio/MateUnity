@@ -14,11 +14,7 @@
 *.userprefs
 
 PlayMaker/
-PathologicalGames/
-ShaderForge/
 PlayMaker.meta
-PathologicalGames.meta
-ShaderForge.meta
 
 Plugins/Android/
 Plugins/Android.meta
