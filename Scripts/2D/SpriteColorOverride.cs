@@ -5,7 +5,7 @@ namespace M8 {
     [AddComponentMenu("M8/Sprite/ColorOverride")]
     public class SpriteColorOverride : MonoBehaviour {
         [SerializeField]
-        SpriteRenderer[] _targets;
+        SpriteRenderer[] _targets = new SpriteRenderer[0];
 
         [SerializeField]
         bool _recursive = false;

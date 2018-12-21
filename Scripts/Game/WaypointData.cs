@@ -17,7 +17,7 @@ namespace M8 {
         int loopCount = -1; //-1 = infinite
 
         [SerializeField]
-        string startWaypoint;
+        string startWaypoint = "";
 
         [SerializeField]
         int startIndex = 0;

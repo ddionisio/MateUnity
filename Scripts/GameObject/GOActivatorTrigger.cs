@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
-    [AddComponentMenu("M8/Game/Activator Trigger")]
-    public class ActivatorTrigger : Activator {
+    [AddComponentMenu("M8/Game Object/Activator Trigger")]
+    public class GOActivatorTrigger : GOActivator {
 
         void OnTriggerEnter(Collider other) {
             Activate();

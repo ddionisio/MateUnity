@@ -16,11 +16,11 @@ namespace M8 {
         }
 
         [SerializeField]
-        Mode _mode;
+        Mode _mode = Mode.Dir;
         [SerializeField]
-        Axis _dir;
+        Axis _dir = Axis.Up;
         [SerializeField]
-        Vector2 _forceOfs;
+        Vector2 _forceOfs = Vector2.zero;
         [SerializeField]
         float _maxSpeed = 15.0f;
         public bool inverse;
@@ -31,7 +31,7 @@ namespace M8 {
         [SerializeField]
         float _updateDelay = 0.2f;
         [SerializeField]
-        string[] _tagFilters;
+        string[] _tagFilters = new string[0];
         private bool mModeRunning = false;
         private YieldInstruction mWait;
         private Vector2 mCenterLocal;

@@ -7,7 +7,7 @@ namespace M8 {
     [AddComponentMenu("M8/Core/SceneLoad")]
     public class SceneLoad : MonoBehaviour {
         [SerializeField]
-        SceneAssetPath _scene;
+        SceneAssetPath _scene = new SceneAssetPath();
         
         public void Execute() {
             SceneManager.instance.LoadScene(_scene.name);

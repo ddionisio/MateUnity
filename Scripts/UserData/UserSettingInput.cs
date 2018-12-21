@@ -121,7 +121,7 @@ namespace M8 {
         [SerializeField]
         string _header = "input";
         [SerializeField]
-        ActionData[] _actions;
+        ActionData[] _actions = new ActionData[0];
 
         /// <summary>
         /// Grab action data index based on given name (note: this is the ActionData.name, not InputAction)

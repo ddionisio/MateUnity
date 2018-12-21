@@ -35,7 +35,7 @@ namespace M8 {
         int _id = invalidID;
 
         [SerializeField]
-        UserData _userData;
+        UserData _userData = null;
 
         private static Dictionary<int, SceneSerializer> mRefs = null;
 

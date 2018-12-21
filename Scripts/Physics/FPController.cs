@@ -7,7 +7,7 @@ namespace M8 {
     [AddComponentMenu("M8/Physics/First-Person Controller")]
     public class FPController : RigidBodyController {
         [SerializeField]
-        Transform _eye;
+        Transform _eye = null;
 
         public Vector3 eyeOfs;
         public float eyeLockOrientSpeed = 1080.0f; //when we lock the eye again, this is the speed to re-orient based on dirHolder

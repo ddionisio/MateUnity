@@ -9,8 +9,8 @@ namespace M8 {
     ///make sure to have this as a child,
     ///destroy it if we are currently active
     ///</summary>
-    [AddComponentMenu("M8/Game/Activator")]
-    public class Activator : MonoBehaviour, IPoolDespawn {
+    [AddComponentMenu("M8/Game Object/Activator")]
+    public class GOActivator : MonoBehaviour, IPoolDespawn {
         public const string activatorGOName = "__activatorHolder";
         //public const string ActivatorHolderTag = "ActivatorHolder"; //make sure this is in the scene root
 

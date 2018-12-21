@@ -6,8 +6,8 @@ namespace M8 {
     /// <summary>
     /// Do a periodic check for colliders based on layer mask, ensure Activators have a collider with matching layer.
     /// </summary>
-    [AddComponentMenu("M8/Game/Activator Activate Radius Check")]
-    public class ActivatorActivateRadiusCheck : ActivatorActivateCheckBase<Collider> {
+    [AddComponentMenu("M8/Game Object/Activator Activate Radius Check")]
+    public class GOActivatorActivateRadiusCheck : GOActivatorActivateCheckBase<Collider> {
         public float radius;
 
         protected override int PopulateCollisions(Collider[] cache) {

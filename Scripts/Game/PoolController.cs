@@ -132,10 +132,10 @@ namespace M8 {
         public string group = "";
         
         [SerializeField]
-        FactoryData[] factory;
+        FactoryData[] factory = new FactoryData[0];
 
         [SerializeField]
-        Transform poolHolder;
+        Transform poolHolder = null;
 
         public event System.Action<PoolDataController> spawnCallback;
         public event System.Action<PoolDataController> despawnCallback;

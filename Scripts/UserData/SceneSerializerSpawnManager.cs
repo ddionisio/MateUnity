@@ -41,7 +41,7 @@ namespace M8 {
         }
 
         [SerializeField]
-        UserData _userData;
+        UserData _userData = null;
 
         //[spawn id, SpawnInfo]
         private Dictionary<int, SpawnInfo> mSpawns;

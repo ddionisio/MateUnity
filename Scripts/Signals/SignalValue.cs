@@ -10,7 +10,7 @@ namespace M8 {
         [SerializeField]
         T _initialValue = default(T);
         [SerializeField]
-        bool _ignoreChanged;
+        bool _ignoreChanged = false;
 
         /// <summary>
         /// This is called with current and previous value, respectively

@@ -67,10 +67,10 @@ namespace M8 {
         }
 
         [SerializeField]
-        TableData[] tables; //table info for each language
+        TableData[] tables = new TableData[0]; //table info for each language
 
         [SerializeField]
-        int baseTableIndex; //default table
+        int baseTableIndex = 0; //default table
         
         private Dictionary<string, LocalizeData> mEntries;
         

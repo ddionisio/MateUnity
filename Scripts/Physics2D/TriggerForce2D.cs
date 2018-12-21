@@ -18,16 +18,16 @@ namespace M8 {
         }
 
         [SerializeField]
-        Transform _dirRef;
+        Transform _dirRef = null;
 
         [SerializeField]
         Mode _dirMode = Mode.Dir;
 
         [SerializeField]
-        Axis _dir;
+        Axis _dir = Axis.Up;
 
         [SerializeField]
-        string[] _tags;
+        string[] _tags = new string[0];
 
         public bool inverse;
         public bool resetVelocityByAxis;

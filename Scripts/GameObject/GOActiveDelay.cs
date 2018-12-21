@@ -2,8 +2,8 @@
 using System.Collections;
 
 namespace M8 {
-    [AddComponentMenu("M8/Game Object/Activate Delay")]
-    public class GOActivateDelay : MonoBehaviour {
+    [AddComponentMenu("M8/Game Object/Active Delay")]
+    public class GOActiveDelay : MonoBehaviour {
         public delegate void OnActivate();
 
         public GameObject target;

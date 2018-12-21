@@ -6,9 +6,9 @@ namespace M8 {
     [RequireComponent(typeof(Renderer))]
     public class RendererSortingLayer : MonoBehaviour {
         [SerializeField, SortingLayerAttribute]
-        string _sortingLayerName;
+        string _sortingLayerName = "default";
         [SerializeField]
-        int _sortingOrder;
+        int _sortingOrder = 0;
 
         private Renderer mRenderer;
 

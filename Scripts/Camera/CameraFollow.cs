@@ -11,7 +11,7 @@ namespace M8 {
         public bool lockZ;
 
         [SerializeField]
-        Transform targetStart;
+        Transform targetStart = null;
 
         private Transform mSource;
         private Transform mFollow;

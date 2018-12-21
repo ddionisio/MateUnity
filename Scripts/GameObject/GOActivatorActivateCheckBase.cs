@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
-    public abstract class ActivatorActivateCheckBase<T> : MonoBehaviour where T:Component {
+    public abstract class GOActivatorActivateCheckBase<T> : MonoBehaviour where T:Component {
         public LayerMask layerMask;        
         public float delay = 0.3f;
         public int capacity = 8;
 
         private struct ActiveData {
             public T collider;
-            public Activator activator;
+            public GOActivator activator;
         }
 
         private T[] mColls;
@@ -73,7 +73,7 @@ namespace M8 {
                     }
 
                     if(activeInd == -1) {
-                        var activator = coll.GetComponent<Activator>();
+                        var activator = coll.GetComponent<GOActivator>();
                         if(activator) {
                             activator.Activate();
 

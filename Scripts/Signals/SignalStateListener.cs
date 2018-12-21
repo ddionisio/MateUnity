@@ -13,7 +13,7 @@ namespace M8 {
 
         [Tooltip("If true, only listen when this behaviour is enabled.")]
         [SerializeField]
-        bool _activeOnly;
+        bool _activeOnly = true;
 
         public StateUnityEvent onSignal;
 

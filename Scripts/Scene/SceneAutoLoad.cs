@@ -9,13 +9,13 @@ namespace M8 {
     [AddComponentMenu("M8/Core/SceneAutoLoad")]
     public class SceneAutoLoad : MonoBehaviour {
         [SerializeField]
-        SceneAssetPath _scene;
+        SceneAssetPath _scene = new SceneAssetPath();
 
         [SerializeField]
         float _delay = 0f;
 
         [SerializeField]
-        bool _destroyAfter;
+        bool _destroyAfter = false;
         
         IEnumerator Start() {
             if(_delay > 0f)

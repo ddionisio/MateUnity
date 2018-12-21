@@ -10,7 +10,7 @@ namespace M8 {
         }
 
         [SerializeField]
-        Axis _dir;
+        Axis _dir = Axis.Up;
 
         public bool inverse;
 

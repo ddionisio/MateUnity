@@ -9,16 +9,16 @@ namespace M8 {
     [AddComponentMenu("M8/Core/UserData Controller")]
     public class UserDataController : MonoBehaviour {
         [SerializeField]
-        UserData _userData;
+        UserData _userData = null;
 
         [Header("Flags")]
 
         [SerializeField]
-        bool _loadOnAwake;
+        bool _loadOnAwake = false;
         [SerializeField]
-        bool _saveOnSceneChange;
+        bool _saveOnSceneChange = false;
         [SerializeField]
-        bool _saveOnAppExit;
+        bool _saveOnAppExit = false;
 
         void OnApplicationQuit() {
             if(_saveOnAppExit)

@@ -14,7 +14,7 @@ namespace M8 {
         [SerializeField]
         Color gizmoColor = Color.white;
         [SerializeField]
-        bool gizmoSolid;
+        bool gizmoSolid = false;
 
         void OnDrawGizmos() {
             if(bounds.size.x > 0 && bounds.size.y > 0 && bounds.size.z > 0) {
