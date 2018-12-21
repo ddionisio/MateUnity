@@ -16,7 +16,7 @@ namespace M8 {
 
             //make sure a localize asset exists
             if(!LocalizeEdit.isLocalizeFileExists) {
-                GUI.Label(position, Localize.resourcePath + " not found.");
+                GUI.Label(position, Localize.assetPath + " not found.");
             }
             else {
                 var loc = Localize.instance;
