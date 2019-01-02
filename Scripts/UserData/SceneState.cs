@@ -284,18 +284,18 @@ namespace M8 {
                 return true;
             }
 
-            public void DeleteValuesByNameContain(string nameContains, bool persistent) {
+            public void RemoveValuesByNameContain(string nameContains, bool persistent) {
                 foreach(string key in new List<string>(mStates.Keys)) {
                     if(key.Contains(nameContains))
-                        DeleteValue(key, persistent);
+                        RemoveValue(key, persistent);
                 }
             }
 
-            public void DeleteValue(string name, bool persistent) {
+            public void RemoveValue(string name, bool persistent) {
                 mStates.Remove(name);
 
                 if(persistent)
-                    mUserData.Delete(string.Format(DataFormat, mPrefix, name));
+                    mUserData.Remove(string.Format(DataFormat, mPrefix, name));
             }
 
             /// <summary>
@@ -314,7 +314,7 @@ namespace M8 {
             /// </summary>
             public void ClearUserData() {
                 foreach(var pair in mStates)
-                    mUserData.Delete(string.Format(DataFormat, mPrefix, pair.Key));
+                    mUserData.Remove(string.Format(DataFormat, mPrefix, pair.Key));
             }
 
             public StateValue GetValueRaw(string name) {
@@ -426,7 +426,7 @@ namespace M8 {
                 }
                 else {
                     string key = string.Format(DataFormat, mPrefix, name);
-                    mUserData.Delete(key);
+                    mUserData.Remove(key);
                 }
             }
 

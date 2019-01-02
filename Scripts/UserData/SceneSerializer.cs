@@ -107,9 +107,9 @@ namespace M8 {
             return _userData.HasKey(GetVarKey(name));
         }
 
-        public void DeleteValue(string name) {
+        public void RemoveValue(string name) {
             if(_id != invalidID)
-                _userData.Delete(GetVarKey(name));
+                _userData.Remove(GetVarKey(name));
         }
 
         public int GetInt(string name, int defaultVal = 0) {
@@ -173,10 +173,10 @@ namespace M8 {
         /// <summary>
         /// Call this if you no longer want variables for this object to be kept in user data and scene data
         /// </summary>
-        public void DeleteAllValues() {
+        public void RemoveAllValues() {
             if(_id != invalidID) {
                 var headerKey = GetHeaderKey();
-                _userData.DeleteByNamePredicate((key) => key.IndexOf(headerKey) != -1);
+                _userData.RemoveByNamePredicate((key) => key.IndexOf(headerKey) != -1);
             }
             else {
                 Debug.LogWarning("Invalid id for "+name+", nothing to delete.");
@@ -196,7 +196,7 @@ namespace M8 {
         /// </summary>
         public virtual void MarkRemove() {
             if(_id != invalidID) {
-                DeleteAllValues();
+                RemoveAllValues();
                 SetInt(removeKey, 1);
             }
         }

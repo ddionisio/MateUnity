@@ -23,7 +23,7 @@ namespace M8 {
                 //remove info from manager
                 SceneSerializerSpawnManager.instance.UnRegisterSpawn(this);
 
-                DeleteAllValues();
+                RemoveAllValues();
 
                 //possible that we will be spawned again as a fresh new item
                 __SetID(invalidID);

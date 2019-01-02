@@ -47,35 +47,43 @@ namespace M8 {
             return mValues.GetEnumerator();
         }
 
-        public void SnapshotSave() {
+        public void SnapshotSave(string key) {
+            object val;
+            if(mValues.TryGetValue(key, out val)) {
+                if(mValuesSnapshot == null) {
+                    mValuesSnapshot = new Dictionary<string, object>();
+                    mValuesSnapshot.Add(key, val);
+                }
+                else if(mValuesSnapshot.ContainsKey(key))
+                    mValuesSnapshot[key] = val;
+                else
+                    mValuesSnapshot.Add(key, val);
+            }
+        }
+
+        public void SnapshotSaveAll() {
             mValuesSnapshot = mValues != null ? new Dictionary<string, object>(mValues) : null;
         }
 
         public void SnapshotRestore() {
             if(mValuesSnapshot != null) {
-                mValues = new Dictionary<string, object>(mValuesSnapshot);
+                //overwrite or add values from snapshot
+                foreach(var pair in mValuesSnapshot) {
+                    if(mValues.ContainsKey(pair.Key))
+                        mValues[pair.Key] = pair.Value;
+                    else
+                        mValues.Add(pair.Key, pair.Value);
+                }
 
                 if(loadedCallback != null)
                     loadedCallback();
             }
         }
 
-        public void SnapshotDelete() {
+        public void SnapshotClear() {
             mValuesSnapshot = null;
         }
-
-        public void SnapshotPreserve(string key) {
-            if(mValuesSnapshot != null) {
-                object val;
-                if(mValues.TryGetValue(key, out val)) {
-                    if(mValuesSnapshot.ContainsKey(key))
-                        mValuesSnapshot[key] = val;
-                    else
-                        mValuesSnapshot.Add(key, val);
-                }
-            }
-        }
-
+                
         public void Load() {
             Data[] dat;
 
@@ -105,8 +113,15 @@ namespace M8 {
             }
         }
 
-        public void Unload() {
-            mValues = null;
+        public virtual void Unload() {
+            mValues = null;            
+        }
+
+        /// <summary>
+        /// This will unload all values, and delete data.
+        /// </summary>
+        public void Delete() {
+            Unload();
             DeleteRawData();
         }
 
@@ -179,35 +194,35 @@ namespace M8 {
                 mValues[name] = value;
         }
 
-        public void DeleteAllByNameContain(string nameContains) {
+        public void RemoveAllByNameContain(string nameContains) {
             if(mValues == null)
                 return;
 
-            var deleteKeys = new List<string>();
+            var removeKeys = new List<string>();
             foreach(var pair in mValues) {
                 if(pair.Key.Contains(nameContains))
-                    deleteKeys.Add(pair.Key);
+                    removeKeys.Add(pair.Key);
             }
 
-            for(int i = 0; i < deleteKeys.Count; i++)
-                mValues.Remove(deleteKeys[i]);
+            for(int i = 0; i < removeKeys.Count; i++)
+                mValues.Remove(removeKeys[i]);
         }
 
-        public void DeleteByNamePredicate(Predicate<string> predicate) {
+        public void RemoveByNamePredicate(Predicate<string> predicate) {
             if(mValues == null)
                 return;
 
-            var deleteKeys = new List<string>();
+            var removeKeys = new List<string>();
             foreach(var pair in mValues) {
                 if(predicate(pair.Key))
-                    deleteKeys.Add(pair.Key);
+                    removeKeys.Add(pair.Key);
             }
 
-            for(int i = 0; i < deleteKeys.Count; i++)
-                mValues.Remove(deleteKeys[i]);
+            for(int i = 0; i < removeKeys.Count; i++)
+                mValues.Remove(removeKeys[i]);
         }
 
-        public void Delete(string name) {
+        public void Remove(string name) {
             if(mValues != null)
                 mValues.Remove(name);
         }
