@@ -221,7 +221,32 @@ namespace M8 {
             }
 
             /// <summary>
-            /// Reset all data to startData
+            /// Reset given value to startData (or from UserData)
+            /// </summary>
+            public void Reset(string name) {
+                if(!mStates.ContainsKey(name))
+                    return;
+
+                string key = string.Format(DataFormat, mPrefix, name);
+
+                //check from userdata first, if invalid, then use init data
+                StateValue s = new StateValue(mUserData, key);
+                if(s.type != Type.Invalid) {
+                    mStates[name] = s;
+                }
+                else if(mStartData != null) {
+                    for(int i = 0; i < mStartData.Length; i++) {
+                        var initData = mStartData[i];
+                        if(initData.name == name) {
+                            mStates[name] = initData.stateValue;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Reset all values to startData (or from UserData)
             /// </summary>
             public void Reset() {
                 Clear(false);
