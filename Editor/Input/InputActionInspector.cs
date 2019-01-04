@@ -57,6 +57,8 @@ namespace M8 {
 
             for(int i = 0; i < dat.defaultBinds.Length; i++) {
                 var bind = dat.defaultBinds[i];
+                if(bind == null)
+                    continue;
 
                 GUILayout.BeginVertical(GUI.skin.box);
 
