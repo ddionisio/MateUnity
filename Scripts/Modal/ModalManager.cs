@@ -162,6 +162,7 @@ namespace M8 {
                     if(!mModals.ContainsKey(ctrl.id)) {
                         ctrl.Init();
                         mModals.Add(ctrl.id, ctrl);
+                        ctrl.SetOwner(this);
                     }
                 }
             }
@@ -189,6 +190,7 @@ namespace M8 {
                 var iCtrl = ctrl as IModalController;
                 iCtrl.Init();
                 mModals.Add(iCtrl.id, iCtrl);
+                iCtrl.SetOwner(this);
             }
 
             int maxModalCount = mModals.Count;

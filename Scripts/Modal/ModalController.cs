@@ -6,6 +6,7 @@ namespace M8 {
     /// <summary>
     /// Use this for modals, name is used as id.
     /// </summary>
+    [AddComponentMenu("M8/Modal/Controller")]
     public class ModalController : MonoBehaviour, IModalController {
         [Tooltip("Hide modals behind if this is the top.")]
         [SerializeField]
@@ -37,7 +38,7 @@ namespace M8 {
 
         void IModalController.Init() {
             //grab interfaces
-            var comps = gameObject.GetComponents<MonoBehaviour>();
+            var comps = gameObject.GetComponentsInChildren<MonoBehaviour>(true);
 
             var IPushes = new List<IModalPush>();
             var IPops = new List<IModalPop>();

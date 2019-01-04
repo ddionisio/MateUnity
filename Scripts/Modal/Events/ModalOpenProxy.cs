@@ -4,23 +4,25 @@ using UnityEngine;
 
 namespace M8 {
     /// <summary>
-    /// Open a modal from ModalManager.main
+    /// Open a modal from ModalManager
     /// </summary>
     [AddComponentMenu("M8/Modal/Events/Open")]
-    public class ModalOpenProxy : MonoBehaviour {
+    public class ModalOpenProxy : ModalManagerControlBase {
         public string modal;
         public bool closeIfOpened;
 
         public void Invoke() {
-            if(!ModalManager.main)
+            var mgr = modalManager;
+
+            if(!mgr)
                 return;
 
-            if(ModalManager.main.IsInStack(modal)) {
+            if(mgr.IsInStack(modal)) {
                 if(closeIfOpened)
-                    ModalManager.main.CloseUpTo(modal, true);
+                    mgr.CloseUpTo(modal, true);
             }
             else
-                ModalManager.main.Open(modal);
+                mgr.Open(modal);
         }
     }
 }

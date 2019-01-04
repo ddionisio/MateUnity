@@ -4,10 +4,10 @@ using UnityEngine;
 
 namespace M8 {
     /// <summary>
-    /// Clop top or all from ModalManager.main
+    /// Clop top or all from ModalManager
     /// </summary>
     [AddComponentMenu("M8/Modal/Events/Close")]
-    public class ModalCloseProxy : MonoBehaviour {
+    public class ModalCloseProxy : ModalManagerControlBase {
         public enum Mode {
             Top,
             All
@@ -16,15 +16,17 @@ namespace M8 {
         public Mode mode = Mode.Top;
 
         public void Invoke() {
-            if(!ModalManager.main)
+            var mgr = modalManager;
+
+            if(!mgr)
                 return;
 
             switch(mode) {
                 case Mode.Top:
-                    ModalManager.main.CloseTop();
+                    mgr.CloseTop();
                     break;
                 case Mode.All:
-                    ModalManager.main.CloseAll();
+                    mgr.CloseAll();
                     break;
             }
         }
