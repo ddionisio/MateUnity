@@ -78,7 +78,7 @@ namespace M8 {
         public float deadZone = 0.1f;
         public bool forceRaw = false;
 
-        public Key[] defaultBinds = new Key[1];
+        public Key[] defaultBinds = new Key[0];
         
         public Key[] binds {
             get {
@@ -261,7 +261,10 @@ namespace M8 {
                 if(mBinds[i] == null)
                     mBinds[i] = new Key();
 
-                defaultBinds[i].CopyTo(mBinds[i]);
+                if(defaultBinds[i] != null)
+                    defaultBinds[i].CopyTo(mBinds[i]);
+                else
+                    defaultBinds[i] = new Key();
             }
         }
 
