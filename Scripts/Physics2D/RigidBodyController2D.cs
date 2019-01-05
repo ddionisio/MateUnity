@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
-    [AddComponentMenu("M8/Physics2D/RigidBodyController2D")]
+    [AddComponentMenu("M8/Physics2D/RigidBodyController")]
     public class RigidBodyController2D : MonoBehaviour {
         protected const float moveCosCheck = 0.01745240643728351281941897851632f; //cos(89)
 

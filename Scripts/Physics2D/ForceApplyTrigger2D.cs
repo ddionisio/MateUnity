@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace M8 {
-    [AddComponentMenu("M8/Physics2D/ForceField")]
-    public class ForceField2D : MonoBehaviour {
+    [AddComponentMenu("M8/Physics2D/ForceApplyTrigger")]
+    public class ForceApplyTrigger2D : MonoBehaviour {
         public enum Axis {
             Up,
             Right
