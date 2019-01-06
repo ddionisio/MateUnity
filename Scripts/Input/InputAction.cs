@@ -1,8 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace M8 {
+    [System.Serializable]
+    public class UnityEventInputAction : UnityEvent<InputAction> { }
+
     [CreateAssetMenu(fileName = "inputAction", menuName = "M8/Input Action")]
     public class InputAction : ScriptableObject, ISerializationCallbackReceiver {
         public const int keyCodeNone = 0;

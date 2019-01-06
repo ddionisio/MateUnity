@@ -36,10 +36,7 @@ namespace M8 {
 
         public float standDrag = 60.0f;
         public LayerMask standDragLayer;
-
-        public float effectorDrag = 0.015f;
-        public LayerMask effectorLayer;
-
+        
         public float slopeLimit = 50.0f; //if we are standing still and slope is high, just use groundDrag, also determines collideflag below
         public float aboveLimit = 145.0f; //determines collideflag above, should be > 90, around 140'ish
         public float slideLimit = 80.0f;
@@ -48,8 +45,6 @@ namespace M8 {
         public event CollisionCallbackEvent collisionEnterCallback;
         public event CollisionCallbackEvent collisionStayCallback;
         public event CollisionCallbackEvent collisionExitCallback;
-        public event TriggerCallbackEvent triggerEnterCallback;
-        public event TriggerCallbackEvent triggerExitCallback;
 
         private Vector2 mCurMoveAxis;
         private Vector2 mCurMoveDir;
@@ -71,15 +66,11 @@ namespace M8 {
         private Vector2 mLastVelocity;
 
         private float mRadius = 0.0f;
-
-        private CapsuleCollider2D mCapsuleColl;
-
+        
         private int mLockDragCounter = 0;
 
         private float mMoveScale = 1.0f;
-
-        private int mEffectorCount;
-
+        
         protected Rigidbody2D mBody;
         protected Collider2D mColl;
 
@@ -99,9 +90,7 @@ namespace M8 {
         public Vector2 moveDir { get { return mCurMoveDir; } }
         public CollisionFlags collisionFlags { get { return mCollFlags; } }
         public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
-
-        public bool isInEffector { get { return mEffectorCount > 0; } }
-
+        
         /// <summary>
         /// Note: This will return the entire array, actual length is collisionData.Count or collisionCount
         /// </summary>
@@ -122,9 +111,7 @@ namespace M8 {
                 }
             }
         }
-
-        public CapsuleCollider2D capsuleCollider { get { return mCapsuleColl; } }
-
+        
         public float moveScale {
             get { return mMoveScale; }
             set { mMoveScale = value; }
@@ -183,15 +170,21 @@ namespace M8 {
         }
 
         void GetCapsuleInfo(out Vector2 p1, out Vector2 p2, out float r, float reduceOfs) {
-            p1 = mCapsuleColl.offset;
+            p1 = mColl.offset;
             p2 = p1;
 
-            float h = mCapsuleColl.size.y - reduceOfs;
+            var capsuleColl = mColl as CapsuleCollider2D;
+            if(!capsuleColl) {
+                r = 0f;
+                return;
+            }
+
+            float h = capsuleColl.size.y - reduceOfs;
             float hHalf = h * 0.5f;
 
-            r = mCapsuleColl.size.x * 0.5f;
+            r = capsuleColl.size.x * 0.5f;
 
-            switch(mCapsuleColl.direction) {
+            switch(capsuleColl.direction) {
                 case CapsuleDirection2D.Horizontal: //x
                     p1.x -= hHalf - r;
                     p2.x += hHalf - r;
@@ -209,12 +202,14 @@ namespace M8 {
         }
 
         public bool CheckPenetrate(float reduceOfs, LayerMask mask) {
-            if(mCapsuleColl) {
-                Transform collT = transform;
-                Vector2 collPos = collT.position + collT.localToWorldMatrix.MultiplyPoint3x4(mCapsuleColl.offset);
-                Vector2 collSize = mCapsuleColl.size; collSize.y -= reduceOfs;
+            if(mColl is CapsuleCollider2D) {
+                var capsuleColl = (CapsuleCollider2D)mColl;
 
-                return Physics2D.OverlapCapsule(collPos, collSize, mCapsuleColl.direction, collT.eulerAngles.z, mask) != null;
+                Transform collT = transform;
+                Vector2 collPos = collT.position + collT.localToWorldMatrix.MultiplyPoint3x4(capsuleColl.offset);
+                Vector2 collSize = capsuleColl.size; collSize.y -= reduceOfs;
+
+                return Physics2D.OverlapCapsule(collPos, collSize, capsuleColl.direction, collT.eulerAngles.z, mask) != null;
             }
             else {
                 return Physics2D.OverlapCircle(transform.position, mRadius - reduceOfs, mask) != null;
@@ -222,12 +217,14 @@ namespace M8 {
         }
 
         public bool CheckCast(float reduceOfs, Vector2 dir, out RaycastHit2D hit, float dist, int mask) {
-            if(mCapsuleColl) {
-                Transform collT = transform;
-                Vector2 collPos = collT.position + collT.localToWorldMatrix.MultiplyPoint3x4(mCapsuleColl.offset);
-                Vector2 collSize = mCapsuleColl.size; collSize.y -= reduceOfs;
+            if(mColl is CapsuleCollider2D) {
+                var capsuleColl = (CapsuleCollider2D)mColl;
 
-                hit = Physics2D.CapsuleCast(collPos, collSize, mCapsuleColl.direction, collT.eulerAngles.z, dir, dist, mask);
+                Transform collT = transform;
+                Vector2 collPos = collT.position + collT.localToWorldMatrix.MultiplyPoint3x4(capsuleColl.offset);
+                Vector2 collSize = capsuleColl.size; collSize.y -= reduceOfs;
+
+                hit = Physics2D.CapsuleCast(collPos, collSize, capsuleColl.direction, collT.eulerAngles.z, dir, dist, mask);
                 return hit.collider != null;
             }
             else {
@@ -237,12 +234,14 @@ namespace M8 {
         }
 
         public RaycastHit2D[] CheckAllCasts(Vector2 posOfs, float reduceOfs, Vector2 dir, float dist, int mask) {
-            if(mCapsuleColl) {
-                Transform collT = transform;
-                Vector2 collPos = collT.position + collT.localToWorldMatrix.MultiplyPoint3x4(mCapsuleColl.offset + posOfs);
-                Vector2 collSize = mCapsuleColl.size; collSize.y -= reduceOfs;
+            if(mColl is CapsuleCollider2D) {
+                var capsuleColl = (CapsuleCollider2D)mColl;
 
-                return Physics2D.CapsuleCastAll(collPos, collSize, mCapsuleColl.direction, collT.eulerAngles.z, dir, dist, mask);
+                Transform collT = transform;
+                Vector2 collPos = collT.position + collT.localToWorldMatrix.MultiplyPoint3x4(capsuleColl.offset + posOfs);
+                Vector2 collSize = capsuleColl.size; collSize.y -= reduceOfs;
+
+                return Physics2D.CapsuleCastAll(collPos, collSize, capsuleColl.direction, collT.eulerAngles.z, dir, dist, mask);
             }
             else {
                 Transform collT = transform;
@@ -403,33 +402,7 @@ namespace M8 {
 
             //Debug.Log("exit count: " + mCollCount);
         }
-
-        protected virtual void OnTriggerEnter2D(Collider2D col) {
-            if(((1 << col.gameObject.layer) & effectorLayer) != 0) {
-                //Debug.Log("Enter: " + col.name);
-
-                mEffectorCount++;
-            }
-
-            if(triggerEnterCallback != null)
-                triggerEnterCallback(this, col);
-        }
-
-        protected virtual void OnTriggerExit2D(Collider2D col) {
-            if(((1 << col.gameObject.layer) & effectorLayer) != 0) {
-                //Debug.Log("Exit: " + col.name);
-
-                mEffectorCount--;
-                if(mEffectorCount < 0) {
-                    //Debug.LogWarning("Effect Count Under 0, one of the trigger didn't 'exit'");
-                    mEffectorCount = 0;
-                }
-            }
-
-            if(triggerExitCallback != null)
-                triggerExitCallback(this, col);
-        }
-
+        
         protected virtual void OnDisable() {
             ResetCollision();
         }
@@ -440,8 +413,6 @@ namespace M8 {
             collisionEnterCallback = null;
             collisionStayCallback = null;
             collisionExitCallback = null;
-            triggerEnterCallback = null;
-            triggerExitCallback = null;
         }
 
         protected virtual void Awake() {
@@ -462,8 +433,8 @@ namespace M8 {
                 if(mColl is CircleCollider2D)
                     mRadius = ((CircleCollider2D)mColl).radius;
                 else if(mColl is CapsuleCollider2D) {
-                    mCapsuleColl = mColl as CapsuleCollider2D;
-                    mRadius = mCapsuleColl.size.y * 0.5f;
+                    var capsuleColl = (CapsuleCollider2D)mColl;
+                    mRadius = capsuleColl.size.y * 0.5f;
                 }
             }
         }
@@ -529,13 +500,13 @@ namespace M8 {
                 //move
                 if(isGrounded) {
                     if(mLockDragCounter == 0)
-                        mBody.drag = isInEffector ? effectorDrag : groundDrag;
+                        mBody.drag = groundDrag;
 
                     Move(moveAxis, moveForce);
                 }
                 else {
                     if(mLockDragCounter == 0)
-                        mBody.drag = isInEffector ? effectorDrag : airDrag;
+                        mBody.drag = airDrag;
 
                     Move(moveAxis, moveAirForce);
                 }
@@ -544,7 +515,7 @@ namespace M8 {
                 mCurMoveDir = Vector2.zero;
 
                 if(mLockDragCounter == 0 && !mBody.isKinematic)
-                    mBody.drag = isInEffector ? effectorDrag : isGrounded && !mIsSlopSlide ? (standDragLayer & mCollLayerMask) == 0 ? groundDrag : standDrag : airDrag;
+                    mBody.drag = isGrounded && !mIsSlopSlide ? (standDragLayer & mCollLayerMask) == 0 ? groundDrag : standDrag : airDrag;
             }
         }
 
@@ -651,8 +622,6 @@ namespace M8 {
                     mCollLayerMask |= 1 << inf.collider.gameObject.layer;
                 }
             }
-
-            mEffectorCount = 0;
         }
     }
 }

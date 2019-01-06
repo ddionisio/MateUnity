@@ -12,8 +12,8 @@ namespace M8 {
         [System.Serializable]
         public struct Data {
             public InputAction action;
-            public UnityEvent pressedCallback;
-            public UnityEvent releasedCallback;
+            public UnityEventInputAction pressedCallback;
+            public UnityEventInputAction releasedCallback;
 
             public InputAction.ButtonState curState { get { return mCurState; } }
 
@@ -33,11 +33,11 @@ namespace M8 {
                     switch(mCurState) {
                         case InputAction.ButtonState.Pressed:
                             if(pressedCallback != null)
-                                pressedCallback.Invoke();
+                                pressedCallback.Invoke(action);
                             break;
                         case InputAction.ButtonState.Released:
                             if(releasedCallback != null)
-                                releasedCallback.Invoke();
+                                releasedCallback.Invoke(action);
                             break;
                     }
                 }
