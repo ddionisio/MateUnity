@@ -29,9 +29,7 @@ namespace M8 {
 
         [TagSelector]
         public string[] fieldTagFilter; //if not empty, which tags to consider for fields
-
-        public Collider2D bodyCollider { get; private set; }
-
+        
         public bool forceLocked { get; set; }
 
         public Vector2 force { get; private set; }
@@ -107,8 +105,6 @@ namespace M8 {
 
             if(body) {
                 body.gravityScale = 0f;
-
-                bodyCollider = body.GetComponent<Collider2D>();
             }
         }
 

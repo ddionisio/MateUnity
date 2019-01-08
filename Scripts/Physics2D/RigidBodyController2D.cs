@@ -48,13 +48,6 @@ namespace M8 {
 
         public float slideForce = 40.0f;
         
-        public float airDrag = 0.015f; //if there is no ground collision, this is the drag
-
-        public float groundDrag = 5.0f; //if there is ground and/or side collision and/or we are moving
-
-        public float standDrag = 60.0f;
-        public LayerMask standDragLayer;
-        
         public float slopeLimit = 50.0f; //if we are standing still and slope is high, just use groundDrag, also determines collideflag below
         public float aboveLimit = 145.0f; //determines collideflag above, should be > 90, around 140'ish
         public float slideLimit = 80.0f;
@@ -67,13 +60,7 @@ namespace M8 {
         public float moveHorizontal { get { return mCurMoveAxis.x; } set { mCurMoveAxis.x = value; } }
 
         public bool isSlide { get { return mIsSlide; } }
-
-        /// <summary>
-        /// Use this to override the rigidbody's drag such that ground/air/stand drag is ignored, set to 0 to unlock
-        /// </summary>
-        public int lockDragCounter { get { return mLockDragCounter; } set { mLockDragCounter = value; if(mLockDragCounter < 0) mLockDragCounter = 0; } }
-
-        public Vector2 moveDir { get { return mCurMoveDir; } }
+        
         public CollisionFlags collisionFlags { get { return mCollFlags; } }
         public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
 
@@ -105,7 +92,6 @@ namespace M8 {
         protected int mCollLayerMask = 0; //layer masks that are colliding us (ground and side)
 
         private Vector2 mCurMoveAxis;
-        private Vector2 mCurMoveDir;
                 
         private float mSlopeLimitCos;
         private float mAboveLimitCos;
@@ -118,8 +104,6 @@ namespace M8 {
 
         private float mRadius = 0.0f;
         
-        private int mLockDragCounter = 0;
-
         private float mMoveScale = 1.0f;
 
         /// <summary>
@@ -170,7 +154,6 @@ namespace M8 {
             mCollLayerMask = 0;
             mIsSlide = false;            
             mCurMoveAxis = Vector2.zero;
-            mCurMoveDir = Vector2.zero;
             mLastVelocity = Vector2.zero;
 
             ResetCollisionInfo();
@@ -488,25 +471,7 @@ namespace M8 {
                 }
             }
             //
-
-            //update drag and move dir
-            if(axisHorzEnabled || axisVertEnabled) {
-                mCurMoveDir = (axisHorz + axisVert).normalized;
-
-                if(mLockDragCounter == 0 && !body.isKinematic)
-                    body.drag = isGrounded ? groundDrag : airDrag;
-            }
-            else {
-                mCurMoveDir = Vector2.zero;
-
-                if(mLockDragCounter == 0 && !body.isKinematic) {
-                    if(mIsSlide || !isGrounded)
-                        body.drag = airDrag;
-                    else
-                        body.drag = (standDragLayer & mCollLayerMask) == 0 ? groundDrag : standDrag;
-                }   
-            }
-
+            
 #if MATE_PHYSICS_DEBUG
             M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
 #endif

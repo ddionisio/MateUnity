@@ -39,7 +39,7 @@ namespace M8 {
             DirInfo info = null;
             mCurDirs.TryGetValue(entity, out info);
 
-            Vector2 entPos = entity.bodyCollider ? entity.bodyCollider.bounds.center : entity.transform.position;
+            Vector2 entPos = entity.transform.position;
             Vector2 entUp = entity.transform.up;
 
             Vector2 dir = inverse ? entPos - center : center - entPos;
