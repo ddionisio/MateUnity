@@ -86,6 +86,10 @@ namespace M8 {
             set { mMoveScale = value; }
         }
 
+        public Vector2 normalGround { get; private set; }
+        public Vector2 normalSide { get; private set; }
+        public Vector2 normalAbove { get; private set; }
+
         protected CollisionInfo[] mColls;
 
         protected CollisionFlags mCollFlags;
@@ -95,9 +99,9 @@ namespace M8 {
                 
         private float mSlopeLimitCos;
         private float mAboveLimitCos;
+        private float mSlideLimitCos;
 
         private bool mIsSlide;
-        private Vector2 mSlideNormal;
 
         private Vector2 mLocalVelocity;
         private Vector2 mLastVelocity;
@@ -286,10 +290,6 @@ namespace M8 {
         protected void ClearCollFlags() {
             mCollFlags = 0;
         }
-
-        CollisionFlags GenCollFlag(Vector2 up, ContactPoint2D contact) {
-            return GetCollisionFlag(up, contact.normal);
-        }
         
         void OnCollisionEnter2D(Collision2D col) {
             AddCollisionInfo(col);
@@ -339,6 +339,7 @@ namespace M8 {
             //mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
             mSlopeLimitCos = Mathf.Cos(slopeLimit * Mathf.Deg2Rad);
             mAboveLimitCos = Mathf.Cos(aboveLimit * Mathf.Deg2Rad);
+            mSlideLimitCos = Mathf.Cos(slideLimit * Mathf.Deg2Rad);
 
             bodyCollision = GetComponent<Collider2D>();
             if(bodyCollision != null) {
@@ -364,6 +365,7 @@ namespace M8 {
             //mTopBottomColCos = Mathf.Cos(sphereCollisionAngle * Mathf.Deg2Rad);
             mSlopeLimitCos = Mathf.Cos(slopeLimit * Mathf.Deg2Rad);
             mAboveLimitCos = Mathf.Cos(aboveLimit * Mathf.Deg2Rad);
+            mSlideLimitCos = Mathf.Cos(slideLimit * Mathf.Deg2Rad);
 #endif
 
             //update velocity
@@ -435,6 +437,15 @@ namespace M8 {
 
             bool groundNoSlope = false; //prevent slope slide if we are also touching a non-slidable ground (standing on the corner base of slope)
 
+            normalGround = Vector2.zero;
+            int normalGroundCount = 0;
+            normalAbove = Vector2.zero;
+            int normalAboveCount = 0;
+            normalSide = Vector2.zero;
+            int normalSideCount = 0;
+
+            int horzSlideCount = 0;
+
             for(int i = 0; i < collisionCount; i++) {
                 var coll = mColls[i];
 
@@ -442,46 +453,79 @@ namespace M8 {
                     continue;
 
                 mCollLayerMask |= 1 << coll.collider.gameObject.layer;
-
+                                
                 for(int j = 0; j < coll.contactCount; j++) {
                     var contact = coll.GetContact(j);
 
-                    var contactFlag = GetCollisionFlag(up, contact.normal);
+                    //generate flag
+                    CollisionFlags contactFlag;
+
+                    float dot = Vector2.Dot(up, contact.normal);
+
+                    //Debug.Log("dot: " + dot);
+                    //Debug.Log("deg: " + (Mathf.Acos(dot)*Mathf.Rad2Deg));
+
+                    if(dot >= mSlopeLimitCos) {
+                        contactFlag = CollisionFlags.Below;
+                        normalGround += contact.normal;
+                        normalGroundCount++;
+                    }
+                    else if(dot <= mAboveLimitCos) {
+                        contactFlag = CollisionFlags.Above;
+                        normalAbove += contact.normal;
+                        normalAboveCount++;
+                    }
+                    else {
+                        contactFlag = CollisionFlags.Sides;
+                        normalSide += contact.normal;
+                        normalSideCount++;
+                    }
+                    //
 
                     //update slide
                     if(!(slideDisable || groundNoSlope) && (contactFlag == CollisionFlags.Below || contactFlag == CollisionFlags.Sides)) {
                         //sliding
-                        float a = Vector2.Angle(up, contact.normal);
-                        mIsSlide = a > slopeLimit && a <= slideLimit;
-                        if(mIsSlide) {
-                            //Debug.Log("a: " + a);
-                            mSlideNormal = contact.normal;
-                        }
-                        else if(contactFlag == CollisionFlags.Below) {
-                            mIsSlide = false;
+                        mIsSlide = dot >= mSlideLimitCos && dot < mSlopeLimitCos;
+                        if(!mIsSlide && contactFlag == CollisionFlags.Below)
                             groundNoSlope = true;
-                        }
                     }
 
                     //allow horizontal to move along ground (useful for moving down a slope)
-                    if(axisHorzEnabled && contactFlag == CollisionFlags.Below)
-                        axisHorz = MathUtil.Slide(axisHorz, contact.normal);
+                    if(axisHorzEnabled && contactFlag == CollisionFlags.Below) {
+                        var horzSlide = MathUtil.Slide(axisHorz, contact.normal);
+                        if(horzSlideCount == 0)
+                            axisHorz = horzSlide;
+                        else
+                            axisHorz += horzSlide;
+
+                        horzSlideCount++;
+                    }
 
                     mCollFlags |= contactFlag;
                 }
             }
+
+            if(normalGroundCount > 1)
+                normalGround = (normalGround / normalGroundCount).normalized;
+            if(normalAboveCount > 1)
+                normalAbove = (normalAbove / normalAboveCount).normalized;
+            if(normalSideCount > 1)
+                normalSide = (normalSide / normalSideCount).normalized;
+
+            if(horzSlideCount > 1)
+                axisHorz /= horzSlideCount;
             //
-            
+
 #if MATE_PHYSICS_DEBUG
             M8.DebugUtil.DrawArrow(transform.position, mCurMoveDir);
 #endif
-            //
+                //
 
             Vector2 force = Vector2.zero;
 
             //slide
             if(mIsSlide) {
-                Vector2 dir = MathUtil.Slide(-up, mSlideNormal);
+                Vector2 dir = MathUtil.Slide(-up, normalSide);
                 dir.Normalize();
                 force += dir * slideForce;
             }
