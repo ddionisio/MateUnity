@@ -10,6 +10,13 @@ namespace M8 {
 
         protected const float moveCosCheck = 0.01745240643728351281941897851632f; //cos(89)
 
+        [System.Flags]
+        public enum SideFlags {
+            None = 0x0,
+            Right = 0x1,
+            Left = 0x2
+        }
+
         public class CollisionInfo {
             public Collider2D collider { get; private set; }
             public Collider2D otherCollider { get; private set; }
@@ -61,8 +68,9 @@ namespace M8 {
 
         public bool isSlide { get { return mIsSlide; } }
         
-        public CollisionFlags collisionFlags { get { return mCollFlags; } }
-        public bool isGrounded { get { return (mCollFlags & CollisionFlags.Below) != 0; } }
+        public CollisionFlags collisionFlags { get; private set; }
+        public SideFlags sideFlags { get; private set; } 
+        public bool isGrounded { get { return (collisionFlags & CollisionFlags.Below) != 0; } }
 
         public int collisionCount { get; private set; }
 
@@ -91,8 +99,7 @@ namespace M8 {
         public Vector2 normalAbove { get; private set; }
 
         protected CollisionInfo[] mColls;
-
-        protected CollisionFlags mCollFlags;
+        
         protected int mCollLayerMask = 0; //layer masks that are colliding us (ground and side)
 
         private Vector2 mCurMoveAxis;
@@ -154,7 +161,8 @@ namespace M8 {
         public virtual void ResetCollision() {
             if(mColls == null) return; //not initialized yet
 
-            mCollFlags = CollisionFlags.None;
+            ClearCollFlags();
+
             mCollLayerMask = 0;
             mIsSlide = false;            
             mCurMoveAxis = Vector2.zero;
@@ -288,7 +296,8 @@ namespace M8 {
         }
 
         protected void ClearCollFlags() {
-            mCollFlags = 0;
+            collisionFlags = CollisionFlags.None;
+            sideFlags = SideFlags.None;
         }
         
         void OnCollisionEnter2D(Collision2D col) {
@@ -431,7 +440,8 @@ namespace M8 {
             }
 
             //update flags and such
-            mCollFlags = CollisionFlags.None;
+            collisionFlags = CollisionFlags.None;
+            sideFlags = SideFlags.None;
             mCollLayerMask = 0;
             mIsSlide = false;
 
@@ -456,29 +466,40 @@ namespace M8 {
                                 
                 for(int j = 0; j < coll.contactCount; j++) {
                     var contact = coll.GetContact(j);
+                    var contactN = contact.normal;
 
                     //generate flag
                     CollisionFlags contactFlag;
 
-                    float dot = Vector2.Dot(up, contact.normal);
+                    float dot = Vector2.Dot(up, contactN);
 
                     //Debug.Log("dot: " + dot);
                     //Debug.Log("deg: " + (Mathf.Acos(dot)*Mathf.Rad2Deg));
 
                     if(dot >= mSlopeLimitCos) {
                         contactFlag = CollisionFlags.Below;
-                        normalGround += contact.normal;
+                        normalGround += contactN;
                         normalGroundCount++;
                     }
                     else if(dot <= mAboveLimitCos) {
                         contactFlag = CollisionFlags.Above;
-                        normalAbove += contact.normal;
+                        normalAbove += contactN;
                         normalAboveCount++;
                     }
                     else {
                         contactFlag = CollisionFlags.Sides;
-                        normalSide += contact.normal;
+                        normalSide += contactN;
                         normalSideCount++;
+
+                        var side = MathUtil.CheckSide(contactN, up);
+                        switch(side) {
+                            case MathUtil.Side.Left:
+                                sideFlags |= SideFlags.Left;
+                                break;
+                            case MathUtil.Side.Right:
+                                sideFlags |= SideFlags.Right;
+                                break;
+                        }
                     }
                     //
 
@@ -501,7 +522,7 @@ namespace M8 {
                         horzSlideCount++;
                     }
 
-                    mCollFlags |= contactFlag;
+                    collisionFlags |= contactFlag;
                 }
             }
 
