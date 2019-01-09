@@ -412,7 +412,7 @@ namespace M8 {
             //
 
             Vector2 up = dirHolder.up;
-            float rotAngle = dirHolder.eulerAngles.z;
+            float rotAngle = -dirHolder.eulerAngles.z;
 
             //setup move axis
             bool axisHorzEnabled = mCurMoveAxis.x != 0f;
@@ -434,9 +434,9 @@ namespace M8 {
             //rotate move axis            
             if(rotAngle != 0f) {
                 if(axisHorzEnabled)
-                    axisHorz = MathUtil.Rotate(axisHorz, rotAngle);
+                    axisHorz = MathUtil.RotateAngle(axisHorz, rotAngle);
                 if(axisVertEnabled)
-                    axisVert = MathUtil.Rotate(axisVert, rotAngle);
+                    axisVert = MathUtil.RotateAngle(axisVert, rotAngle);
             }
 
             //update flags and such

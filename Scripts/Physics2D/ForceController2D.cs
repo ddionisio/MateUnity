@@ -167,7 +167,7 @@ namespace M8 {
                         ApplyOrientDir(mOrientDestDir);
                 }
                 else {
-                    if(angle + deltaAngle > 0f)
+                    if(angle + deltaAngle < 0f)
                         ApplyOrientDir(MathUtil.RotateAngle(curOrient, deltaAngle));
                     else
                         ApplyOrientDir(mOrientDestDir);
