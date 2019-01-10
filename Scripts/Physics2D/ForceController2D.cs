@@ -23,7 +23,8 @@ namespace M8 {
         public float forceScale = 1f;
 
         public OrientMode orient = OrientMode.None;
-        public float orientAngleSpeed = 180.0f;
+        //public float orientAngleSpeed = 180.0f;
+        public float orientDelay = 0.3f;
 
         public bool ignoreFields = false;
 
@@ -38,6 +39,8 @@ namespace M8 {
         private CacheList<ForceFieldBase2D> mForceFields = new CacheList<ForceFieldBase2D>(forceFieldCapacity);
 
         private Vector2 mOrientDestDir;
+        private float mOrientAngleToUp;
+        private float mOrientChangeVel;
 
         protected virtual void OnTriggerEnter2D(Collider2D col) {
             if(mForceFields.IsFull)
@@ -91,6 +94,8 @@ namespace M8 {
 
         protected virtual void OnEnable() {
             mOrientDestDir = GetOrientDir();
+            mOrientAngleToUp = Vector2.SignedAngle(mOrientDestDir, Vector2.up);
+            mOrientChangeVel = 0f;
         }
 
         protected virtual void OnDisable() {
@@ -146,6 +151,7 @@ namespace M8 {
                         newOrient.Normalize();
 
                     mOrientDestDir = newOrient;
+                    mOrientAngleToUp = Vector2.SignedAngle(mOrientDestDir, Vector2.up);
                     force = newForce;
                 }
             }
@@ -157,7 +163,17 @@ namespace M8 {
             //apply orient
             var curOrient = GetOrientDir();
             if(curOrient != mOrientDestDir) {
-                float angle = Vector2.SignedAngle(curOrient, mOrientDestDir);
+                if(orientDelay > 0f) {
+                    float curAngleToUp = Vector2.SignedAngle(curOrient, Vector2.up);
+
+                    float angleToUp = Mathf.SmoothDampAngle(curAngleToUp, mOrientAngleToUp, ref mOrientChangeVel, orientDelay, float.MaxValue, Time.fixedDeltaTime);
+
+                    ApplyOrientDir(MathUtil.RotateAngle(Vector2.up, angleToUp));
+                }
+                else
+                    ApplyOrientDir(mOrientDestDir);
+
+                /*float angle = Vector2.SignedAngle(curOrient, mOrientDestDir);
                 float deltaAngle = Time.fixedDeltaTime * orientAngleSpeed;
 
                 if(angle > 0f) {
@@ -171,7 +187,7 @@ namespace M8 {
                         ApplyOrientDir(MathUtil.RotateAngle(curOrient, deltaAngle));
                     else
                         ApplyOrientDir(mOrientDestDir);
-                }
+                }*/
             }
         }
 

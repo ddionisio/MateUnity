@@ -4,7 +4,9 @@ using UnityEngine;
 
 namespace M8 {
     public abstract class GOActivatorActivateCheckBase<T> : MonoBehaviour where T:Component {
-        public LayerMask layerMask;        
+        public LayerMask layerMask;
+        [TagSelector]
+        public string[] tagFilters; //if not empty, only select activators that match one of these tags
         public float delay = 0.3f;
         public int capacity = 8;
 
@@ -63,6 +65,21 @@ namespace M8 {
                 for(int i = 0; i < count; i++) {
                     var coll = mColls[i];
 
+                    //ignore if tag not match
+                    if(tagFilters.Length > 0) {
+                        bool isTagMatch = false;
+                        for(int t = 0; t < tagFilters.Length; t++) {
+                            if(coll.CompareTag(tagFilters[t])) {
+                                isTagMatch = true;
+                                break;
+                            }
+                        }
+
+                        if(!isTagMatch)
+                            continue;
+                    }
+
+                    //check if it already exists
                     int activeInd = -1;
                     for(int j = 0; j < activeCount; j++) {
                         var active = mActives[j];
@@ -72,6 +89,7 @@ namespace M8 {
                         }
                     }
 
+                    //add
                     if(activeInd == -1) {
                         var activator = coll.GetComponent<GOActivator>();
                         if(activator) {
