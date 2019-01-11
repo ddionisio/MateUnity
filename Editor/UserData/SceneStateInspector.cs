@@ -46,6 +46,9 @@ namespace M8 {
                 initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
 
                 if(initGlobalFoldout) {
+                    if(data.globalStartData == null)
+                        data.globalStartData = new SceneState.InitData[0];
+
                     GUILayout.BeginVertical(GUI.skin.box);
 
                     int delSubKey = -1;
@@ -126,6 +129,9 @@ namespace M8 {
                     }
 
                     //Scenes
+
+                    if(data.startData == null)
+                        data.startData = new SceneState.InitSceneData[0];
 
                     int delKey = -1;
 
