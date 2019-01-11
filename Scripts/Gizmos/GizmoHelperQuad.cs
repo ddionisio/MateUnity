@@ -16,9 +16,16 @@ namespace M8 {
                     bound.center = bc.center;
                     bound.extents = new Vector3(bc.size.x * transform.localScale.x, bc.size.y * transform.localScale.y, bc.size.z * transform.localScale.z) * 0.5f;
                 }
+                else {
+                    BoxCollider2D bc2D = GetComponent<BoxCollider2D>();
+                    if(bc2D != null) {
+                        bound.center = bc2D.offset;
+                        bound.extents = bc2D.size * 0.5f;
+                    }
+                }
             }
 
-            if(bound.size.x > 0 && bound.size.y > 0 && bound.size.z > 0) {
+            if(bound.size.x > 0 && bound.size.y > 0) {
                 Gizmos.color = color;
 
                 Vector3 ul = transform.localToWorldMatrix.MultiplyPoint(bound.center + new Vector3(-bound.extents.x, bound.extents.y));
