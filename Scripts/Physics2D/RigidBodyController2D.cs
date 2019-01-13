@@ -295,6 +295,19 @@ namespace M8 {
             return CollisionFlags.Sides;
         }
 
+        public CollisionFlags GetCollisionFlag(Collision2D coll) {
+            CollisionFlags flags = CollisionFlags.None;
+
+            Vector2 up = dirHolder.up;
+
+            for(int i = 0; i < coll.contactCount; i++) {
+                var contact = coll.GetContact(i);
+                flags |= GetCollisionFlag(up, contact.normal);
+            }
+
+            return flags;
+        }
+
         protected void ClearCollFlags() {
             collisionFlags = CollisionFlags.None;
             sideFlags = SideFlags.None;
@@ -310,7 +323,7 @@ namespace M8 {
                 var colInf = mColls[i];
 
                 //invalid?
-                if(!colInf.collider || !colInf.otherCollider) {
+                if(!colInf.collider || !colInf.collider.enabled || !colInf.otherCollider || !colInf.otherCollider.enabled) {
                     mColls[i] = mColls[collisionCount - 1];
                     colInf.Reset();
                     collisionCount--;
@@ -456,11 +469,15 @@ namespace M8 {
 
             int horzSlideCount = 0;
 
-            for(int i = 0; i < collisionCount; i++) {
+            for(int i = collisionCount - 1; i >= 0; i--) {
                 var coll = mColls[i];
 
-                if(!coll.collider)
+                if(!coll.collider || !coll.collider.enabled) {
+                    mColls[i] = mColls[collisionCount - 1];
+                    coll.Reset();
+                    collisionCount--;
                     continue;
+                }
 
                 mCollLayerMask |= 1 << coll.collider.gameObject.layer;
                                 
