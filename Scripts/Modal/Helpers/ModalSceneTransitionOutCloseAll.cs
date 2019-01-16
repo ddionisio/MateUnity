@@ -5,10 +5,13 @@ using UnityEngine;
 
 namespace M8 {
     /// <summary>
-    /// Close all modals in ModalManager.main during scene manager transition out
+    /// Close all modals in ModalManager.main (if useMain is true), or modalManager during scene manager transition out
     /// </summary>
     [AddComponentMenu("M8/Modal/Helpers/Scene Transition Out Close All")]
     public class ModalSceneTransitionOutCloseAll : MonoBehaviour, SceneManager.ITransition {
+        public bool useMain;
+        public ModalManager modalManager;
+
         int SceneManager.ITransition.priority {
             get {
                 return 1000; //make sure we close first before fullscreen transition
@@ -29,10 +32,14 @@ namespace M8 {
         }
 
         IEnumerator SceneManager.ITransition.Out() {
-            ModalManager.main.CloseAll();
+            var modalMgr = useMain ? ModalManager.main : modalManager;
 
-            while(ModalManager.main.isBusy)
-                yield return null;
+            if(modalMgr) {
+                modalMgr.CloseAll();
+
+                while(modalMgr.isBusy)
+                    yield return null;
+            }
         }
     }
 }
