@@ -9,8 +9,7 @@ namespace M8 {
     /// </summary>
     [AddComponentMenu("M8/Modal/Helpers/Scene Transition Out Close All")]
     public class ModalSceneTransitionOutCloseAll : MonoBehaviour, SceneManager.ITransition {
-        public bool useMain;
-        public ModalManager modalManager;
+        public ModalManagerPath modalManager;
 
         int SceneManager.ITransition.priority {
             get {
@@ -32,7 +31,7 @@ namespace M8 {
         }
 
         IEnumerator SceneManager.ITransition.Out() {
-            var modalMgr = useMain ? ModalManager.main : modalManager;
+            var modalMgr = modalManager.manager;
 
             if(modalMgr) {
                 modalMgr.CloseAll();

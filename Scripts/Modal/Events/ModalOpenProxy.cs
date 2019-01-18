@@ -7,14 +7,20 @@ namespace M8 {
     /// Open a modal from ModalManager
     /// </summary>
     [AddComponentMenu("M8/Modal/Events/Open")]
-    public class ModalOpenProxy : ModalManagerControlBase {
+    public class ModalOpenProxy : MonoBehaviour {
+        public ModalManagerPath modalManager;
         public string modal;
+        [Tooltip("If true, only open if the stack is empty (no other modals opened)")]
+        public bool onlyIfEmpty;
         public bool closeIfOpened;
 
         public void Invoke() {
-            var mgr = modalManager;
+            var mgr = modalManager.manager;
 
             if(!mgr)
+                return;
+
+            if(onlyIfEmpty && (mgr.isBusy || mgr.activeCount > 0))
                 return;
 
             if(mgr.IsInStack(modal)) {

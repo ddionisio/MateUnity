@@ -7,16 +7,17 @@ namespace M8 {
     /// Clop top or all from ModalManager
     /// </summary>
     [AddComponentMenu("M8/Modal/Events/Close")]
-    public class ModalCloseProxy : ModalManagerControlBase {
+    public class ModalCloseProxy : ModalManager {
         public enum Mode {
             Top,
             All
         }
 
+        public ModalManagerPath modalManager;
         public Mode mode = Mode.Top;
 
         public void Invoke() {
-            var mgr = modalManager;
+            var mgr = modalManager.manager;
 
             if(!mgr)
                 return;
