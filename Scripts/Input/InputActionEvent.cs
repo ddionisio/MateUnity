@@ -52,6 +52,9 @@ namespace M8 {
         }
 
         void Update() {
+            if(SceneManager.isInstantiated && SceneManager.instance.isLoading)
+                return;
+
             for(int i = 0; i < actions.Length; i++)
                 actions[i].Update();
         }
