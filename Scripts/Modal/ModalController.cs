@@ -32,7 +32,12 @@ namespace M8 {
             if(owner)
                 owner.CloseUpTo(id, true);
         }
-        
+
+        public void CloseIfTop() {
+            if(owner && owner.GetTopBehaviour() == this)
+                owner.CloseTop();
+        }
+
         //IModalController Implements
         MonoBehaviour IModalController.behaviour { get { return this; } }
 
