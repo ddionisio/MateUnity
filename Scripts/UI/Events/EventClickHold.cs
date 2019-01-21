@@ -17,7 +17,6 @@ namespace M8.UI.Events {
         [Header("Events")]
         public Slider.SliderEvent valueEvent;
         public UnityEvent clickEvent;
-        public Signal clickSignal;
 
         private float mCurVal = 0f;
         private float mLastTime;
@@ -63,9 +62,6 @@ namespace M8.UI.Events {
             Release();
 
             clickEvent.Invoke();
-
-            if(clickSignal)
-                clickSignal.Invoke();
         }
 
         private void Release() {
