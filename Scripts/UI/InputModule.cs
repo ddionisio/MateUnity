@@ -336,8 +336,13 @@ namespace M8.UI {
 
         private Vector2 GetRawMoveVector() {
             Vector2 move = Vector2.zero;
-            if(m_HorizontalAxis) move.x = Mathf.Sign(m_HorizontalAxis.GetAxis());
-            if(m_VerticalAxis) move.y = Mathf.Sign(m_VerticalAxis.GetAxis());
+            if(m_HorizontalAxis) move.x = m_HorizontalAxis.GetAxis();
+            if(m_VerticalAxis) move.y = m_VerticalAxis.GetAxis();
+
+            if(move.x != 0f)
+                move.x = Mathf.Sign(move.x);
+            if(move.y != 0f)
+                move.y = Mathf.Sign(move.y);
 
             return move;
         }
