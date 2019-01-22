@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 
 namespace M8.UI.Events {
     [AddComponentMenu("M8/UI/Events/HoverGOSetActive")]
-    public class HoverGOSetActive : UIBehaviour,
+    public class HoverGOSetActive : MonoBehaviour,
         IPointerDownHandler, IPointerUpHandler,
         IPointerEnterHandler, IPointerExitHandler,
         ISelectHandler, IDeselectHandler {
@@ -14,25 +14,21 @@ namespace M8.UI.Events {
         private bool mIsPointerDown;
         private bool mIsPointerInside;
 
-        protected override void OnEnable() {
-            base.OnEnable();
-
+        void OnEnable() {
             EventSystem es = EventSystem.current;
             if(es)
                 target.SetActive(es.currentSelectedGameObject == gameObject);
         }
 
-        protected override void OnDisable() {
+        void OnDisable() {
             mIsPointerDown = false;
             mIsPointerInside = false;
 
             target.SetActive(false);
-
-            base.OnDisable();
         }
 
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData) {
-            if(!IsActive()) return;
+            if(!isActiveAndEnabled) return;
 
             mIsPointerDown = true;
 
@@ -40,7 +36,7 @@ namespace M8.UI.Events {
         }
 
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData) {
-            if(!IsActive()) return;
+            if(!isActiveAndEnabled) return;
 
             mIsPointerDown = false;
 
@@ -48,7 +44,7 @@ namespace M8.UI.Events {
         }
 
         void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData) {
-            if(!IsActive()) return;
+            if(!isActiveAndEnabled) return;
 
             mIsPointerInside = true;
 
@@ -56,7 +52,7 @@ namespace M8.UI.Events {
         }
 
         void IPointerExitHandler.OnPointerExit(PointerEventData eventData) {
-            if(!IsActive()) return;
+            if(!isActiveAndEnabled) return;
 
             mIsPointerInside = false;
 
@@ -64,13 +60,13 @@ namespace M8.UI.Events {
         }
 
         void ISelectHandler.OnSelect(BaseEventData eventData) {
-            if(!IsActive()) return;
+            if(!isActiveAndEnabled) return;
 
             target.SetActive(eventData.selectedObject == gameObject);
         }
 
         void IDeselectHandler.OnDeselect(BaseEventData eventData) {
-            if(!IsActive()) return;
+            if(!isActiveAndEnabled) return;
 
             target.SetActive(false);
         }
