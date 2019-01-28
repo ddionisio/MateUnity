@@ -339,11 +339,6 @@ namespace M8.UI {
             if(m_HorizontalAxis) move.x = m_HorizontalAxis.GetAxis();
             if(m_VerticalAxis) move.y = m_VerticalAxis.GetAxis();
 
-            if(move.x != 0f)
-                move.x = Mathf.Sign(move.x);
-            if(move.y != 0f)
-                move.y = Mathf.Sign(move.y);
-
             return move;
         }
 
@@ -360,7 +355,7 @@ namespace M8.UI {
             }
             
             // If user pressed key again, always allow event
-            bool allow = (m_HorizontalAxis && m_HorizontalAxis.IsDown()) || (m_VerticalAxis && m_VerticalAxis.IsDown());
+            bool allow = (m_HorizontalAxis && m_HorizontalAxis.IsPressed()) || (m_VerticalAxis && m_VerticalAxis.IsPressed());
             bool similarDir = (Vector2.Dot(movement, m_LastMoveVector) > 0);
             if(!allow) {
                 // Otherwise, user held down key or axis.
@@ -373,7 +368,7 @@ namespace M8.UI {
             }
             if(!allow)
                 return false;
-
+            
             // Debug.Log(m_ProcessingEvent.rawType + " axis:" + m_AllowAxisEvents + " value:" + "(" + x + "," + y + ")");
             var axisEventData = GetAxisEventData(movement.x, movement.y, 0.6f);
 
