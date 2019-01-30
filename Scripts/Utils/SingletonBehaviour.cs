@@ -89,7 +89,7 @@ namespace M8 {
         }
 
         void Awake() {
-            if(mInstanceState != InstanceState.Initialized) {
+            if(mInstance == null || mInstanceState != InstanceState.Initialized) {
                 mInstanceState = InstanceState.Initialized;
                 mInstance = this as T;
                 OnInstanceInit();
