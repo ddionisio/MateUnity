@@ -21,8 +21,18 @@ public class SceneCamAxisRotator : EditorWindow {
 
         r = EditorGUILayout.Slider("Z-Axis", r, 0, 360);
         if(prevR != r) {
-            SceneView.currentDrawingSceneView.rotation = Quaternion.AngleAxis(r, Vector3.forward);
-            SceneView.currentDrawingSceneView.Repaint();
+            SceneView sceneView;
+            if(SceneView.currentDrawingSceneView)
+                sceneView = SceneView.currentDrawingSceneView;
+            else if(SceneView.lastActiveSceneView)
+                sceneView = SceneView.lastActiveSceneView;
+            else
+                sceneView = null;
+
+            if(sceneView) {
+                sceneView.rotation = Quaternion.AngleAxis(r, Vector3.forward);
+                sceneView.Repaint();
+            }
         }
 
         GUILayout.EndHorizontal();
