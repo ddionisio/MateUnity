@@ -167,6 +167,7 @@ namespace M8 {
             mIsSlide = false;            
             mCurMoveAxis = Vector2.zero;
             mLastVelocity = Vector2.zero;
+            mLocalVelocity = Vector2.zero;
 
             ResetCollisionInfo();
         }
