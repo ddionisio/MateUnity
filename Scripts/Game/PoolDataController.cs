@@ -11,6 +11,9 @@ namespace M8 {
         public bool isSpawned { get { return mIsSpawned; } }
         public bool claimed { get { return !mIsSpawned; } }
 
+        public event System.Action<PoolDataController> spawnCallback;
+        public event System.Action<PoolDataController> despawnCallback;
+
         private bool mIsSpawned = false;
         private bool mIsInterfacesInit;
         private IPoolSpawn[] mISpawns;
@@ -47,10 +50,16 @@ namespace M8 {
 
             for(int i = 0; i < mISpawnCompletes.Length; i++)
                 mISpawnCompletes[i].OnSpawnComplete();
+
+            if(spawnCallback != null)
+                spawnCallback(this);
         }
 
         public void Despawn() {
             InitInterfaces();
+
+            if(despawnCallback != null)
+                despawnCallback(this);
 
             for(int i = 0; i < mIDespawns.Length; i++)
                 mIDespawns[i].OnDespawned();
