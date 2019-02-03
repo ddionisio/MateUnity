@@ -9,7 +9,7 @@ namespace M8 {
     }
 
     [AddComponentMenu("M8/Game/State Controller")]
-    public class StateController : MonoBehaviour {
+    public class StateController : MonoBehaviour, IPoolDespawn {
         public StateUnityEvent stateChangedEvent;
 
         public State state {
@@ -45,6 +45,10 @@ namespace M8 {
             mPrevState = mState;
 
             stateChangedEvent.Invoke(mState);
+        }
+
+        void IPoolDespawn.OnDespawned() {
+            mState = null;
         }
     }
 }
