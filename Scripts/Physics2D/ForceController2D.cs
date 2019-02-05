@@ -19,7 +19,8 @@ namespace M8 {
 
         public Rigidbody2D body;
 
-        public Vector2 defaultForce = Vector2.zero;
+        public float defaultForce = 0f;
+        public float defaultForceOrient = 0f; //relative to Vector2.up
         public float forceScale = 1f;
 
         public OrientMode orient = OrientMode.None;
@@ -43,6 +44,9 @@ namespace M8 {
         private Vector2 mOrientDestDir;
         private float mOrientAngleToUp;
         private float mOrientChangeVel;
+
+        private Vector2 mDefaultForce;
+        private Vector2 mDefaultForceDir;
 
         protected virtual void OnTriggerEnter2D(Collider2D col) {
             if(mForceFields.IsFull)
@@ -113,13 +117,21 @@ namespace M8 {
             if(body) {
                 body.gravityScale = 0f;
             }
+
+            mDefaultForceDir = MathUtil.RotateAngle(Vector2.up, defaultForceOrient);
+            mDefaultForce = defaultForce * mDefaultForceDir;
         }
 
         protected virtual void FixedUpdate() {
+#if UNITY_EDITOR
+            mDefaultForceDir = MathUtil.RotateAngle(Vector2.up, defaultForceOrient);
+            mDefaultForce = defaultForce * mDefaultForceDir;
+#endif
+
             //apply fields
             if(!ignoreFields) {
                 var newOrient = Vector2.zero;
-                var newForce = defaultForce;
+                var newForce = mDefaultForce;
                 int fieldCount = 0;
 
                 //global
@@ -156,6 +168,11 @@ namespace M8 {
                     mOrientAngleToUp = Vector2.SignedAngle(mOrientDestDir, Vector2.up);
                     force = newForce;
                 }
+            }
+            else {
+                mOrientDestDir = mDefaultForceDir;
+                mOrientAngleToUp = defaultForceOrient;
+                force = mDefaultForce;
             }
 
             //apply force
@@ -224,6 +241,16 @@ namespace M8 {
                 default:
                     transform.up = dir;
                     break;
+            }
+        }
+
+        void OnDrawGizmos() {
+            if(defaultForce > 0f) {
+                Gizmos.color = Color.yellow;
+
+                Vector2 pos = transform.position;
+
+                Gizmo.ArrowLine2D(pos, pos + MathUtil.RotateAngle(Vector2.up, defaultForceOrient) * 0.5f);
             }
         }
     }
