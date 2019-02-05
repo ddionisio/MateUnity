@@ -228,20 +228,24 @@ namespace M8 {
         }
 
         private void ApplyOrientDir(Vector2 dir) {
+            Vector2 toDir;
+
             switch(orient) {
                 case OrientMode.Down:
-                    transform.up = -dir;
+                    toDir = -dir;
                     break;
                 case OrientMode.Right:
-                    transform.up = new Vector2(-dir.y, dir.x);
+                    toDir = new Vector2(-dir.y, dir.x);
                     break;
                 case OrientMode.Left:
-                    transform.up = new Vector2(dir.y, -dir.x);
+                    toDir = new Vector2(dir.y, -dir.x);
                     break;
                 default:
-                    transform.up = dir;
+                    toDir = dir;
                     break;
             }
+
+            transform.eulerAngles = new Vector3(0f, 0f, Vector2.SignedAngle(Vector2.up, toDir));
         }
 
         void OnDrawGizmos() {

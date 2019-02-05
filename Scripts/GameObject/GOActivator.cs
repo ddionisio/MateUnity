@@ -16,6 +16,7 @@ namespace M8 {
 
         public bool deactivateOnEnable = true;
         public float deactivateDelay = 2.0f;
+        public bool resetTransformOnActivate = false; //if true, reset parent's transform to mParentInit*
 
         public UnityEvent awakeEvent;
         public UnityEvent sleepEvent;
@@ -26,6 +27,10 @@ namespace M8 {
         private Vector3 mLocalPos;
 
         private Coroutine mDeactivateRout;
+        
+        private Vector3 mParentInitPos;
+        private Vector3 mParentInitScale;
+        private Quaternion mParentInitRot;
 
         private static Transform mActivatorHolder = null;
 
@@ -50,6 +55,12 @@ namespace M8 {
                 }
 
                 //put ourself back in parent
+                if(resetTransformOnActivate) {
+                    mDefaultParent.position = mParentInitPos;
+                    mDefaultParent.rotation = mParentInitRot;
+                    mDefaultParent.localScale = mParentInitScale;
+                }
+
                 mDefaultParent.gameObject.SetActive(true);
                 SetParent(mDefaultParent);
 
@@ -105,17 +116,22 @@ namespace M8 {
             }
 
             mDefaultParent = transform.parent;
+
+            mParentInitPos = mDefaultParent.position;
+            mParentInitRot = mDefaultParent.rotation;
+            mParentInitScale = mDefaultParent.localScale;
+
             mLocalPos = transform.localPosition;
         }
         
         protected virtual void SetParent(Transform toParent) {
             if(toParent != mDefaultParent) {
                 Vector3 pos = transform.position;
-                transform.parent = toParent;
+                transform.SetParent(toParent);
                 transform.position = pos;
             }
             else {
-                transform.parent = toParent;
+                transform.SetParent(toParent);
                 transform.position = toParent.position;
                 transform.localPosition = mLocalPos;
             }

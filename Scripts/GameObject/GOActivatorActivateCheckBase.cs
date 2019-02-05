@@ -56,7 +56,7 @@ namespace M8 {
                         if(active.activator)
                             active.activator.Deactivate();
 
-                        mActives.RemoveLast();
+                        mActives.RemoveAt(i);
                     }
                 }
 
