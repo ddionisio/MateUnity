@@ -308,6 +308,28 @@ namespace M8 {
             ret.x = 1.0f - ret.y - ret.z;
             return ret;
         }
+
+        //-------------- Misc. --------------
+
+        /// <summary>
+        /// Greatest common factor.
+        /// </summary>
+        public static int Gcf(int a, int b) {
+            while(b != 0) {
+                int c = b;
+                b = a % b;
+                a = c;
+            }
+
+            return a;
+        }
+
+        /// <summary>
+        /// Least common multiple.
+        /// </summary>
+        public static int Lcm(int a, int b) {
+            return (a / Gcf(a, b)) * b;
+        }
     }
 
 	//-------------- Bounds --------------
