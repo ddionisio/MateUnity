@@ -145,7 +145,7 @@ namespace M8 {
         }
 
         void Awake() {
-            if(isMain)
+            if(isMain && main == null)
                 main = this;
 
             if(!root)
