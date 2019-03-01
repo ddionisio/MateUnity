@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 9c6a166d7c725464fa706b520e0ee024
+guid: 9b05e233ff427c841bcf6fc23a3eaa2d
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -8,11 +8,11 @@ TrueTypeFontImporter:
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Ubuntu Mono
+  fontName: Ubuntu
   fontNames:
-  - Ubuntu Mono
+  - Ubuntu
   fallbackFontReferences:
-  - {fileID: 12800000, guid: c969b463ff9f80843b646d2259a22197, type: 3}
+  - {fileID: 12800000, guid: dbb967b1fe6da884dbf8cdf03ddbd670, type: 3}
   customCharacters: 
   fontRenderingMode: 1
   ascentCalculationMode: 1
