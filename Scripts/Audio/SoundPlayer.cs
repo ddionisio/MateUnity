@@ -8,8 +8,6 @@ namespace M8 {
     [RequireComponent(typeof(AudioSource))]
     [AddComponentMenu("M8/Audio/SoundPlayer")]
     public class SoundPlayer : MonoBehaviour {
-        public const float refRate = 44100.0f;
-
         [SerializeField]
         AudioSource _target;
 
