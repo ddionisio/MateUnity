@@ -9,17 +9,13 @@ namespace M8 {
         public const string soundKey = "volumeSfx";
         public const string musicKey = "volumeMusic";
 
-        //need to debug while listening to music
-#if UNITY_EDITOR
-        private const float volumeDefault = 1.0f;
-#else
-	private const float volumeDefault = 1.0f;
-#endif
-
-        private float mVolume;
-        private float mSoundVolume;
-        private float mMusicVolume;
-
+        [SerializeField]
+        float _masterVolumeDefault = 1.0f;
+        [SerializeField]
+        float _soundVolumeDefault = 1.0f;
+        [SerializeField]
+        float _musicVolumeDefault = 1.0f;
+                
         public float soundVolume {
             get { return mSoundVolume; }
 
@@ -59,12 +55,20 @@ namespace M8 {
             }
         }
 
+        public float volumeDefault { get { return _masterVolumeDefault; } }
+        public float soundVolumeDefault { get { return _soundVolumeDefault; } }
+        public float musicVolumeDefault { get { return _musicVolumeDefault; } }
+
+        private float mVolume;
+        private float mSoundVolume;
+        private float mMusicVolume;
+
         public override void Load() {
-            mVolume = userData.GetFloat(volumeKey, 1.0f);
+            mVolume = userData.GetFloat(volumeKey, _masterVolumeDefault);
 
-            mSoundVolume = userData.GetFloat(soundKey, volumeDefault);
+            mSoundVolume = userData.GetFloat(soundKey, _soundVolumeDefault);
 
-            mMusicVolume = userData.GetFloat(musicKey, volumeDefault);
+            mMusicVolume = userData.GetFloat(musicKey, _musicVolumeDefault);
 
             AudioListener.volume = mVolume;
         }

@@ -17,7 +17,7 @@ namespace M8 {
         public virtual void Save() {
             userData.Save();
         }
-
+        
         protected override void OnInstanceInit() {
             if(userData == null)
                 userData = GetComponent<UserData>();

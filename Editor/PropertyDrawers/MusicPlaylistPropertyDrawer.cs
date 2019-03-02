@@ -10,10 +10,7 @@ namespace M8 {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             if(!mPlaylist) {
                 //manually grab
-                var objects = Resources.FindObjectsOfTypeAll<MusicPlaylist>();
-                if(objects.Length > 0) {
-                    mPlaylist = objects[0];
-                }
+                mPlaylist = AssetDatabase.LoadAssetAtPath<MusicPlaylist>(MusicPlaylist.assetPath);
             }
 
             if(mPlaylist) {

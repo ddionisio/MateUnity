@@ -194,6 +194,9 @@ namespace M8 {
         }
 
         private AudioSourceProxy GetAvailable() {
+            if(mSourceCache == null)
+                return null;
+
             if(!mSourceCache.IsFull) {
                 return mSourceCache.RemoveLast();
             }
@@ -204,6 +207,9 @@ namespace M8 {
         }
 
         private void Cache(AudioSourceProxy src) {
+            if(mSourceCache == null)
+                return;
+
             mSourceCache.Add(src);
         }
     }
