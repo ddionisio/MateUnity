@@ -27,6 +27,8 @@ namespace M8 {
 
         public bool isPlaying { get { return mSourceProxy && mSourceProxy.isPlaying; } }
 
+        public string lastPlayName { get; private set; }
+
         public AudioSourceProxy sourceProxy {
             get {
                 if(!mSourceProxy) {
@@ -74,6 +76,8 @@ namespace M8 {
                 Debug.LogWarning("Music does not exist: " + name);
                 return;
             }
+
+            lastPlayName = name;
 
             float _fadeInDelay, _fadeOutDelay;
             if(immediate) {

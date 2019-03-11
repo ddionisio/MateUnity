@@ -10,8 +10,16 @@ namespace M8 {
         public bool loop;
         public bool immediate;
 
-        public void Play() {
-            MusicPlaylist.instance.Play(music, loop, immediate);
+        public void Play(bool checkPrevious) {
+            var ctrl = MusicPlaylist.instance;
+
+            //don't play if it's already playing
+            if(checkPrevious) {
+                if(ctrl.lastPlayName == music && ctrl.isPlaying)
+                    return;
+            }
+
+            ctrl.Play(music, loop, immediate);
         }
 
         public void Stop(bool aImmediate) {
