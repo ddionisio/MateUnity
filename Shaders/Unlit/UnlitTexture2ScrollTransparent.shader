@@ -30,7 +30,9 @@ Shader "M8/Unlit/Texture 2 Scroll Transparent" {
 		#include "UnityCG.cginc"
 
 		sampler2D _MainTex;
+		float4 _MainTex_ST;
         sampler2D _MainTex2;
+		float4 _MainTex2_ST;
 		
 		float speedX;
 		float speedY;
@@ -59,11 +61,11 @@ Shader "M8/Unlit/Texture 2 Scroll Transparent" {
 			v2f_vct o;
 			o.vertex = UnityObjectToClipPos(v.vertex);
 			
-			o.texcoord = v.texcoord;
+			o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
 			o.texcoord.x += speedX * _Time.y;
 			o.texcoord.y += speedY * _Time.y;
 
-            o.texcoord2 = v.texcoord;
+            o.texcoord2 = TRANSFORM_TEX(v.texcoord, _MainTex2);
             o.texcoord2.x += speedX2 * _Time.y;
             o.texcoord2.y += speedY2 * _Time.y;
 
