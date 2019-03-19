@@ -199,6 +199,9 @@ namespace M8 {
         }
 
         void OnDisable() {
+            if(UserSettingAudio.instance)
+                UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
+
             if(audioSource)
                 audioSource.Stop();
 
@@ -207,18 +210,11 @@ namespace M8 {
 
         void OnEnable() {
             mIsFocused = Application.isFocused;
-        }
 
-        void OnDestroy() {
-            if(UserSettingAudio.isInstantiated)
-                UserSettingAudio.instance.changeCallback -= UserSettingsChanged;
-        }
-
-        void Awake() {
-            if(UserSettingAudio.isInstantiated)
+            if(UserSettingAudio.instance)
                 UserSettingAudio.instance.changeCallback += UserSettingsChanged;
         }
-                
+        
         void UserSettingsChanged(UserSettingAudio us) {
             if(audioSource)
                 audioSource.volume = volume;

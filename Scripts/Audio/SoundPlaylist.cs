@@ -65,6 +65,11 @@ namespace M8 {
                 return null;
             }
 
+            if(dat.clip == null) {
+                Debug.LogWarning(string.Format("Sound '{0}' does not have a clip.", name));
+                return null;
+            }
+
             var src = GetAvailable();
             if(src) {
                 src.Play2D(dat.clip, delegate (GenericParams _parms) {
@@ -189,6 +194,8 @@ namespace M8 {
                 srcProxy.audioSource = audioSrc;
                 srcProxy.muteOnFocusLost = muteOnFocusLost;
 
+                go.SetActive(false);
+
                 mSourceCache.Add(srcProxy);
             }
         }
@@ -197,8 +204,10 @@ namespace M8 {
             if(mSourceCache == null)
                 return null;
 
-            if(!mSourceCache.IsFull) {
-                return mSourceCache.RemoveLast();
+            if(mSourceCache.Count > 0) {
+                var src = mSourceCache.RemoveLast();
+                src.gameObject.SetActive(true);
+                return src;
             }
             else {
                 Debug.LogWarning("No available source.");
@@ -209,6 +218,8 @@ namespace M8 {
         private void Cache(AudioSourceProxy src) {
             if(mSourceCache == null)
                 return;
+
+            src.gameObject.SetActive(false);
 
             mSourceCache.Add(src);
         }
