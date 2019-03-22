@@ -10,6 +10,8 @@ namespace M8.UI.Events {
         ISelectHandler, IDeselectHandler {
 
         public GameObject target;
+        [Tooltip("If true, target remains active if this gameObject is selected.")]
+        public bool selectSticky;
 
         private bool mIsPointerDown;
         private bool mIsPointerInside;
@@ -32,7 +34,10 @@ namespace M8.UI.Events {
 
             mIsPointerDown = true;
 
-            target.SetActive(mIsPointerInside || eventData.pointerPress == gameObject);
+            if(selectSticky && eventData.selectedObject == gameObject)
+                target.SetActive(true);
+            else
+                target.SetActive(mIsPointerInside || eventData.pointerPress == gameObject);
         }
 
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData) {
@@ -40,7 +45,10 @@ namespace M8.UI.Events {
 
             mIsPointerDown = false;
 
-            target.SetActive(mIsPointerInside);
+            if(selectSticky && eventData.selectedObject == gameObject)
+                target.SetActive(true);
+            else
+                target.SetActive(mIsPointerInside);
         }
 
         void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData) {
@@ -48,15 +56,21 @@ namespace M8.UI.Events {
 
             mIsPointerInside = true;
 
-            target.SetActive(mIsPointerDown || eventData.pointerPress == null);
+            if(selectSticky && eventData.selectedObject == gameObject)
+                target.SetActive(true);
+            else
+                target.SetActive(mIsPointerDown || eventData.pointerPress == null);
         }
 
         void IPointerExitHandler.OnPointerExit(PointerEventData eventData) {
             if(!isActiveAndEnabled) return;
-
+                        
             mIsPointerInside = false;
 
-            target.SetActive(mIsPointerDown && eventData.pointerPress == gameObject);
+            if(selectSticky && eventData.selectedObject == gameObject)
+                target.SetActive(true);
+            else
+                target.SetActive(mIsPointerDown && eventData.pointerPress == gameObject);
         }
 
         void ISelectHandler.OnSelect(BaseEventData eventData) {
