@@ -16,10 +16,17 @@ namespace M8.UI.Events {
         private bool mIsPointerDown;
         private bool mIsPointerInside;
 
+        private Selectable mSelectable;
+
         void OnEnable() {
-            EventSystem es = EventSystem.current;
-            if(es)
-                target.SetActive(es.currentSelectedGameObject == gameObject);
+            if(mSelectable && !mSelectable.interactable) {
+                target.SetActive(false);
+            }
+            else {
+                EventSystem es = EventSystem.current;
+                if(es)
+                    target.SetActive(es.currentSelectedGameObject == gameObject);
+            }
         }
 
         void OnDisable() {
@@ -29,12 +36,18 @@ namespace M8.UI.Events {
             target.SetActive(false);
         }
 
+        void Awake() {
+            mSelectable = GetComponent<Selectable>();
+        }
+
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData) {
             if(!isActiveAndEnabled) return;
 
             mIsPointerDown = true;
 
-            if(selectSticky && eventData.selectedObject == gameObject)
+            if(mSelectable && !mSelectable.interactable)
+                target.SetActive(false);
+            else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
             else
                 target.SetActive(mIsPointerInside || eventData.pointerPress == gameObject);
@@ -45,7 +58,9 @@ namespace M8.UI.Events {
 
             mIsPointerDown = false;
 
-            if(selectSticky && eventData.selectedObject == gameObject)
+            if(mSelectable && !mSelectable.interactable)
+                target.SetActive(false);
+            else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
             else
                 target.SetActive(mIsPointerInside);
@@ -54,9 +69,12 @@ namespace M8.UI.Events {
         void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData) {
             if(!isActiveAndEnabled) return;
 
+
             mIsPointerInside = true;
 
-            if(selectSticky && eventData.selectedObject == gameObject)
+            if(mSelectable && !mSelectable.interactable)
+                target.SetActive(false);
+            else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
             else
                 target.SetActive(mIsPointerDown || eventData.pointerPress == null);
@@ -67,7 +85,9 @@ namespace M8.UI.Events {
                         
             mIsPointerInside = false;
 
-            if(selectSticky && eventData.selectedObject == gameObject)
+            if(mSelectable && !mSelectable.interactable)
+                target.SetActive(false);
+            else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
             else
                 target.SetActive(mIsPointerDown && eventData.pointerPress == gameObject);
@@ -76,7 +96,10 @@ namespace M8.UI.Events {
         void ISelectHandler.OnSelect(BaseEventData eventData) {
             if(!isActiveAndEnabled) return;
 
-            target.SetActive(eventData.selectedObject == gameObject);
+            if(mSelectable && !mSelectable.interactable)
+                target.SetActive(false);
+            else
+                target.SetActive(eventData.selectedObject == gameObject);
         }
 
         void IDeselectHandler.OnDeselect(BaseEventData eventData) {
