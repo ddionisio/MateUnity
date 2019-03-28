@@ -9,7 +9,8 @@ namespace M8 {
         public const string DataFormat = "{0}:{1}";
 
         public UserData userData;
-        public bool autoSave = true; //save userData when scene changing, application exit
+        public bool autoSaveOnSceneChange = true; //save userData when scene changing
+        public bool autoSaveOnApplicationExit = true; //save when exiting app.
 
         public int localStateCache = 0;
 
@@ -666,12 +667,12 @@ namespace M8 {
         }
 
         void OnApplicationQuit() {
-            if(autoSave && userData)
+            if(autoSaveOnApplicationExit && userData)
                 userData.Save();
         }
 
         void OnSceneChange(string toScene) {
-            if(autoSave && userData)
+            if(autoSaveOnSceneChange && userData)
                 userData.Save();
         }
 

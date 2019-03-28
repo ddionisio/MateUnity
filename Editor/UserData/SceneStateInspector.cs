@@ -36,11 +36,24 @@ namespace M8 {
                     data.userData = newUserData;
                 }
 
-                var newUserDataAutoSave = EditorGUILayout.Toggle("Auto Save", data.autoSave);
-                if(data.autoSave != newUserDataAutoSave) {
+                //auto save config
+                GUILayout.BeginVertical(GUI.skin.box);
+
+                GUILayout.Label("Auto Save");
+
+                var autoSaveOnSceneChange = EditorGUILayout.Toggle("On Scene Change", data.autoSaveOnSceneChange);
+                if(data.autoSaveOnSceneChange != autoSaveOnSceneChange) {
                     Undo.RecordObject(data, "Change Auto Save");
-                    data.autoSave = newUserDataAutoSave;
+                    data.autoSaveOnSceneChange = autoSaveOnSceneChange;
                 }
+
+                var autoSaveOnAppExit = EditorGUILayout.Toggle("On Application Exit", data.autoSaveOnApplicationExit);
+                if(data.autoSaveOnApplicationExit != autoSaveOnAppExit) {
+                    Undo.RecordObject(data, "Change Auto Save");
+                    data.autoSaveOnApplicationExit = autoSaveOnAppExit;
+                }
+
+                GUILayout.EndVertical();
 
                 //Globals 
                 initGlobalFoldout = EditorGUILayout.Foldout(initGlobalFoldout, "Scene Global Data");
