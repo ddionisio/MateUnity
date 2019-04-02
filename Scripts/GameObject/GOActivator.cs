@@ -80,6 +80,9 @@ namespace M8 {
         public void Deactivate() {
             if(mIsActive) {
                 if(deactivateDelay > 0.0f) {
+                    if(!enabled || !gameObject.activeInHierarchy) //ignore deactivation if we are hidden
+                        return;
+
                     if(mDeactivateRout == null)
                         mDeactivateRout = StartCoroutine(DoInActiveDelay());
                 }
@@ -92,6 +95,17 @@ namespace M8 {
         public void ForceDeactivate(bool notifySleep) {
             StopDeactivateRout();
             InActive(notifySleep);
+        }
+
+        /// <summary>
+        /// Use this to stop GOActivatorActivate* from managing this. Useful when despawning item and such.
+        /// </summary>
+        public void Release() {
+            //put back to parent
+            SetParent(mDefaultParent);
+
+            StopDeactivateRout();
+            mIsActive = true;
         }
                 
         protected virtual void OnEnable() {
@@ -200,11 +214,7 @@ namespace M8 {
         }
 
         void IPoolDespawn.OnDespawned() {
-            //put back to parent
-            SetParent(mDefaultParent);
-
-            StopDeactivateRout();
-            mIsActive = true;
+            Release();
         }
     }
 }
