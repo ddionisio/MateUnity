@@ -27,7 +27,7 @@ namespace M8 {
         private Vector3 mLocalPos;
 
         private Coroutine mDeactivateRout;
-        
+
         private Vector3 mParentInitPos;
         private Vector3 mParentInitScale;
         private Quaternion mParentInitRot;
@@ -107,7 +107,7 @@ namespace M8 {
             StopDeactivateRout();
             mIsActive = true;
         }
-                
+
         protected virtual void OnEnable() {
             if(deactivateOnEnable) {
                 InActive(false);
@@ -137,7 +137,20 @@ namespace M8 {
 
             mLocalPos = transform.localPosition;
         }
-        
+
+        void Update() {
+            //check if parent is still alive
+            if(mDefaultParent) {
+                if(!mIsActive) {
+                    if(mDefaultParent.gameObject.activeSelf) { //parent got activated manually
+                        Activate();
+                    }
+                }
+            }
+            else
+                Destroy(gameObject);
+        }
+
         protected virtual void SetParent(Transform toParent) {
             if(toParent != mDefaultParent) {
                 Vector3 pos = transform.position;
@@ -152,30 +165,9 @@ namespace M8 {
         }
 
         IEnumerator DoInActiveDelay() {
-            float curTime = 0f;
-            while(curTime < deactivateDelay) {
-                yield return null;
-                curTime += Time.deltaTime;
-
-                if(!mDefaultParent) { //parent lost?
-                    Destroy(gameObject);
-                    yield break;
-                }
-            }
+            yield return new WaitForSeconds(deactivateDelay);
 
             InActive(true);
-
-            //check if parent is still alive
-            while(mDefaultParent) {
-                if(mDefaultParent.gameObject.activeSelf) { //parent got activated manually
-                    Activate();
-                    yield break;
-                }
-
-                yield return null;
-            }
-
-            Destroy(gameObject);
 
             mDeactivateRout = null;
         }
