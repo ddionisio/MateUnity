@@ -3,74 +3,49 @@ Shader "M8/Sprite/Multiplicative2x"
 {
 	Properties
 	{
-		[PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
-		_Color ("Tint", Color) = (1,1,1,1)
-		[MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
+		[PerRendererData] _MainTex("Sprite Texture", 2D) = "white" {}
+		_Color("Tint", Color) = (1,1,1,1)
+		[MaterialToggle] PixelSnap("Pixel snap", Float) = 0
+		[HideInInspector] _RendererColor("RendererColor", Color) = (1,1,1,1)
+		[HideInInspector] _Flip("Flip", Vector) = (1,1,1,1)
+		[PerRendererData] _AlphaTex("External Alpha", 2D) = "white" {}
+		[PerRendererData] _EnableExternalAlpha("Enable External Alpha", Float) = 0
 	}
 
 	SubShader
 	{
 		Tags
-		{ 
-			"Queue"="Transparent" 
-			"IgnoreProjector"="True" 
-			"RenderType"="Transparent" 
-			"PreviewType"="Plane"
-			"CanUseSpriteAtlas"="True"
+		{
+			"Queue" = "Transparent"
+			"IgnoreProjector" = "True"
+			"RenderType" = "Transparent"
+			"PreviewType" = "Plane"
+			"CanUseSpriteAtlas" = "True"
 		}
 
 		Cull Off
 		Lighting Off
 		ZWrite Off
-		Fog { Mode Off }
 		Blend DstColor SrcColor
 
 		Pass
 		{
 		CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma multi_compile DUMMY PIXELSNAP_ON
-			#include "UnityCG.cginc"
-			
-			struct appdata_t
-			{
-				float4 vertex   : POSITION;
-				float4 color    : COLOR;
-				float2 texcoord : TEXCOORD0;
-			};
+			#pragma vertex SpriteVert
+			#pragma fragment SpriteFrag_Mult2X
+			#pragma target 2.0
+			#pragma multi_compile_instancing
+			#pragma multi_compile _ PIXELSNAP_ON
+			#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
+			#include "UnitySprites.cginc"
 
-			struct v2f
-			{
-				float4 vertex   : SV_POSITION;
-				fixed4 color    : COLOR;
-				half2 texcoord  : TEXCOORD0;
-			};
-			
-			fixed4 _Color;
-
-			v2f vert(appdata_t IN)
-			{
-				v2f OUT;
-				OUT.vertex = UnityObjectToClipPos(IN.vertex);
-				OUT.texcoord = IN.texcoord;
-				OUT.color = IN.color * _Color;
-				#ifdef PIXELSNAP_ON
-				OUT.vertex = UnityPixelSnap (OUT.vertex);
-				#endif
-
-				return OUT;
-			}
-
-			sampler2D _MainTex;
-
-			fixed4 frag(v2f IN) : COLOR
+			fixed4 SpriteFrag_Mult2X(v2f IN) : COLOR
 			{
 				fixed4 col;
-                fixed4 tex = tex2D(_MainTex, IN.texcoord);
-                col.rgb = tex.rgb * IN.color.rgb * 2;
-                col.a = IN.color.a * tex.a;
-                return lerp(fixed4(0.5f,0.5f,0.5f,0.5f), col, col.a);
+				fixed4 tex = SampleSpriteTexture(IN.texcoord);
+				col.rgb = tex.rgb * IN.color.rgb * 2;
+				col.a = IN.color.a * tex.a;
+				return lerp(0.5, col, col.a);
 			}
 		ENDCG
 		}
