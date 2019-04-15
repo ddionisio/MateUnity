@@ -47,6 +47,23 @@ namespace M8 {
             val = default(T);
             return false;
         }
+
+        /// <summary>
+        /// Merge other to this container. If isOverride=true, then override matching items with other's.
+        /// </summary>
+        public void Merge(GenericParams other, bool isOverride) {
+            if(other == null)
+                return;
+
+            foreach(var pair in other) {
+                if(ContainsKey(pair.Key)) {
+                    if(isOverride)
+                        this[pair.Key] = pair.Value;
+                }
+                else
+                    Add(pair.Key, pair.Value);
+            }
+        }
     }
 
     [System.Serializable]
