@@ -35,7 +35,7 @@ Shader "M8/Sprite/Multiplicative2x"
 			#pragma fragment SpriteFrag_Mult2X
 			#pragma target 2.0
 			#pragma multi_compile_instancing
-			#pragma multi_compile _ PIXELSNAP_ON
+			#pragma multi_compile_local _ PIXELSNAP_ON
 			#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 			#include "UnitySprites.cginc"
 
