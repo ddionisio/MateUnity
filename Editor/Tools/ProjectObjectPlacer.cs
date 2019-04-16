@@ -42,8 +42,7 @@ namespace M8.EditorExt {
             mOfs = EditorPrefs.GetFloat(M8.EditorExt.Utility.PreferenceKey(prefKey, "ofs"), mOfs);
             mLayerMask = EditorPrefs.GetInt(M8.EditorExt.Utility.PreferenceKey(prefKey, "layer"), mLayerMask);
 
-            if(SceneView.onSceneGUIDelegate != OnSceneGUI)
-                SceneView.onSceneGUIDelegate += OnSceneGUI;
+            SceneView.duringSceneGui += OnSceneGUI;
 
             mLayerMasks = M8.EditorExt.Utility.GenerateLayerMaskString();
         }
@@ -59,7 +58,7 @@ namespace M8.EditorExt {
                 mPrefabPreviewer = null;
             }
 
-            SceneView.onSceneGUIDelegate -= OnSceneGUI;
+            SceneView.duringSceneGui -= OnSceneGUI;
         }
 
         void OnFocus() {
