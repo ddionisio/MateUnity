@@ -9,10 +9,11 @@ namespace M8.UI.Events {
     /// Sends event for value [0, 1], and then click once value reaches 1
     /// </summary>
     [AddComponentMenu("M8/UI/Events/ClickHold")]
-    public class EventClickHold : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
+    public class EventClickHold : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IBeginDragHandler {
         [Header("Config")]
         public float delay = 2f;
         public bool isRealtime;
+        public bool ignoreDrag = true; //if false, cancel hold if drag begins
 
         [Header("Input")]
         public InputAction input; //if this is selected and input is "down", consider it as a hold
@@ -71,6 +72,13 @@ namespace M8.UI.Events {
 
             if(mIsInputDown != inputIsDown) {
                 mIsInputDown = inputIsDown;
+                UpdateHold();
+            }
+        }
+
+        void IBeginDragHandler.OnBeginDrag(PointerEventData eventData) {
+            if(!ignoreDrag) {
+                mIsPointerDown = false;
                 UpdateHold();
             }
         }
