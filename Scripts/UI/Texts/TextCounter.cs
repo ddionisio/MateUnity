@@ -9,6 +9,7 @@ namespace M8.UI.Texts {
     [AddComponentMenu("M8/UI/Texts/Counter")]
     public class TextCounter : MonoBehaviour {
         public Text target;
+        public string format = "";
         public float delay; //delay to count
                 
         public int count {
@@ -40,8 +41,7 @@ namespace M8.UI.Texts {
                 mRout = null;
             }
 
-            if(target)
-                target.text = mCount.ToString();
+            ApplyNumber(mCount);
         }
 
         void OnDisable() {
@@ -62,12 +62,22 @@ namespace M8.UI.Texts {
 
                 curCount = Mathf.RoundToInt(Mathf.Lerp(startCount, mCount, t));
 
-                target.text = curCount.ToString();
+                ApplyNumber(curCount);
             }
 
-            target.text = mCount.ToString();
+            ApplyNumber(mCount);
 
             mRout = null;
+        }
+
+        void ApplyNumber(int num) {
+            if(!target)
+                return;
+
+            if(!string.IsNullOrEmpty(format))
+                target.text = num.ToString(format);
+            else
+                target.text = num.ToString();
         }
     }
 }
