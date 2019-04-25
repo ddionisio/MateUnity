@@ -1,5 +1,5 @@
 ﻿//Only use for sprites
-Shader "M8/Sprite/ColorOverlayAddPulse"
+Shader "M8/Sprite/ColorOverlayPulseMultiply"
 {
 	Properties
 	{
@@ -35,31 +35,21 @@ Shader "M8/Sprite/ColorOverlayAddPulse"
 			Pass
 			{
 			CGPROGRAM
-				#pragma vertex SpriteVert_OverlayColorAdd
-				#pragma fragment SpriteFrag_OverlayColorAdd
+				#pragma vertex SpriteVert_OverlayColorMult
+				#pragma fragment SpriteFrag
 				#pragma target 2.0
 				#pragma multi_compile_instancing
 				#pragma multi_compile_local _ PIXELSNAP_ON
 				#pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 				#include "UnitySprites.cginc"
 
-				fixed3 _ColorOverlayMin;
-				fixed3 _ColorOverlayMax;
+				fixed4 _ColorOverlayMin;
+				fixed4 _ColorOverlayMax;
 				float _PulseScale;
 
-				struct v2fExt
+				v2f SpriteVert_OverlayColorMult(appdata_t IN)
 				{
-					float4 vertex   : SV_POSITION;
-					fixed4 color : COLOR0;
-					float2 texcoord : TEXCOORD0;
-					UNITY_VERTEX_OUTPUT_STEREO
-
-					fixed3 colorOverlay : COLOR1;
-				};
-
-				v2fExt SpriteVert_OverlayColorAdd(appdata_t IN)
-				{
-					v2fExt OUT;
+					v2f OUT;
 
 					UNITY_SETUP_INSTANCE_ID(IN);
 					UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
@@ -76,17 +66,9 @@ Shader "M8/Sprite/ColorOverlayAddPulse"
 					float sinT = sin(_Time.y * _PulseScale);
 					float t = sinT * sinT;
 
-					OUT.colorOverlay = lerp(_ColorOverlayMin, _ColorOverlayMax, t);
+					OUT.color *= lerp(_ColorOverlayMin, _ColorOverlayMax, t);
 
 					return OUT;
-				}
-
-				fixed4 SpriteFrag_OverlayColorAdd(v2fExt IN) : SV_Target
-				{
-					fixed4 c = SampleSpriteTexture(IN.texcoord) * IN.color;
-					c.rgb = clamp(c.rgb + IN.colorOverlay, 0, 1);
-					c.rgb *= c.a;
-					return c;
 				}
 			ENDCG
 			}
