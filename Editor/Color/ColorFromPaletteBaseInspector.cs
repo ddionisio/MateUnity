@@ -4,50 +4,70 @@ using UnityEngine;
 using UnityEditor;
 
 namespace M8 {
+    [CanEditMultipleObjects]
     [CustomEditor(typeof(ColorFromPaletteBase), true)]
     public class ColorFromPaletteBaseInspector : Editor {
+        SerializedProperty mPalette;
+        SerializedProperty mPaletteIndex;
+        SerializedProperty mBrightness;
+        SerializedProperty mAlpha;
+
+        void OnDisable() {
+            Undo.undoRedoPerformed -= ApplyColor;
+        }
+
+        void OnEnable() {
+            mPalette = serializedObject.FindProperty("_palette");
+            mPaletteIndex = serializedObject.FindProperty("_index");
+            mBrightness = serializedObject.FindProperty("_brightness");
+            mAlpha = serializedObject.FindProperty("_alpha");
+
+            ApplyColor();
+
+            Undo.undoRedoPerformed += ApplyColor;
+        }
+
+        void ApplyColor() {
+            //refresh
+            var dats = serializedObject.targetObjects;
+            for(int i = 0; i < dats.Length; i++) {
+                var dat = (ColorFromPaletteBase)dats[i];
+                dat.ApplyColor();
+            }
+        }
+
         public override void OnInspectorGUI() {
-            var dat = target as ColorFromPaletteBase;
+            base.OnInspectorGUI();
+
+            //var dat = target as ColorFromPaletteBase;
+
+            serializedObject.Update();
 
             //Palette Edit
             EditorGUILayout.BeginVertical(GUI.skin.box);
 
-            var clrPalette = (ColorPalette)EditorGUILayout.ObjectField("Palette", dat.palette, typeof(ColorPalette), true);
-            if(dat.palette != clrPalette) {
-                Undo.RecordObject(dat, "Changed Palette");
-                dat.palette = clrPalette;
+            EditorGUILayout.PropertyField(mPalette);
+
+            if(mPalette.objectReferenceValue) {
+                var palette = (ColorPalette)mPalette.objectReferenceValue;
+                EditorGUILayout.IntSlider(mPaletteIndex, 0, palette.count - 1);
             }
-
-            int ind;
-
-            if(clrPalette)
-                ind = EditorGUILayout.IntSlider("Index", dat.index, 0, clrPalette.count);
             else
-                ind = EditorGUILayout.IntField("Index", dat.index);
-
-            if(dat.index != ind) {
-                Undo.RecordObject(dat, "Changed Palette Index");
-                dat.index = ind;
-            }
+                EditorGUILayout.PropertyField(mPaletteIndex);
 
             EditorGUILayout.EndVertical();
 
             //Settings
             EditorGUILayout.BeginVertical(GUI.skin.box);
 
-            var brightness = EditorGUILayout.Slider("Brightness", dat.brightness, 0f, 1f);
-            if(dat.brightness != brightness) {
-                Undo.RecordObject(dat, "Changed Brightness");
-                dat.brightness = brightness;
-            }
+            EditorGUILayout.Slider(mBrightness, 0f, 1f);
 
-            var alpha = EditorGUILayout.Slider("Alpha", dat.alpha, 0f, 1f);
-            if(dat.alpha != alpha) {
-                Undo.RecordObject(dat, "Changed Alpha");
-                dat.alpha = alpha;
-            }
+            EditorGUILayout.Slider(mAlpha, 0f, 1f);
 
             EditorGUILayout.EndVertical();
+
+            if(serializedObject.ApplyModifiedProperties())
+                ApplyColor();
         }
     }
 }
