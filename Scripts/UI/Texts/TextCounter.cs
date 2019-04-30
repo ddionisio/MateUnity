@@ -75,7 +75,7 @@ namespace M8.UI.Texts {
                 return;
 
             if(!string.IsNullOrEmpty(format))
-                target.text = num.ToString(format);
+                target.text = string.Format(format, num);
             else
                 target.text = num.ToString();
         }
