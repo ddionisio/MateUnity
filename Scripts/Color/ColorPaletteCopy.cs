@@ -21,19 +21,16 @@ namespace M8 {
         public bool revertOnDisable = true;
 
         public void Apply() {
-            int len;
+            var len = GetLength();
 
-            if(length == 0)
-                len = destination.count - destinationIndex;
-            else
-                len = length;
-                        
-            for(int i = 0; i < length; i++)
+            for(int i = 0; i < len; i++)
                 destination.SetColor(i + destinationIndex, source.GetColor(i + sourceIndex));
         }
 
         public void Revert() {
-            for(int i = 0; i < length; i++)
+            var len = GetLength();
+
+            for(int i = 0; i < len; i++)
                 destination.RevertColor(i + destinationIndex);
         }
 
@@ -45,6 +42,17 @@ namespace M8 {
         void OnDisable() {
             if(revertOnDisable)
                 Revert();
+        }
+
+        private int GetLength() {
+            int len;
+
+            if(length == 0)
+                len = destination.count - destinationIndex;
+            else
+                len = length;
+
+            return len;
         }
     }
 }

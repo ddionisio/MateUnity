@@ -44,9 +44,12 @@ namespace M8 {
 
             if(GUILayout.Button("Add New Color"))
                 palettesVar.arraySize = palettesVar.arraySize + 1;
-
+                        
             if(GUILayout.Button("Revert Colors"))
                 dat.RevertColors();
+
+            if(GUILayout.Button("Refresh"))
+                dat.InvokeAll();
 
             serializedObject.ApplyModifiedProperties();
         }

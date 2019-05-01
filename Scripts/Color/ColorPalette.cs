@@ -18,6 +18,16 @@ namespace M8 {
             updateCallback?.Invoke(index);
         }
 
+        public void InvokeAll() {
+            if(updateCallback != null) {
+                if(mColorBuffer == null || mColorBuffer.Length != _colors.Length)
+                    GenerateColorBuffer();
+
+                for(int i = 0; i < mColorBuffer.Length; i++)
+                    updateCallback(i);
+            }
+        }
+
         public void RevertColors() {
             if(mColorBuffer != null) {
                 for(int i = 0; i < mColorBuffer.Length; i++)
@@ -53,6 +63,8 @@ namespace M8 {
                     return;
 
                 mColorBuffer[index] = _colors[index];
+
+                Invoke(index);
             }
         }
 
