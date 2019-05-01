@@ -12,21 +12,53 @@ namespace M8 {
 
         public event System.Action<int> updateCallback; //called whenever a color has changed
 
+        private Color[] mColorBuffer; //filled up when setting color
+
         public void Invoke(int index) {
             updateCallback?.Invoke(index);
         }
 
+        public void RevertColors() {
+            if(mColorBuffer != null) {
+                for(int i = 0; i < mColorBuffer.Length; i++)
+                    mColorBuffer[i] = _colors[i];
+            }
+        }
+
         public Color GetColor(int index) {
-            if(index < 0 || index >= _colors.Length)
+            if(mColorBuffer == null || mColorBuffer.Length != _colors.Length)
+                GenerateColorBuffer();
+
+            if(index < 0 || index >= mColorBuffer.Length)
                 return Color.white;
 
-            return _colors[index];
+            return mColorBuffer[index];
         }
 
         public void SetColor(int index, Color color) {
-            _colors[index] = color;
+            if(mColorBuffer == null || mColorBuffer.Length != _colors.Length)
+                GenerateColorBuffer();
+
+            if(index < 0 || index >= mColorBuffer.Length)
+                return;
+
+            mColorBuffer[index] = color;
 
             Invoke(index);
+        }
+
+        public void RevertColor(int index) {
+            if(mColorBuffer != null) {
+                if(index < 0 || index >= mColorBuffer.Length)
+                    return;
+
+                mColorBuffer[index] = _colors[index];
+            }
+        }
+
+        private void GenerateColorBuffer() {
+            mColorBuffer = new Color[_colors.Length];
+            System.Array.Copy(_colors, mColorBuffer, _colors.Length);
         }
     }
 }

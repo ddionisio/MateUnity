@@ -7,6 +7,8 @@ namespace M8 {
     [CustomEditor(typeof(ColorPalette))]
     public class ColorPaletteInspector : Editor {
         public override void OnInspectorGUI() {
+            serializedObject.Update();
+
             var dat = target as ColorPalette;
             var palettesVar = serializedObject.FindProperty("_colors");
 
@@ -42,6 +44,9 @@ namespace M8 {
 
             if(GUILayout.Button("Add New Color"))
                 palettesVar.arraySize = palettesVar.arraySize + 1;
+
+            if(GUILayout.Button("Revert Colors"))
+                dat.RevertColors();
 
             serializedObject.ApplyModifiedProperties();
         }
