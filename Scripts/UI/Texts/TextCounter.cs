@@ -11,6 +11,8 @@ namespace M8.UI.Texts {
         public Text target;
         public string format = "";
         public float delay; //delay to count
+
+        public bool playOnEnable;
                 
         public int count {
             get { return mCount; }
@@ -42,6 +44,12 @@ namespace M8.UI.Texts {
             }
 
             ApplyNumber(mCount);
+        }
+
+        void OnEnable() {
+            if(playOnEnable) {
+                mRout = StartCoroutine(DoCount(0));
+            }
         }
 
         void OnDisable() {
