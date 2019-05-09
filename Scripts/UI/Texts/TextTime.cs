@@ -50,9 +50,9 @@ namespace M8.UI.Texts {
         private void ApplyText() {
             mStringBuff.Clear();
 
-            int seconds = Mathf.RoundToInt(mTime);
-            int minutes = Mathf.RoundToInt(seconds / 60f);
-            int hours = Mathf.RoundToInt(minutes / 60f);
+            int seconds = Mathf.FloorToInt(mTime);
+            int minutes = Mathf.FloorToInt(seconds / 60f);
+            int hours = Mathf.FloorToInt(minutes / 60f);
 
             if((displayFlags & Flags.Hours) != Flags.None) {
                 mStringBuff.Append(hours.ToString("D2"));
