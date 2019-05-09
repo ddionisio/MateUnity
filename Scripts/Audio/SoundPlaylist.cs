@@ -10,7 +10,21 @@ namespace M8 {
         public class SoundData {
             public string name;
             public AudioClip clip;
+            public AudioClip[] clipVariants;
             public float spatialBlend = 1f; //use for playing 3D
+
+            public AudioClip GetClip() {
+                if(clipVariants.Length > 0) {
+                    if(clip) {
+                        int ind = Random.Range(0, clipVariants.Length + 1);
+                        return ind == 0 ? clip : clipVariants[ind - 1];
+                    }
+                    else
+                        return clipVariants[Random.Range(0, clipVariants.Length)];
+                }
+                else
+                    return clip;
+            }
         }
 
         public SoundData[] sounds;
@@ -50,7 +64,7 @@ namespace M8 {
 
                 var src = GetAvailable();
                 if(src)
-                    src.Play2D(dat.clip, true);
+                    src.Play2D(dat.GetClip(), true);
 
                 return src;
             }
@@ -65,14 +79,16 @@ namespace M8 {
                 return null;
             }
 
-            if(dat.clip == null) {
+            var clip = dat.GetClip();
+
+            if(clip == null) {
                 Debug.LogWarning(string.Format("Sound '{0}' does not have a clip.", name));
                 return null;
             }
 
             var src = GetAvailable();
             if(src) {
-                src.Play2D(dat.clip, delegate (GenericParams _parms) {
+                src.Play2D(clip, delegate (GenericParams _parms) {
                     Cache(src); //add back
 
                     if(callback != null)
@@ -93,7 +109,7 @@ namespace M8 {
 
                 var src = GetAvailable();
                 if(src)
-                    src.Play(dat.clip, dat.spatialBlend, follow, true);
+                    src.Play(dat.GetClip(), dat.spatialBlend, follow, true);
 
                 return src;
             }
@@ -110,7 +126,7 @@ namespace M8 {
 
             var src = GetAvailable();
             if(src) {
-                src.Play(dat.clip, dat.spatialBlend, follow, delegate (GenericParams _parms) {
+                src.Play(dat.GetClip(), dat.spatialBlend, follow, delegate (GenericParams _parms) {
                     Cache(src); //add back
 
                     if(callback != null)
@@ -131,7 +147,7 @@ namespace M8 {
 
                 var src = GetAvailable();
                 if(src)
-                    src.Play(dat.clip, dat.spatialBlend, position, true);
+                    src.Play(dat.GetClip(), dat.spatialBlend, position, true);
 
                 return src;
             }
@@ -148,7 +164,7 @@ namespace M8 {
 
             var src = GetAvailable();
             if(src) {
-                src.Play(dat.clip, dat.spatialBlend, position, delegate (GenericParams _parms) {
+                src.Play(dat.GetClip(), dat.spatialBlend, position, delegate (GenericParams _parms) {
                     Cache(src); //add back
 
                     if(callback != null)
