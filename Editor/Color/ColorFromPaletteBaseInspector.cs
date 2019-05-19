@@ -60,7 +60,7 @@ namespace M8 {
             //Settings
             EditorGUILayout.BeginVertical(GUI.skin.box);
 
-            EditorGUILayout.Slider(mBrightness, 0f, 1f);
+            EditorGUILayout.Slider(mBrightness, 0f, 2f);
 
             EditorGUILayout.Slider(mAlpha, 0f, 1f);
 
