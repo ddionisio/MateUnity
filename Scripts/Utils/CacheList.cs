@@ -164,5 +164,9 @@ namespace M8 {
         public void Sort() {
             Array.Sort(mItems, 0, mCount);
         }
+
+        public void Shuffle() {
+            ArrayUtil.Shuffle(mItems, 0, mCount);
+        }
     }
 }
