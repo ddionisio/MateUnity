@@ -3,53 +3,54 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+    [ExecuteInEditMode]
     [AddComponentMenu("M8/Renderer/Color From Palette")]
     public class RendererColorFromPalette : ColorFromPaletteBase {
         [Header("Material Data")]
         public string colorProperty = "_Color";
+        public Material material;
 
         private int mColorId;
-        private Material[] mMats;
+        private Material mMat;
 
         public override void ApplyColor() {
-            if(mMats == null) {
+#if UNITY_EDITOR
+            if(!Application.isPlaying) {
+                //refresh
+                if(mMat) {
+                    DestroyImmediate(mMat);
+                    mMat = null;
+                }
+            }
+#endif
+            if(mMat == null && material) {
                 mColorId = Shader.PropertyToID(colorProperty);
 
                 var renderer = GetComponent<Renderer>();
-
-                var matList = new List<Material>();
-
-                var sms = renderer.sharedMaterials;
-                for(int j = 0; j < sms.Length; j++) {
-                    var sm = sms[j];
-                    if(sm.HasProperty(mColorId)) {
-                        var mat = matList.Find(m => m.name.CompareTo(sm.name) == 0);
-                        if(mat == null) {
-                            mat = new Material(sm);
-                            matList.Add(mat);
-                        }
-                        sms[j] = mat;
-                    }
+                if(renderer) {
+                    mMat = new Material(material);
+                    renderer.material = mMat;
                 }
-
-                renderer.sharedMaterials = sms;
-
-                mMats = matList.ToArray();
             }
 
-            for(int i = 0; i < mMats.Length; i++)
-                mMats[i].SetColor(mColorId, color);
+            if(mMat)
+                mMat.SetColor(mColorId, color);
         }
 
         void OnDestroy() {
-            if(mMats != null) {
-                for(int i = 0; i < mMats.Length; i++) {
-                    if(mMats[i])
-                        DestroyImmediate(mMats[i]);
-                }
+            if(mMat)
+                DestroyImmediate(mMat);
+        }
 
-                mMats = null;
+        void Awake() {
+#if UNITY_EDITOR
+            if(!Application.isPlaying) {
+                var renderer = GetComponent<Renderer>();
+                if(renderer) {
+                    renderer.sharedMaterial = material;
+                }
             }
+#endif
         }
     }
 }
