@@ -9,17 +9,19 @@
 *.csproj
 *.unityproj
 *.sln
+*.suo
 *.pidb
 *.DotSettings
 *.userprefs
 
+# Third-Party plugins
 PlayMaker/
 PlayMaker.meta
 
-Plugins/Android/
-Plugins/Android.meta
+tripolygon/
+tripolygon.meta
 
-*.suo
-/Common/*.png.meta
-/Common/UI/*.png.meta
-/Common/Fonts/*.png.meta
+# Mate Specifics
+# /Common/*.png.meta
+# /Common/UI/*.png.meta
+# /Common/Fonts/*.png.meta
