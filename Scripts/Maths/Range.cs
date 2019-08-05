@@ -15,6 +15,17 @@ namespace M8 {
         public float Lerp(float t) {
             return Mathf.Lerp(min, max, t);
         }
+
+        public float Clamp(float v) {
+            return Mathf.Clamp(v, min, max);
+        }
+
+        /// <summary>
+        /// Returns [0, 1] based on given value
+        /// </summary>
+        public float GetT(float v) {
+            return Mathf.Clamp01((v - min) / length);
+        }
     }
 
     [System.Serializable]
@@ -28,6 +39,20 @@ namespace M8 {
 
         public int Lerp(float t) {
             return Mathf.RoundToInt(Mathf.Lerp(min, max, t));
+        }
+
+        public int Clamp(int v) {
+            return Mathf.Clamp(v, min, max);
+        }
+
+        /// <summary>
+        /// Returns [0, 1] based on given value
+        /// </summary>
+        public float GetT(int v) {
+            float fMin = min;
+            float fMax = max;
+
+            return Mathf.Clamp01((v - fMin) / (fMax - fMin));
         }
     }
 }
