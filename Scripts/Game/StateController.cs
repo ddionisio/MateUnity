@@ -1,16 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace M8 {
-    [System.Serializable]
-    public class StateUnityEvent : UnityEvent<State> {
-    }
-
     [AddComponentMenu("M8/Game/State Controller")]
     public class StateController : MonoBehaviour, IPoolDespawn {
-        public StateUnityEvent stateChangedEvent;
+        public UnityEventState stateChangedEvent;
 
         public State state {
             get { return mState; }

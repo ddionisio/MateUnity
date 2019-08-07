@@ -5,17 +5,17 @@ using UnityEngine.Events;
 
 namespace M8 {
     /// <summary>
-    /// Use this to allow calling of SignalState.Invoke through hookups
+    /// Use this to allow calling of Signal.Invoke through hookups
     /// </summary>
-    [AddComponentMenu("M8/Signals/State Listener")]
-    public class SignalStateListener : MonoBehaviour {
-        public SignalState signal;
+    [AddComponentMenu("M8/Signals/Boolean Listener")]
+    public class SignalBooleanListener : MonoBehaviour {
+        public SignalBoolean signal;
 
         [Tooltip("If true, only listen when this behaviour is enabled.")]
         [SerializeField]
         bool _activeOnly = true;
 
-        public UnityEventState onSignal;
+        public UnityEventBoolean onSignal;
 
         void OnDisable() {
             if(_activeOnly) {
@@ -45,8 +45,8 @@ namespace M8 {
             }
         }
 
-        void OnSignal(State state) {
-            onSignal.Invoke(state);
+        void OnSignal(bool v) {
+            onSignal.Invoke(v);
         }
     }
 }
