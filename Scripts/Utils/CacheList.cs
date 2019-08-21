@@ -36,7 +36,22 @@ namespace M8 {
             mCount = 0;
             mItems = new T[capacity];
         }
-        
+
+        public CacheList(IEnumerable<T> collection) {
+            mCount = 0;
+
+            List<T> itms = new List<T>(collection);
+            mItems = itms.ToArray();
+        }
+
+        public CacheList(IEnumerable<T> collection, int capacity) {
+            mCount = 0;
+            mItems = new T[capacity];
+
+            foreach(var itm in collection)
+                Add(itm);
+        }
+
         public IEnumerator<T> GetEnumerator() {
             for(int i = 0; i < mCount; i++)
                 yield return mItems[i];
