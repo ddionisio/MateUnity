@@ -5,7 +5,9 @@ namespace M8 {
     [AddComponentMenu("M8/Transform/LookAt")]
     [ExecuteInEditMode]
     public class TransLookAt : MonoBehaviour {
-        public string targetTag = "MainCamera"; //if target is null
+        [M8.TagSelector]
+        public string targetTag; //if target is null
+        public bool targetUseMainCamera = true; //if target is null
         public Transform target;
 
         public bool visibleCheck = true; //if true, only compute if source's renderer is visible
@@ -15,46 +17,58 @@ namespace M8 {
 
         private Renderer mRenderer;
 
-        void Awake() {
-            if(target == null) {
-                GameObject go = GameObject.FindGameObjectWithTag(targetTag);
-                if(go != null)
-                    target = go.transform;
+        private Transform GetTarget() {
+            if(target)
+                return target;
+
+            if(targetUseMainCamera) {
+                var cam = Camera.main;
+                if(cam)
+                    return cam.transform;
             }
 
+            if(!string.IsNullOrEmpty(targetTag)) {
+                var go = GameObject.FindGameObjectWithTag(targetTag);
+                if(go)
+                    return go.transform;
+            }
+
+            return null;
+        }
+
+        void Awake() {
             if(source == null)
                 source = transform;
 
-            if(visibleCheck) {
-                mRenderer = source.GetComponent<Renderer>();
-                if(mRenderer == null)
-                    Debug.LogError("No Renderer found.");
+            if(Application.isPlaying) {
+                if(target == null)
+                    target = GetTarget();
+
+                if(visibleCheck) {
+                    mRenderer = source.GetComponent<Renderer>();
+                    if(mRenderer == null)
+                        Debug.LogError("No Renderer found.");
+                }
             }
         }
 
         void Update() {
-            bool isVisible = !visibleCheck || mRenderer == null || mRenderer.isVisible;
-            Transform tgt = target;
-            Transform src = source;
+            bool isVisible;
+            Transform tgt, src = source;
 
-#if UNITY_EDITOR
-            if(!Application.isPlaying) {
-                if(tgt == null) {
-                    GameObject go = GameObject.FindGameObjectWithTag(targetTag);
-                    if(go != null)
-                        tgt = go.transform;
-                }
+            if(Application.isPlaying) {
+                tgt = target;
 
-                if(src == null)
-                    src = transform;
-
-                isVisible = isVisible && tgt != null && src != null;
+                isVisible = tgt != null && source != null && (!visibleCheck || mRenderer == null || mRenderer.isVisible);
             }
-#endif
+            else {
+                tgt = GetTarget();
 
-            if(isVisible) {
+                isVisible = tgt != null && source != null;
+            }
+
+            if(isVisible)
                 src.rotation = Quaternion.LookRotation(backwards ? tgt.forward : -tgt.forward, tgt.up);
-            }
         }
     }
 }
