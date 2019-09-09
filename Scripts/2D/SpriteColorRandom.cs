@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
-    [AddComponentMenu("M8/Sprite/Random")]
-    public class SpriteRandom : MonoBehaviour {
+    [AddComponentMenu("M8/Sprite/Color Random")]
+    public class SpriteColorRandom : MonoBehaviour {
         public SpriteRenderer spriteRender;
 
-        public Sprite[] sprites;
+        public Color[] colors;
 
         public void Apply() {
             if(spriteRender == null)
                 spriteRender = GetComponent<SpriteRenderer>();
 
             if(spriteRender)
-                spriteRender.sprite = sprites[Random.Range(0, sprites.Length)];
+                spriteRender.color = colors[Random.Range(0, colors.Length)];
         }
 
         void OnEnable() {
