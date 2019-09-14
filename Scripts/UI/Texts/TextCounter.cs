@@ -21,7 +21,7 @@ namespace M8.UI.Texts {
                     var prevCount = mCount;
                     mCount = value;
 
-                    if(mRout == null)
+                    if(gameObject.activeInHierarchy && mRout == null)
                         mRout = StartCoroutine(DoCount(prevCount));
                 }
             }
