@@ -19,7 +19,8 @@ namespace M8 {
         public float startDelay; //pause at start in seconds
         public float nextDelay;
 
-        public bool playOnStart;
+        public bool playOnEnable;
+        public bool resetOnStop; //reset frame to frames[0]
 
         private bool mActive;
         private Coroutine mRout;
@@ -37,29 +38,24 @@ namespace M8 {
                 StopCoroutine(mRout);
                 mRout = null;
             }
+
+            if(resetOnStop && frames.Length > 0) //reset to first frame
+                sprite.sprite = frames[0];
         }
 
         void OnEnable() {
-            if(mActive)
+            if(mActive || playOnEnable)
                 Play();
         }
 
         void OnDisable() {
-            if(mRout != null) {
-                StopCoroutine(mRout);
-                mRout = null;
-            }
+            Stop();
         }
 
         void Awake() {
             if(sprite == null) {
                 sprite = GetComponent<SpriteRenderer>();
             }
-        }
-
-        void Start() {
-            if(playOnStart)
-                Play();
         }
 
         IEnumerator DoPlay() {
