@@ -81,6 +81,16 @@ namespace M8 {
             Array.Resize(ref mItems, mItems.Length + amount);
         }
 
+        /// <summary>
+        /// Change capacity size by given amount
+        /// </summary>
+        public void Resize(int amount) {
+            if(amount <= 0)
+                throw new ArgumentException(string.Format("Invalid amount ({0})" + amount));
+
+            Array.Resize(ref mItems, amount);
+        }
+
         public void Add(T item) {
             if(IsFull)
                 throw new InvalidOperationException(string.Format("Maximum capacity of {0} reached.", mItems.Length));
