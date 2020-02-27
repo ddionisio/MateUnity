@@ -11,6 +11,12 @@ namespace M8 {
             if(!mPlaylist) {
                 //manually grab
                 mPlaylist = AssetDatabase.LoadAssetAtPath<SoundPlaylist>(SoundPlaylist.assetPath);
+                if(!mPlaylist) {
+                    //grab first instance of type from assets (there should only be one anyhow)                    
+                    var guids = AssetDatabase.FindAssets("t:"+typeof(SoundPlaylist).Name);
+                    if(guids.Length > 0)
+                        mPlaylist = AssetDatabase.LoadAssetAtPath<SoundPlaylist>(AssetDatabase.GUIDToAssetPath(guids[0]));
+                }
             }
 
             if(mPlaylist) {

@@ -11,18 +11,11 @@ namespace M8 {
         public static bool isLocalizeFileExists {
             get {
                 //try default path
-                var localizeAssetPath = Localize.assetPath;                
-                var localizeResGUID = AssetDatabase.AssetPathToGUID(localizeAssetPath);
+                var localizeResGUID = AssetDatabase.AssetPathToGUID(Localize.assetPath);
                 if(!string.IsNullOrEmpty(localizeResGUID)) {
-                    //try finding file
-                    var resourcePath = Localize.resourcePath;
-                    var filenames = AssetDatabase.FindAssets("l:"+resourcePath);
-                    for(int i = 0; i < filenames.Length; i++) {
-                        if(filenames[i].Contains(resourcePath))
-                            return true;
-                    }
-
-                    return false;
+                    //check if at least one exists
+                    var guids = AssetDatabase.FindAssets("t:" + typeof(Localize).Name);
+                    return guids.Length > 0;
                 }
 
                 return true;
