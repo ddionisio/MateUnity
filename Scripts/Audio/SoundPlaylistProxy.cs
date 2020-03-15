@@ -16,6 +16,9 @@ namespace M8 {
         public Mode mode = Mode.TwoD;
 
         public void Play() {
+            if(string.IsNullOrEmpty(sound))
+                return;
+
             switch(mode) {
                 case Mode.TwoD:
                     SoundPlaylist.instance.Play(sound, false);
