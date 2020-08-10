@@ -113,8 +113,7 @@ namespace M8 {
             //Mode
             EditorGUILayout.PropertyField(mModeProp);
 
-            var mode = (ColorGradientTextureGenerator.Mode)mModeProp.enumValueIndex;
-            var isMono = mode != ColorGradientTextureGenerator.Mode.Gradient && mMonoProp.boolValue;
+            var mode = (ColorGradientTextureGenerator.Mode)mModeProp.enumValueIndex;            
 
             //Mode Settings            
             switch(mode) {
@@ -144,6 +143,8 @@ namespace M8 {
                     break;
             }
 
+            var isMono = mode != ColorGradientTextureGenerator.Mode.Gradient && mMonoProp.boolValue;
+
             //Texture Properties
             if(mode != ColorGradientTextureGenerator.Mode.Steps)
                 EditorGUILayout.IntPopup(mTextureWidthProp, mTextureWidthLabels, mTextureWidths);
@@ -154,9 +155,7 @@ namespace M8 {
             EditorExt.Utility.DrawSeparator();
 
             EditorGUILayout.PropertyField(mTextureProp, new GUIContent("Output"));
-
-            serializedObject.ApplyModifiedProperties();
-
+                        
             //Texture Generate
             string savePath = null;
 
@@ -199,12 +198,13 @@ namespace M8 {
                         texImport.SaveAndReimport();
 
                         mTextureProp.objectReferenceValue = AssetDatabase.LoadAssetAtPath(texImport.assetPath, typeof(Texture2D));
-                        serializedObject.ApplyModifiedProperties();
                     }
                 }
 
                 DestroyImmediate(tex);
             }
+
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }
