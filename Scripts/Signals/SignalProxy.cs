@@ -6,7 +6,7 @@ namespace M8 {
     /// <summary>
     /// Use this to allow calling of Signal.Invoke through hookups
     /// </summary>
-    [AddComponentMenu("M8/Signals/Proxy")]
+    [AddComponentMenu("M8/Signals/Signal Proxy")]
     public class SignalProxy : MonoBehaviour {
         public Signal signal;
 
