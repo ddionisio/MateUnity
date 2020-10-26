@@ -15,7 +15,7 @@ namespace M8 {
             public object obj;
         }
 
-        public bool isLoaded { get { return mValues != null; } }
+        public bool isLoaded { get; protected set; }
         public int valueCount { get { return mValues != null ? mValues.Count : 0; } }
 
         /// <summary>
@@ -84,20 +84,14 @@ namespace M8 {
             mValuesSnapshot = null;
         }
                 
-        public void Load() {
-            Data[] dat;
+        public virtual void Load() {
+            isLoaded = false;
 
             byte[] raw = LoadRawData();
-            if(raw != null && raw.Length > 0) {
-                dat = LoadData(raw);
-
-                mValues = new Dictionary<string, object>();
-                foreach(Data datum in dat) {
-                    mValues.Add(datum.name, datum.obj);
-                }
-
-                if(loadedCallback != null)
-                    loadedCallback();
+            if(raw != null) {
+                ParseRawData(raw);
+                isLoaded = true;
+                LoadedInvoke();
             }
         }
 
@@ -237,12 +231,35 @@ namespace M8 {
 
         protected abstract void DeleteRawData();
 
+        ////////////////////////////////////////////
+        // Internal
+
+        protected void ParseRawData(byte[] raw) {
+            var dat = LoadData(raw);
+
+            mValues = new Dictionary<string, object>();
+            foreach(Data datum in dat) {
+                mValues.Add(datum.name, datum.obj);
+            }
+        }
+
+        protected void LoadedInvoke() {
+            loadedCallback?.Invoke();
+        }
+
+        protected void ClearValues() {
+            if(mValues != null)
+                mValues.Clear();
+        }
+
         private Data[] LoadData(byte[] dat) {
             Data[] ret = null;
 
-            BinaryFormatter bf = new BinaryFormatter();
-            using(MemoryStream ms = new MemoryStream(dat)) {
-                ret = (Data[])bf.Deserialize(ms);
+            if(dat.Length > 0) {
+                BinaryFormatter bf = new BinaryFormatter();
+                using(MemoryStream ms = new MemoryStream(dat)) {
+                    ret = (Data[])bf.Deserialize(ms);
+                }
             }
 
             return ret == null ? new Data[0] : ret;

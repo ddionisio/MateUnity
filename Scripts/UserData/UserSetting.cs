@@ -3,10 +3,12 @@
 namespace M8 {
     public abstract class UserSetting<T> : SingletonBehaviour<T> where T : MonoBehaviour {
         [SerializeField]
-        protected UserData userData; //this is where to grab the settings, set to blank to grab from current gameObject
+        UserData _userData = null; //this is where to grab the settings, set to blank to grab from current gameObject
 
         [SerializeField]
         bool _loadOnInstance = true;
+
+        public UserData userData { get { return _userData; } }
 
         public delegate void Callback(T us);
 
@@ -19,14 +21,17 @@ namespace M8 {
         }
         
         protected override void OnInstanceInit() {
-            if(userData == null)
-                userData = GetComponent<UserData>();
+            if(_loadOnInstance) {
+                if(!userData) {
+                    Debug.LogError("userData is null.");
+                    return;
+                }
 
-            if(!userData.isLoaded)
-                userData.Load();
+                if(!userData.isLoaded)
+                    userData.Load();
 
-            if(_loadOnInstance)
                 Load();
+            }
         }
 
         protected void RelaySettingsChanged() {
