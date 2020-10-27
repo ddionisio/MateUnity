@@ -182,19 +182,14 @@ namespace M8 {
             src.Stop();
             Cache(src);
         }
-        
-        protected override void OnInstanceInit() {
-            //generate lookups
-            mSfx = new Dictionary<string, SoundData>();
-            for(int i = 0; i < sounds.Length; i++)
-                mSfx.Add(sounds[i].name, sounds[i]);
 
-            //generate sources
-            if(max <= 0)
-                max = sounds.Length;
-
-            mSourceRootGO = new GameObject("soundPlaylist");
-            DontDestroyOnLoad(mSourceRootGO);
+        public void SetupSourceRoot(GameObject sourceGO) {
+            if(sourceGO)
+                mSourceRootGO = sourceGO;
+            else {
+                mSourceRootGO = new GameObject("soundPlaylist");
+                DontDestroyOnLoad(mSourceRootGO);
+            }
 
             mSourceCache = new CacheList<AudioSourceProxy>(max);
             for(int i = 0; i < max; i++) {
@@ -215,10 +210,20 @@ namespace M8 {
                 mSourceCache.Add(srcProxy);
             }
         }
+        
+        protected override void OnInstanceInit() {
+            //generate lookups
+            mSfx = new Dictionary<string, SoundData>();
+            for(int i = 0; i < sounds.Length; i++)
+                mSfx.Add(sounds[i].name, sounds[i]);
+
+            if(max <= 0)
+                max = sounds.Length;
+        }
 
         private AudioSourceProxy GetAvailable() {
             if(mSourceCache == null)
-                return null;
+                SetupSourceRoot(null);
 
             if(mSourceCache.Count > 0) {
                 var src = mSourceCache.RemoveLast();
@@ -233,7 +238,7 @@ namespace M8 {
 
         private void Cache(AudioSourceProxy src) {
             if(mSourceCache == null)
-                return;
+                SetupSourceRoot(null);
 
             src.gameObject.SetActive(false);
 

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI.Extensions;
 
 namespace M8 {
     /// <summary>
@@ -31,19 +32,8 @@ namespace M8 {
 
         public AudioSourceProxy sourceProxy {
             get {
-                if(!mSourceProxy) {
-                    var newGO = new GameObject("musicPlaylistSource");
-                    DontDestroyOnLoad(newGO);
-
-                    var audioSrc = newGO.AddComponent<AudioSource>();                    
-                    audioSrc.outputAudioMixerGroup = audioMixer;
-                    audioSrc.playOnAwake = false;
-
-                    mSourceProxy = newGO.AddComponent<AudioSourceProxy>();
-                    mSourceProxy.settingsSource = AudioSourceProxy.VolumeSourceType.Music;
-                    mSourceProxy.audioSource = audioSrc;
-                    mSourceProxy.muteOnFocusLost = muteOnFocusLost;
-                }
+                if(!mSourceProxy)
+                    SetupSourceProxy(null);
 
                 return mSourceProxy;
             }
@@ -52,6 +42,22 @@ namespace M8 {
         private AudioSourceProxy mSourceProxy;
 
         private Dictionary<string, MusicData> mMusic;
+
+        public void SetupSourceProxy(GameObject sourceGO) {
+            if(!sourceGO) {
+                sourceGO = new GameObject("musicPlaylistSource");
+                DontDestroyOnLoad(sourceGO);
+            }
+
+            var audioSrc = Util.GetOrAddComponent<AudioSource>(sourceGO);
+            audioSrc.outputAudioMixerGroup = audioMixer;
+            audioSrc.playOnAwake = false;
+
+            mSourceProxy = Util.GetOrAddComponent<AudioSourceProxy>(sourceGO);
+            mSourceProxy.settingsSource = AudioSourceProxy.VolumeSourceType.Music;
+            mSourceProxy.audioSource = audioSrc;
+            mSourceProxy.muteOnFocusLost = muteOnFocusLost;
+        }
 
         public bool Exists(string name) {
             if(mMusic != null)
