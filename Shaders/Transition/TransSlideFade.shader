@@ -11,7 +11,6 @@
 		struct v2f {
 			 half4 pos : POSITION;
 			 half2 uv : TEXCOORD0;
-			 half2 uv1 : TEXCOORD1;
 		 };
 		
 		sampler2D _MainTex;
@@ -22,11 +21,11 @@
 		fixed _t;
 
 		half4 frag(v2f i) : COLOR {
-			half2 alphaUV = i.uv1 - _Scroll;
+			half2 alphaUV = i.uv - _Scroll;
 			half4 alpha = tex2D(_AlphaMaskTex, alphaUV);
 			fixed alphaT = alpha.r * _t;
 			
-			return lerp(tex2D(_MainTex, i.uv), tex2D(_SourceTex, i.uv1), alphaT);
+			return lerp(tex2D(_MainTex, i.uv), tex2D(_SourceTex, i.uv), alphaT);
 		}
 
 		v2f vert(appdata_img v) {
@@ -36,7 +35,7 @@
 			
 			#if SHADER_API_D3D9 || SHADER_API_XBOX360 || SHADER_API_D3D11
 			if (_MainTex_TexelSize.y < 0)
-				o.uv1.y = 1-o.uv1.y;
+				o.uv.y = 1-o.uv.y;
 			#endif
 			
 			return o;
