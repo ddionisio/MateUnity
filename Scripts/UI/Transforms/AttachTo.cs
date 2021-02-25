@@ -7,6 +7,8 @@ namespace M8.UI.Transforms {
     public class AttachTo : MonoBehaviour {
         [SerializeField]
         private Transform _target;
+        [SerializeField]
+        private Vector3 _targetOffset;
 
         private Camera mTargetCam;
 
@@ -27,6 +29,11 @@ namespace M8.UI.Transforms {
             }
         }
 
+        public Vector3 targetOffset {
+            get { return _targetOffset; }
+            set { _targetOffset = value; }
+        }
+
         void Awake() {
             ApplyTargetData();
 
@@ -41,8 +48,8 @@ namespace M8.UI.Transforms {
         void LateUpdate() {
             if(_target && mRootCanvasRectTrans) {
                 Vector2 sizeDelta = mRootCanvasRectTrans.sizeDelta;
-                Vector2 vpPos = mTargetCam.WorldToViewportPoint(_target.position);
-                mRectTrans.anchoredPosition = new Vector2(((vpPos.x*sizeDelta.x) - (sizeDelta.x*0.5f)), ((vpPos.y*sizeDelta.y) - (sizeDelta.y*0.5f)));
+                Vector2 vpPos = mTargetCam.WorldToViewportPoint(_target.TransformPoint(_targetOffset));
+                mRectTrans.anchoredPosition = new Vector2((vpPos.x*sizeDelta.x) - (sizeDelta.x*0.5f), (vpPos.y*sizeDelta.y) - (sizeDelta.y*0.5f));
             }
         }
 
