@@ -3,6 +3,13 @@ using System.Collections;
 
 namespace M8 {
     /// <summary>
+    /// This is called after Pool instantiates the template to be stored as cache. (useful for caching data before awake/spawn)
+    /// </summary>
+    public interface IPoolInit {
+        void OnInit();
+    }
+
+    /// <summary>
     /// This is called during Spawn via Pool. Generally used for initialization.
     /// </summary>
     public interface IPoolSpawn {

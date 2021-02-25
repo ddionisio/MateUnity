@@ -37,13 +37,16 @@ namespace M8 {
             pdc.factoryKey = !string.IsNullOrEmpty(factoryKey) ? factoryKey : template.name;
             pdc.mIsSpawned = false;
 
+            pdc.Init();
+
             return pdc;
         }
         
         public void Spawn(GenericParams parms) {
-            mIsSpawned = true;
+            if(!mIsInterfacesInit)
+                Init();
 
-            InitInterfaces();
+            mIsSpawned = true;
                         
             for(int i = 0; i < mISpawns.Length; i++)
                 mISpawns[i].OnSpawned(parms);
@@ -56,13 +59,13 @@ namespace M8 {
         }
 
         public void Despawn() {
-            InitInterfaces();
-
             if(despawnCallback != null)
                 despawnCallback(this);
 
-            for(int i = 0; i < mIDespawns.Length; i++)
-                mIDespawns[i].OnDespawned();
+            if(mIDespawns != null) {
+                for(int i = 0; i < mIDespawns.Length; i++)
+                    mIDespawns[i].OnDespawned();
+            }
 
             mIsSpawned = false;
         }
@@ -71,10 +74,7 @@ namespace M8 {
             PoolController.ReleaseAuto(this);
         }
 
-        private void InitInterfaces() {
-            if(mIsInterfacesInit)
-                return;
-
+        private void Init() {
             var comps = GetComponentsInChildren<MonoBehaviour>(true);
 
             var ISpawns = new List<IPoolSpawn>();
@@ -92,6 +92,10 @@ namespace M8 {
 
                 var despawn = comp as IPoolDespawn;
                 if(despawn != null) IDespawns.Add(despawn);
+
+                var init = comp as IPoolInit;
+                if(init != null)
+                    init.OnInit();
             }
 
             mISpawns = ISpawns.ToArray();
