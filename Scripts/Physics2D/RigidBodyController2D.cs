@@ -17,30 +17,6 @@ namespace M8 {
             Left = 0x2
         }
 
-        public class CollisionInfo {
-            public Collider2D collider { get; private set; }
-            public Collider2D otherCollider { get; private set; }
-            public int contactCount { get; private set; }
-
-            private ContactPoint2D[] mContacts = new ContactPoint2D[contactPointCapacity];
-
-            public ContactPoint2D GetContact(int index) {
-                return mContacts[index];
-            }
-
-            public void Reset() {
-                collider = null;
-                otherCollider = null;
-                contactCount = 0;
-            }
-
-            public void Apply(Collision2D coll) {
-                collider = coll.collider;
-                otherCollider = coll.otherCollider;
-                contactCount = coll.GetContacts(mContacts);
-            }
-        }
-
         public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
                                     //you'll want this as an attach for camera as well.
 
@@ -98,7 +74,7 @@ namespace M8 {
         public Vector2 normalSide { get; private set; }
         public Vector2 normalAbove { get; private set; }
 
-        protected CollisionInfo[] mColls;
+        protected ContactPoint2D[] mColls = new ContactPoint2D[contactPointCapacity];
         
         protected int mCollLayerMask = 0; //layer masks that are colliding us (ground and side)
 
@@ -120,7 +96,7 @@ namespace M8 {
         /// <summary>
         /// Collision infos that are currently in contact. Use collisionCount to iterate.
         /// </summary>
-        public CollisionInfo GetCollisionInfo(int index) {
+        public ContactPoint2D GetCollisionInfo(int index) {
             return mColls[index];
         }
 
@@ -130,16 +106,12 @@ namespace M8 {
         public ContactPoint2D TryGetContact(CollisionFlags flags) {
             Vector2 up = dirHolder.up;
 
-            for(int i = 0; i < collisionCount; i++) {
-                var coll = mColls[i];
+            for(int j = 0; j < collisionCount; j++) {
+                var contact = mColls[j];
 
-                for(int j = 0; j < coll.contactCount; j++) {
-                    var contact = coll.GetContact(j);
-
-                    var contactFlag = GetCollisionFlag(up, contact.normal);
-                    if((contactFlag & flags) != CollisionFlags.None) {
-                        return contact;
-                    }
+                var contactFlag = GetCollisionFlag(up, contact.normal);
+                if((contactFlag & flags) != CollisionFlags.None) {
+                    return contact;
                 }
             }
 
@@ -159,8 +131,6 @@ namespace M8 {
         }
 
         public virtual void ResetCollision() {
-            if(mColls == null) return; //not initialized yet
-
             ClearCollFlags();
 
             mCollLayerMask = 0;
@@ -173,31 +143,7 @@ namespace M8 {
         }
 
         private void ResetCollisionInfo() {
-            for(int i = 0; i < collisionCount; i++)
-                mColls[i].Reset();
-
             collisionCount = 0;
-        }
-
-        private void AddCollisionInfo(Collision2D collision) {
-            if(collisionCount < collisionInfoCapacity) {
-                mColls[collisionCount].Apply(collision);
-                collisionCount++;
-            }
-
-            //TODO: expand limit?
-        }
-
-        private void RemoveCollisionInfo(Collision2D collision) {
-            for(int i = 0; i < collisionCount; i++) {
-                var coll = mColls[i];
-                if(coll.collider == collision.collider && coll.otherCollider == collision.otherCollider) {
-                    mColls[i] = mColls[collisionCount - 1]; //swap from last
-                    coll.Reset();
-                    collisionCount--;
-                    break;
-                }
-            }
         }
 
         void GetCapsuleInfo(out Vector2 p1, out Vector2 p2, out float r, float reduceOfs) {
@@ -314,37 +260,6 @@ namespace M8 {
             sideFlags = SideFlags.None;
         }
         
-        void OnCollisionEnter2D(Collision2D col) {
-            AddCollisionInfo(col);
-        }
-
-        void OnCollisionStay2D(Collision2D col) {
-            //update collision info
-            for(int i = collisionCount - 1; i >= 0; i--) {
-                var colInf = mColls[i];
-
-                //invalid?
-                if(!colInf.collider || !colInf.collider.enabled || !colInf.otherCollider || !colInf.otherCollider.enabled) {
-                    mColls[i] = mColls[collisionCount - 1];
-                    colInf.Reset();
-                    collisionCount--;
-                    continue;
-                }
-
-                if(colInf.collider == col.collider && colInf.otherCollider == col.otherCollider) {
-                    colInf.Apply(col);
-                    return;
-                }
-            }
-
-            //not found, add
-            AddCollisionInfo(col);
-        }
-
-        void OnCollisionExit2D(Collision2D col) {
-            RemoveCollisionInfo(col);
-        }
-        
         protected virtual void OnDisable() {
             ResetCollision();
         }
@@ -373,10 +288,6 @@ namespace M8 {
                     mRadius = capsuleColl.size.y * 0.5f;
                 }
             }
-
-            mColls = new CollisionInfo[collisionInfoCapacity];
-            for(int i = 0; i < mColls.Length; i++)
-                mColls[i] = new CollisionInfo();
         }
 
         // Update is called once per frame
@@ -470,78 +381,71 @@ namespace M8 {
 
             int horzSlideCount = 0;
 
-            for(int i = collisionCount - 1; i >= 0; i--) {
-                var coll = mColls[i];
 
-                if(!coll.collider || !coll.collider.enabled) {
-                    mColls[i] = mColls[collisionCount - 1];
-                    coll.Reset();
-                    collisionCount--;
-                    continue;
+            collisionCount = bodyCollision.GetContacts(mColls);
+            //mCollLayerMask |= 1 << coll.collider.gameObject.layer;
+
+            for(int j = 0; j < collisionCount; j++) {
+                var contact = mColls[j];
+                var contactN = contact.normal;
+
+                mCollLayerMask |= 1 << contact.collider.gameObject.layer;
+
+                //generate flag
+                CollisionFlags contactFlag;
+
+                float dot = Vector2.Dot(up, contactN);
+
+                //Debug.Log("dot: " + dot);
+                //Debug.Log("deg: " + (Mathf.Acos(dot)*Mathf.Rad2Deg));
+
+                if(dot >= mSlopeLimitCos) {
+                    contactFlag = CollisionFlags.Below;
+                    normalGround += contactN;
+                    normalGroundCount++;
+                }
+                else if(dot <= mAboveLimitCos) {
+                    contactFlag = CollisionFlags.Above;
+                    normalAbove += contactN;
+                    normalAboveCount++;
+                }
+                else {
+                    contactFlag = CollisionFlags.Sides;
+                    normalSide += contactN;
+                    normalSideCount++;
+
+                    var side = MathUtil.CheckSide(contactN, up);
+                    switch(side) {
+                        case MathUtil.Side.Left:
+                            sideFlags |= SideFlags.Left;
+                            break;
+                        case MathUtil.Side.Right:
+                            sideFlags |= SideFlags.Right;
+                            break;
+                    }
+                }
+                //
+
+                //update slide
+                if(!(slideDisable || groundNoSlope) && (contactFlag == CollisionFlags.Below || contactFlag == CollisionFlags.Sides)) {
+                    //sliding
+                    mIsSlide = dot >= mSlideLimitCos && dot < mSlopeLimitCos;
+                    if(!mIsSlide && contactFlag == CollisionFlags.Below)
+                        groundNoSlope = true;
                 }
 
-                mCollLayerMask |= 1 << coll.collider.gameObject.layer;
-                                
-                for(int j = 0; j < coll.contactCount; j++) {
-                    var contact = coll.GetContact(j);
-                    var contactN = contact.normal;
+                //allow horizontal to move along ground (useful for moving down a slope)
+                if(axisHorzEnabled && contactFlag == CollisionFlags.Below) {
+                    var horzSlide = MathUtil.Slide(axisHorz, contact.normal);
+                    if(horzSlideCount == 0)
+                        axisHorz = horzSlide;
+                    else
+                        axisHorz += horzSlide;
 
-                    //generate flag
-                    CollisionFlags contactFlag;
-
-                    float dot = Vector2.Dot(up, contactN);
-
-                    //Debug.Log("dot: " + dot);
-                    //Debug.Log("deg: " + (Mathf.Acos(dot)*Mathf.Rad2Deg));
-
-                    if(dot >= mSlopeLimitCos) {
-                        contactFlag = CollisionFlags.Below;
-                        normalGround += contactN;
-                        normalGroundCount++;
-                    }
-                    else if(dot <= mAboveLimitCos) {
-                        contactFlag = CollisionFlags.Above;
-                        normalAbove += contactN;
-                        normalAboveCount++;
-                    }
-                    else {
-                        contactFlag = CollisionFlags.Sides;
-                        normalSide += contactN;
-                        normalSideCount++;
-
-                        var side = MathUtil.CheckSide(contactN, up);
-                        switch(side) {
-                            case MathUtil.Side.Left:
-                                sideFlags |= SideFlags.Left;
-                                break;
-                            case MathUtil.Side.Right:
-                                sideFlags |= SideFlags.Right;
-                                break;
-                        }
-                    }
-                    //
-
-                    //update slide
-                    if(!(slideDisable || groundNoSlope) && (contactFlag == CollisionFlags.Below || contactFlag == CollisionFlags.Sides)) {
-                        //sliding
-                        mIsSlide = dot >= mSlideLimitCos && dot < mSlopeLimitCos;
-                        if(!mIsSlide && contactFlag == CollisionFlags.Below)
-                            groundNoSlope = true;
-                    }
-
-                    //allow horizontal to move along ground (useful for moving down a slope)
-                    if(axisHorzEnabled && contactFlag == CollisionFlags.Below) {
-                        var horzSlide = MathUtil.Slide(axisHorz, contact.normal);
-                        if(horzSlideCount == 0)
-                            axisHorz = horzSlide;
-                        else
-                            axisHorz += horzSlide;
-
-                        horzSlideCount++;
-                    }
-
-                    collisionFlags |= contactFlag;
+                    horzSlideCount++;
                 }
+
+                collisionFlags |= contactFlag;
             }
 
             if(normalGroundCount > 1)
