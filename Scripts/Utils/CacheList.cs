@@ -185,6 +185,15 @@ namespace M8 {
             return false;
         }
 
+        public int IndexOf(T item) {
+            for(int i = 0; i < mCount; i++) {
+                if(mItems[i].Equals(item))
+                    return i;
+            }
+
+            return -1;
+        }
+
         public void Sort(IComparer<T> comparer) {
             Array.Sort(mItems, 0, mCount, comparer);
         }
