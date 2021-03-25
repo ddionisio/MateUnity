@@ -93,7 +93,15 @@ namespace M8 {
         /// <summary>
         /// Use this as time scale if "isTimeScaleOverride" is true
         /// </summary>
-        public float timeScale { get { return mTimeScale; } set { mTimeScale = value; } }
+        public float timeScale { 
+            get { return mTimeScale; } 
+            set { 
+                mTimeScale = value;
+
+                if(isTimeScaleOverride && !isPaused)
+                    Time.timeScale = mTimeScale;
+            } 
+        }
 
         private Scene mCurScene;
         private SceneAssetPath mFirstSceneLoaded; //used for additive mode, if rootScene is null
