@@ -26,6 +26,10 @@ namespace M8 {
         public float GetT(float v) {
             return Mathf.Clamp01((v - min) / length);
         }
+
+        public bool InRange(float v) {
+            return v >= min && v <= max;
+        }
     }
 
     [System.Serializable]
