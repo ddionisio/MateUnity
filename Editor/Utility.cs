@@ -102,7 +102,7 @@ namespace M8.EditorExt {
         }
 
         public static bool DrawSimpleButton(string character, string toolTip) {
-            return GUILayout.Button(new GUIContent(character, toolTip), EditorStyles.toolbarButton, GUILayout.MaxWidth(20f));
+            return GUILayout.Button(new GUIContent(character, toolTip), GUILayout.MaxWidth(20f));
         }
 
         public static bool TextFieldEx(ref string output, string focusName, ref string editingValue, ref string lastFocusedControl, string hint) {
