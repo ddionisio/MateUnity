@@ -77,48 +77,50 @@ namespace M8.UI.Texts {
 
             label.text = "";
 
-            if(mStringBuff == null || mStringBuff.Capacity < mString.Length)
-                mStringBuff = new System.Text.StringBuilder(mString.Length);
-            else
-                mStringBuff.Remove(0, mStringBuff.Length);
-
-            int count = mString.Length;
-            for(int i = 0; i < count; i++) {
-                if(useRealTime) {
-                    var lastTime = Time.realtimeSinceStartup;
-                    while(Time.realtimeSinceStartup - lastTime < delay)
-                        yield return null;
-                }
+            if(mString != null) {
+                if(mStringBuff == null || mStringBuff.Capacity < mString.Length)
+                    mStringBuff = new System.Text.StringBuilder(mString.Length);
                 else
-                    yield return wait;
+                    mStringBuff.Remove(0, mStringBuff.Length);
 
-                if(mString[i] == '<') {
-                    int endInd = -1;
-                    bool foundEnd = false;
-                    for(int j = i + 1; j < mString.Length; j++) {
-                        if(mString[j] == '>') {
-                            endInd = j;
-                            if(foundEnd)
-                                break;
-                        }
-                        else if(mString[j] == '/')
-                            foundEnd = true;
+                int count = mString.Length;
+                for(int i = 0; i < count; i++) {
+                    if(useRealTime) {
+                        var lastTime = Time.realtimeSinceStartup;
+                        while(Time.realtimeSinceStartup - lastTime < delay)
+                            yield return null;
                     }
+                    else
+                        yield return wait;
 
-                    if(endInd != -1 && foundEnd) {
-                        mStringBuff.Append(mString, i, (endInd - i) + 1);
-                        i = endInd;
+                    if(mString[i] == '<') {
+                        int endInd = -1;
+                        bool foundEnd = false;
+                        for(int j = i + 1; j < mString.Length; j++) {
+                            if(mString[j] == '>') {
+                                endInd = j;
+                                if(foundEnd)
+                                    break;
+                            }
+                            else if(mString[j] == '/')
+                                foundEnd = true;
+                        }
+
+                        if(endInd != -1 && foundEnd) {
+                            mStringBuff.Append(mString, i, (endInd - i) + 1);
+                            i = endInd;
+                        }
+                        else
+                            mStringBuff.Append(mString[i]);
                     }
                     else
                         mStringBuff.Append(mString[i]);
+
+                    label.text = mStringBuff.ToString();
+
+                    if(proceedCallback != null)
+                        proceedCallback();
                 }
-                else
-                    mStringBuff.Append(mString[i]);
-
-                label.text = mStringBuff.ToString();
-
-                if(proceedCallback != null)
-                    proceedCallback();
             }
 
             mRout = null;
