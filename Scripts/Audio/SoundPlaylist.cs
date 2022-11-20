@@ -14,7 +14,7 @@ namespace M8 {
             public float spatialBlend = 1f; //use for playing 3D
 
             public AudioClip GetClip() {
-                if(clipVariants.Length > 0) {
+                if(clipVariants != null && clipVariants.Length > 0) {
                     if(clip) {
                         int ind = Random.Range(0, clipVariants.Length + 1);
                         return ind == 0 ? clip : clipVariants[ind - 1];
