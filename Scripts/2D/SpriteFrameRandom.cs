@@ -62,6 +62,10 @@ namespace M8 {
         }
 
         IEnumerator DoPlay() {
+            //fail-safe
+            if(frames.Length == 0)
+                yield break;
+
             if(startDelay > 0f)
                 yield return new WaitForSeconds(startDelay);
 
