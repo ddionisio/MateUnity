@@ -15,8 +15,15 @@ namespace M8 {
             public object obj;
         }
 
+        /// <summary>
+        /// Don't allow saving for this data.
+        /// </summary>
+        [SerializeField]
+        bool _isReadOnly;
+
         public bool isLoaded { get; protected set; }
         public int valueCount { get { return mValues != null ? mValues.Count : 0; } }
+        public bool isReadOnly { get { return _isReadOnly; } }
 
         /// <summary>
         /// Called before values are saved
@@ -84,7 +91,7 @@ namespace M8 {
             mValuesSnapshot = null;
         }
                 
-        public virtual void Load() {
+        public void Load() {
             isLoaded = false;
 
             byte[] raw = LoadRawData();
@@ -95,7 +102,10 @@ namespace M8 {
             }
         }
 
-        public virtual void Save() {
+        public void Save() {
+            if(_isReadOnly)
+                return;
+
             if(mValues != null) {
                 if(saveCallback != null)
                     saveCallback();
