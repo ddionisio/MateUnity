@@ -17,7 +17,7 @@ namespace M8 {
 
             yield return request.SendWebRequest();
 
-            if(request.isNetworkError) {
+            if(request.result == UnityWebRequest.Result.ConnectionError) {
                 error = request.error;
                 status = Status.Error;
             }
