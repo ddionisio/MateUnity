@@ -371,29 +371,31 @@ namespace M8 {
 
         private void RegisterCommandsFromClasses() {
             foreach(var assembly in System.AppDomain.CurrentDomain.GetAssemblies()) {
-                foreach(var type in assembly.GetTypes()) {
-                    var registerAttr = System.Attribute.GetCustomAttribute(type, typeof(ConsoleCommandClassAttribute), true) as ConsoleCommandClassAttribute;
-                    if(registerAttr != null) {
-                        //check tag filter
-                        if(!string.IsNullOrEmpty(registerAttr.tag) && !CompareTag(registerAttr.tag))
-                            continue;
+                try {
+                    foreach(var type in assembly.GetTypes()) {
+                        var registerAttr = System.Attribute.GetCustomAttribute(type, typeof(ConsoleCommandClassAttribute), true) as ConsoleCommandClassAttribute;
+                        if(registerAttr != null) {
+                            //check tag filter
+                            if(!string.IsNullOrEmpty(registerAttr.tag) && !CompareTag(registerAttr.tag))
+                                continue;
 
-                        //grab "public static funcs"
-                        var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
-                        foreach(var method in methods) {
-                            var commandAttr = System.Attribute.GetCustomAttribute(method, typeof(ConsoleCommandAttribute), true) as ConsoleCommandAttribute;
-                            if(commandAttr != null) {
-                                //check tag filter
-                                if(!string.IsNullOrEmpty(commandAttr.tag) && !CompareTag(commandAttr.tag))
-                                    continue;
+                            //grab "public static funcs"
+                            var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
+                            foreach(var method in methods) {
+                                var commandAttr = System.Attribute.GetCustomAttribute(method, typeof(ConsoleCommandAttribute), true) as ConsoleCommandAttribute;
+                                if(commandAttr != null) {
+                                    //check tag filter
+                                    if(!string.IsNullOrEmpty(commandAttr.tag) && !CompareTag(commandAttr.tag))
+                                        continue;
 
-                                AddCommand(method, commandAttr.alias, commandAttr.hint);
+                                    AddCommand(method, commandAttr.alias, commandAttr.hint);
+                                }
+                                else
+                                    AddCommand(method, "", "");
                             }
-                            else
-                                AddCommand(method, "", "");
                         }
                     }
-                }
+                } catch { }
             }
         }
     }

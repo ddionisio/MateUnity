@@ -91,7 +91,7 @@ namespace M8 {
             mValuesSnapshot = null;
         }
                 
-        public void Load() {
+        public virtual void Load() {
             isLoaded = false;
 
             byte[] raw = LoadRawData();
