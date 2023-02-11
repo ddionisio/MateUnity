@@ -95,6 +95,13 @@ namespace M8 {
             Gizmos.DrawLine(position + rot * new Vector3(extent.x, extent.y, 0f), position + rot * new Vector3(-extent.x, extent.y, 0f));
         }
 
+        public static void DrawWireRect(Vector3[] worldCorners) {
+            Gizmos.DrawLine(worldCorners[0], worldCorners[1]);
+            Gizmos.DrawLine(worldCorners[1], worldCorners[2]);
+            Gizmos.DrawLine(worldCorners[2], worldCorners[3]);
+            Gizmos.DrawLine(worldCorners[3], worldCorners[0]);
+        }
+
         public static void DrawWireCube(Vector3 position, Quaternion rotation, Vector3 extent) {
             // draw front
             Gizmos.DrawLine(position + rotation * new Vector3(-extent.x, -extent.y, extent.z), position + rotation * new Vector3(extent.x, -extent.y, extent.z));
