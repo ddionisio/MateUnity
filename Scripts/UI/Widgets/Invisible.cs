@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 
 namespace M8.UI.Widgets {
+    [RequireComponent(typeof(CanvasRenderer))]
     [AddComponentMenu("M8/UI/Widgets/Invisible")]
     public class Invisible : MaskableGraphic {
         public override void SetMaterialDirty() {}
