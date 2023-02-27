@@ -1,4 +1,5 @@
-﻿using UnityEngine.Events;
+﻿using UnityEngine;
+using UnityEngine.Events;
 using System.Collections.Generic;
 
 namespace M8 {
@@ -62,6 +63,73 @@ namespace M8 {
                 }
                 else
                     Add(pair.Key, pair.Value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Use this as a field for components to customize parameters via inspector
+    /// </summary>
+    [System.Serializable]
+    public struct GenericParamSerialized {
+        public enum ValueType {
+            Boolean,
+            Int,
+            Float,
+            String,
+            Vector2,
+            Vector3,
+            Vector4,
+            Object
+        }
+
+        public string key;
+
+        public ValueType type;
+
+        public int iVal;
+        public Vector4 vectorVal;
+        public string sVal;
+        public Object oVal;
+
+        public static GenericParams GenerateParams(GenericParamSerialized[] paramFields) {
+            var parms = new GenericParams();
+            for(int i = 0; i < paramFields.Length; i++)
+                paramFields[i].ApplyTo(parms);
+            return parms;
+        }
+
+        public static void ApplyAll(GenericParams parms, GenericParamSerialized[] paramFields) {
+            for(int i = 0; i < paramFields.Length; i++)
+                paramFields[i].ApplyTo(parms);
+        }
+
+        public void ApplyTo(GenericParams parms) {
+            switch(type) {
+                case ValueType.Boolean:
+                    parms[key] = iVal > 0 ? true : false;
+                    break;
+                case ValueType.Int:
+                    parms[key] = iVal;
+                    break;
+                case ValueType.Float:
+                    parms[key] = vectorVal.x;
+                    break;
+                case ValueType.String:
+                    parms[key] = sVal;
+                    break;
+                case ValueType.Vector2:
+                    parms[key] = new Vector2 { x = vectorVal.x, y = vectorVal.y };
+                    break;
+                case ValueType.Vector3:
+                    parms[key] = new Vector3 { x = vectorVal.x, y = vectorVal.y, z = vectorVal.z };
+                    break;
+                case ValueType.Vector4:
+                    parms[key] = vectorVal;
+                    break;
+                case ValueType.Object:
+                    parms[key] = oVal;
+                    break;
             }
         }
     }
