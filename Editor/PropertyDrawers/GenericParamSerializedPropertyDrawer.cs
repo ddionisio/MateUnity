@@ -16,13 +16,11 @@ namespace M8 {
 
             var keyPos = position; keyPos.width *= 0.3f;
 
-            EditorGUIUtility.labelWidth = 20f;
-
-            propKey.stringValue = EditorGUI.TextField(keyPos, "K:", propKey.stringValue);
+            propKey.stringValue = EditorGUI.TextField(keyPos, propKey.stringValue);
 
             var typePos = position; typePos.x = keyPos.xMax + 8f; typePos.width *= 0.22f;
 
-            propType.enumValueIndex = EditorGUI.Popup(typePos, "V:", propType.enumValueIndex, propType.enumDisplayNames);
+            propType.enumValueIndex = EditorGUI.Popup(typePos, propType.enumValueIndex, propType.enumDisplayNames);
 
             var valPos = position; valPos.x = typePos.xMax + 4f; valPos.width = position.xMax - valPos.x;
 
