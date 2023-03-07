@@ -7,21 +7,32 @@ namespace M8 {
 
         public GameObject target;
         public float delay;
+        public bool isRealTime;
 
         private bool mDefaultActive;
+        private float mLastTime;
 
         void OnEnable() {
-            mDefaultActive = target.activeSelf;
-            InvokeRepeating("Blink", delay, delay);
+            if(target)
+                mDefaultActive = target.activeSelf;
+
+            mLastTime = isRealTime ? Time.realtimeSinceStartup : Time.time;
         }
 
         void OnDisable() {
-            CancelInvoke("Blink");
-            target.SetActive(mDefaultActive);
+            if(target)
+                target.SetActive(mDefaultActive);
         }
 
-        void Blink() {
-            target.SetActive(!target.activeSelf);
+        void Update() {
+            if(target) {
+                var curTime = isRealTime ? Time.realtimeSinceStartup : Time.time;
+                if(curTime - mLastTime >= delay) {
+                    target.SetActive(!target.activeSelf);
+
+                    mLastTime = curTime;
+                }
+            }
         }
     }
 }
