@@ -9,9 +9,7 @@ namespace M8.UI.Graphics {
             Once,
             Saw,
             SeeSaw,
-            Repeat,
-
-            NumType
+            Repeat
         }
 
         public Graphic target;
@@ -86,13 +84,13 @@ namespace M8.UI.Graphics {
                         break;
 
                     case Type.SeeSaw:
-                        if(mCurTime > delay) {
-                            if(mReverse)
-                                mCurTime -= delay;
-                            else
-                                mCurTime = delay - (mCurTime - delay);
-
-                            mReverse = !mReverse;
+                        if(mReverse && mCurTime < 0f) {
+                            mCurTime = -mCurTime;
+                            mReverse = false;
+                        }
+                        else if(mCurTime > delay) {
+                            mCurTime = delay - (mCurTime - delay);
+                            mReverse = true;
                         }
 
                         target.color = M8.ColorUtil.Lerp(colors, mCurTime / delay);

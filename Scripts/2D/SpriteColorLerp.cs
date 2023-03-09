@@ -8,9 +8,7 @@ namespace M8 {
             Once,
             Saw,
             SeeSaw,
-            Repeat,
-
-            NumType
+            Repeat
         }
 
         public SpriteRenderer sprite;
@@ -105,13 +103,13 @@ namespace M8 {
                         break;
 
                     case Type.SeeSaw:
-                        if(mCurTime > delay || (mReverse && mCurTime <= 0.0f)) {
-                            if(mReverse)
-                                mCurTime -= delay;
-                            else
-                                mCurTime = delay - (mCurTime-delay);
-
-                            mReverse = !mReverse;
+                        if(mReverse && mCurTime < 0f) {
+                            mCurTime = -mCurTime;
+                            mReverse = false;
+                        }
+                        else if(mCurTime > delay) {
+                            mCurTime = delay - (mCurTime - delay);
+                            mReverse = true;
                         }
 
                         sprite.color = M8.ColorUtil.Lerp(colors, mCurTime / delay);
