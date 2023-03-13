@@ -17,9 +17,10 @@ namespace M8.UI.Events {
         private bool mIsPointerInside;
 
         private Selectable mSelectable;
+        private CanvasGroup mCanvasGroup;
 
         void OnEnable() {
-            if(mSelectable && !mSelectable.interactable) {
+            if(IsNotInteractable()) {
                 target.SetActive(false);
             }
             else {
@@ -38,6 +39,7 @@ namespace M8.UI.Events {
 
         void Awake() {
             mSelectable = GetComponent<Selectable>();
+            mCanvasGroup = GetComponentInParent<CanvasGroup>(true);
         }
 
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData) {
@@ -45,7 +47,7 @@ namespace M8.UI.Events {
 
             mIsPointerDown = true;
 
-            if(mSelectable && !mSelectable.interactable)
+            if(IsNotInteractable())
                 target.SetActive(false);
             else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
@@ -58,7 +60,7 @@ namespace M8.UI.Events {
 
             mIsPointerDown = false;
 
-            if(mSelectable && !mSelectable.interactable)
+            if(IsNotInteractable())
                 target.SetActive(false);
             else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
@@ -72,7 +74,7 @@ namespace M8.UI.Events {
 
             mIsPointerInside = true;
 
-            if(mSelectable && !mSelectable.interactable)
+            if(IsNotInteractable())
                 target.SetActive(false);
             else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
@@ -85,7 +87,7 @@ namespace M8.UI.Events {
                         
             mIsPointerInside = false;
 
-            if(mSelectable && !mSelectable.interactable)
+            if(IsNotInteractable())
                 target.SetActive(false);
             else if(selectSticky && eventData.selectedObject == gameObject)
                 target.SetActive(true);
@@ -96,7 +98,7 @@ namespace M8.UI.Events {
         void ISelectHandler.OnSelect(BaseEventData eventData) {
             if(!isActiveAndEnabled) return;
 
-            if(mSelectable && !mSelectable.interactable)
+            if(IsNotInteractable())
                 target.SetActive(false);
             else
                 target.SetActive(eventData.selectedObject == gameObject);
@@ -106,6 +108,14 @@ namespace M8.UI.Events {
             if(!isActiveAndEnabled) return;
 
             target.SetActive(false);
+        }
+
+        private bool IsNotInteractable() {
+            if(mCanvasGroup && !mCanvasGroup.interactable)
+                return true;
+            else if(mSelectable && !mSelectable.interactable)
+                return true;
+            return false;
         }
     }
 }

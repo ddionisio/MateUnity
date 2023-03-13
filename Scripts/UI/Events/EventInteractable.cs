@@ -14,22 +14,42 @@ namespace M8.UI.Events {
 
         private bool mIsInteractable;
 
+        private CanvasGroup mCanvasGroup;
+
         void OnEnable() {
-            mIsInteractable = target.interactable;
+            mIsInteractable = IsInteractable();
             if(mIsInteractable)
                 enableEvent.Invoke();
             else
                 disableEvent.Invoke();
         }
 
+        void Awake() {
+            if(!target)
+                target = GetComponent<Selectable>();
+
+            mCanvasGroup = GetComponentInParent<CanvasGroup>(true);
+        }
+
         void Update() {
-            if(mIsInteractable != target.interactable) {
-                mIsInteractable = target.interactable;
+            var isInteractable = IsInteractable();
+            if(mIsInteractable != isInteractable) {
+                mIsInteractable = isInteractable;
                 if(mIsInteractable)
                     enableEvent.Invoke();
                 else
                     disableEvent.Invoke();
             }
+        }
+
+        private bool IsInteractable() {
+            if(mCanvasGroup && !mCanvasGroup.interactable)
+                return false;
+
+            if(target && target.interactable)
+                return true;
+
+            return false;
         }
     }
 }
