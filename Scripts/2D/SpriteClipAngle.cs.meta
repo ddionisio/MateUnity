@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 3160bb5f209eb4c4ca44e9ac533b8a48
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - _clipAngleMaterial: {fileID: 2100000, guid: a34014ec925787845a3c95e30f0dce57, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
