@@ -34,6 +34,8 @@ namespace M8.UI.Texts {
         private System.Text.StringBuilder mStringBuff;
         private Coroutine mRout;
 
+        private bool mIsStarted;
+
         public void Play() {
             if(mRout != null)
                 StopCoroutine(mRout);
@@ -55,7 +57,7 @@ namespace M8.UI.Texts {
         }
 
         void OnEnable() {
-            if(autoPlay)
+            if(autoPlay && mIsStarted)
                 Play();
         }
 
@@ -65,6 +67,13 @@ namespace M8.UI.Texts {
             if(mRout != null) {
                 StopCoroutine(mRout);
                 mRout = null;
+            }
+        }
+
+        void Start() {
+            if(autoPlay) {
+                mIsStarted = true;
+                Play();
             }
         }
 
