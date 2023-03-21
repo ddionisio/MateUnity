@@ -9,12 +9,13 @@ namespace M8.UI.Texts {
         public Text label;
         public float delay;
 
+        public bool autoText = false;
         public bool autoPlay = true;
         public bool useRealTime;
 
         public string text {
             get {
-                return label.text;
+                return mString;
             }
 
             set {
@@ -57,8 +58,12 @@ namespace M8.UI.Texts {
         }
 
         void OnEnable() {
-            if(autoPlay && mIsStarted)
+            if(autoPlay && mIsStarted) {
+                if(autoText)
+                    mString = label.text;
+
                 Play();
+            }
         }
 
         void OnDisable() {
@@ -73,12 +78,12 @@ namespace M8.UI.Texts {
         void Start() {
             if(autoPlay) {
                 mIsStarted = true;
+
+                if(autoText)
+                    mString = label.text;
+
                 Play();
             }
-        }
-
-        void Awake() {
-            label.text = "";
         }
 
         IEnumerator DoType() {
