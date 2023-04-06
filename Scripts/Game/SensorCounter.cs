@@ -8,6 +8,7 @@ namespace M8 {
     /// </summary>
     [AddComponentMenu("M8/Game/SensorCounter")]
     public class SensorCounter : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public float updateCheckDelay = 0.2f;
 
         private HashSet<Collider> mUnits = new HashSet<Collider>();
@@ -101,5 +102,6 @@ namespace M8 {
 
             mDoUpdateActive = false;
         }
+#endif
     }
 }

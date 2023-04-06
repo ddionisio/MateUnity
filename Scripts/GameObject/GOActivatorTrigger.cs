@@ -5,7 +5,7 @@ using UnityEngine;
 namespace M8 {
     [AddComponentMenu("M8/Game Object/Activator Trigger")]
     public class GOActivatorTrigger : GOActivator {
-
+#if !M8_PHYSICS_DISABLED
         void OnTriggerEnter(Collider other) {
             Activate();
         }
@@ -13,5 +13,6 @@ namespace M8 {
         void OnTriggerExit(Collider other) {
             Deactivate();
         }
+#endif
     }
 }

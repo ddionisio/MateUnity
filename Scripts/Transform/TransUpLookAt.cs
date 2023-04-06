@@ -23,6 +23,7 @@ namespace M8 {
         private bool mStarted;
         private Vector3 mCurVel;
 
+#if !M8_PHYSICS_DISABLED
         void OnTriggerEnter(Collider c) {
             if(useTrigger && target == null)
                 target = c.transform;
@@ -32,6 +33,7 @@ namespace M8 {
             if(useTrigger && target == c.transform)
                 target = null;
         }
+#endif
 
         void OnEnable() {
             if(mStarted) {

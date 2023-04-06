@@ -6,6 +6,7 @@ namespace M8 {
     //TODO: right now it assumes a sphere collider
     [AddComponentMenu("M8/Physics/First-Person Controller")]
     public class FPController : RigidBodyController {
+#if !M8_PHYSICS_DISABLED
         [SerializeField]
         Transform _eye = null;
 
@@ -405,5 +406,6 @@ namespace M8 {
                 mEyeOrienting = !rotDone;
             }
         }
+#endif
     }
 }

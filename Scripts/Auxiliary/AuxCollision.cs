@@ -3,6 +3,7 @@
 namespace M8.Auxiliary {
     [AddComponentMenu("M8/Auxiliary/Collision")]
     public class AuxCollision : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public delegate void Callback(Collision coll);
 
         public event Callback enterCallback;
@@ -23,5 +24,6 @@ namespace M8.Auxiliary {
             if(exitCallback != null)
                 exitCallback(coll);
         }
+#endif
     }
 }

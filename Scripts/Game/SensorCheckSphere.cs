@@ -69,6 +69,7 @@ namespace M8 {
             //get units in area
             mGatherUnits.Clear();
 
+#if !M8_PHYSICS_DISABLED
             Collider[] cols = Physics.OverlapSphere(transform.position, radius, mask.value);
             foreach(Collider col in cols) {
                 T unit = col.GetComponent<T>();
@@ -85,6 +86,7 @@ namespace M8 {
                     }
                 }
             }
+#endif
 
             //swap
             HashSet<T> prevSet = mUnits;

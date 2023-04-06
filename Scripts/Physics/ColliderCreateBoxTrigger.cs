@@ -7,6 +7,7 @@ namespace M8 {
     /// </summary>
     [AddComponentMenu("M8/Physics/ColliderCreateBoxTrigger")]
     public class ColliderCreateBoxTrigger : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public enum Anchor {
             Top,
             Bottom,
@@ -121,5 +122,6 @@ namespace M8 {
                 M8.Gizmo.DrawWireCube(transform, c, s);
             }
         }
+#endif
     }
 }

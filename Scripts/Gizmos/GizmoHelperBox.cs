@@ -12,12 +12,15 @@ namespace M8 {
         void OnDrawGizmos() {
 
             if(useCollider) {
+#if !M8_PHYSICS_DISABLED
                 BoxCollider bc = GetComponent<BoxCollider>();
                 if(bc != null) {
                     bound.center = bc.center;
                     bound.extents = new Vector3(bc.size.x*transform.localScale.x, bc.size.y*transform.localScale.y, bc.size.z*transform.localScale.z) * 0.5f;
                 }
-                else {
+                else 
+#endif
+                {
                     BoxCollider2D bc2D = GetComponent<BoxCollider2D>();
                     if(bc2D != null) {
                         bound.center = bc2D.offset* transform.localScale;

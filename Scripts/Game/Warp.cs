@@ -4,6 +4,7 @@ using System.Collections;
 namespace M8 {
     [AddComponentMenu("M8/Game/Warp")]
     public class Warp : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public const int maxCheckCount = 20;
 
         public delegate void Callback(bool success);
@@ -86,5 +87,6 @@ namespace M8 {
                 Gizmos.DrawWireSphere(transform.position, radiusCheck);
             }
         }
+#endif
     }
 }

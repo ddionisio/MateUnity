@@ -14,12 +14,15 @@ namespace M8 {
             Vector3 ofs = offset;
 
             if(useCollider) {
+#if !M8_PHYSICS_DISABLED
                 SphereCollider sc = GetComponent<SphereCollider>();
                 if(sc != null) {
                     radius = sc.radius;
                     ofs += sc.center;
                 }
-                else {
+                else 
+#endif
+                {
                     CircleCollider2D sc2D = GetComponent<CircleCollider2D>();
                     if(sc2D != null) {
                         radius = sc2D.radius;

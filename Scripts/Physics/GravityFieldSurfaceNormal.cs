@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace M8 {
     [AddComponentMenu("M8/Physics/GravityFieldSurfaceNormal")]
     public class GravityFieldSurfaceNormal : GravityFieldBase {
+#if !M8_PHYSICS_DISABLED
         public const int startCapacity = 8;
 
         public Transform center;
@@ -120,5 +121,6 @@ namespace M8 {
 
             mUpdateActive = false;
         }
+#endif
     }
 }

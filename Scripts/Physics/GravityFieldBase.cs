@@ -4,6 +4,7 @@ using System.Collections;
 namespace M8 {
     [AddComponentMenu("")]
     public abstract class GravityFieldBase : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public bool gravityOverride = false; //if true, use the gravity value to controller
         public float gravity = -9.8f;
         public bool retainGravity = false; //if true, then gravity and up orientation of GravityController will persist when it exits the field
@@ -31,5 +32,6 @@ namespace M8 {
             if(isGlobal)
                 mGlobal = this;
         }
+#endif
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace M8 {
     [AddComponentMenu("M8/Physics/ForceField")]
     public class ForceField : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public enum Axis {
             Up,
             Forward,
@@ -182,5 +183,6 @@ namespace M8 {
 
             mModeRunning = false;
         }
+#endif
     }
 }

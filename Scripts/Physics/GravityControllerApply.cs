@@ -4,6 +4,7 @@ using System.Collections;
 namespace M8 {
     [AddComponentMenu("M8/Physics/GravityControllerApply")]
     public class GravityControllerApply : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public GravityController target;
 
         public bool overrideGravity = true;
@@ -20,5 +21,6 @@ namespace M8 {
                 mBody.AddForce(target.up * (overrideGravity ? gravity : target.gravity) * mBody.mass, ForceMode.Force);
             }
         }
+#endif
     }
 }

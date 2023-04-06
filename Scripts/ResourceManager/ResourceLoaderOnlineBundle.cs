@@ -12,6 +12,7 @@ namespace M8 {
         public override IEnumerator Load() {
             status = Status.Loading;
 
+#if !M8_WEB_API_DISABLED
             //TODO: add version and crc
             var request = UnityWebRequestAssetBundle.GetAssetBundle(rootPath);
 
@@ -25,6 +26,11 @@ namespace M8 {
                 mAssetBundle = DownloadHandlerAssetBundle.GetContent(request);
                 status = Status.Loaded;
             }
+#else
+            yield return null;
+
+            status = Status.Loaded;
+#endif
         }
 
         public override void Unload() {

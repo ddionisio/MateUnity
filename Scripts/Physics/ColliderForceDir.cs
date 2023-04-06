@@ -3,6 +3,7 @@
 namespace M8 {
     [AddComponentMenu("M8/Physics/ColliderForceDir")]
     public class ColliderForceDir : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public enum Axis {
             Up,
             Forward,
@@ -45,5 +46,6 @@ namespace M8 {
                 }
             }
         }
+#endif
     }
 }

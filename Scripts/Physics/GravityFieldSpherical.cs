@@ -4,7 +4,7 @@ using System.Collections;
 namespace M8 {
     [AddComponentMenu("M8/Physics/GravityFieldSpherical")]
     public class GravityFieldSpherical : GravityFieldBase {
-
+#if !M8_PHYSICS_DISABLED
         public bool inward = false;
 
         public override Vector3 GetUpVector(GravityController entity) {
@@ -13,5 +13,6 @@ namespace M8 {
             Vector3 dir = inward ? transform.position - position : position - transform.position;
             return dir.normalized;
         }
+#endif
     }
 }

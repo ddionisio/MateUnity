@@ -4,6 +4,7 @@ using System.Collections;
 namespace M8 {
     [AddComponentMenu("M8/Physics/GravityController")]
     public class GravityController : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public Vector3 startUp = Vector3.up; //initial up vector, this is to orient the object's up to match this, if zero, init with transform's up
 
         public bool orientUp = true; //allow orientation of the up vector
@@ -218,5 +219,6 @@ namespace M8 {
 
             mIsOrienting = false;
         }
+#endif
     }
 }

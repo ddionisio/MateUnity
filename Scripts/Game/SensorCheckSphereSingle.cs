@@ -49,6 +49,7 @@ namespace M8 {
             T lastUnit = mUnit;
             mUnit = null;
 
+#if !M8_PHYSICS_DISABLED
             Collider[] cols = Physics.OverlapSphere(transform.position, radius, mask.value);
             foreach(Collider col in cols) {
                 T u = col.GetComponent<T>();
@@ -57,6 +58,7 @@ namespace M8 {
                     break;
                 }
             }
+#endif
 
             if(mUnit != lastUnit) {
                 if(lastUnit != null)

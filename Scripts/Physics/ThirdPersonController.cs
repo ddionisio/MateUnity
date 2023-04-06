@@ -4,6 +4,7 @@ using System.Collections;
 namespace M8 {
     [AddComponentMenu("M8/Physics/Third-Person Controller")]
     public class ThirdPersonController : RigidBodyController {
+#if !M8_PHYSICS_DISABLED
         [SerializeField]
         Transform _eye; //optional, can be set at runtime for cutscene, etc.
 
@@ -231,5 +232,6 @@ namespace M8 {
 
             mEyeFollowRoutine = null;
         }
+#endif
     }
 }

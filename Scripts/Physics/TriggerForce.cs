@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace M8 {
     [AddComponentMenu("M8/Physics/TriggerForce")]
     public class TriggerForce : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public enum Axis {
             Up,
             Forward,
@@ -223,5 +224,6 @@ namespace M8 {
             mColliders.Remove(col);
             //Debug.Log("removed: " + col.gameObject.name);
         }
+#endif
     }
 }

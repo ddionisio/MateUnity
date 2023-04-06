@@ -3,6 +3,7 @@ using UnityEngine;
 namespace M8 {
     [AddComponentMenu("M8/Physics/ColliderForce")]
     public class ColliderForce : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         public float force = 30.0f;
         public ForceMode mode = ForceMode.Impulse;
         public bool atPoint = false;
@@ -19,5 +20,6 @@ namespace M8 {
                 }
             }
         }
+#endif
     }
 }

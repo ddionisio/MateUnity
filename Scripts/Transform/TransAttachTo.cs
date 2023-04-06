@@ -15,11 +15,16 @@ namespace M8 {
 
         public bool ignoreRot;
 
+#if !M8_PHYSICS_DISABLED
         private Collider mColl;
+#endif
+
         private Quaternion mRotQ;
 
         void Awake() {
+#if !M8_PHYSICS_DISABLED
             mColl = GetComponent<Collider>();
+#endif
 
             mRotQ = Quaternion.Euler(rotOfs);
         }
@@ -27,12 +32,15 @@ namespace M8 {
         // Update is called once per frame
         void Update() {
             if(target != null) {
+#if !M8_PHYSICS_DISABLED
                 if(mColl != null) {
                     Vector3 ofs = transform.worldToLocalMatrix.MultiplyPoint(mColl.bounds.center);
 
                     transform.position = target.localToWorldMatrix.MultiplyPoint(offset - ofs);
                 }
-                else {
+                else 
+#endif
+                {
                     transform.position = target.position + target.rotation * offset;
                 }
 

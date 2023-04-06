@@ -3,10 +3,11 @@ using UnityEngine;
 
 namespace M8 {
     public struct PhysicsUtil {
-        public const CollisionFlags anyCollisionFlags = CollisionFlags.Above | CollisionFlags.Below | CollisionFlags.Sides;
-
         const float defaultSphereCosCheck = 0.86602540378443864676372317075294f;
         const float defaultBoxCosCheck = 0.70710678118654752440084436210485f;
+
+#if !M8_PHYSICS_DISABLED
+        public const CollisionFlags anyCollisionFlags = CollisionFlags.Above | CollisionFlags.Below | CollisionFlags.Sides;
 
         //cheaper version if you pre-cache the cos(angleLimit)
         public static CollisionFlags GetCollisionFlagsSphereCos(Vector3 up, Vector3 center, float cosLimit, Vector3 contactPoint) {
@@ -86,6 +87,7 @@ namespace M8 {
 
             return CollisionFlags.Sides;
         }
+#endif
 
         public static int[] GetLayerIndices(int layerMask) {
             int[] layers = new int[32];

@@ -7,6 +7,7 @@ namespace M8 {
     /// Do a periodic check for colliders based on layer mask, ensure Activators have a collider with matching layer.
     /// </summary>
     [AddComponentMenu("M8/Game Object/Activator Activate Radius Check")]
+#if !M8_PHYSICS_DISABLED
     public class GOActivatorActivateRadiusCheck : GOActivatorActivateCheckBase<Collider> {
         public float radius;
 
@@ -21,4 +22,20 @@ namespace M8 {
             }
         }
     }
+#else
+    public class GOActivatorActivateRadiusCheck : GOActivatorActivateCheckBase<Component> {
+        public float radius;
+
+        protected override int PopulateCollisions(Component[] cache) {
+            return 0;
+        }
+
+        void OnDrawGizmos() {
+            if(radius > 0f) {
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireSphere(transform.position, radius);
+            }
+        }
+    }
+#endif
 }

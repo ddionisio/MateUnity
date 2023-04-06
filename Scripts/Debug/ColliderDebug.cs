@@ -6,6 +6,7 @@ public class ColliderDebug : MonoBehaviour {
     public bool logCollisionStay = false;
     public bool logTriggerStay = false;
 
+#if !M8_PHYSICS_DISABLED
     void OnTriggerEnter(Collider c) {
         Debug.Log(gameObject.name + " trigger enter with: " + c.gameObject.name);
     }
@@ -38,4 +39,5 @@ public class ColliderDebug : MonoBehaviour {
             }
         }
     }
+#endif
 }

@@ -103,8 +103,10 @@ namespace M8 {
         private WaitForSeconds mWaitStartDelay;
         private WaitForSeconds mWaitDelay;
 
+#if !M8_PHYSICS_DISABLED
         private Rigidbody mTargetBody;
         private Collider mTargetColl;
+#endif
 
         private bool mRestore = false;
 
@@ -184,8 +186,10 @@ namespace M8 {
             if(target == null)
                 target = transform;
 
+#if !M8_PHYSICS_DISABLED
             mTargetBody = target.GetComponent<Rigidbody>();
             mTargetColl = target.GetComponent<Collider>();
+#endif
 
             mWaitUpdate = new WaitForFixedUpdate();
             mWaitStartDelay = new WaitForSeconds(startWait);
@@ -361,12 +365,14 @@ namespace M8 {
                 mCurVel = dpos / Time.fixedDeltaTime;
             }
 
+#if !M8_PHYSICS_DISABLED
             if(mTargetColl != null)
                 pos -= target.worldToLocalMatrix.MultiplyPoint(mTargetColl.bounds.center);
 
             if(mTargetBody != null)
                 mTargetBody.MovePosition(pos);
             else
+#endif
                 target.position = pos;
         }
     }

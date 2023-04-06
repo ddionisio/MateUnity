@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace M8 {
     public abstract class SensorSingle<T> : MonoBehaviour where T : Component {
+#if !M8_PHYSICS_DISABLED
         public delegate void Callback(T unit);
 
         public event Callback enterCallback;
@@ -67,5 +68,6 @@ namespace M8 {
                 }
             }
         }
+#endif
     }
 }

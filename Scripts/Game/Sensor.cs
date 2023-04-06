@@ -7,7 +7,9 @@ namespace M8 {
         protected abstract void UnitAdded(T unit);
         protected abstract void UnitRemoved(T unit);
 
+#if !M8_PHYSICS_DISABLED
         protected Collider mCollider;
+#endif
 
         private HashSet<T> mUnits = new HashSet<T>();
 
@@ -22,17 +24,24 @@ namespace M8 {
         }
 
         protected virtual void OnEnable() {
+#if !M8_PHYSICS_DISABLED
             mCollider.enabled = true;
+#endif
         }
 
         protected virtual void OnDisable() {
+#if !M8_PHYSICS_DISABLED
             mCollider.enabled = false;
+#endif
         }
 
         protected virtual void Awake() {
+#if !M8_PHYSICS_DISABLED
             mCollider = GetComponent<Collider>();
+#endif
         }
 
+#if !M8_PHYSICS_DISABLED
         void OnTriggerEnter(Collider other) {
             CleanUp();
             T unit = other.GetComponent<T>();
@@ -50,6 +59,7 @@ namespace M8 {
                 UnitRemoved(unit);
             }
         }
+#endif
 
         bool IsUnitInvalid(T unit) {
             if(unit != null) {

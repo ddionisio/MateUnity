@@ -11,6 +11,7 @@ namespace M8 {
     //and be able to stand still on platforms
     [AddComponentMenu("M8/Physics/RigidBodyController")]
     public class RigidBodyController : MonoBehaviour {
+#if !M8_PHYSICS_DISABLED
         protected const float moveCosCheck = 0.01745240643728351281941897851632f; //cos(89)
 
         public class CollideInfo {
@@ -800,5 +801,6 @@ namespace M8 {
                 mIsLocalVelocityComputed = true;
             }
         }
+#endif
     }
 }

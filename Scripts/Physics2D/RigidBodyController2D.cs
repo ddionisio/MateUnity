@@ -17,6 +17,14 @@ namespace M8 {
             Left = 0x2
         }
 
+        [System.Flags]
+        public enum CollisionFlags {
+            None = 0x0,
+            Sides = 0x1,
+            Above = 0x2,
+            Below = 0x4
+        }
+
         public Transform dirHolder; //the forward vector of this determines our forward movement, put this as a child of this gameobject
                                     //you'll want this as an attach for camera as well.
 
@@ -121,7 +129,7 @@ namespace M8 {
         /// <summary>
         /// Check if given collision is currently colliding with this object.
         /// </summary>
-        public bool CheckCollide(Collider col) {
+        public bool CheckCollide(Collider2D col) {
             for(int i = 0; i < collisionCount; i++) {
                 if(mColls[i].collider == col)
                     return true;
