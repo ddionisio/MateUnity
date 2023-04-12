@@ -43,6 +43,7 @@ namespace M8.UI.Texts {
                 mRout = null;
             }
 
+            label.text = "";
             mString = "";
         }
 
