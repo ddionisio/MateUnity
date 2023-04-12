@@ -37,6 +37,15 @@ namespace M8.UI.Texts {
 
         private bool mIsStarted;
 
+        public void Clear() {
+            if(mRout != null) {
+                StopCoroutine(mRout);
+                mRout = null;
+            }
+
+            mString = "";
+        }
+
         public void Play() {
             if(mRout != null)
                 StopCoroutine(mRout);
