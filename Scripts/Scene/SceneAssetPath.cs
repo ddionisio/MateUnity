@@ -71,5 +71,13 @@ namespace M8 {
         public static bool operator !=(SceneAssetPath a, Scene b) {
             return !(a == b);
         }
+
+        public static bool operator ==(Scene a, SceneAssetPath b) {
+            return a.name == b.name && a.path == b.path;
+        }
+
+        public static bool operator !=(Scene a, SceneAssetPath b) {
+            return !(b == a);
+        }
     }
 }
