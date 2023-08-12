@@ -13,20 +13,12 @@ namespace M8 {
             var propMax = property.FindPropertyRelative("max");
 
             var minPos = new Rect(position.x, position.y, position.width * 0.5f, position.height);
-            var maxPos = new Rect(minPos.xMax, position.y, position.width * 0.5f, position.height);
+            var maxPos = new Rect(minPos.xMax + 4f, position.y, position.width * 0.5f - 4f, position.height);
 
-            EditorGUIUtility.labelWidth = 42f;
+            EditorGUIUtility.labelWidth = 45f;
 
-            var minVal = propMin.floatValue;
-            var maxVal = propMax.floatValue;
-
-            minVal = EditorGUI.FloatField(minPos, "min", minVal);
-            if(minVal > maxVal)
-                maxVal = minVal;
-
-            maxVal = EditorGUI.FloatField(maxPos, "max", maxVal);
-            if(maxVal < minVal)
-                minVal = maxVal;
+            var minVal = EditorGUI.FloatField(minPos, "min", propMin.floatValue);
+            var maxVal = EditorGUI.FloatField(maxPos, "max", propMax.floatValue);
 
             propMin.floatValue = minVal;
             propMax.floatValue = maxVal;
