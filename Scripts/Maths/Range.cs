@@ -11,7 +11,16 @@ namespace M8 {
         public float length { get { return max - min; } }
 
         public float random { get { return Random.Range(min, max); } }
-                
+
+        public RangeFloat(float aMin, float aMax) {
+            min = aMin;
+            max = aMax;
+        }
+
+        public RangeFloat(float val) {
+            min = max = val;
+        }
+
         public float Lerp(float t) {
             return Mathf.Lerp(min, max, t);
         }
@@ -40,6 +49,15 @@ namespace M8 {
         public int length { get { return max - min; } }
 
         public int random { get { return Random.Range(min, max + 1); } }
+
+        public RangeInt(int aMin, int aMax) {
+            min = aMin;
+            max = aMax;
+        }
+
+        public RangeInt(int val) {
+            min = max = val;
+        }
 
         public int Lerp(float t) {
             return Mathf.RoundToInt(Mathf.Lerp(min, max, t));
