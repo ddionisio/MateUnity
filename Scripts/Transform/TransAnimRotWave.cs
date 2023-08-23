@@ -18,7 +18,20 @@ namespace M8 {
 
         public bool local;
 
+        public bool isRealtime;
+
+        public bool resetOnDisable;
+
         private Vector3 mOrigin;
+
+        void OnDisable() {
+            if(resetOnDisable) {
+                if(local)
+                    transform.localEulerAngles = mOrigin;
+                else
+                    transform.eulerAngles = mOrigin;
+            }
+        }
 
         void Awake() {
             if(target == null)
@@ -29,7 +42,7 @@ namespace M8 {
 
         // Update is called once per frame
         void Update() {
-            Vector3 angles = mOrigin + Mathf.Sin(Time.time * speed * Mathf.Deg2Rad) * rotate;
+            Vector3 angles = mOrigin + Mathf.Sin((isRealtime ? Time.realtimeSinceStartup : Time.time) * speed * Mathf.Deg2Rad) * rotate;
 
             if(local)
                 transform.localEulerAngles = angles;
