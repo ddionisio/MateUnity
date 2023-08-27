@@ -27,9 +27,9 @@ namespace M8 {
         void OnDisable() {
             if(resetOnDisable) {
                 if(local)
-                    transform.localEulerAngles = mOrigin;
+                    target.localEulerAngles = mOrigin;
                 else
-                    transform.eulerAngles = mOrigin;
+                    target.eulerAngles = mOrigin;
             }
         }
 
@@ -37,7 +37,7 @@ namespace M8 {
             if(target == null)
                 target = transform;
 
-            mOrigin = local ? transform.localEulerAngles : transform.eulerAngles;
+            mOrigin = local ? target.localEulerAngles : target.eulerAngles;
         }
 
         // Update is called once per frame
@@ -45,9 +45,9 @@ namespace M8 {
             Vector3 angles = mOrigin + Mathf.Sin((isRealtime ? Time.realtimeSinceStartup : Time.time) * speed * Mathf.Deg2Rad) * rotate;
 
             if(local)
-                transform.localEulerAngles = angles;
+                target.localEulerAngles = angles;
             else
-                transform.eulerAngles = angles;
+                target.eulerAngles = angles;
         }
     }
 }
