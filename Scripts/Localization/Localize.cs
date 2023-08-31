@@ -88,6 +88,10 @@ namespace M8 {
         public static string Get(string id) {
             return instance.GetText(id);
         }
+
+        public static bool Contains(string id) {
+            return instance.Exists(id);
+        }
                 
         /// <summary>
         /// Register during Awake such that GetText will be able to fill params correctly
