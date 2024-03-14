@@ -242,7 +242,8 @@ namespace M8 {
 
             src.gameObject.SetActive(false);
 
-            mSourceCache.Add(src);
+            if(!mSourceCache.IsFull) //TODO: edge-case, need to find why this is happening later
+                mSourceCache.Add(src);
         }
     }
 }
