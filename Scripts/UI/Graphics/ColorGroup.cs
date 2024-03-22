@@ -20,8 +20,9 @@ namespace M8.UI.Graphics {
 
         public Color applyColor;
 
-        private Graphic[] mGraphics;
-        private Color[] mGraphicDefaultColors;
+		public Graphic[] graphics;
+
+		private Color[] mGraphicDefaultColors;
 
         private bool mIsApplied;
 
@@ -30,28 +31,30 @@ namespace M8.UI.Graphics {
         }
 
         public void ApplyColor(Color color) {
-            if(mGraphics == null)
-                Init();
+			if(graphics == null || graphics.Length == 0 || (mGraphicDefaultColors != null && graphics.Length != mGraphicDefaultColors.Length))
+				Init();
+			else if(mGraphicDefaultColors == null)
+				InitDefaultData();
 
-            applyColor = color;
+			applyColor = color;
 
             switch(type) {
                 case Type.Override:
-                    for(int i = 0; i < mGraphics.Length; i++) {
-                        if(mGraphics[i])
-                            mGraphics[i].color = color;
+                    for(int i = 0; i < graphics.Length; i++) {
+                        if(graphics[i])
+                            graphics[i].color = color;
                     }
                     break;
                 case Type.Multiply:
-                    for(int i = 0; i < mGraphics.Length; i++) {
-                        if(mGraphics[i])
-                            mGraphics[i].color = mGraphicDefaultColors[i] * color;
+                    for(int i = 0; i < graphics.Length; i++) {
+                        if(graphics[i])
+                            graphics[i].color = mGraphicDefaultColors[i] * color;
                     }
                     break;
                 case Type.Add:
-                    for(int i = 0; i < mGraphics.Length; i++) {
-                        if(mGraphics[i])
-                            mGraphics[i].color = new Color(
+                    for(int i = 0; i < graphics.Length; i++) {
+                        if(graphics[i])
+                            graphics[i].color = new Color(
                                 Mathf.Clamp01(mGraphicDefaultColors[i].r + color.r),
                                 Mathf.Clamp01(mGraphicDefaultColors[i].g + color.g),
                                 Mathf.Clamp01(mGraphicDefaultColors[i].b + color.b),
@@ -67,12 +70,12 @@ namespace M8.UI.Graphics {
             if(mIsApplied) {
                 mIsApplied = false;
 
-                if(mGraphics == null)
+                if(graphics == null)
                     return;
 
-                for(int i = 0; i < mGraphics.Length; i++) {
-                    if(mGraphics[i])
-                        mGraphics[i].color = mGraphicDefaultColors[i];
+                for(int i = 0; i < graphics.Length; i++) {
+                    if(graphics[i])
+                        graphics[i].color = mGraphicDefaultColors[i];
                 }
             }
         }
@@ -80,21 +83,25 @@ namespace M8.UI.Graphics {
         public void Init() {
             Revert();
 
-            mGraphics = GetComponentsInChildren<Graphic>(true);
+            graphics = GetComponentsInChildren<Graphic>(true);
 
-            mGraphicDefaultColors = new Color[mGraphics.Length];
-
-            for(int i = 0; i < mGraphics.Length; i++)
-                mGraphicDefaultColors[i] = mGraphics[i].color;
-        }
+            InitDefaultData();
+		}
 
         void OnDestroy() {
             Revert();
         }
 
         void Awake() {
-            if(initOnAwake)
-                Init();
+			if(initOnAwake && (graphics == null || graphics.Length == 0))
+				Init();
         }
-    }
+
+		private void InitDefaultData() {
+			mGraphicDefaultColors = new Color[graphics.Length];
+
+			for(int i = 0; i < graphics.Length; i++)
+				mGraphicDefaultColors[i] = graphics[i].color;
+		}
+	}
 }
