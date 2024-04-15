@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("")]
     public abstract class ForceFieldBase2D : MonoBehaviour {
         public enum FieldValueType {
@@ -43,4 +44,5 @@ namespace M8 {
                 global = this;
         }
     }
+#endif
 }

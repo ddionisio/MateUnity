@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace M8 {
     public static class Rigidbody2DExtension {
+#if !M8_PHYSICS2D_DISABLED
         public static void AddExplosionForce(this Rigidbody2D body, float explosionForce, Vector2 explosionPosition, float explosionRadius, bool applyWearOff, ForceMode2D mode) {
             var delta = (body.position - explosionPosition);
             var dist = delta.magnitude;
@@ -133,5 +134,6 @@ namespace M8 {
                 }
             }
         }
+#endif
     }
 }

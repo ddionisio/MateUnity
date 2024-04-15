@@ -20,11 +20,13 @@ namespace M8 {
                 else 
 #endif
                 {
+#if !M8_PHYSICS2D_DISABLED
                     BoxCollider2D bc2D = GetComponent<BoxCollider2D>();
                     if(bc2D != null) {
                         bound.center = bc2D.offset;
                         bound.extents = bc2D.size * 0.5f;
                     }
+#endif
                 }
             }
 

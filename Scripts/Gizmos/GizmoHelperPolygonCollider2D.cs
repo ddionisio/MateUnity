@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Gizmo Helpers/PolygonCollider2D")]
     public class GizmoHelperPolygonCollider2D : MonoBehaviour {
         public Color color = Color.green;
@@ -33,4 +34,5 @@ namespace M8 {
             }
         }
     }
+#endif
 }

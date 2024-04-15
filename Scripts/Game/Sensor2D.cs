@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     public abstract class Sensor2D<T> : MonoBehaviour where T : Component {
         public int cacheCapacity = 16;
 
@@ -82,4 +83,5 @@ namespace M8 {
             return true;
         }
     }
+#endif
 }

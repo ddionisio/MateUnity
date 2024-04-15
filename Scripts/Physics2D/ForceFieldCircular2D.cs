@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Physics2D/ForceFieldCircular")]
     public class ForceFieldCircular2D : ForceFieldBase2D {
         public bool inward = false;
@@ -15,4 +16,5 @@ namespace M8 {
             return dir.normalized;
         }
     }
+#endif
 }

@@ -2,6 +2,7 @@
 using UnityEngine.Events;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Physics2D/Collider Enter Event")]
     public class ColliderEnterUnityEvent2D : MonoBehaviour {
         [Tooltip("Which tags is allowed to invoke callback. Set this to empty to allow any collision.")]
@@ -30,4 +31,5 @@ namespace M8 {
                 callback.Invoke(collision);
         }
     }
+#endif
 }

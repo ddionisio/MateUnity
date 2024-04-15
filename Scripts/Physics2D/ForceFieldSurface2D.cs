@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Physics2D/ForceFieldSurface")]
     public class ForceFieldSurface2D : ForceFieldBase2D {
         public const int startCapacity = 8;
@@ -63,4 +64,5 @@ namespace M8 {
         }
         
     }
+#endif
 }

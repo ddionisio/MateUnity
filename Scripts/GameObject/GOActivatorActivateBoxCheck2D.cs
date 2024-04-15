@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     /// <summary>
     /// Do a periodic check for colliders based on layer mask, ensure Activators have a collider with matching layer.
     /// </summary>
@@ -22,4 +23,5 @@ namespace M8 {
             }
         }
     }
+#endif
 }

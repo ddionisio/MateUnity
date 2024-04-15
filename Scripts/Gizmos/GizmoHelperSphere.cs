@@ -23,11 +23,13 @@ namespace M8 {
                 else 
 #endif
                 {
+#if !M8_PHYSICS2D_DISABLED
                     CircleCollider2D sc2D = GetComponent<CircleCollider2D>();
                     if(sc2D != null) {
                         radius = sc2D.radius;
                         ofs += new Vector3(sc2D.offset.x, sc2D.offset.y);
                     }
+#endif
                 }
             }
 

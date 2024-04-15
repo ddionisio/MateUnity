@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     /// <summary>
     /// Default is essentially gravity.
     /// </summary>
@@ -258,4 +259,5 @@ namespace M8 {
             }
         }
     }
+#endif
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Physics2D/TriggerForce")]
     public class TriggerForce2D : MonoBehaviour {
         public enum Axis {
@@ -211,4 +212,5 @@ namespace M8 {
             //Debug.Log("removed: " + col.gameObject.name);
         }
     }
+#endif
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Physics2D/Spinner")]
     public class RigidBodySpinner2D : MonoBehaviour {
 
@@ -23,4 +24,5 @@ namespace M8 {
             target.MoveRotation(rot + rotDelta);
         }
     }
+#endif
 }

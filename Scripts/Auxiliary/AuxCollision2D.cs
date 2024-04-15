@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 namespace M8.Auxiliary {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Auxiliary/Collision2D")]
     public class AuxCollision2D : MonoBehaviour {
         public delegate void Callback(Collision2D coll);
@@ -24,4 +25,5 @@ namespace M8.Auxiliary {
                 exitCallback(coll);
         }
     }
+#endif
 }

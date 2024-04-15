@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Physics2D/RigidBodyController")]
     public class RigidBodyController2D : MonoBehaviour {
         public const int collisionInfoCapacity = 8;
@@ -494,4 +495,5 @@ namespace M8 {
                 body.AddForce(force * moveScale);
         }
     }
+#endif
 }

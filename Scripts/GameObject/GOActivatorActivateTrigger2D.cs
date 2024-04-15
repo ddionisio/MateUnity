@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+#if !M8_PHYSICS2D_DISABLED
     [AddComponentMenu("M8/Game Object/Activator Activate Trigger2D")]
     public class GOActivatorActivateTrigger2D : MonoBehaviour {
         void OnTriggerEnter2D(Collider2D collision) {
@@ -17,4 +18,5 @@ namespace M8 {
                 activator.Deactivate();
         }
     }
+#endif
 }
