@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if !M8_ASSET_BUNDLE_DISABLED
+using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 
@@ -58,3 +59,4 @@ namespace M8 {
         }
     }
 }
+#endif

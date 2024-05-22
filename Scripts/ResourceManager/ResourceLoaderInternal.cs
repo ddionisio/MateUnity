@@ -17,7 +17,13 @@ namespace M8 {
         }
 
         public override void UnloadResource(object obj) {
-            if(obj is GameObject || obj is Component || obj is ScriptableObject || obj is AssetBundle)
+            if(obj is GameObject 
+                || obj is Component 
+                || obj is ScriptableObject
+#if !M8_ASSET_BUNDLE_DISABLED
+                || obj is AssetBundle
+#endif
+                )
                 return;
             else
                 Resources.UnloadAsset(obj as Object);

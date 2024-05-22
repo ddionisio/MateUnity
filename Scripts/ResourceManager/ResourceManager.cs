@@ -47,12 +47,14 @@ namespace M8 {
                     case LoaderType.Internal:
                         loader = new ResourceLoaderInternal(path);
                         break;
+#if !M8_ASSET_BUNDLE_DISABLED
                     case LoaderType.LocalBundle:
                         loader = new ResourceLoaderLocalBundle(path);
                         break;
                     case LoaderType.OnlineBundle:
                         loader = new ResourceLoaderOnlineBundle(path);
                         break;
+#endif
                 }
 
                 counter = 1;

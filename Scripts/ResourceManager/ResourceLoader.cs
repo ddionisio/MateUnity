@@ -63,6 +63,7 @@ namespace M8 {
             }
         }
 
+#if !M8_ASSET_BUNDLE_DISABLED
         protected class RequestProcessBundle : IRequestProcess {
             private AssetBundleRequest mReq;
 
@@ -73,6 +74,7 @@ namespace M8 {
                 mReq = req;
             }
         }
+#endif
 
         protected class RequestInternal : Request {
             public override bool isDone { get { return errorCode == ErrorCode.None ? processor != null ? processor.isDone : false : true; } }
