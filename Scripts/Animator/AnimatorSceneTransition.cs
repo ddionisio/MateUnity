@@ -1,18 +1,18 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace M8 {
+	/// <summary>
+	/// Perform scene transition animation. Ensure clips used by states do not loop indefinitely.
+	/// Ideally the state setup would be: Idle -triggerExit-> Exiting -triggerEnter-> Entering -> Idle
+	/// </summary>
 	[AddComponentMenu("M8/Animator Unity/SceneTransition")]
 	[RequireComponent(typeof(Animator))]
 	public class AnimatorSceneTransition : MonoBehaviour, SceneManager.ITransition {		
 		public AnimatorParamTrigger triggerEnter;
 		public AnimatorParamTrigger triggerExit;
-		public float waitDelay = 0.2f;
 
 		public Animator animator { get; private set; }
-
-		private WaitForSeconds mWait;
 
 		void OnDestroy() {
 			if(SceneManager.isInstantiated)
@@ -23,9 +23,6 @@ namespace M8 {
 			SceneManager.instance.AddTransition(this);
 
 			animator = GetComponent<Animator>();
-
-			if(waitDelay > 0f)
-				mWait = new WaitForSeconds(waitDelay);
 		}
 
 		int SceneManager.ITransition.priority { get { return 0; } }
@@ -33,13 +30,25 @@ namespace M8 {
 		IEnumerator SceneManager.ITransition.Out() {
 			triggerExit.Set(animator);
 
-			yield return mWait;
+			while(true) {
+				yield return null;
+
+				var state = animator.GetCurrentAnimatorStateInfo(0);
+				if(state.normalizedTime >= 1f)
+					break;
+			}
 		}
 
 		IEnumerator SceneManager.ITransition.In() {
 			triggerEnter.Set(animator);
 
-			yield return mWait;
+			while(true) {
+				yield return null;
+
+				var state = animator.GetCurrentAnimatorStateInfo(0);
+				if(state.normalizedTime >= 1f)
+					break;
+			}
 		}
 	}
 }
