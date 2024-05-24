@@ -4,14 +4,15 @@ using UnityEngine;
 
 namespace M8 {
 	[AddComponentMenu("M8/Animator Unity/SceneTransition")]
-	public class AnimatorSceneTransition : MonoBehaviour, SceneManager.ITransition {
-		public Animator animator;
-		public string triggerEnter;
-		public string triggerExit;
+	[RequireComponent(typeof(Animator))]
+	public class AnimatorSceneTransition : MonoBehaviour, SceneManager.ITransition {		
+		public AnimatorParamTrigger triggerEnter;
+		public AnimatorParamTrigger triggerExit;
 		public float waitDelay = 0.2f;
 
-		private int mTriggerEnterInd = -1;
-		private int mTriggerExitInd = -1;
+		public Animator animator { get; private set; }
+
+		private WaitForSeconds mWait;
 
 		void OnDestroy() {
 			if(SceneManager.isInstantiated)
@@ -21,32 +22,24 @@ namespace M8 {
 		void Awake() {
 			SceneManager.instance.AddTransition(this);
 
-			//grab trigger indices
-			var parms = animator.parameters;
-			for(int i = 0; i < parms.Length; i++) {
-				if(parms[i].name == triggerEnter)
-					mTriggerEnterInd = i;
-				else if(parms[i].name == triggerExit)
-					mTriggerExitInd = i;
-			}
+			animator = GetComponent<Animator>();
+
+			if(waitDelay > 0f)
+				mWait = new WaitForSeconds(waitDelay);
 		}
 
 		int SceneManager.ITransition.priority { get { return 0; } }
 
 		IEnumerator SceneManager.ITransition.Out() {
-			if(mTriggerExitInd != -1)
-				animator.SetTrigger(mTriggerExitInd);
+			triggerExit.Set(animator);
 
-			if(waitDelay > 0f)
-				yield return new WaitForSeconds(waitDelay);
+			yield return mWait;
 		}
 
-		IEnumerator SceneManager.ITransition.In() {			
+		IEnumerator SceneManager.ITransition.In() {
+			triggerEnter.Set(animator);
 
-			animator.SetTrigger(mTriggerEnterInd);
-
-			if(waitDelay > 0f)
-				yield return new WaitForSeconds(waitDelay);
+			yield return mWait;
 		}
 	}
 }
