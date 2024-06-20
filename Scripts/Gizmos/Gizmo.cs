@@ -139,5 +139,29 @@ namespace M8 {
             Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(-extent.x, extent.y, extent.z)));
             Gizmos.DrawLine(mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, -extent.z)), mtx.MultiplyPoint3x4(center + new Vector3(extent.x, extent.y, extent.z)));
         }
-    }
+
+        public static void DrawStepLineX(Transform t, Vector3 localPoint, float length) {
+			Matrix4x4 mtx = t.localToWorldMatrix;
+
+            var ext = length * 0.5f;
+
+            Gizmos.DrawLine(mtx.MultiplyPoint3x4(localPoint + new Vector3(-ext, 0f, 0f)), mtx.MultiplyPoint3x4(localPoint + new Vector3(ext, 0f, 0f)));
+		}
+
+		public static void DrawStepLineY(Transform t, Vector3 localPoint, float length) {
+			Matrix4x4 mtx = t.localToWorldMatrix;
+
+			var ext = length * 0.5f;
+
+			Gizmos.DrawLine(mtx.MultiplyPoint3x4(localPoint + new Vector3(0f, -ext, 0f)), mtx.MultiplyPoint3x4(localPoint + new Vector3(0f, ext, 0f)));
+		}
+
+		public static void DrawStepLineZ(Transform t, Vector3 localPoint, float length) {
+			Matrix4x4 mtx = t.localToWorldMatrix;
+
+			var ext = length * 0.5f;
+
+			Gizmos.DrawLine(mtx.MultiplyPoint3x4(localPoint + new Vector3(0f, 0f, -ext)), mtx.MultiplyPoint3x4(localPoint + new Vector3(0f, 0f, ext)));
+		}
+	}
 }
