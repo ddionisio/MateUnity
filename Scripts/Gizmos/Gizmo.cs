@@ -87,7 +87,11 @@ namespace M8 {
             Gizmos.DrawRay(end, left * arrowHeadLength);
         }
 
-        public static void DrawWireRect(Vector3 position, float rotation, Vector2 extent) {
+		public static void Arrow2D(Vector2 pos, Vector2 direction, float arrowHeadLength = 0.25f, float arrowHeadAngle = 20.0f) {
+            ArrowLine2D(pos, pos + direction, arrowHeadLength, arrowHeadAngle);
+		}
+
+		public static void DrawWireRect(Vector3 position, float rotation, Vector2 extent) {
             var rot = Quaternion.Euler(0f, 0f, rotation);
             Gizmos.DrawLine(position + rot * new Vector3(-extent.x, -extent.y, 0f), position + rot * new Vector3(extent.x, -extent.y, 0f));
             Gizmos.DrawLine(position + rot * new Vector3(-extent.x, -extent.y, 0f), position + rot * new Vector3(-extent.x, extent.y, 0f));
