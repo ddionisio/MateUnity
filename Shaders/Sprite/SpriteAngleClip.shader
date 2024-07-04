@@ -47,6 +47,7 @@ Shader "M8/Sprite/ClipAngle"
 			float _Angle;
 			float _AngleMin;
 			float _AngleMax;
+			float2 _UVOfs;
 
 			fixed4 SpriteFrag_Angle(v2f IN) : COLOR
 			{
@@ -59,7 +60,7 @@ Shader "M8/Sprite/ClipAngle"
                 float offset360 = clamp(0, 360, endAngle - 360);
 
                 // convert uv to atan coordinates
-                float2 atan2Coord = float2(lerp(-1, 1, IN.texcoord.x), lerp(-1, 1, IN.texcoord.y));
+                float2 atan2Coord = float2(lerp(-1, 1, IN.texcoord.x + _UVOfs.x), lerp(-1, 1, IN.texcoord.y + _UVOfs.y));
                 float atanAngle = atan2(atan2Coord.y, atan2Coord.x) * 57.3; // angle in degrees
 
                 // convert angle to 360 system

@@ -62,6 +62,10 @@ namespace M8 {
             }
         }
 
+        [SerializeField]
+        Vector2 _ofs;
+
+        private static int mUVOfsId = Shader.PropertyToID("_UVOfs");
         private static int mAngleId = Shader.PropertyToID("_Angle");
         private static int mAngleMinId = Shader.PropertyToID("_AngleMin");
         private static int mAngleMaxId = Shader.PropertyToID("_AngleMax");
@@ -75,6 +79,8 @@ namespace M8 {
                 mMatInst.SetFloat(mAngleId, _angle);
                 mMatInst.SetFloat(mAngleMinId, _angleMin);
                 mMatInst.SetFloat(mAngleMaxId, _angleMax);
+
+                //mMatInst.SetVector(mUVOfsId, _ofs);
             }
             else
                 Awake();
@@ -97,7 +103,24 @@ namespace M8 {
                 mMatInst.SetFloat(mAngleMinId, _angleMin);
                 mMatInst.SetFloat(mAngleMaxId, _angleMax);
 
-                mIsInit = true;
+                Vector2 uvMin = Vector2.one, uvMax = Vector2.zero;
+
+                var uvs = mSprRender.sprite.uv;
+                for(int i = 0; i < uvs.Length; i++) {
+                    if(uvs[i].x < uvMin.x)
+                        uvMin.x = uvs[i].x;
+                    if(uvs[i].y < uvMin.y)
+                        uvMin.y = uvs[i].y;
+
+					if(uvs[i].x > uvMax.x)
+						uvMax.x = uvs[i].x;
+					if(uvs[i].y > uvMax.y)
+						uvMax.y = uvs[i].y;
+				}
+
+				mMatInst.SetVector(mUVOfsId, new Vector2(0.5f, 0.5f) - (uvMax + uvMin) * 0.5f);
+
+				mIsInit = true;
             }
         }
 
