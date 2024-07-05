@@ -62,9 +62,6 @@ namespace M8 {
             }
         }
 
-        [SerializeField]
-        Vector2 _ofs;
-
         private static int mUVOfsId = Shader.PropertyToID("_UVOfs");
         private static int mAngleId = Shader.PropertyToID("_Angle");
         private static int mAngleMinId = Shader.PropertyToID("_AngleMin");
@@ -72,6 +69,9 @@ namespace M8 {
 
         private SpriteRenderer mSprRender;
         private Material mMatInst;
+
+        private Vector2 mUVOfs;
+
         private bool mIsInit;
 
         public void Refresh() {
@@ -80,8 +80,11 @@ namespace M8 {
                 mMatInst.SetFloat(mAngleMinId, _angleMin);
                 mMatInst.SetFloat(mAngleMaxId, _angleMax);
 
-                //mMatInst.SetVector(mUVOfsId, _ofs);
-            }
+                if(!Application.isPlaying) //ensure uv offset is correct when not running for display purpose
+					GenerateUVOfs();
+
+				mMatInst.SetVector(mUVOfsId, mUVOfs);
+			}
             else
                 Awake();
         }
@@ -89,7 +92,9 @@ namespace M8 {
         void OnEnable() {
             if(!mIsInit)
                 Awake();
-        }
+            else
+                Refresh();
+		}
 
         void Awake() {
             if(_clipAngleMaterial) {
@@ -103,22 +108,9 @@ namespace M8 {
                 mMatInst.SetFloat(mAngleMinId, _angleMin);
                 mMatInst.SetFloat(mAngleMaxId, _angleMax);
 
-                Vector2 uvMin = Vector2.one, uvMax = Vector2.zero;
+                GenerateUVOfs();
 
-                var uvs = mSprRender.sprite.uv;
-                for(int i = 0; i < uvs.Length; i++) {
-                    if(uvs[i].x < uvMin.x)
-                        uvMin.x = uvs[i].x;
-                    if(uvs[i].y < uvMin.y)
-                        uvMin.y = uvs[i].y;
-
-					if(uvs[i].x > uvMax.x)
-						uvMax.x = uvs[i].x;
-					if(uvs[i].y > uvMax.y)
-						uvMax.y = uvs[i].y;
-				}
-
-				mMatInst.SetVector(mUVOfsId, new Vector2(0.5f, 0.5f) - (uvMax + uvMin) * 0.5f);
+				mMatInst.SetVector(mUVOfsId, mUVOfs);
 
 				mIsInit = true;
             }
@@ -134,5 +126,28 @@ namespace M8 {
                 mMatInst = null;
             }
         }
+
+        private void GenerateUVOfs() {
+			if(mSprRender.sprite) {
+				Vector2 uvMin = Vector2.one, uvMax = Vector2.zero;
+
+				var uvs = mSprRender.sprite.uv;
+				for(int i = 0; i < uvs.Length; i++) {
+					if(uvs[i].x < uvMin.x)
+						uvMin.x = uvs[i].x;
+					if(uvs[i].y < uvMin.y)
+						uvMin.y = uvs[i].y;
+
+					if(uvs[i].x > uvMax.x)
+						uvMax.x = uvs[i].x;
+					if(uvs[i].y > uvMax.y)
+						uvMax.y = uvs[i].y;
+				}
+
+				mUVOfs = new Vector2(0.5f, 0.5f) - (uvMax + uvMin) * 0.5f;
+			}
+			else
+				mUVOfs = Vector2.zero;
+		}
     }
 }
