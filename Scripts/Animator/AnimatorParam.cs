@@ -67,4 +67,77 @@ namespace M8 {
 			animator.SetFloat(nameID, val);
 		}
 	}
+
+	//target version
+
+	public abstract class AnimatorTargetParam {
+		[SerializeField]
+		Animator _target;
+
+		[SerializeField]
+		int _nameID;
+
+		public abstract AnimatorControllerParameterType paramType { get; }
+
+		public Animator target { get { return _target; } }
+
+		public int nameID { get { return _nameID; } }
+	}
+
+	public abstract class AnimatorTargetParamValue<T> : AnimatorTargetParam {
+		public abstract T Get();
+		public abstract void Set(T val);
+	}
+
+	[Serializable]
+	public class AnimatorTargetParamTrigger : AnimatorTargetParam {
+		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Trigger; } }
+
+		public void Set() {
+			target.SetTrigger(nameID);
+		}
+
+		public void Reset() {
+			target.ResetTrigger(nameID);
+		}
+	}
+
+	[Serializable]
+	public class AnimatorTargetParamBool : AnimatorTargetParamValue<bool> {
+		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Bool; } }
+
+		public override bool Get() {
+			return target.GetBool(nameID);
+		}
+
+		public override void Set(bool val) {
+			target.SetBool(nameID, val);
+		}
+	}
+
+	[Serializable]
+	public class AnimatorTargetParamInt : AnimatorTargetParamValue<int> {
+		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Int; } }
+
+		public override int Get() {
+			return target.GetInteger(nameID);
+		}
+
+		public override void Set(int val) {
+			target.SetInteger(nameID, val);
+		}
+	}
+
+	[Serializable]
+	public class AnimatorTargetParamFloat : AnimatorTargetParamValue<float> {
+		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Float; } }
+
+		public override float Get() {
+			return target.GetFloat(nameID);
+		}
+
+		public override void Set(float val) {
+			target.SetFloat(nameID, val);
+		}
+	}
 }
