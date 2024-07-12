@@ -15,30 +15,47 @@ namespace M8 {
             string[] layerNames = GetSortingLayerNames();
 
             int selected = -1;
+
             //What is selected?
-            string sName = property.stringValue;
-            for(int i = 0; i < layerNames.Length; i++) {
-                //Debug.Log(sID + " " + layerID[i]);
-                if(sName == layerNames[i]) {
-                    selected = i;
+            if(property.propertyType == SerializedPropertyType.String) {
+                string sName = property.stringValue;
+                for(int i = 0; i < layerNames.Length; i++) {
+                    //Debug.Log(sID + " " + layerID[i]);
+                    if(sName == layerNames[i]) {
+                        selected = i;
+                        break;
+                    }
                 }
             }
+            else if(property.propertyType == SerializedPropertyType.Integer) { //use ID
+                int ID = property.intValue;
+				for(int i = 0; i < layerNames.Length; i++) {
+					//Debug.Log(sID + " " + layerID[i]);
+					if(SortingLayer.NameToID(layerNames[i]) == ID) {
+						selected = i;
+						break;
+					}
+				}
+			}
 
             if(selected == -1) {
                 //Select Default.
                 for(int i = 0; i < layerNames.Length; i++) {
                     if(layerNames[i] == "Default") {
                         selected = i;
+                        break;
                     }
                 }
             }
 
             selected = EditorGUI.Popup(position, selected, layerNames);
 
-            //Translate to ID
-            property.stringValue = layerNames[selected];
+            if(property.propertyType == SerializedPropertyType.String)
+                property.stringValue = layerNames[selected];
+            else if(property.propertyType == SerializedPropertyType.Integer) //Translate to ID
+                property.intValue = SortingLayer.NameToID(layerNames[selected]);
 
-            EditorGUI.EndProperty();
+			EditorGUI.EndProperty();
         }
 
         public string[] GetSortingLayerNames() {
