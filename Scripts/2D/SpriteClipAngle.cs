@@ -127,7 +127,11 @@ namespace M8 {
             }
         }
 
-        private void GenerateUVOfs() {
+        void OnDidApplyAnimationProperties() {
+            Refresh();
+		}
+
+		private void GenerateUVOfs() {
 			if(mSprRender.sprite) {
 				Vector2 uvMin = Vector2.one, uvMax = Vector2.zero;
 

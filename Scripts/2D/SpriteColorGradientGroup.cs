@@ -17,16 +17,17 @@ namespace M8 {
 		public Gradient gradient;
 
 		[Range(0f, 1f)]
-		public float initialScale;
+		[SerializeField]
+		float _scale;
 
 		public bool applyOnAwake;
 
 		public float scale {
-			get { return mScale; }
+			get { return _scale; }
 			set {
 				var val = Mathf.Clamp01(value);
-				if(mScale != val) {
-					mScale = val;
+				if(_scale != val) {
+					_scale = val;
 
 					if(mIsApplied)
 						ApplyGradient();
@@ -35,8 +36,6 @@ namespace M8 {
 		}
 
 		private Color[] mGraphicDefaultColors;
-
-		private float mScale;
 
 		private bool mIsApplied = false;
 
@@ -66,10 +65,13 @@ namespace M8 {
 		}
 
 		void Awake() {
-			mScale = initialScale;
-
 			if(applyOnAwake)
 				Apply();
+		}
+
+		void OnDidApplyAnimationProperties() {
+			mIsApplied = true;
+			ApplyGradient();
 		}
 
 		private void ApplyGradient() {
@@ -85,7 +87,7 @@ namespace M8 {
 				}
 			}
 
-			var clr = gradient.Evaluate(mScale);
+			var clr = gradient.Evaluate(_scale);
 
 			switch(type) {
 				case Type.Override:
