@@ -17,6 +17,7 @@ namespace M8 {
 			var flipXProp = serializedObject.FindProperty("_flipX");
 			var flipYProp = serializedObject.FindProperty("_flipY");
 			var gradientModeProp = serializedObject.FindProperty("_gradientMode");
+			var gradientOffsetProp = serializedObject.FindProperty("_gradientOffset");
 			var clrsProp = serializedObject.FindProperty("_colors");
 			var sortLayerProp = serializedObject.FindProperty("_sortingLayer");
 			var sortOrderProp = serializedObject.FindProperty("_sortingOrder");
@@ -82,6 +83,8 @@ namespace M8 {
 
 			refreshGeometry = refreshGeometry || EditorGUI.EndChangeCheck();
 			//
+
+			EditorExt.Utility.DrawSeparator();
 
 			//colors
 			EditorGUI.BeginChangeCheck();
@@ -173,6 +176,34 @@ namespace M8 {
 					break;
 			}
 
+			if(!(gradientMode == SpriteGeometryGrid.ColorGradientMode.None || gradientMode == SpriteGeometryGrid.ColorGradientMode.Solid)) {
+				var ofs = gradientOffsetProp.vector2Value;
+
+				if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Horizontal || gradientMode == SpriteGeometryGrid.ColorGradientMode.Both) {
+					EditorGUILayout.BeginHorizontal();
+					EditorGUILayout.LabelField("Gradient Offset");
+
+					ofs.x = EditorGUILayout.Slider(ofs.x, -1f, 1f);
+
+					EditorGUILayout.EndHorizontal();
+				}
+								
+				if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Vertical || gradientMode == SpriteGeometryGrid.ColorGradientMode.Both) {
+					EditorGUILayout.BeginHorizontal();
+
+					if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Vertical)
+						EditorGUILayout.LabelField("Gradient Offset");
+					else
+						EditorGUILayout.LabelField("");
+
+					ofs.y = EditorGUILayout.Slider(ofs.y, -1f, 1f);
+
+					EditorGUILayout.EndHorizontal();
+				}
+
+				gradientOffsetProp.vector2Value = ofs;
+			}
+
 			//EditorGUIUtility.labelWidth = 0f;
 
 			refreshColor = EditorGUI.EndChangeCheck();
@@ -209,6 +240,8 @@ namespace M8 {
 
 			refreshMaterialProp = EditorGUI.EndChangeCheck();
 			//
+
+			EditorExt.Utility.DrawSeparator();
 
 			//mesh properties
 			EditorGUI.BeginChangeCheck();

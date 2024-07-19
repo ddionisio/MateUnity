@@ -43,8 +43,11 @@ namespace M8 {
 		ColorGradientMode _gradientMode = ColorGradientMode.Solid;
 
 		[SerializeField]
-		Color[] _colors = new Color[] { Color.white, Color.white };
+		Vector2 _gradientOffset;
 
+		[SerializeField]
+		Color[] _colors = new Color[] { Color.white, Color.white };
+				
 		[SerializeField]
 		[SortingLayer]
 		int _sortingLayer = 0;
@@ -242,22 +245,31 @@ namespace M8 {
 		}
 
 		public void RefreshVertexColors() {
-			var clrs = mMesh.colors32;
-
-			var xCount = _columnCount + 1;
-			var yCount = _rowCount + 1;
-
-			for(int r = 0; r < yCount; r++) {
-				var yt = (float)r / _rowCount;
-
-				for(int c = 0; c < xCount; c++) {
-					var xt = (float)c / _columnCount;
-
-					clrs[Util.CellToIndex(r, c, xCount)] = GetColorRange(yt, xt);
-				}
+			if(_gradientMode == ColorGradientMode.None) {
+				mMesh.colors32 = null;
 			}
+			else {
+				var clrs = mMesh.colors32;
 
-			mMesh.colors32 = clrs;
+				var xCount = _columnCount + 1;
+				var yCount = _rowCount + 1;
+				var vtxCount = xCount * yCount;
+
+				if(clrs == null || clrs.Length != vtxCount)
+					clrs = new Color32[vtxCount];
+
+				for(int r = 0; r < yCount; r++) {
+					var yt = (float)r / _rowCount;
+
+					for(int c = 0; c < xCount; c++) {
+						var xt = (float)c / _columnCount;
+
+						clrs[Util.CellToIndex(r, c, xCount)] = GetColorRange(yt, xt);
+					}
+				}
+
+				mMesh.colors32 = clrs;
+			}
 		}
 
 		void OnDestroy() {
@@ -270,6 +282,9 @@ namespace M8 {
 		}
 				
 		private Color32 GetColorRange(float yt, float xt) {
+			yt = Mathf.Clamp01(yt + _gradientOffset.y);
+			xt = Mathf.Clamp01(xt + _gradientOffset.x);
+
 			switch(_gradientMode) {
 				case ColorGradientMode.Solid:
 					if(_colors == null || _colors.Length < 2)
@@ -358,7 +373,7 @@ namespace M8 {
 			var uvs = new Vector2[vtxCount];
 			var tris = new int[trisCount];
 
-			var clrs = new Color32[vtxCount];
+			Color32[] clrs = _gradientMode != ColorGradientMode.None ? new Color32[vtxCount] : null;
 
 			for(int r = 0; r < yCount; r++) {
 				var yt = (float)r / _rowCount;
@@ -382,7 +397,8 @@ namespace M8 {
 
 					uvs[Util.CellToIndex(r, c, xCount)] = new Vector2(u, v);
 
-					clrs[Util.CellToIndex(r, c, xCount)] = GetColorRange(yt, xt);
+					if(clrs != null)
+						clrs[Util.CellToIndex(r, c, xCount)] = GetColorRange(yt, xt);
 				}
 			}
 
