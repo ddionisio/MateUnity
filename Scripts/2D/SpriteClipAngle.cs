@@ -26,8 +26,13 @@ namespace M8 {
                 if(_angle != value) {
                     _angle = value;
 
-                    if(mIsInit)
-                        mMatInst.SetFloat(mAngleId, _angle);
+                    if(mIsInit) {
+						mSprRender.GetPropertyBlock(mMatPropBlock);
+
+						mMatPropBlock.SetFloat(mAngleId, _angle);
+
+						mSprRender.SetPropertyBlock(mMatPropBlock);
+					}
                     else
                         Awake();
                 }
@@ -40,8 +45,13 @@ namespace M8 {
                 if(_angleMin != value) {
                     _angleMin = value;
 
-                    if(mIsInit)
-                        mMatInst.SetFloat(mAngleMinId, _angleMin);
+                    if(mIsInit) {
+						mSprRender.GetPropertyBlock(mMatPropBlock);
+
+						mMatPropBlock.SetFloat(mAngleMinId, _angleMin);
+
+						mSprRender.SetPropertyBlock(mMatPropBlock);
+					}
                     else
                         Awake();
                 }
@@ -54,8 +64,13 @@ namespace M8 {
                 if(_angleMax != value) {
                     _angleMax = value;
 
-                    if(mIsInit)
-                        mMatInst.SetFloat(mAngleMaxId, _angleMax);
+                    if(mIsInit) {
+                        mSprRender.GetPropertyBlock(mMatPropBlock);
+
+                        mMatPropBlock.SetFloat(mAngleMaxId, _angleMax);
+
+						mSprRender.SetPropertyBlock(mMatPropBlock);
+					}
                     else
                         Awake();
                 }
@@ -68,62 +83,39 @@ namespace M8 {
         private static int mAngleMaxId = Shader.PropertyToID("_AngleMax");
 
         private SpriteRenderer mSprRender;
-        private Material mMatInst;
 
-        private Vector2 mUVOfs;
+		private MaterialPropertyBlock mMatPropBlock;
+
+		private Vector2 mUVOfs;
 
         private bool mIsInit;
 
         public void Refresh() {
             if(mIsInit) {
-                mMatInst.SetFloat(mAngleId, _angle);
-                mMatInst.SetFloat(mAngleMinId, _angleMin);
-                mMatInst.SetFloat(mAngleMaxId, _angleMax);
-
                 if(!Application.isPlaying) //ensure uv offset is correct when not running for display purpose
 					GenerateUVOfs();
 
-				mMatInst.SetVector(mUVOfsId, mUVOfs);
+                RefreshMaterialProps();
 			}
             else
                 Awake();
         }
 
         void OnEnable() {
-            if(!mIsInit)
-                Awake();
-            else
-                Refresh();
+			Refresh();
 		}
 
         void Awake() {
             if(_clipAngleMaterial) {
                 mSprRender = GetComponent<SpriteRenderer>();
-
-                mMatInst = new Material(_clipAngleMaterial);
-
-                mSprRender.sharedMaterial = mMatInst;
-
-                mMatInst.SetFloat(mAngleId, _angle);
-                mMatInst.SetFloat(mAngleMinId, _angleMin);
-                mMatInst.SetFloat(mAngleMaxId, _angleMax);
-
+                                
                 GenerateUVOfs();
 
-				mMatInst.SetVector(mUVOfsId, mUVOfs);
+				mMatPropBlock = new MaterialPropertyBlock();
+
+				RefreshMaterialProps();
 
 				mIsInit = true;
-            }
-        }
-
-        void OnDestroy() {
-            if(mMatInst) {
-                if(Application.isPlaying)
-                    Destroy(mMatInst);
-                else
-                    DestroyImmediate(mMatInst);
-
-                mMatInst = null;
             }
         }
 
@@ -153,5 +145,17 @@ namespace M8 {
 			else
 				mUVOfs = Vector2.zero;
 		}
+
+        private void RefreshMaterialProps() {
+            mSprRender.GetPropertyBlock(mMatPropBlock);
+
+			mMatPropBlock.SetFloat(mAngleId, _angle);
+			mMatPropBlock.SetFloat(mAngleMinId, _angleMin);
+			mMatPropBlock.SetFloat(mAngleMaxId, _angleMax);
+
+			mMatPropBlock.SetVector(mUVOfsId, mUVOfs);
+
+			mSprRender.SetPropertyBlock(mMatPropBlock);
+        }
     }
 }
