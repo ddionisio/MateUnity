@@ -1,3 +1,4 @@
+using DG.DemiEditor;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -18,7 +19,8 @@ namespace M8 {
 			var flipYProp = serializedObject.FindProperty("_flipY");
 			var gradientModeProp = serializedObject.FindProperty("_gradientMode");
 			var gradientOffsetProp = serializedObject.FindProperty("_gradientOffset");
-			var clrsProp = serializedObject.FindProperty("_colors");
+			var gradientsProp = serializedObject.FindProperty("_gradients");
+			var clrProp = serializedObject.FindProperty("_color");
 			var sortLayerProp = serializedObject.FindProperty("_sortingLayer");
 			var sortOrderProp = serializedObject.FindProperty("_sortingOrder");
 
@@ -95,91 +97,69 @@ namespace M8 {
 
 			gradientModeProp.intValue = (int)gradientMode;
 
-			SerializedProperty clr1, clr2, clr3, clr4;
+			SerializedProperty grad1Prop, grad2Prop;
 
 			switch(gradientMode) {
 				case SpriteGeometryGrid.ColorGradientMode.None:
-					clrsProp.arraySize = 1;
+					gradientsProp.arraySize = 0;
 					break;
 
 				case SpriteGeometryGrid.ColorGradientMode.Solid:
-					clrsProp.arraySize = 2;
+					gradientsProp.arraySize = 1;
 
-					EditorGUILayout.BeginHorizontal();
-					EditorGUILayout.LabelField("");
+					grad1Prop = gradientsProp.GetArrayElementAtIndex(0);
 
-					clr1 = clrsProp.GetArrayElementAtIndex(1);
-					clr1.colorValue = EditorGUILayout.ColorField(clr1.colorValue);
+					var grad1 = grad1Prop.boxedValue as Gradient;
 
-					EditorGUILayout.EndHorizontal();
+					var solidClr = grad1.Evaluate(0f);
+
+					solidClr = EditorGUILayout.ColorField(" ", solidClr);
+
+					grad1.mode = GradientMode.Fixed;
+					grad1.SetKeys(new GradientColorKey[] { new GradientColorKey(solidClr, 0f) }, new GradientAlphaKey[] { new GradientAlphaKey(solidClr.a, 0f) });
+
+					grad1Prop.boxedValue = grad1;
 					break;
 
 				case SpriteGeometryGrid.ColorGradientMode.Horizontal:
-					clrsProp.arraySize = 3;
+					gradientsProp.arraySize = 1;
 
-					EditorGUILayout.BeginHorizontal();
-					EditorGUILayout.LabelField("");
+					grad1Prop = gradientsProp.GetArrayElementAtIndex(0);
 
-					clr1 = clrsProp.GetArrayElementAtIndex(1);
-					clr1.colorValue = EditorGUILayout.ColorField(clr1.colorValue);
-
-					clr2 = clrsProp.GetArrayElementAtIndex(2);
-					clr2.colorValue = EditorGUILayout.ColorField(clr2.colorValue);
-
-					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.PropertyField(grad1Prop, new GUIContent(" "));
 					break;
 
 				case SpriteGeometryGrid.ColorGradientMode.Vertical:
-					clrsProp.arraySize = 3;
+					gradientsProp.arraySize = 1;
 
-					EditorGUILayout.BeginHorizontal();
-					EditorGUILayout.LabelField("");
+					grad1Prop = gradientsProp.GetArrayElementAtIndex(0);
 
-					clr1 = clrsProp.GetArrayElementAtIndex(1);
-					clr1.colorValue = EditorGUILayout.ColorField(clr1.colorValue);
-
-					EditorGUILayout.EndHorizontal();
-
-					EditorGUILayout.BeginHorizontal();
-					EditorGUILayout.LabelField("");
-
-					clr2 = clrsProp.GetArrayElementAtIndex(2);
-					clr2.colorValue = EditorGUILayout.ColorField(clr2.colorValue);
-
-					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.PropertyField(grad1Prop, new GUIContent(" "));
 					break;
 
 				case SpriteGeometryGrid.ColorGradientMode.Both:
-					clrsProp.arraySize = 5;
+					gradientsProp.arraySize = 2;
 
-					EditorGUILayout.BeginHorizontal();
-					EditorGUILayout.LabelField("");
+					grad1Prop = gradientsProp.GetArrayElementAtIndex(0);
+					grad2Prop = gradientsProp.GetArrayElementAtIndex(1);
 
-					clr1 = clrsProp.GetArrayElementAtIndex(1);
-					clr1.colorValue = EditorGUILayout.ColorField(clr1.colorValue);
+					EditorGUILayout.PropertyField(grad1Prop, new GUIContent("Left"));
+					EditorGUILayout.PropertyField(grad2Prop, new GUIContent("Right"));
+					break;
 
-					clr3 = clrsProp.GetArrayElementAtIndex(3);
-					clr3.colorValue = EditorGUILayout.ColorField(clr3.colorValue);
+				case SpriteGeometryGrid.ColorGradientMode.Circular:
+					gradientsProp.arraySize = 1;
 
-					EditorGUILayout.EndHorizontal();
+					grad1Prop = gradientsProp.GetArrayElementAtIndex(0);
 
-					EditorGUILayout.BeginHorizontal();
-					EditorGUILayout.LabelField("");
-
-					clr2 = clrsProp.GetArrayElementAtIndex(2);
-					clr2.colorValue = EditorGUILayout.ColorField(clr2.colorValue);
-
-					clr4 = clrsProp.GetArrayElementAtIndex(4);
-					clr4.colorValue = EditorGUILayout.ColorField(clr4.colorValue);
-
-					EditorGUILayout.EndHorizontal();
+					EditorGUILayout.PropertyField(grad1Prop, new GUIContent(" "));
 					break;
 			}
 
 			if(!(gradientMode == SpriteGeometryGrid.ColorGradientMode.None || gradientMode == SpriteGeometryGrid.ColorGradientMode.Solid)) {
 				var ofs = gradientOffsetProp.vector2Value;
 
-				if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Horizontal || gradientMode == SpriteGeometryGrid.ColorGradientMode.Both) {
+				if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Horizontal || gradientMode == SpriteGeometryGrid.ColorGradientMode.Circular || gradientMode == SpriteGeometryGrid.ColorGradientMode.Both) {
 					EditorGUILayout.BeginHorizontal();
 					EditorGUILayout.LabelField("Gradient Offset");
 
@@ -188,7 +168,7 @@ namespace M8 {
 					EditorGUILayout.EndHorizontal();
 				}
 								
-				if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Vertical || gradientMode == SpriteGeometryGrid.ColorGradientMode.Both) {
+				if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Vertical || gradientMode == SpriteGeometryGrid.ColorGradientMode.Circular || gradientMode == SpriteGeometryGrid.ColorGradientMode.Both) {
 					EditorGUILayout.BeginHorizontal();
 
 					if(gradientMode == SpriteGeometryGrid.ColorGradientMode.Vertical)
@@ -215,8 +195,6 @@ namespace M8 {
 			EditorGUI.BeginChangeCheck();
 
 			//color
-			var clrProp = clrsProp.GetArrayElementAtIndex(0);
-
 			clrProp.colorValue = EditorGUILayout.ColorField("Color", clrProp.colorValue);
 
 			//flip

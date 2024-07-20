@@ -14,7 +14,8 @@ namespace M8 {
 			Solid,
 			Horizontal,
 			Vertical,
-			Both
+			Both,
+			Circular
 		}
 
 		[SerializeField]
@@ -40,13 +41,16 @@ namespace M8 {
 		bool _flipY;
 
 		[SerializeField]
-		ColorGradientMode _gradientMode = ColorGradientMode.Solid;
+		ColorGradientMode _gradientMode = ColorGradientMode.None;
+
+		[SerializeField]
+		Gradient[] _gradients = new Gradient[0];
 
 		[SerializeField]
 		Vector2 _gradientOffset;
 
 		[SerializeField]
-		Color[] _colors = new Color[] { Color.white, Color.white };
+		Color _color = Color.white;
 				
 		[SerializeField]
 		[SortingLayer]
@@ -88,14 +92,10 @@ namespace M8 {
 		}
 
 		public Color color {
-			get { return _colors != null && _colors.Length > 0 ? _colors[0] : Color.white; }
+			get { return _color; }
 			set {
-				if(_colors == null || _colors.Length == 0)
-					_colors = new Color[1];
-
-				var clr = _colors[0];
-				if(clr != value) {
-					_colors[0] = value;
+				if(_color != value) {
+					_color = value;
 
 					if(isInit) {
 						if(mMatPropBlock == null)
@@ -103,7 +103,7 @@ namespace M8 {
 						else {
 							_meshRenderer.GetPropertyBlock(mMatPropBlock);
 
-							mMatPropBlock.SetColor(mColorPropID, value);
+							mMatPropBlock.SetColor(mColorPropID, _color);
 
 							_meshRenderer.SetPropertyBlock(mMatPropBlock);
 						}
@@ -238,7 +238,7 @@ namespace M8 {
 			_meshRenderer.GetPropertyBlock(mMatPropBlock);
 
 			mMatPropBlock.SetTexture(mTexPropID, _sprite.texture);
-			mMatPropBlock.SetColor(mColorPropID, _colors != null && _colors.Length > 0 ? _colors[0] : Color.white);
+			mMatPropBlock.SetColor(mColorPropID, _color);
 			mMatPropBlock.SetVector(mFlipPropID, new Vector4(_flipX ? -1f : 1f, _flipY ? -1f : 1f));
 
 			_meshRenderer.SetPropertyBlock(mMatPropBlock);
@@ -272,6 +272,11 @@ namespace M8 {
 			}
 		}
 
+		void OnDidApplyAnimationProperties() {
+			RefreshMeshRenderer();
+			RefreshMaterialProperty();
+		}
+
 		void OnDestroy() {
 			ClearMesh();
 		}
@@ -287,28 +292,27 @@ namespace M8 {
 
 			switch(_gradientMode) {
 				case ColorGradientMode.Solid:
-					if(_colors == null || _colors.Length < 2)
-						return new Color32(255, 255, 255, 255);
-
-					return _colors[1];
+					return _gradients != null && _gradients.Length > 0 ? _gradients[0].Evaluate(0f) : Color.white;
 
 				case ColorGradientMode.Horizontal:
-					if(_colors == null || _colors.Length < 3)
-						return new Color32(255, 255, 255, 255);
-
-					return Color.Lerp(_colors[1], _colors[2], xt);
+					return _gradients != null && _gradients.Length > 0 ? _gradients[0].Evaluate(xt) : Color.white;
 
 				case ColorGradientMode.Vertical:
-					if(_colors == null || _colors.Length < 3)
-						return new Color32(255, 255, 255, 255);
-
-					return Color.Lerp(_colors[2], _colors[1], yt);
+					return _gradients != null && _gradients.Length > 0 ? _gradients[0].Evaluate(yt) : Color.white;
 
 				case ColorGradientMode.Both:
-					if(_colors == null || _colors.Length < 5)
-						return new Color32(255, 255, 255, 255);
+					if(_gradients == null || _gradients.Length < 2) return Color.white;
 
-					return Color.Lerp(Color.Lerp(_colors[2], _colors[1], yt), Color.Lerp(_colors[4], _colors[3], yt), xt);
+					return Color.Lerp(_gradients[0].Evaluate(yt), _gradients[1].Evaluate(yt), xt);
+
+				case ColorGradientMode.Circular:
+					if(_gradients == null || _gradients.Length == 0) return Color.white;
+
+					float xu = Mathf.Lerp(-1f, 1f, xt), yu = Mathf.Lerp(-1f, 1f, yt);
+
+					var len = Mathf.Sqrt(xu * xu + yu * yu);
+
+					return _gradients[0].Evaluate(Mathf.Clamp01(len));
 
 				default:
 					return new Color32(255, 255, 255, 255);

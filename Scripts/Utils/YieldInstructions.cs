@@ -35,4 +35,36 @@ namespace M8 {
 			}
 		}
 	}
+
+	public class WaitForSecondsRealtimeRandom : CustomYieldInstruction {
+		private float mMin;
+		private float mMax;
+
+		private bool mIsGenerated;
+		private float mDelay;
+		private float mLastTime;
+
+		public WaitForSecondsRealtimeRandom(float min, float max) {
+			mMin = min;
+			mMax = max;
+			mIsGenerated = false;
+		}
+
+		public override bool keepWaiting {
+			get {
+				if(!mIsGenerated) {
+					mDelay = Random.Range(mMin, mMax);
+					mLastTime = Time.realtimeSinceStartup;
+					mIsGenerated = true;
+				}
+
+				if(Time.realtimeSinceStartup - mLastTime >= mDelay) {
+					mIsGenerated = false;
+					return false;
+				}
+
+				return true;
+			}
+		}
+	}
 }
