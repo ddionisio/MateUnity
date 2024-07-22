@@ -68,52 +68,42 @@ namespace M8 {
 
 				mCurTime = mCurTime + (mReverse ? -delta : delta);
 
+				sprite.color = gradient.Evaluate(Mathf.Clamp01(mCurTime / delay));
+
 				switch(type) {
 					case Type.Once:
-						if(mCurTime >= delay) {
+						if(mCurTime >= delay)
 							mActive = false;
-							sprite.color = gradient.Evaluate(1f);
-						}
-						else {
-							sprite.color = gradient.Evaluate(mCurTime / delay);
-						}
 						break;
 
 					case Type.Repeat:
-						if(mCurTime > delay) {
-							mCurTime -= delay;
-						}
-
-						sprite.color = gradient.Evaluate(mCurTime / delay);
+						if(mCurTime >= delay)
+							mCurTime = 0f;
 						break;
 
 					case Type.Saw:
-						if(mCurTime > delay) {
+						if(mCurTime >= delay) {
 							if(mReverse)
-								mCurTime -= delay;
+								mCurTime = 0f;
 							else
-								mCurTime = delay - (mCurTime - delay);
+								mCurTime = delay;
 
 							mReverse = !mReverse;
 						}
 						else if(mReverse && mCurTime <= 0.0f) {
 							mActive = false;
 						}
-
-						sprite.color = gradient.Evaluate(mCurTime / delay);
 						break;
 
 					case Type.SeeSaw:
-						if(mReverse && mCurTime < 0f) {
-							mCurTime = -mCurTime;
+						if(mReverse && mCurTime <= 0f) {
+							mCurTime = 0f;
 							mReverse = false;
 						}
-						else if(mCurTime > delay) {
-							mCurTime = delay - (mCurTime - delay);
+						else if(mCurTime >= delay) {
+							mCurTime = delay;
 							mReverse = true;
 						}
-
-						sprite.color = gradient.Evaluate(mCurTime / delay);
 						break;
 				}
 			}

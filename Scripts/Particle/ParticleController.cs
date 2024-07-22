@@ -4,75 +4,82 @@ using System.Collections;
 namespace M8 {
     [AddComponentMenu("M8/Particle/Controller")]
     public class ParticleController : MonoBehaviour {
-        public bool playOnEnable;
-        public float playOnEnableDelay = 0.1f;
+        public ParticleSystem target;
 
-        public bool stopOnDisable;
-        public bool clearOnStop;
+        [SerializeField]
+        bool _playOnEnable;
+		[SerializeField]
+		bool _stopOnDisable;
+        [SerializeField]
+        bool _disableOnEnd;
 
-        private bool mStarted;
+        [Header("Controls")]
+        [SerializeField]
+        bool _loop;
 
-        private ParticleSystem mPS;
+        public bool loop {
+            get { return _loop; }
+            set {
+                if(_loop != value) {
+                    _loop = value;
+
+                    var main = target.main;
+                    main.loop = _loop;
+                }
+            }
+        }
 
         public void Play(bool withChildren) {
-            if(!mPS.isPlaying)
-                mPS.Play(withChildren);
+            target.Play(withChildren);
         }
 
         public void PlayLoop(bool withChildren) {
-            SetLoop(true);
+            target.Play(withChildren);
 
-            if(!mPS.isPlaying)
-                mPS.Play(withChildren);
+            loop = true;
         }
 
         public void Stop() {
-            mPS.Stop();
+			target.Stop();
         }
 
         public void Pause() {
-            mPS.Pause();
+            target.Pause();
         }
 
-        public void SetLoop(bool loop) {
-            var main = mPS.main;
-            main.loop = loop;
+        public void Refresh() {
+			var main = target.main;
+
+			main.loop = _loop;
+		}
+
+		void OnDidApplyAnimationProperties() {
+            Refresh();
+		}
+
+		void OnEnable() {
+            Refresh();
+
+			if(_playOnEnable)
+                target.Play();
         }
-
-        void OnEnable() {
-            if(mStarted && playOnEnable && !mPS.isPlaying) {
-                mPS.Clear();
-
-                if(playOnEnableDelay > 0.0f)
-                    Invoke("DoPlay", playOnEnableDelay);
-                else
-                    DoPlay();
-            }
-
-        }
-
-        void DoPlay() {
-            mPS.Play();
-        }
-
+                
         void OnDisable() {
-            CancelInvoke();
-
-            if(mStarted && stopOnDisable) {
-                mPS.Stop();
-
-                if(clearOnStop)
-                    mPS.Clear();
+            if(target) {
+                if(_stopOnDisable)
+					target.Stop();
             }
         }
 
-        void Awake() {
-            mPS = GetComponent<ParticleSystem>();
-        }
+		void Update() {
+			if(_disableOnEnd) {
+                if(!target.isPlaying)
+                    enabled = false;
+            }
+		}
 
-        void Start() {
-            mStarted = true;
-            OnEnable();
-        }
-    }
+		void Awake() {
+			if(!target) target = GetComponent<ParticleSystem>();
+		}
+	}
 }
