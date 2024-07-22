@@ -31,6 +31,9 @@ namespace M8 {
 				StopCoroutine(mRout);
 				mRout = null;
 			}
+
+			if(activeGO) activeGO.SetActive(activeStart);
+			if(inactiveGO) inactiveGO.SetActive(!activeStart);
 		}
 
 		void Awake() {
@@ -42,6 +45,9 @@ namespace M8 {
 				mWaitDelay = new WaitForSecondsRandom(delayRange.min, delayRange.max);
 				mWaitBlinkDelay = new WaitForSecondsRandom(blinkDelayRange.min, blinkDelayRange.max);
 			}
+
+			if(activeGO) activeGO.SetActive(activeStart);
+			if(inactiveGO) inactiveGO.SetActive(!activeStart);
 		}
 
 		IEnumerator DoInterval() {
@@ -64,6 +70,8 @@ namespace M8 {
 
 					if(activeGO) activeGO.SetActive(_active);
 					if(inactiveGO) inactiveGO.SetActive(!_active);
+
+					yield return mWaitBlinkDelay;
 				}
 			}
 		}

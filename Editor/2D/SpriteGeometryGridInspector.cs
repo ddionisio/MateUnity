@@ -230,6 +230,13 @@ namespace M8 {
 			refreshMesh = refreshMesh || EditorGUI.EndChangeCheck();
 			//
 
+			EditorExt.Utility.DrawSeparator();
+
+			//edit
+			if(GUILayout.Button("Refresh"))
+				refreshGeometry = true;
+			//
+
 			//refresh
 			serializedObject.ApplyModifiedProperties();
 
