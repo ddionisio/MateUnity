@@ -17,6 +17,8 @@ Shader "M8/Sprite/UVWaveXYScroll"
 		
 		[Header(Scroll)]
 		scrollParams("Params speed=(x,y) wave amp=(z,w)", Vector) = (1,1,0,0)
+        scrollOffsetX("Offset X", Float) = 0
+        scrollOffsetY("Offset Y", Float) = 0
 		
 		[Header(Wave)]
 		speedX("Speed X", Float) = 1
@@ -57,6 +59,9 @@ Shader "M8/Sprite/UVWaveXYScroll"
             #include "UnitySprites.cginc"
 			
 			float4 scrollParams;
+
+            float scrollOffsetX;
+            float scrollOffsetY;
 			
 			float speedX;
 			float speedY;
@@ -80,7 +85,7 @@ Shader "M8/Sprite/UVWaveXYScroll"
 				
 				OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
 				OUT.vertex = UnityObjectToClipPos(OUT.vertex);
-				OUT.texcoord = waveTexCoord + scrollParams.xy * _Time.y + float2(scrollParams.z * _CosTime.w, scrollParams.w * _SinTime.w);
+				OUT.texcoord = waveTexCoord + float2(scrollOffsetX, scrollOffsetY) + scrollParams.xy * _Time.y + float2(scrollParams.z * _CosTime.w, scrollParams.w * _SinTime.w);
 				OUT.color = IN.color * _Color * _RendererColor;
 
 				#ifdef PIXELSNAP_ON

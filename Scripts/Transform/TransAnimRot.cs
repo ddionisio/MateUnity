@@ -1,11 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 namespace M8 {
-	[AddComponentMenu("M8/Transform/Anim Scale")]
-	public class TransAnimScale : MonoBehaviour {
+    [AddComponentMenu("M8/Transform/Anim Rotation")]
+    public class TransAnimRot : MonoBehaviour {
 		public enum UpdateType {
 			Update,
 			FixedUpdate,
@@ -27,20 +26,27 @@ namespace M8 {
 		public float pauseDelay;
 		public float delay;
 
-		public Vector3 startScale = Vector3.one;
-		public Vector3 endScale = Vector3.one;
+		public Vector3 startRotation = Vector3.zero;
+		public Vector3 endRotation = Vector3.zero;
+		public bool isLocal = true;
 
 		private State mState;
 		private float mLastTime;
 
+		private Quaternion mRotS;
+		private Quaternion mRotE;
+
 		void OnEnable() {
-			target.localScale = startScale;
+			ApplyRotation(mRotS);
 			mState = startPause ? State.Pause : State.Play;
 			mLastTime = GetTime();
 		}
 
 		void Awake() {
 			if(!target) target = transform;
+
+			mRotS = Quaternion.Euler(startRotation);
+			mRotE = Quaternion.Euler(endRotation);
 		}
 
 		void Update() {
@@ -59,11 +65,11 @@ namespace M8 {
 					if(delta < delay) {
 						var t = Mathf.Clamp01(curve.Evaluate(delta / delay));
 
-						target.localScale = Vector3.Lerp(startScale, endScale, t);
+						ApplyRotation(Quaternion.Slerp(mRotS, mRotE, t));
 					}
 					else {
-						target.localScale = endScale;
-												
+						ApplyRotation(mRotE);
+
 						mLastTime = time;
 
 						if(pauseDelay > 0.0f)
@@ -83,6 +89,13 @@ namespace M8 {
 					return Time.realtimeSinceStartup;
 			}
 			return 0.0f;
+		}
+
+		void ApplyRotation(Quaternion rot) {
+			if(isLocal)
+				target.localRotation = rot;
+			else
+				target.rotation = rot;
 		}
 	}
 }
