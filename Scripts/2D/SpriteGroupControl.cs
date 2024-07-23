@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace M8 {
 	[AddComponentMenu("M8/Sprite/GroupControl")]
+	[ExecuteInEditMode]
 	public class SpriteGroupControl : MonoBehaviour {
 		[SerializeField]
 		SpriteRenderer[] _spriteRenders;
@@ -138,6 +139,10 @@ namespace M8 {
 				mIsInit = true;
 			}
 
+			ApplyProperties(_spriteRenders);
+		}
+
+		void OnDidApplyAnimationProperties() {
 			ApplyProperties(_spriteRenders);
 		}
 
