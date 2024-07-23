@@ -1,4 +1,5 @@
-Shader "M8/Sprite/VertexWaveXMultiplicative"
+//Note: This is only useful for non-atlas sprites, or for plugins that assume the use of sprite shaders
+Shader "M8/Sprite/UVWaveXY"
 {
     Properties
     {
@@ -10,11 +11,19 @@ Shader "M8/Sprite/VertexWaveXMultiplicative"
         [PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
         [PerRendererData] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
 		
-        _speed("Speed", Float) = 1
+		[Header(Blending)]
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend mode Source", Int) = 5
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend mode Destination", Int) = 10
+		
+		[Header(Wave)]
+		speedX("Speed X", Float) = 1
+        speedY("Speed Y", Float) = 1
 
-        _amplitude("Amplitude", Float) = 0.017453292
+        amplitudeX("Amplitude X", Float) = 0.017453292
+        amplitudeY("Amplitude Y", Float) = 0.017453292
 
-        _range("Range", Float) = 0.017453292
+        rangeX("Range X", Float) = 0.017453292
+        rangeY("Range Y", Float) = 0.017453292
     }
 
     SubShader
@@ -31,12 +40,12 @@ Shader "M8/Sprite/VertexWaveXMultiplicative"
         Cull Off
         Lighting Off
         ZWrite Off
-        Blend Zero SrcColor
+        Blend [_BlendSrc] [_BlendDst]
 
         Pass
         {
         CGPROGRAM
-            #pragma vertex SpriteVert_VertexWave
+            #pragma vertex SpriteVert_UVWave
             #pragma fragment SpriteFrag
             #pragma target 2.0
             #pragma multi_compile_instancing
@@ -44,26 +53,29 @@ Shader "M8/Sprite/VertexWaveXMultiplicative"
             #pragma multi_compile _ ETC1_EXTERNAL_ALPHA
             #include "UnitySprites.cginc"
 			
-            float _speed;
-
-            float _amplitude;
-
-            float _range;
+			float speedX;
+			float speedY;
 			
-			v2f SpriteVert_VertexWave(appdata_t IN)
+			float amplitudeX;
+			float amplitudeY;
+		
+			float rangeX;
+			float rangeY;
+			
+			v2f SpriteVert_UVWave(appdata_t IN)
 			{
 				v2f OUT;
 
 				UNITY_SETUP_INSTANCE_ID (IN);
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 				
-				float4 vtx = IN.vertex;
+				float2 waveTexCoord = float2(
+					IN.texcoord.x + sin(IN.texcoord.y*rangeY + speedX*_Time.y)*amplitudeX,
+					IN.texcoord.y + sin(IN.texcoord.x*rangeX + speedY*_Time.y)*amplitudeY);
 				
-				vtx.x += sin(vtx.y * _range + _speed * _Time.y) * _amplitude;
-
-				OUT.vertex = UnityFlipSprite(vtx, _Flip);
+				OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
 				OUT.vertex = UnityObjectToClipPos(OUT.vertex);
-				OUT.texcoord = IN.texcoord;
+				OUT.texcoord = waveTexCoord;
 				OUT.color = IN.color * _Color * _RendererColor;
 
 				#ifdef PIXELSNAP_ON

@@ -10,6 +10,11 @@ Shader "M8/Sprite/VertexWaveXY"
         [PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
         [PerRendererData] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
 		
+		[Header(Blending)]
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend mode Source", Int) = 5
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend mode Destination", Int) = 10
+		
+		[Header(Wave)]
         speedX("Speed X", Float) = 1
         speedY("Speed Y", Float) = 1
 
@@ -34,7 +39,7 @@ Shader "M8/Sprite/VertexWaveXY"
         Cull Off
         Lighting Off
         ZWrite Off
-        Blend One OneMinusSrcAlpha
+        Blend [_BlendSrc] [_BlendDst]
 
         Pass
         {
