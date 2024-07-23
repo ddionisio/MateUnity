@@ -11,6 +11,10 @@ Shader "M8/Sprite/SolidColor"
 		[HideInInspector] _Flip("Flip", Vector) = (1,1,1,1)
 		[PerRendererData] _AlphaTex("External Alpha", 2D) = "white" {}
 		[PerRendererData] _EnableExternalAlpha("Enable External Alpha", Float) = 0
+		
+		[Header(Blending)]
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Source", Int) = 5
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Destination", Int) = 10
 	}
 
 	SubShader
@@ -27,7 +31,7 @@ Shader "M8/Sprite/SolidColor"
 		Cull Off
 		Lighting Off
 		ZWrite Off
-		Blend One OneMinusSrcAlpha
+		Blend [_BlendSrc] [_BlendDst]
 
 		Pass
 		{

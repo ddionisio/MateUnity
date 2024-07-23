@@ -10,8 +10,13 @@ Shader "M8/Sprite/ColorOverlay"
 		[HideInInspector] _Flip("Flip", Vector) = (1,1,1,1)
 		[PerRendererData] _AlphaTex("External Alpha", 2D) = "white" {}
 		[PerRendererData] _EnableExternalAlpha("Enable External Alpha", Float) = 0
+		
+		[Header(Blending)]
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Source", Int) = 5
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Destination", Int) = 10
 
-		_ColorOverlay("Overlay", Color) = (0,0,0,0)
+		[Header(Overlay)]
+		_ColorOverlay("Color", Color) = (0,0,0,0)
 	}
 
 	SubShader
@@ -28,7 +33,7 @@ Shader "M8/Sprite/ColorOverlay"
 		Cull Off
 		Lighting Off
 		ZWrite Off
-		Blend One OneMinusSrcAlpha
+		Blend [_BlendSrc] [_BlendDst]
 
 		Pass
 		{

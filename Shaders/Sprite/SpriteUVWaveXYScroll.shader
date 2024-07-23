@@ -12,8 +12,8 @@ Shader "M8/Sprite/UVWaveXYScroll"
         [PerRendererData] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
 						
 		[Header(Blending)]
-    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Blend mode Source", Int) = 5
-    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Blend mode Destination", Int) = 10
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Source", Int) = 5
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Destination", Int) = 10
 		
 		[Header(Scroll)]
 		scrollParams("Params speed=(x,y) wave amp=(z,w)", Vector) = (1,1,0,0)

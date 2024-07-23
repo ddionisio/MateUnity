@@ -11,8 +11,13 @@ Shader "M8/Sprite/ColorOverlayPulseMultiply"
 		[PerRendererData] _AlphaTex("External Alpha", 2D) = "white" {}
 		[PerRendererData] _EnableExternalAlpha("Enable External Alpha", Float) = 0
 
-		_ColorOverlayMin("Overlay Min", Color) = (0,0,0)
-		_ColorOverlayMax("Overlay Max", Color) = (0,0,0)
+		[Header(Blending)]
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendSrc ("Source", Int) = 5
+    		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Destination", Int) = 10
+
+		[Header(Overlay)]
+		_ColorOverlayMin("Color Min", Color) = (0,0,0)
+		_ColorOverlayMax("Color Max", Color) = (0,0,0)
 		_PulseScale("Pulse Scale", Float) = 1
 	}
 
@@ -30,7 +35,7 @@ Shader "M8/Sprite/ColorOverlayPulseMultiply"
 			Cull Off
 			Lighting Off
 			ZWrite Off
-			Blend One OneMinusSrcAlpha
+			Blend [_BlendSrc] [_BlendDst]
 
 			Pass
 			{
