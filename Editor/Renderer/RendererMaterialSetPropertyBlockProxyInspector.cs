@@ -9,7 +9,7 @@ namespace M8 {
 		public override void OnInspectorGUI() {
 			var targetProp = serializedObject.FindProperty("_target");
 
-			var idProp = serializedObject.FindProperty("_propID");
+			var nameProp = serializedObject.FindProperty("_name");
 
 			var valTypeProp = serializedObject.FindProperty("_valueType");
 
@@ -31,12 +31,12 @@ namespace M8 {
 					GetPropertyInfos(mat, out names, out details, out valueTypes, out inds);
 
 					//select variable
-					var propID = idProp.intValue;
+					var propName = nameProp.stringValue;
 
 					int curInd = -1;
 
 					for(int i = 0; i < names.Length; i++) {
-						if(Shader.PropertyToID(names[i]) == propID) {
+						if(names[i] == propName) {
 							curInd = i;
 							break;
 						}
@@ -46,7 +46,7 @@ namespace M8 {
 
 					//apply property id and value type
 					if(curInd != ind) {
-						idProp.intValue = propID = Shader.PropertyToID(names[ind]);
+						nameProp.stringValue = propName = names[ind];
 
 						valTypeProp.intValue = (int)valueTypes[ind];
 
@@ -72,7 +72,7 @@ namespace M8 {
 
 							case RendererMaterialSetPropertyBlockProxy.ValueType.Range:
 								Vector2 range;
-								if(GetPropertyRange(mat, propID, out range))
+								if(GetPropertyRange(mat, propName, out range))
 									valVector.x = EditorGUILayout.Slider("Value", valVector.x, range.x, range.y);								
 								else
 									valVector.x = EditorGUILayout.FloatField("Value", valVector.x);
@@ -107,7 +107,7 @@ namespace M8 {
 			}
 		}
 
-		private bool GetPropertyRange(Material mat, int propID, out Vector2 range) {
+		private bool GetPropertyRange(Material mat, string propName, out Vector2 range) {
 			var shader = mat.shader;
 			var count = ShaderUtil.GetPropertyCount(shader);
 
@@ -115,7 +115,7 @@ namespace M8 {
 				var name = ShaderUtil.GetPropertyName(shader, i);
 				var type = ShaderUtil.GetPropertyType(shader, i);
 
-				if(Shader.PropertyToID(name) == propID && type == ShaderUtil.ShaderPropertyType.Range) {
+				if(name == propName && type == ShaderUtil.ShaderPropertyType.Range) {
 					range = new Vector2(ShaderUtil.GetRangeLimits(shader, i, 1), ShaderUtil.GetRangeLimits(shader, i, 2));
 					return true;
 				}

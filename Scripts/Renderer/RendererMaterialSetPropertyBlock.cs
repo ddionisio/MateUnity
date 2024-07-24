@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using UnityEngine;
 
 namespace M8 {
@@ -20,7 +21,7 @@ namespace M8 {
 
 		[System.Serializable]
 		public struct PropertyInfo {
-			public int id;
+			public string name;
 
 			public ValueType valueType;
 			public Vector4 valueVector;
@@ -29,23 +30,23 @@ namespace M8 {
 			public void Apply(MaterialPropertyBlock propBlock) {
 				switch(valueType) {
 					case ValueType.Color:
-						propBlock.SetColor(id, new Color(valueVector.x, valueVector.y, valueVector.z, valueVector.w));
+						propBlock.SetColor(name, new Color(valueVector.x, valueVector.y, valueVector.z, valueVector.w));
 						break;
 					case ValueType.Vector:
-						propBlock.SetVector(id, valueVector);
+						propBlock.SetVector(name, valueVector);
 						break;
 					case ValueType.Float:
-						propBlock.SetFloat(id, valueVector.x);
+						propBlock.SetFloat(name, valueVector.x);
 						break;
 					case ValueType.Range:
-						propBlock.SetFloat(id, valueVector.x);
+						propBlock.SetFloat(name, valueVector.x);
 						break;
 					case ValueType.TexEnv:
 						if(valueTexture)
-							propBlock.SetTexture(id, valueTexture);
+							propBlock.SetTexture(name, valueTexture);
 						break;
 					case ValueType.Int:
-						propBlock.SetInt(id, (int)valueVector.x);
+						propBlock.SetInt(name, (int)valueVector.x);
 						break;
 				}
 			}
@@ -53,20 +54,20 @@ namespace M8 {
 			public void SetValueFrom(Material mat) {
 				switch(valueType) {
 					case ValueType.Color:
-						valueVector = mat.GetColor(id);
+						valueVector = mat.GetColor(name);
 						break;
 					case ValueType.Vector:
-						valueVector = mat.GetVector(id);
+						valueVector = mat.GetVector(name);
 						break;
 					case ValueType.Float:
 					case ValueType.Range:
-						valueVector.x = mat.GetFloat(id);
+						valueVector.x = mat.GetFloat(name);
 						break;
 					case ValueType.TexEnv:
-						valueTexture = mat.GetTexture(id);
+						valueTexture = mat.GetTexture(name);
 						break;
 					case ValueType.Int:
-						valueVector.x = mat.GetInt(id);
+						valueVector.x = mat.GetInt(name);
 						break;
 				}
 			}

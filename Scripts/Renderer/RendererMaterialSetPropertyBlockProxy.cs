@@ -21,7 +21,7 @@ namespace M8 {
 		Renderer _target;
 
 		[SerializeField]
-		int _propID;
+		string _name;
 
 		[SerializeField]
 		ValueType _valueType;
@@ -32,11 +32,30 @@ namespace M8 {
 
 		public Renderer target { get { return _target; } }
 
-		public int propertyID { get { return _propID; } }
+		public int propertyID { 
+			get {
+				if(!mIsPropIDInit)
+					mPropID = Shader.PropertyToID(_name);
+				return mPropID;
+			} 
+		}
+
+		public string propertyName { 
+			get { return _name; }
+			set {
+				if(_name != value) {
+					_name = value;
+					mIsPropIDInit = false;
+					Apply();
+				}
+			}
+		}
 
 		public ValueType valueType { get { return _valueType; } }
 
 		private MaterialPropertyBlock mMatPropBlock;
+		private bool mIsPropIDInit;
+		private int mPropID;
 
 		public void SetColor(Color val) {
 			_valueVector = val;
@@ -72,20 +91,20 @@ namespace M8 {
 
 			switch(_valueType) {
 				case ValueType.Color:
-					_valueVector = mat.GetColor(_propID);
+					_valueVector = mat.GetColor(propertyID);
 					break;
 				case ValueType.Vector:
-					_valueVector = mat.GetVector(_propID);
+					_valueVector = mat.GetVector(propertyID);
 					break;
 				case ValueType.Float:
 				case ValueType.Range:
-					_valueVector.x = mat.GetFloat(_propID);
+					_valueVector.x = mat.GetFloat(propertyID);
 					break;
 				case ValueType.TexEnv:
-					_valueTexture = mat.GetTexture(_propID);
+					_valueTexture = mat.GetTexture(propertyID);
 					break;
 				case ValueType.Int:
-					_valueVector.x = mat.GetInteger(_propID);
+					_valueVector.x = mat.GetInteger(propertyID);
 					break;
 			}
 
@@ -100,23 +119,26 @@ namespace M8 {
 
 			_target.GetPropertyBlock(mMatPropBlock);
 
+			if(!Application.isPlaying)
+				mIsPropIDInit = false;
+
 			switch(_valueType) {
 				case ValueType.Color:
-					mMatPropBlock.SetColor(_propID, _valueVector);
+					mMatPropBlock.SetColor(propertyID, _valueVector);
 					break;
 				case ValueType.Vector:
-					mMatPropBlock.SetVector(_propID, _valueVector);
+					mMatPropBlock.SetVector(propertyID, _valueVector);
 					break;
 				case ValueType.Float:
 				case ValueType.Range:
-					mMatPropBlock.SetFloat(_propID, _valueVector.x);
+					mMatPropBlock.SetFloat(propertyID, _valueVector.x);
 					break;
 				case ValueType.TexEnv:
 					if(_valueTexture)
-						mMatPropBlock.SetTexture(_propID, _valueTexture);
+						mMatPropBlock.SetTexture(propertyID, _valueTexture);
 					break;
 				case ValueType.Int:
-					mMatPropBlock.SetInteger(_propID, (int)_valueVector.x);
+					mMatPropBlock.SetInteger(propertyID, (int)_valueVector.x);
 					break;
 			}
 

@@ -38,7 +38,7 @@ namespace M8 {
 						int curInd = -1;
 
 						for(int j = 0; j < names.Length; j++) {
-							if(Shader.PropertyToID(names[j]) == itm.id) {
+							if(names[j] == itm.name) {
 								curInd = j;
 								break;
 							}
@@ -47,7 +47,7 @@ namespace M8 {
 						int ind = EditorGUILayout.IntPopup(curInd, details, inds);
 
 						if(curInd != ind) {
-							itm.id = Shader.PropertyToID(names[ind]);
+							itm.name = names[ind];
 							itm.valueType = valueTypes[ind];
 
 							//apply initial value
@@ -99,7 +99,7 @@ namespace M8 {
 								float rval;
 								Vector2 range;
 
-								if(GetPropertyRange(mat, itm.id, out range))
+								if(GetPropertyRange(mat, itm.name, out range))
 									rval = EditorGUILayout.Slider("=", valueVector.x, range.x, range.y);
 								else
 									rval = EditorGUILayout.FloatField("=", valueVector.x);
@@ -159,7 +159,7 @@ namespace M8 {
 					}
 
 					if(GUILayout.Button("Add Property")) {
-						propertyList.Add(new RendererMaterialSetPropertyBlock.PropertyInfo { id = 0, valueType = RendererMaterialSetPropertyBlock.ValueType.None });
+						propertyList.Add(new RendererMaterialSetPropertyBlock.PropertyInfo { name = "", valueType = RendererMaterialSetPropertyBlock.ValueType.None });
 						isChanged = true;
 					}
 
@@ -183,7 +183,7 @@ namespace M8 {
 			}
 		}
 
-		private bool GetPropertyRange(Material mat, int propID, out Vector2 range) {
+		private bool GetPropertyRange(Material mat, string propName, out Vector2 range) {
 			var shader = mat.shader;
 			var count = ShaderUtil.GetPropertyCount(shader);
 
@@ -191,7 +191,7 @@ namespace M8 {
 				var name = ShaderUtil.GetPropertyName(shader, i);
 				var type = ShaderUtil.GetPropertyType(shader, i);
 
-				if(Shader.PropertyToID(name) == propID && type == ShaderUtil.ShaderPropertyType.Range) {
+				if(name == propName && type == ShaderUtil.ShaderPropertyType.Range) {
 					range = new Vector2(ShaderUtil.GetRangeLimits(shader, i, 1), ShaderUtil.GetRangeLimits(shader, i, 2));
 					return true;
 				}
