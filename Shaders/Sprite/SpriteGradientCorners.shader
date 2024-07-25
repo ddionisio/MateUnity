@@ -15,7 +15,7 @@ Shader "M8/Sprite/GradientCorners"
     		[Enum(UnityEngine.Rendering.BlendMode)] _BlendDst ("Destination", Int) = 10
 
         [Header(Control)]
-        _Offset ("Offset Params (x, y, scale, rotate)", Vector) = (0, 0, 1, 0)
+        _Offset ("Offset Params (x, y, scale x, scale y)", Vector) = (0, 0, 1, 1)
         _Color01 ("Color 01", Color) = (1,0,0,1)
         _Color02 ("Color 02", Color) = (0,1,0,1)
         _Color03 ("Color 03", Color) = (0,0,1,1)
@@ -59,14 +59,14 @@ Shader "M8/Sprite/GradientCorners"
             {
                 float2 texUV = IN.texcoord;
 
-                float2 uv = (texUV + _Offset.xy) * _Offset.z;
+                float2 uv = (texUV + _Offset.xy) * _Offset.zw;
 
-                float rad = _Offset.w * 0.01745329251994329576923690768489;
-                float radC = cos(rad);
-                float radS = sin(rad);
+                //float rad = _Offset.w * 0.01745329251994329576923690768489;
+                //float radC = cos(rad);
+                //float radS = sin(rad);
                                 
-                uv.x = uv.x * radC + uv.y * radS;
-                uv.y = -uv.x * radS + uv.y * radC;
+                //uv.x = uv.x * radC + uv.y * radS;
+                //uv.y = -uv.x * radS + uv.y * radC;
 
                 float s = clamp(uv.x, 0, 1);
                 float t = clamp(uv.y, 0, 1);
