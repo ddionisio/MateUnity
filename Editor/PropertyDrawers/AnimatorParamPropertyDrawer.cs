@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Animations;
 
 namespace M8 {
 	[CustomPropertyDrawer(typeof(AnimatorParam), true)]
@@ -15,40 +16,45 @@ namespace M8 {
 			var animator = target.GetComponent<Animator>();
 
 			if(animator) {
-				var paramType = ((AnimatorParam)property.boxedValue).paramType;
+				var animCtrl = animator.runtimeAnimatorController as AnimatorController;
+				if(animCtrl) {
+					var paramType = ((AnimatorParam)property.boxedValue).paramType;
 
-				var animParms = animator.parameters;
+					var animParms = animCtrl.parameters;
 
-				var parms = new List<AnimatorControllerParameter>(animParms.Length);
-				
-				for(int i = 0; i < animParms.Length; i++) {
-					var animParm = animParms[i];
-					if(animParm.type == paramType)
-						parms.Add(animParm);
-				}
+					var parms = new List<AnimatorControllerParameter>(animParms.Length);
 
-				if(parms.Count > 0) {
-					var nameIDProp = property.FindPropertyRelative("_nameID");
-
-					var curInd = 0;
-
-					var parmNames = new string[parms.Count];
-
-					for(int i = 0; i < parms.Count; i++) {
-						var parm = parms[i];
-
-						parmNames[i] = parm.name;
-
-						if(nameIDProp.intValue == parm.nameHash)
-							curInd = i;
+					for(int i = 0; i < animParms.Length; i++) {
+						var animParm = animParms[i];
+						if(animParm.type == paramType)
+							parms.Add(animParm);
 					}
 
-					var selectInd = EditorGUI.Popup(position, curInd, parmNames);
+					if(parms.Count > 0) {
+						var nameIDProp = property.FindPropertyRelative("_nameID");
 
-					nameIDProp.intValue = parms[selectInd].nameHash;
+						var curInd = 0;
+
+						var parmNames = new string[parms.Count];
+
+						for(int i = 0; i < parms.Count; i++) {
+							var parm = parms[i];
+
+							parmNames[i] = parm.name;
+
+							if(nameIDProp.intValue == parm.nameHash)
+								curInd = i;
+						}
+
+						var selectInd = EditorGUI.Popup(position, curInd, parmNames);
+
+						nameIDProp.intValue = parms[selectInd].nameHash;
+					}
+					else
+						EditorGUILayout.HelpBox(string.Format("No parameters of type {0} found.", paramType.ToString()), MessageType.Warning);
 				}
 				else
-					EditorGUILayout.HelpBox(string.Format("No parameters of type {0} found.", paramType.ToString()), MessageType.Warning);
+					EditorGUILayout.HelpBox("Animator Controller is not assigned.", MessageType.Warning);
 			}
 			else
 				EditorGUILayout.HelpBox("Animator is missing.", MessageType.Warning);
