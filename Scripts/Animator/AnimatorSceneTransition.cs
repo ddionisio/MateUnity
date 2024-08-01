@@ -30,25 +30,13 @@ namespace M8 {
 		IEnumerator SceneManager.ITransition.Out() {
 			triggerExit.Set(animator);
 
-			while(true) {
-				yield return null;
-
-				var state = animator.GetCurrentAnimatorStateInfo(0);
-				if(state.normalizedTime >= 1f)
-					break;
-			}
+			yield return AnimatorUtil.WaitNextState(animator);
 		}
 
 		IEnumerator SceneManager.ITransition.In() {
 			triggerEnter.Set(animator);
 
-			while(true) {
-				yield return null;
-
-				var state = animator.GetCurrentAnimatorStateInfo(0);
-				if(state.normalizedTime >= 1f)
-					break;
-			}
+			yield return AnimatorUtil.WaitNextState(animator);
 		}
 	}
 }
