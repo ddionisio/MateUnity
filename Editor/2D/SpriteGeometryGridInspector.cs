@@ -20,6 +20,7 @@ namespace M8 {
 			var gradientModeProp = serializedObject.FindProperty("_gradientMode");
 			var gradientOffsetProp = serializedObject.FindProperty("_gradientOffset");
 			var gradientsProp = serializedObject.FindProperty("_gradients");
+			var clrApplyProp = serializedObject.FindProperty("_colorApply");
 			var clrProp = serializedObject.FindProperty("_color");
 			var sortLayerProp = serializedObject.FindProperty("_sortingLayer");
 			var sortOrderProp = serializedObject.FindProperty("_sortingOrder");
@@ -195,7 +196,19 @@ namespace M8 {
 			EditorGUI.BeginChangeCheck();
 
 			//color
-			clrProp.colorValue = EditorGUILayout.ColorField("Color", clrProp.colorValue);
+			EditorGUILayout.BeginHorizontal();
+
+			EditorGUIUtility.labelWidth = 50f;
+
+			clrApplyProp.boolValue = EditorGUILayout.BeginToggleGroup("Color", clrApplyProp.boolValue);
+						
+			clrProp.colorValue = EditorGUILayout.ColorField(" ", clrProp.colorValue);
+
+			EditorGUIUtility.labelWidth = 0f;
+
+			EditorGUILayout.EndToggleGroup();
+
+			EditorGUILayout.EndHorizontal();
 
 			//flip
 			EditorGUILayout.BeginHorizontal();

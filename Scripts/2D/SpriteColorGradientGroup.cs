@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace M8 {
     [AddComponentMenu("M8/Sprite/ColorGradientGroup")]
+	[ExecuteInEditMode]
     public class SpriteColorGradientGroup : MonoBehaviour {
 		public enum Type {
 			Override,
@@ -20,7 +21,22 @@ namespace M8 {
 		[SerializeField]
 		float _scale;
 
-		public bool applyOnAwake;
+		[SerializeField]
+		bool _apply;
+
+		public bool isApplied {
+			get { return _apply; }
+			set {
+				if(_apply != value) {
+					_apply = value;
+
+					if(_apply)
+						ApplyGradient();
+					else
+						Revert();
+				}
+			}
+		}
 
 		public float scale {
 			get { return _scale; }
@@ -29,7 +45,7 @@ namespace M8 {
 				if(_scale != val) {
 					_scale = val;
 
-					if(mIsApplied)
+					if(_apply)
 						ApplyGradient();
 				}
 			}
@@ -37,41 +53,41 @@ namespace M8 {
 
 		private Color[] mGraphicDefaultColors;
 
-		private bool mIsApplied = false;
-
-		public void Apply() {
-			if(!mIsApplied) {
-				mIsApplied = true;
+		public void Refresh() {
+			if(_apply)
 				ApplyGradient();
-			}
-		}
-
-		public void Revert() {
-			if(mIsApplied) {
-				mIsApplied = false;
-
-				if(spriteRenders == null || mGraphicDefaultColors == null)
-					return;
-
-				for(int i = 0; i < spriteRenders.Length; i++) {
-					if(spriteRenders[i])
-						spriteRenders[i].color = mGraphicDefaultColors[i];
-				}
-			}
+			else
+				Revert();
 		}
 
 		void OnDestroy() {
-			Revert();
+			if(_apply)
+				Revert();
 		}
 
-		void Awake() {
-			if(applyOnAwake)
-				Apply();
+		void OnEnable() {
+			if(_apply)
+				ApplyGradient();
+		}
+
+		void OnDisable() {
+			if(_apply)
+				Revert();
 		}
 
 		void OnDidApplyAnimationProperties() {
-			mIsApplied = true;
-			ApplyGradient();
+			if(_apply)
+				ApplyGradient();
+		}
+
+		private void Revert() {
+			if(spriteRenders == null || mGraphicDefaultColors == null)
+				return;
+
+			for(int i = 0; i < spriteRenders.Length; i++) {
+				if(spriteRenders[i])
+					spriteRenders[i].color = mGraphicDefaultColors[i];
+			}
 		}
 
 		private void ApplyGradient() {

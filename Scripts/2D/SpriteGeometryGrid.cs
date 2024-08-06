@@ -50,6 +50,9 @@ namespace M8 {
 		Vector2 _gradientOffset;
 
 		[SerializeField]
+		bool _colorApply = true;
+
+		[SerializeField]
 		Color _color = Color.white;
 				
 		[SerializeField]
@@ -94,7 +97,7 @@ namespace M8 {
 		public Color color {
 			get { return _color; }
 			set {
-				if(_color != value) {
+				if(_colorApply && _color != value) {
 					_color = value;
 
 					if(isInit) {
@@ -238,7 +241,10 @@ namespace M8 {
 			_meshRenderer.GetPropertyBlock(mMatPropBlock);
 
 			mMatPropBlock.SetTexture(mTexPropID, _sprite.texture);
-			mMatPropBlock.SetColor(mColorPropID, _color);
+
+			if(_colorApply)
+				mMatPropBlock.SetColor(mColorPropID, _color);
+
 			mMatPropBlock.SetVector(mFlipPropID, new Vector4(_flipX ? -1f : 1f, _flipY ? -1f : 1f));
 
 			_meshRenderer.SetPropertyBlock(mMatPropBlock);
