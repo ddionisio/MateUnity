@@ -76,8 +76,11 @@ namespace M8 {
 		}
 
 		void OnDidApplyAnimationProperties() {
-			if(_apply)
-				ApplyGradient();
+			Refresh();
+		}
+
+		void OnValidate() {
+			Refresh();
 		}
 
 		private void Revert() {

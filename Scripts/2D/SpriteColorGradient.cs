@@ -6,39 +6,45 @@ using UnityEngine.U2D;
 namespace M8 {
     [AddComponentMenu("M8/Sprite/ColorGradient")]
     [Tooltip("Helpful for applying color gradient to a sprite via proxy calls.")]
+	[ExecuteInEditMode]
     public class SpriteColorGradient : MonoBehaviour {
 		public SpriteRenderer target;
 		public Gradient gradient;
 
+		[SerializeField]
 		[Range(0f, 1f)]
-		public float initialScale;
+		float _scale;
 
 		public float scale {
-			get { return mScale; }
+			get { return _scale; }
 			set {
 				var val = Mathf.Clamp01(value);
-				if(mScale != val) {
-					mScale = val;
+				if(_scale != val) {
+					_scale = val;
 					ApplyGradient();
 				}
 			}
 		}
 
-		private float mScale;
-
-		void OnEnable() {
-			ApplyGradient();
-		}
-
-		void Awake() {
-			mScale = initialScale;
-		}
-
-		private void ApplyGradient() {
+		public void ApplyGradient() {
 			if(target == null)
 				target = GetComponent<SpriteRenderer>();
 
-			target.color = gradient.Evaluate(mScale);
+			target.color = gradient.Evaluate(_scale);
+		}
+
+		void OnEnable() {
+			if(gradient != null)
+				ApplyGradient();
+		}
+
+		void OnDidApplyAnimationProperties() {
+			ApplyGradient();
+		}
+
+		void OnValidate() {
+			if(gradient != null)
+				ApplyGradient();
 		}
 	}
 }
