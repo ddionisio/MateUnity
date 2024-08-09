@@ -1,9 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
-using TMPro;
-using static UnityEditor.PlayerSettings;
 
 namespace M8 {
 	[ExecuteInEditMode]
