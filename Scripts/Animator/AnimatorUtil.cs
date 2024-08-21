@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor.Animations;
 
 namespace M8 {
     public struct AnimatorUtil {
@@ -16,5 +17,13 @@ namespace M8 {
 						break;
 			}
 		}
-    }
+
+		public static AnimatorController GetAnimatorController(Animator animator) {
+			RuntimeAnimatorController rAnimCtrl = animator.runtimeAnimatorController;
+			while(rAnimCtrl is AnimatorOverrideController)
+				rAnimCtrl = ((AnimatorOverrideController)rAnimCtrl).runtimeAnimatorController;
+
+			return rAnimCtrl as AnimatorController;
+		}
+	}
 }

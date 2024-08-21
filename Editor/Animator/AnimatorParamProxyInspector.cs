@@ -14,7 +14,7 @@ namespace M8 {
 
 			var animator = targetField.objectReferenceValue as Animator;
 			if(animator) {
-				var animCtrl = animator.runtimeAnimatorController as AnimatorController;
+				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
 				if(animCtrl) {
 					var paramTypeField = serializedObject.FindProperty("_paramType");
 

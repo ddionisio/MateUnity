@@ -22,7 +22,7 @@ namespace M8 {
 			//param
 			var animator = targetProp.objectReferenceValue as Animator;
 			if(animator) {
-				var animCtrl = animator.runtimeAnimatorController as AnimatorController;
+				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
 				if(animCtrl) {
 					var paramPos = new Rect(position.x + position.width * 0.5f + 4f, position.y, position.width * 0.5f - 4f, position.height);
 

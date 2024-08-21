@@ -16,7 +16,7 @@ namespace M8 {
 			var animator = target.GetComponent<Animator>();
 
 			if(animator) {
-				var animCtrl = animator.runtimeAnimatorController as AnimatorController;
+				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
 				if(animCtrl) {
 					var paramType = ((AnimatorParam)property.boxedValue).paramType;
 
