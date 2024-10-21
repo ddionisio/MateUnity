@@ -10,13 +10,23 @@ namespace M8 {
 
         public const float TwoPI = 2.0f * Mathf.PI;
         public const float HalfPI = 0.5f * Mathf.PI;
-                
-        //------------- Interpolates ---------------
+
+		//------------- General ---------------
 
         /// <summary>
-        /// Cosine interpolation
+        /// More tuned approximation between two values
         /// </summary>
-        public static float Clerp(float start, float end, float t) {
+        public static bool Approx(float a, float b, float diff) {
+            return Mathf.Abs(a - b) <= diff;
+        }
+
+
+		//------------- Interpolates ---------------
+
+		/// <summary>
+		/// Cosine interpolation
+		/// </summary>
+		public static float Clerp(float start, float end, float t) {
             float ft = t * Mathf.PI;
             float f = (1.0f - Mathf.Cos(ft))*0.5f;
             return start*(1.0f-f) + end*f;
