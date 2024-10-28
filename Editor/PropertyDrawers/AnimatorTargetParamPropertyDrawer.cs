@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.Animations;
 
 namespace M8 {
 	[CustomPropertyDrawer(typeof(AnimatorTargetParam), true)]
@@ -17,10 +15,10 @@ namespace M8 {
 
 			var targetPos = targetProp.objectReferenceValue ? new Rect(position.x, position.y, position.width * 0.5f, position.height) : position;
 
-			targetProp.objectReferenceValue = EditorGUI.ObjectField(targetPos, targetProp.objectReferenceValue, typeof(Animator), true);
+			targetProp.objectReferenceValue = EditorGUI.ObjectField(targetPos, targetProp.objectReferenceValue, typeof(UnityEngine.Animator), true);
 
 			//param
-			var animator = targetProp.objectReferenceValue as Animator;
+			var animator = targetProp.objectReferenceValue as UnityEngine.Animator;
 			if(animator) {
 				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
 				if(animCtrl) {

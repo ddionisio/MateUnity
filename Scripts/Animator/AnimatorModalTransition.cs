@@ -7,15 +7,15 @@ namespace M8 {
     /// Ideally the state setup would be: Idle -triggerOpen-> Opening -triggerClose-> Closing -> Idle
     /// </summary>
     [AddComponentMenu("M8/Animator Unity/ModalTransition")]
-    [RequireComponent(typeof(Animator))]
+    [RequireComponent(typeof(UnityEngine.Animator))]
     public class AnimatorModalTransition : MonoBehaviour, IModalOpening, IModalClosing {
 		public AnimatorParamTrigger triggerOpen;
 		public AnimatorParamTrigger triggerClose;
 
-		public Animator animator { get; private set; }
+		public UnityEngine.Animator animator { get; private set; }
 
         void Awake() {
-			animator = GetComponent<Animator>();
+			animator = GetComponent<UnityEngine.Animator>();
 		}
 
 		IEnumerator IModalOpening.Opening() {

@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.Animations;
 
 namespace M8 {
 	[CustomPropertyDrawer(typeof(AnimatorParam), true)]
@@ -13,7 +11,7 @@ namespace M8 {
 			position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
 
 			var target = (MonoBehaviour)property.serializedObject.targetObject;
-			var animator = target.GetComponent<Animator>();
+			var animator = target.GetComponent<UnityEngine.Animator>();
 
 			if(animator) {
 				var animCtrl = AnimatorUtil.GetAnimatorController(animator);

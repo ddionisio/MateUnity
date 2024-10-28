@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.Animations;
 
 namespace M8 {
 	[CustomEditor(typeof(AnimatorParamProxy))]
@@ -12,7 +10,7 @@ namespace M8 {
 			
 			EditorGUILayout.ObjectField(targetField, new GUIContent("Target"));
 
-			var animator = targetField.objectReferenceValue as Animator;
+			var animator = targetField.objectReferenceValue as UnityEngine.Animator;
 			if(animator) {
 				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
 				if(animCtrl) {

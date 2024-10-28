@@ -5,7 +5,7 @@ using UnityEditor.Animations;
 
 namespace M8 {
     public struct AnimatorUtil {
-        public static IEnumerator WaitNextState(Animator animator) {
+        public static IEnumerator WaitNextState(UnityEngine.Animator animator) {
 			var curState = animator.GetCurrentAnimatorStateInfo(0);
 
 			while(true) {
@@ -18,7 +18,7 @@ namespace M8 {
 			}
 		}
 
-		public static AnimatorController GetAnimatorController(Animator animator) {
+		public static AnimatorController GetAnimatorController(UnityEngine.Animator animator) {
 			RuntimeAnimatorController rAnimCtrl = animator.runtimeAnimatorController;
 			while(rAnimCtrl is AnimatorOverrideController)
 				rAnimCtrl = ((AnimatorOverrideController)rAnimCtrl).runtimeAnimatorController;

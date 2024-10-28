@@ -6,7 +6,7 @@ namespace M8 {
 	[AddComponentMenu("M8/Animator Unity/ParamProxy")]
 	public class AnimatorParamProxy : MonoBehaviour {
 		[SerializeField]
-		Animator _target;
+		UnityEngine.Animator _target;
 
 		[SerializeField]
 		AnimatorControllerParameterType _paramType;
@@ -14,7 +14,7 @@ namespace M8 {
 		[SerializeField]
 		int _paramID;
 
-		public Animator target { get { return _target; } }
+		public UnityEngine.Animator target { get { return _target; } }
 
 		public AnimatorControllerParameterType paramType { get { return _paramType; } }
 
@@ -22,7 +22,7 @@ namespace M8 {
 
 		public bool SetParameter(string paramName) {
 			if(_target) {
-				var newID = Animator.StringToHash(paramName);
+				var newID = UnityEngine.Animator.StringToHash(paramName);
 
 				//find parameter, apply if valid
 				for(int i = 0; i < _target.parameterCount; i++) {
@@ -72,7 +72,7 @@ namespace M8 {
 
 		void Awake() {
 			if(!_target)
-				_target = GetComponent<Animator>();
+				_target = GetComponent<UnityEngine.Animator>();
 		}
 	}
 }

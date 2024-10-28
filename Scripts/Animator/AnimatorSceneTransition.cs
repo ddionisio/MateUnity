@@ -7,12 +7,12 @@ namespace M8 {
 	/// Ideally the state setup would be: Idle -triggerExit-> Exiting -triggerEnter-> Entering -> Idle
 	/// </summary>
 	[AddComponentMenu("M8/Animator Unity/SceneTransition")]
-	[RequireComponent(typeof(Animator))]
+	[RequireComponent(typeof(UnityEngine.Animator))]
 	public class AnimatorSceneTransition : MonoBehaviour, SceneManager.ITransition {		
 		public AnimatorParamTrigger triggerEnter;
 		public AnimatorParamTrigger triggerExit;
 
-		public Animator animator { get; private set; }
+		public UnityEngine.Animator animator { get; private set; }
 
 		void OnDestroy() {
 			if(SceneManager.isInstantiated)
@@ -22,7 +22,7 @@ namespace M8 {
 		void Awake() {
 			SceneManager.instance.AddTransition(this);
 
-			animator = GetComponent<Animator>();
+			animator = GetComponent<UnityEngine.Animator>();
 		}
 
 		int SceneManager.ITransition.priority { get { return 0; } }

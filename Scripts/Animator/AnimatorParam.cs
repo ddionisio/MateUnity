@@ -12,19 +12,19 @@ namespace M8 {
 	}
 
 	public abstract class AnimatorParamValue<T> : AnimatorParam {
-		public abstract T Get(Animator animator);
-		public abstract void Set(Animator animator, T val);
+		public abstract T Get(UnityEngine.Animator animator);
+		public abstract void Set(UnityEngine.Animator animator, T val);
 	}
 
 	[Serializable]
 	public class AnimatorParamTrigger : AnimatorParam {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Trigger; } }
 
-		public void Set(Animator animator) {
+		public void Set(UnityEngine.Animator animator) {
 			animator.SetTrigger(nameID);
 		}
 
-		public void Reset(Animator animator) {
+		public void Reset(UnityEngine.Animator animator) {
 			animator.ResetTrigger(nameID);
 		}
 	}
@@ -33,11 +33,11 @@ namespace M8 {
 	public class AnimatorParamBool : AnimatorParamValue<bool> {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Bool; } }
 
-		public override bool Get(Animator animator) {
+		public override bool Get(UnityEngine.Animator animator) {
 			return animator.GetBool(nameID);
 		}
 
-		public override void Set(Animator animator, bool val) {
+		public override void Set(UnityEngine.Animator animator, bool val) {
 			animator.SetBool(nameID, val);
 		}
 	}
@@ -46,11 +46,11 @@ namespace M8 {
 	public class AnimatorParamInt : AnimatorParamValue<int> {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Int; } }
 
-		public override int Get(Animator animator) {
+		public override int Get(UnityEngine.Animator animator) {
 			return animator.GetInteger(nameID);
 		}
 
-		public override void Set(Animator animator, int val) {
+		public override void Set(UnityEngine.Animator animator, int val) {
 			animator.SetInteger(nameID, val);
 		}
 	}
@@ -59,11 +59,11 @@ namespace M8 {
 	public class AnimatorParamFloat : AnimatorParamValue<float> {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Float; } }
 
-		public override float Get(Animator animator) {
+		public override float Get(UnityEngine.Animator animator) {
 			return animator.GetFloat(nameID);
 		}
 
-		public override void Set(Animator animator, float val) {
+		public override void Set(UnityEngine.Animator animator, float val) {
 			animator.SetFloat(nameID, val);
 		}
 	}
@@ -72,14 +72,14 @@ namespace M8 {
 
 	public abstract class AnimatorTargetParam {
 		[SerializeField]
-		Animator _target;
+		UnityEngine.Animator _target;
 
 		[SerializeField]
 		int _nameID;
 
 		public abstract AnimatorControllerParameterType paramType { get; }
 
-		public Animator target { get { return _target; } }
+		public UnityEngine.Animator target { get { return _target; } }
 
 		public int nameID { get { return _nameID; } }
 	}

@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Sprites-Multiplicative
-  m_Shader: {fileID: 4800000, guid: b37c9869501d26945b22cf26b2ba515d, type: 3}
+  m_Shader: {fileID: 4800000, guid: e5c4d935d010741479c32c580157fa21, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
