@@ -1,3 +1,4 @@
+#if !M8_UNITY_ANIMATOR_DISABLED
 using System;
 using UnityEngine;
 
@@ -141,3 +142,4 @@ namespace M8 {
 		}
 	}
 }
+#endif

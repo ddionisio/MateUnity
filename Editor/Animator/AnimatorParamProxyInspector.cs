@@ -1,3 +1,4 @@
+#if !M8_UNITY_ANIMATOR_DISABLED
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -61,3 +62,4 @@ namespace M8 {
 		}
 	}
 }
+#endif

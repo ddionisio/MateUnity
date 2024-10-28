@@ -1,30 +1,23 @@
+#if !M8_UNITY_ANIMATOR_DISABLED
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
 namespace M8 {
-	[CustomPropertyDrawer(typeof(AnimatorTargetParam), true)]
-	public class AnimatorTargetParamPropertyDrawer : PropertyDrawer {
+	[CustomPropertyDrawer(typeof(AnimatorParam), true)]
+	public class AnimatorParamPropertyDrawer : PropertyDrawer {
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 			EditorGUI.BeginProperty(position, label, property);
 
 			position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
 
-			//target
-			var targetProp = property.FindPropertyRelative("_target");
+			var target = (MonoBehaviour)property.serializedObject.targetObject;
+			var animator = target.GetComponent<UnityEngine.Animator>();
 
-			var targetPos = targetProp.objectReferenceValue ? new Rect(position.x, position.y, position.width * 0.5f, position.height) : position;
-
-			targetProp.objectReferenceValue = EditorGUI.ObjectField(targetPos, targetProp.objectReferenceValue, typeof(UnityEngine.Animator), true);
-
-			//param
-			var animator = targetProp.objectReferenceValue as UnityEngine.Animator;
 			if(animator) {
 				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
 				if(animCtrl) {
-					var paramPos = new Rect(position.x + position.width * 0.5f + 4f, position.y, position.width * 0.5f - 4f, position.height);
-
-					var paramType = ((AnimatorTargetParam)property.boxedValue).paramType;
+					var paramType = ((AnimatorParam)property.boxedValue).paramType;
 
 					var animParms = animCtrl.parameters;
 
@@ -52,7 +45,7 @@ namespace M8 {
 								curInd = i;
 						}
 
-						var selectInd = EditorGUI.Popup(paramPos, curInd, parmNames);
+						var selectInd = EditorGUI.Popup(position, curInd, parmNames);
 
 						nameIDProp.intValue = parms[selectInd].nameHash;
 					}
@@ -62,8 +55,11 @@ namespace M8 {
 				else
 					EditorGUILayout.HelpBox("Animator Controller is not assigned.", MessageType.Warning);
 			}
-			
+			else
+				EditorGUILayout.HelpBox("Animator is missing.", MessageType.Warning);
+
 			EditorGUI.EndProperty();
 		}
 	}
 }
+#endif
