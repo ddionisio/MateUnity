@@ -45,6 +45,13 @@ namespace M8 {
 
 		//-------------- 2D --------------
 
+		/// <summary>
+		/// More tuned approximation between two vector 2D
+		/// </summary>
+		public static bool Approx(Vector2 a, Vector2 b, float diff) {
+			return Mathf.Abs(a.x - b.x) <= diff && Mathf.Abs(a.y - b.y) <= diff;
+		}
+
 		public static void Limit(ref Vector2 v, float limit) {
             float dSqr = v.sqrMagnitude;
             if(dSqr > limit * limit) {
