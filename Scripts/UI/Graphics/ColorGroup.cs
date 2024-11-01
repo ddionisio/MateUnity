@@ -26,7 +26,14 @@ namespace M8.UI.Graphics {
 
         private bool mIsApplied;
 
-        public void ApplyColor() {
+		public void ApplyColorToggle(bool isApply) {
+			if(isApply)
+				ApplyColor(applyColor);
+			else
+				Revert();
+		}
+
+		public void ApplyColor() {
             ApplyColor(applyColor);
         }
 
@@ -66,7 +73,14 @@ namespace M8.UI.Graphics {
             mIsApplied = true;
         }
 
-        public void Revert() {
+		public void RevertToggle(bool isRevert) {
+			if(isRevert)
+				Revert();
+			else
+				ApplyColor(applyColor);
+		}
+
+		public void Revert() {
             if(mIsApplied) {
                 mIsApplied = false;
 

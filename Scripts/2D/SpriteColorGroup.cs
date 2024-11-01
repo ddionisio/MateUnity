@@ -14,12 +14,15 @@ namespace M8 {
         public Type type = Type.Multiply;
         public bool initOnAwake = true;
 
-        public SpriteRenderer[] spriteRenders;
+        [SerializeField]
+		Color _applyColor = Color.white;
+
+		public SpriteRenderer[] spriteRenders;
 
         public Color color {
-            get { return mColor; }
+            get { return _applyColor; }
             set {
-                if(mColor != value || !mIsApplied) {
+                if(_applyColor != value || !mIsApplied) {
                     ApplyColor(value);
                 }
             }
@@ -28,7 +31,17 @@ namespace M8 {
         private Color[] mGraphicDefaultColors;
 
         private bool mIsApplied = false;
-        private Color mColor = Color.white;
+
+        public void ApplyColorToggle(bool isApply) {
+            if(isApply)
+                ApplyColor(_applyColor);
+            else
+                Revert();
+        }
+
+        public void ApplyColor() {
+            ApplyColor(_applyColor);
+        }
 
         public void ApplyColor(Color color) {
             if(spriteRenders == null || spriteRenders.Length == 0 || (mGraphicDefaultColors != null && spriteRenders.Length != mGraphicDefaultColors.Length))
@@ -62,7 +75,14 @@ namespace M8 {
             }
 
             mIsApplied = true;
-            mColor = color;
+            _applyColor = color;
+        }
+
+        public void RevertToggle(bool isRevert) {
+            if(isRevert)
+                Revert();
+            else
+                ApplyColor(_applyColor);
         }
 
         public void Revert() {
@@ -77,7 +97,7 @@ namespace M8 {
                         spriteRenders[i].color = mGraphicDefaultColors[i];
                 }
 
-                mColor = Color.white;
+                _applyColor = Color.white;
             }
         }
 
