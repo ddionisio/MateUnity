@@ -1,5 +1,6 @@
 #if !M8_UNITY_ANIMATOR_DISABLED
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace M8 {
@@ -27,6 +28,22 @@ namespace M8 {
 
 		public void Reset(UnityEngine.Animator animator) {
 			animator.ResetTrigger(nameID);
+		}
+
+		public IEnumerator WaitTrigger(UnityEngine.Animator animator) {
+			while(true) {
+				yield return null;
+
+				if(animator.GetBool(nameID))
+					break;
+			}
+
+			while(true) {
+				yield return null;
+
+				if(!animator.GetBool(nameID))
+					break;
+			}
 		}
 	}
 
@@ -95,11 +112,13 @@ namespace M8 {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Trigger; } }
 
 		public void Set() {
-			target.SetTrigger(nameID);
+			if(target)
+				target.SetTrigger(nameID);
 		}
 
 		public void Reset() {
-			target.ResetTrigger(nameID);
+			if(target)
+				target.ResetTrigger(nameID);
 		}
 	}
 
@@ -108,11 +127,12 @@ namespace M8 {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Bool; } }
 
 		public override bool Get() {
-			return target.GetBool(nameID);
+			return target ? target.GetBool(nameID) : false;
 		}
 
 		public override void Set(bool val) {
-			target.SetBool(nameID, val);
+			if(target)
+				target.SetBool(nameID, val);
 		}
 	}
 
@@ -121,11 +141,12 @@ namespace M8 {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Int; } }
 
 		public override int Get() {
-			return target.GetInteger(nameID);
+			return target ? target.GetInteger(nameID) : 0;
 		}
 
 		public override void Set(int val) {
-			target.SetInteger(nameID, val);
+			if(target)
+				target.SetInteger(nameID, val);
 		}
 	}
 
@@ -134,11 +155,12 @@ namespace M8 {
 		public override AnimatorControllerParameterType paramType { get { return AnimatorControllerParameterType.Float; } }
 
 		public override float Get() {
-			return target.GetFloat(nameID);
+			return target ? target.GetFloat(nameID) : 0f;
 		}
 
 		public override void Set(float val) {
-			target.SetFloat(nameID, val);
+			if(target)
+				target.SetFloat(nameID, val);
 		}
 	}
 }
