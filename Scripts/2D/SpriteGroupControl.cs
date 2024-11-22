@@ -9,10 +9,10 @@ namespace M8 {
 		[SerializeField]
 		SpriteRenderer[] _spriteRenders;
 		[SerializeField]
-		bool _spriteRendersAutoFill;
+		bool _spriteRendersAutoFill = true;
 
 		[SerializeField]
-		Color _color;
+		Color _color = Color.white;
 		[SerializeField]
 		bool _colorApply;
 
@@ -112,6 +112,9 @@ namespace M8 {
 		bool mIsInit;
 
 		public void ApplyProperties(SpriteRenderer[] renderers) {
+			if(renderers == null)
+				return;
+
 			for(int i = 0; i < renderers.Length; i++) {
 				var spr = renderers[i];
 				if(spr) {
