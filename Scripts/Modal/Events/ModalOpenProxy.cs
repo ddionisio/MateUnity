@@ -14,21 +14,47 @@ namespace M8 {
         public bool onlyIfEmpty;
         public bool closeIfOpened;
 
-        public void Invoke() {
-            var mgr = modalManager.manager;
+        private Coroutine mRout;
 
+        public void Invoke() {
+            if(!gameObject.activeInHierarchy)
+                return;
+
+			var mgr = modalManager.manager;
             if(!mgr)
                 return;
 
-            if(onlyIfEmpty && (mgr.isBusy || mgr.activeCount > 0))
+			if(onlyIfEmpty && (mgr.isBusy || mgr.activeCount > 0))
+				return;
+
+			if(mRout != null)
                 return;
 
-            if(mgr.IsInStack(modal)) {
-                if(closeIfOpened)
-                    mgr.CloseUpTo(modal, true);
-            }
-            else
-                mgr.Open(modal);
+            mRout = StartCoroutine(DoOpen());
         }
+
+		void OnDisable() {
+			if(mRout != null) {
+                StopCoroutine(mRout);
+                mRout = null;
+			}
+		}
+
+		IEnumerator DoOpen() {
+            var mgr = modalManager.manager;
+
+			if(mgr.IsInStack(modal)) {
+				if(closeIfOpened)
+					mgr.CloseUpTo(modal, true);
+			}
+			else
+				mgr.Open(modal);
+
+            do {
+                yield return null;
+            } while(mgr.isBusy);
+
+            mRout = null;
+		}
     }
 }
