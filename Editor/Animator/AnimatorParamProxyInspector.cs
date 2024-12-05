@@ -13,7 +13,7 @@ namespace M8 {
 
 			var animator = targetField.objectReferenceValue as UnityEngine.Animator;
 			if(animator) {
-				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
+				var animCtrl = AnimatorEditorUtil.GetAnimatorController(animator);
 				if(animCtrl) {
 					var paramTypeField = serializedObject.FindProperty("_paramType");
 

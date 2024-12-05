@@ -109,7 +109,11 @@ namespace M8 {
             InitDefaultData();
         }
 
-        void OnDestroy() {
+		void OnDidApplyAnimationProperties() {
+			ApplyColor(_applyColor);
+		}
+
+		void OnDestroy() {
             Revert();
         }
 

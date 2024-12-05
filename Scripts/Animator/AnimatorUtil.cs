@@ -1,7 +1,5 @@
 #if !M8_UNITY_ANIMATOR_DISABLED
 using System.Collections;
-using UnityEngine;
-using UnityEditor.Animations;
 
 namespace M8 {
     public struct AnimatorUtil {
@@ -16,14 +14,6 @@ namespace M8 {
 				if(state.fullPathHash != curState.fullPathHash && state.normalizedTime >= 1f)
 						break;
 			}
-		}
-
-		public static AnimatorController GetAnimatorController(UnityEngine.Animator animator) {
-			RuntimeAnimatorController rAnimCtrl = animator.runtimeAnimatorController;
-			while(rAnimCtrl is AnimatorOverrideController)
-				rAnimCtrl = ((AnimatorOverrideController)rAnimCtrl).runtimeAnimatorController;
-
-			return rAnimCtrl as AnimatorController;
 		}
 	}
 }

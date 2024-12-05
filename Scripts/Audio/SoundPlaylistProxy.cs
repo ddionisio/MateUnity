@@ -14,22 +14,32 @@ namespace M8 {
         [SoundPlaylist]
         public string sound;
         public Mode mode = Mode.TwoD;
+        public bool checkPlaying;
+
+        private AudioSourceProxy mLastPlayed;
 
         public void Play() {
             if(string.IsNullOrEmpty(sound))
                 return;
 
+            if(checkPlaying && mLastPlayed && mLastPlayed.isPlaying)
+                return;
+
             switch(mode) {
                 case Mode.TwoD:
-                    SoundPlaylist.instance.Play(sound, false);
+					mLastPlayed = SoundPlaylist.instance.Play(sound, false);
                     break;
                 case Mode.ThreeD:
-                    SoundPlaylist.instance.Play(sound, transform.position, false);
+					mLastPlayed = SoundPlaylist.instance.Play(sound, transform.position, false);
                     break;
                 case Mode.ThreeDFollow:
-                    SoundPlaylist.instance.Play(sound, transform, false);
+					mLastPlayed = SoundPlaylist.instance.Play(sound, transform, false);
                     break;
             }
         }
-    }
+
+		void OnDisable() {
+			mLastPlayed = null;
+		}
+	}
 }

@@ -21,7 +21,7 @@ namespace M8 {
 			//param
 			var animator = targetProp.objectReferenceValue as UnityEngine.Animator;
 			if(animator) {
-				var animCtrl = AnimatorUtil.GetAnimatorController(animator);
+				var animCtrl = AnimatorEditorUtil.GetAnimatorController(animator);
 				if(animCtrl) {
 					var paramPos = new Rect(position.x + position.width * 0.5f + 4f, position.y, position.width * 0.5f - 4f, position.height);
 

@@ -107,8 +107,8 @@ namespace M8 {
             else
                 proxy.StopFade(fadeOutDelay);
         }
-        
-        protected override void OnInstanceInit() {
+
+		protected override void OnInstanceInit() {
             lastPlayName = null;
 
             mMusic = new Dictionary<string, MusicData>(music.Length);
