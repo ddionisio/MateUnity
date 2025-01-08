@@ -60,17 +60,17 @@ namespace M8 {
 				Revert();
 		}
 
-		void OnDestroy() {
+		protected virtual void OnDestroy() {
 			if(_apply)
 				Revert();
 		}
 
-		void OnEnable() {
+		protected virtual void OnEnable() {
 			if(_apply)
 				ApplyGradient();
 		}
 
-		void OnDisable() {
+		protected virtual void OnDisable() {
 			if(_apply)
 				Revert();
 		}
@@ -94,7 +94,7 @@ namespace M8 {
 		}
 
 		private void ApplyGradient() {
-			if(spriteRenders == null)
+			if(spriteRenders == null || spriteRenders.Length == 0)
 				spriteRenders = GetComponentsInChildren<SpriteRenderer>(true);
 
 			if(mGraphicDefaultColors == null || spriteRenders.Length != mGraphicDefaultColors.Length) {
