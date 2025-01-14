@@ -147,15 +147,17 @@ namespace M8 {
 		}
 
         private void RefreshMaterialProps() {
-            mSprRender.GetPropertyBlock(mMatPropBlock);
+            if(mMatPropBlock != null) {
+                mSprRender.GetPropertyBlock(mMatPropBlock);
 
-			mMatPropBlock.SetFloat(mAngleId, _angle);
-			mMatPropBlock.SetFloat(mAngleMinId, _angleMin);
-			mMatPropBlock.SetFloat(mAngleMaxId, _angleMax);
+                mMatPropBlock.SetFloat(mAngleId, _angle);
+                mMatPropBlock.SetFloat(mAngleMinId, _angleMin);
+                mMatPropBlock.SetFloat(mAngleMaxId, _angleMax);
 
-			mMatPropBlock.SetVector(mUVOfsId, mUVOfs);
+                mMatPropBlock.SetVector(mUVOfsId, mUVOfs);
 
-			mSprRender.SetPropertyBlock(mMatPropBlock);
+                mSprRender.SetPropertyBlock(mMatPropBlock);
+            }
         }
     }
 }
