@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.U2D;
-using UnityEngine.UIElements;
 
 namespace M8 {
 	[AddComponentMenu("M8/Sprite/ColorGradientGroupPulseDelay")]
