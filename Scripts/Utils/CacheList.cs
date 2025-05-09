@@ -205,5 +205,11 @@ namespace M8 {
         public void Shuffle() {
             ArrayUtil.Shuffle(mItems, 0, mCount);
         }
+
+        public T[] ToArray() {
+            var ret = new T[mCount];
+            Array.Copy(mItems, ret, mCount);
+            return ret;
+        }
     }
 }
