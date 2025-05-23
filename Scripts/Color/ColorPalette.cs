@@ -45,6 +45,10 @@ namespace M8 {
             return mColorBuffer[index];
         }
 
+        public Color GetRandomColor() {
+            return GetColor(Random.Range(0, _colors.Length));
+        }
+
         public void SetColor(int index, Color color) {
             if(mColorBuffer == null || mColorBuffer.Length != _colors.Length)
                 GenerateColorBuffer();
@@ -66,6 +70,20 @@ namespace M8 {
 
                 Invoke(index);
             }
+        }
+
+        public void SetColorsLerp(ColorPalette from, ColorPalette to, float t) {
+            var len = Mathf.Min(from.count, to.count, count);
+
+            for(int i = 0; i < len; i++)
+                SetColor(i, Color.Lerp(from.GetColor(i), to.GetColor(i), t));
+        }
+
+        public void CopyColors(ColorPalette from) {
+            var len = Mathf.Min(from.count, count);
+
+            for(int i = 0;i < len; i++)
+                SetColor(i, from.GetColor(i));
         }
 
         private void GenerateColorBuffer() {

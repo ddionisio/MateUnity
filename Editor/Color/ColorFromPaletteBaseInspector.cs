@@ -27,7 +27,7 @@ namespace M8 {
             Undo.undoRedoPerformed += ApplyColor;
         }
 
-        void ApplyColor() {
+        protected void ApplyColor() {
             //refresh
             var dats = serializedObject.targetObjects;
             for(int i = 0; i < dats.Length; i++) {
@@ -39,35 +39,39 @@ namespace M8 {
         public override void OnInspectorGUI() {
             base.OnInspectorGUI();
 
-            //var dat = target as ColorFromPaletteBase;
+			serializedObject.Update();
 
-            serializedObject.Update();
+			OnPaletteInspectorGUI();
 
-            //Palette Edit
-            EditorGUILayout.BeginVertical(GUI.skin.box);
+			if(serializedObject.ApplyModifiedProperties())
+				ApplyColor();
+		}
 
-            EditorGUILayout.PropertyField(mPalette);
+        protected void OnPaletteInspectorGUI() {
+			//var dat = target as ColorFromPaletteBase;
 
-            if(mPalette.objectReferenceValue) {
-                var palette = (ColorPalette)mPalette.objectReferenceValue;
-                EditorGUILayout.IntSlider(mPaletteIndex, 0, palette.count - 1);
-            }
-            else
-                EditorGUILayout.PropertyField(mPaletteIndex);
+			//Palette Edit
+			EditorGUILayout.BeginVertical(GUI.skin.box);
 
-            EditorGUILayout.EndVertical();
+			EditorGUILayout.PropertyField(mPalette);
 
-            //Settings
-            EditorGUILayout.BeginVertical(GUI.skin.box);
+			if(mPalette.objectReferenceValue) {
+				var palette = (ColorPalette)mPalette.objectReferenceValue;
+				EditorGUILayout.IntSlider(mPaletteIndex, 0, palette.count - 1);
+			}
+			else
+				EditorGUILayout.PropertyField(mPaletteIndex);
 
-            EditorGUILayout.Slider(mBrightness, 0f, 2f);
+			EditorGUILayout.EndVertical();
 
-            EditorGUILayout.Slider(mAlpha, 0f, 1f);
+			//Settings
+			EditorGUILayout.BeginVertical(GUI.skin.box);
 
-            EditorGUILayout.EndVertical();
+			EditorGUILayout.Slider(mBrightness, 0f, 2f);
 
-            if(serializedObject.ApplyModifiedProperties())
-                ApplyColor();
-        }
+			EditorGUILayout.Slider(mAlpha, 0f, 1f);
+
+			EditorGUILayout.EndVertical();
+		}
     }
 }
