@@ -27,9 +27,10 @@ namespace M8 {
 		bool _flipYApply;
 
 		[SerializeField]
-		int _sortLayerID;
+		[SortingLayer]
+		string _sortLayerName;
 		[SerializeField]
-		bool _sortLayerIDApply;
+		bool _sortLayerNameApply;
 
 		[SerializeField]
 		int _sortOrder;
@@ -88,25 +89,27 @@ namespace M8 {
 		}
 
 		public int sortLayerID {
-			get { return _sortLayerID; }
+			get { return SortingLayer.NameToID(_sortLayerName); }
 			set {
-				if(_sortLayerID != value) {
-					_sortLayerID = value;
+				sortLayerName = SortingLayer.IDToName(value);
+			}
+		}
+
+		public string sortLayerName {
+			get { return _sortLayerName; }
+			set {
+				if(_sortLayerName != value) {
+					_sortLayerName = value;
 
 					if(!mIsInit) Awake();
 
 					for(int i = 0; i < _spriteRenders.Length; i++) {
 						var spr = _spriteRenders[i];
 						if(spr)
-							spr.sortingLayerID = _sortLayerID;
+							spr.sortingLayerName = _sortLayerName;
 					}
 				}
 			}
-		}
-
-		public string sortLayerName {
-			get { return SortingLayer.IDToName(_sortLayerID); }
-			set { sortLayerID = SortingLayer.NameToID(value); }
 		}
 
 		bool mIsInit;
@@ -121,8 +124,8 @@ namespace M8 {
 					if(_colorApply)
 						spr.color = _color;
 
-					if(_sortLayerIDApply)
-						spr.sortingLayerID = _sortLayerID;
+					if(_sortLayerNameApply)
+						spr.sortingLayerName = _sortLayerName;
 					if(_sortOrderApply)
 						spr.sortingOrder = _sortOrder;
 
