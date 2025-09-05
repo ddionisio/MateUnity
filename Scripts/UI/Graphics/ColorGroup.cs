@@ -94,6 +94,19 @@ namespace M8.UI.Graphics {
             }
         }
 
+        public void RefreshDefaultColors() {
+			if(graphics == null || mGraphicDefaultColors == null)
+				return;
+
+			Revert();
+                        
+            for(int i = 0; i < graphics.Length; i++) {
+                var graphic = graphics[i];
+                if(graphic)
+                    mGraphicDefaultColors[i] = graphic.color;
+            }
+        }
+
         public void Init() {
             Revert();
 

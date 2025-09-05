@@ -101,7 +101,20 @@ namespace M8 {
             }
         }
 
-        public void Init() {
+		public void RefreshDefaultColors() {
+			if(spriteRenders == null || mGraphicDefaultColors == null)
+				return;
+
+			Revert();
+
+			for(int i = 0; i < spriteRenders.Length; i++) {
+				var spr = spriteRenders[i];
+				if(spr)
+					mGraphicDefaultColors[i] = spr.color;
+			}
+		}
+
+		public void Init() {
             Revert();
 
             spriteRenders = GetComponentsInChildren<SpriteRenderer>(true);
